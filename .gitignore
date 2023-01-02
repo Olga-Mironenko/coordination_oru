@@ -31,3 +31,15 @@ hs_err_pid*
 # temporary maps
 .temp*/
 logs/
+
+# IntelliJ IDEA
+.idea/
+
+# SimpleReedsSheppCarPlanner 
+SimpleReedsSheppCarPlanner/CMakeCache.txt
+SimpleReedsSheppCarPlanner/CMakeFiles/
+SimpleReedsSheppCarPlanner/Makefile
+SimpleReedsSheppCarPlanner/cmake_install.cmake
+SimpleReedsSheppCarPlanner/install_manifest.txt
+SimpleReedsSheppCarPlanner/libsimplereedssheppcarplanner.so
+
