@@ -6,22 +6,20 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.Mission;
-import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.Heuristics;
-import se.oru.coordination.coordination_oru.code.Vehicle;
+import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
-import std_msgs.Bool;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
 @DemoDescription(desc = "Example of a single human driven and seven autonomous vehicles using heuristics for computation time, " +
         "navigating in a test mine map.")
-public class test {
+public class OneLimitedVisibilitySevenAutonomous {
 
     public static void main(String[] args) throws InterruptedException, IOException {
 
@@ -100,53 +98,53 @@ public class test {
         rsp.setTurningRadius(0.01);
         rsp.setDistanceBetweenPathPoints(0.1);
 
-        Vehicle humVehicle1 = new Vehicle(0, 0, "Red", 6, 2, true);
+        AutonomousVehicle humAbstractVehicle1 = new AutonomousVehicle();
 
-        Vehicle autVehicle1 = new Vehicle(1, 1, "Green", 6, 2, false);
-        Vehicle autVehicle2 = new Vehicle(2, 1, "Green", 6, 2, false);
-        Vehicle autVehicle3 = new Vehicle(3, 1, "Green", 6, 2, false);
-        Vehicle autVehicle4 = new Vehicle(4, 1, "Green", 6, 2, false);
-        Vehicle autVehicle5 = new Vehicle(5, 1, "Green", 6, 2, false);
-        Vehicle autVehicle6 = new Vehicle(6, 1, "Green", 6, 2, false);
-        Vehicle autVehicle7 = new Vehicle(7, 1, "Green", 6, 2, false);
+        AutonomousVehicle autAbstractVehicle1 = new AutonomousVehicle();
+        AutonomousVehicle autAbstractVehicle2 = new AutonomousVehicle();
+        AutonomousVehicle autAbstractVehicle3 = new AutonomousVehicle();
+        AutonomousVehicle autAbstractVehicle4 = new AutonomousVehicle();
+        AutonomousVehicle autAbstractVehicle5 = new AutonomousVehicle();
+        AutonomousVehicle autAbstractVehicle6 = new AutonomousVehicle();
+        AutonomousVehicle autAbstractVehicle7 = new AutonomousVehicle();
 
-        tec.setMotionPlanner(humVehicle1.getID(), rsp);
+        tec.setMotionPlanner(humAbstractVehicle1.getID(), rsp);
 
-        tec.setMotionPlanner(autVehicle1.getID(), rsp);
-        tec.setMotionPlanner(autVehicle2.getID(), rsp);
-        tec.setMotionPlanner(autVehicle3.getID(), rsp);
-        tec.setMotionPlanner(autVehicle4.getID(), rsp);
-        tec.setMotionPlanner(autVehicle5.getID(), rsp);
-        tec.setMotionPlanner(autVehicle6.getID(), rsp);
-        tec.setMotionPlanner(autVehicle7.getID(), rsp);
+        tec.setMotionPlanner(autAbstractVehicle1.getID(), rsp);
+        tec.setMotionPlanner(autAbstractVehicle2.getID(), rsp);
+        tec.setMotionPlanner(autAbstractVehicle3.getID(), rsp);
+        tec.setMotionPlanner(autAbstractVehicle4.getID(), rsp);
+        tec.setMotionPlanner(autAbstractVehicle5.getID(), rsp);
+        tec.setMotionPlanner(autAbstractVehicle6.getID(), rsp);
+        tec.setMotionPlanner(autAbstractVehicle7.getID(), rsp);
 
-        tec.setForwardModel(humVehicle1.getID(), new ConstantAccelerationForwardModel(humVehicle1.getID(), maxVel, tec.getTemporalResolution(),
-                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(humVehicle1.getID())));
+        tec.setForwardModel(humAbstractVehicle1.getID(), new ConstantAccelerationForwardModel(humAbstractVehicle1.getID(), maxVel, tec.getTemporalResolution(),
+                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(humAbstractVehicle1.getID())));
 
-        tec.setForwardModel(autVehicle1.getID(), new ConstantAccelerationForwardModel(autVehicle1.getID(), maxVel, tec.getTemporalResolution(),
-                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autVehicle1.getID())));
-        tec.setForwardModel(autVehicle2.getID(), new ConstantAccelerationForwardModel(autVehicle2.getID(), maxVel, tec.getTemporalResolution(),
-                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autVehicle2.getID())));
-        tec.setForwardModel(autVehicle3.getID(), new ConstantAccelerationForwardModel(autVehicle3.getID(), maxVel, tec.getTemporalResolution(),
-                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autVehicle3.getID())));
-        tec.setForwardModel(autVehicle4.getID(), new ConstantAccelerationForwardModel(autVehicle3.getID(), maxVel, tec.getTemporalResolution(),
-                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autVehicle3.getID())));
-        tec.setForwardModel(autVehicle5.getID(), new ConstantAccelerationForwardModel(autVehicle3.getID(), maxVel, tec.getTemporalResolution(),
-                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autVehicle3.getID())));
-        tec.setForwardModel(autVehicle6.getID(), new ConstantAccelerationForwardModel(autVehicle3.getID(), maxVel, tec.getTemporalResolution(),
-                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autVehicle3.getID())));
-        tec.setForwardModel(autVehicle7.getID(), new ConstantAccelerationForwardModel(autVehicle3.getID(), maxVel, tec.getTemporalResolution(),
-                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autVehicle3.getID())));
+        tec.setForwardModel(autAbstractVehicle1.getID(), new ConstantAccelerationForwardModel(autAbstractVehicle1.getID(), maxVel, tec.getTemporalResolution(),
+                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autAbstractVehicle1.getID())));
+        tec.setForwardModel(autAbstractVehicle2.getID(), new ConstantAccelerationForwardModel(autAbstractVehicle2.getID(), maxVel, tec.getTemporalResolution(),
+                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autAbstractVehicle2.getID())));
+        tec.setForwardModel(autAbstractVehicle3.getID(), new ConstantAccelerationForwardModel(autAbstractVehicle3.getID(), maxVel, tec.getTemporalResolution(),
+                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autAbstractVehicle3.getID())));
+        tec.setForwardModel(autAbstractVehicle4.getID(), new ConstantAccelerationForwardModel(autAbstractVehicle3.getID(), maxVel, tec.getTemporalResolution(),
+                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autAbstractVehicle3.getID())));
+        tec.setForwardModel(autAbstractVehicle5.getID(), new ConstantAccelerationForwardModel(autAbstractVehicle3.getID(), maxVel, tec.getTemporalResolution(),
+                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autAbstractVehicle3.getID())));
+        tec.setForwardModel(autAbstractVehicle6.getID(), new ConstantAccelerationForwardModel(autAbstractVehicle3.getID(), maxVel, tec.getTemporalResolution(),
+                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autAbstractVehicle3.getID())));
+        tec.setForwardModel(autAbstractVehicle7.getID(), new ConstantAccelerationForwardModel(autAbstractVehicle3.getID(), maxVel, tec.getTemporalResolution(),
+                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autAbstractVehicle3.getID())));
 
-        tec.placeRobot(humVehicle1.getID(), initial0);
+        tec.placeRobot(humAbstractVehicle1.getID(), initial0);
 
-        tec.placeRobot(autVehicle1.getID(), initial1);
-        tec.placeRobot(autVehicle2.getID(), initial2);
-        tec.placeRobot(autVehicle3.getID(), initial3);
-        tec.placeRobot(autVehicle4.getID(), initial4);
-        tec.placeRobot(autVehicle5.getID(), initial5);
-        tec.placeRobot(autVehicle6.getID(), initial6);
-        tec.placeRobot(autVehicle7.getID(), initial7);
+        tec.placeRobot(autAbstractVehicle1.getID(), initial1);
+        tec.placeRobot(autAbstractVehicle2.getID(), initial2);
+        tec.placeRobot(autAbstractVehicle3.getID(), initial3);
+        tec.placeRobot(autAbstractVehicle4.getID(), initial4);
+        tec.placeRobot(autAbstractVehicle5.getID(), initial5);
+        tec.placeRobot(autAbstractVehicle6.getID(), initial6);
+        tec.placeRobot(autAbstractVehicle7.getID(), initial7);
 
         // Get complete path plan
 //        PoseSteering[] path1 = null;
@@ -189,15 +187,15 @@ public class test {
 
 //        System.out.println("Press a key");
 //        System.in.read();
-        var m0 = new Mission(humVehicle1.getID(), path0);
+        var m0 = new Mission(humAbstractVehicle1.getID(), path0);
 
-        var m1 = new Mission(autVehicle1.getID(), path1);
-        var m2 = new Mission(autVehicle2.getID(), path2);
-        var m3 = new Mission(autVehicle3.getID(), path3);
-        var m4 = new Mission(autVehicle4.getID(), path4);
-        var m5 = new Mission(autVehicle5.getID(), path5);
-        var m6 = new Mission(autVehicle6.getID(), path6);
-        var m7 = new Mission(autVehicle7.getID(), path7);
+        var m1 = new Mission(autAbstractVehicle1.getID(), path1);
+        var m2 = new Mission(autAbstractVehicle2.getID(), path2);
+        var m3 = new Mission(autAbstractVehicle3.getID(), path3);
+        var m4 = new Mission(autAbstractVehicle4.getID(), path4);
+        var m5 = new Mission(autAbstractVehicle5.getID(), path5);
+        var m6 = new Mission(autAbstractVehicle6.getID(), path6);
+        var m7 = new Mission(autAbstractVehicle7.getID(), path7);
 
         Missions.enqueueMission(m0);
 
@@ -214,7 +212,7 @@ public class test {
 
         for (int i = 0; i < pathArray0.size(); i++) {
             Thread.sleep(dt);
-            tec.replacePath(humVehicle1.getID(), pathArray0.get(i+1), pathArray0.get(i).length, false, null);
+            tec.replacePath(humAbstractVehicle1.getID(), pathArray0.get(i+1), pathArray0.get(i).length, false, null);
         }
 
     }

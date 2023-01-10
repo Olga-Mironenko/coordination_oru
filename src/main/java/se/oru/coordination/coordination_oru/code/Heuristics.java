@@ -30,7 +30,7 @@ public class Heuristics {
     }
 
     // A robot with given priority on ID number moves first via critical section: "priorityToID"
-    public Comparator<RobotAtCriticalSection> priorityToID (ArrayList<Vehicle> vehicles) {
-        return Comparator.comparingInt(o -> vehicles.get(o.getRobotReport().getRobotID()).getPriorityID());
-    }
+//    public Comparator<RobotAtCriticalSection> priorityToID (ArrayList<Vehicle> vehicles) {
+//        return Comparator.comparingInt(o -> vehicles.get(o.getRobotReport().getRobotID()).getPriorityID());
+//    }
 }
