@@ -31,6 +31,8 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 
 import se.oru.coordination.coordination_oru.RobotReport;
+import se.oru.coordination.coordination_oru.code.AbstractVehicle;
+import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 
 public class BrowserVisualization implements FleetVisualization {
 	
@@ -219,12 +221,16 @@ public class BrowserVisualization implements FleetVisualization {
 				extraData += (" | " + st);
 			}
 		}
-		
+
+		String color = "#ff0000";
+		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
+		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColor();
+
 		Geometry geom = TrajectoryEnvelope.getFootprint(te.getFootprint(), x, y, theta);
 		this.updateRobotFootprintArea(geom);
 		double scale = Math.sqrt(robotFootprintArea)*0.2;
 		Geometry arrowGeom = createArrow(rr.getPose(), robotFootprintXDim/scale, scale);
-		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, "#ff0000", -1, true, extraData) + "}";
+		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, color, -1, true, extraData) + "}";
 		String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+name, arrowGeom, "#ffffff", -1, true, null) + "}";
 		enqueueMessage(jsonString);
 		enqueueMessage(jsonStringArrow);
@@ -243,12 +249,16 @@ public class BrowserVisualization implements FleetVisualization {
 				extraData += (" | " + st);
 			}
 		}
-		
+
+		String color = "#ff0000";
+		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
+		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColor();
+
 		Geometry geom = TrajectoryEnvelope.getFootprint(fp, x, y, theta);
 		this.updateRobotFootprintArea(geom);
 		double scale = Math.sqrt(robotFootprintArea)*0.2;
 		Geometry arrowGeom = createArrow(rr.getPose(), robotFootprintXDim/scale, scale);
-		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, "#ff0000", -1, true, extraData) + "}";
+		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, color, -1, true, extraData) + "}";
 		String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+name, arrowGeom, "#ffffff", -1, true, null) + "}";
 		enqueueMessage(jsonString);
 		enqueueMessage(jsonStringArrow);

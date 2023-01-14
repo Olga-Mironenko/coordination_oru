@@ -12,9 +12,6 @@ public class AutonomousVehicle extends AbstractVehicle {
         super(ID, priorityID, color, maxVelocity, maxAcceleration, map, xLength, yLength);
     }
 
-    public AutonomousVehicle() {
-        super(1, 0, Color.GREEN, 5, 2, null, 0.5, 0.5);
-    }
     @Override
     public PoseSteering[] getPath(Pose initial, Pose goal, String map, Boolean inversePath) {
 
@@ -34,7 +31,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         rsp.setGoals(goal);
         rsp.plan();
         if (rsp.getPath() == null) throw new Error("No path found."); // FIXME No path find exception
-            pathFwd = rsp.getPath();
+        pathFwd = rsp.getPath();
         if (inversePath) {
             pathInv = rsp.getPathInv();
             path = (PoseSteering[]) ArrayUtils.addAll(pathFwd, pathInv);

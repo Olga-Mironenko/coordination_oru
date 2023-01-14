@@ -10,19 +10,19 @@ import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
 
 import java.awt.*;
-import java.util.Arrays;
 
 public class test2 {
 
     public static void main(String[] args) {
 
+
         Pose mainTunnelLeft = new Pose(4.25,15.35, -Math.PI);
         Pose mainTunnelRight = new Pose(80.05,24.75, Math.PI);
         String YAML_FILE = "maps/mine-map-test.yaml";
 
-        AutonomousVehicle aut = new AutonomousVehicle();
+        AutonomousVehicle aut = new AutonomousVehicle(1, 0, Color.BLUE, 5, 2, YAML_FILE, 0.5, 0.5);
+//        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.CYAN, 5, 2, YAML_FILE, 0.5, 0.5);
         PoseSteering[] path = aut.getPath(mainTunnelLeft, mainTunnelRight, YAML_FILE, true);
-        System.out.println(Arrays.toString(path));
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -34,6 +34,7 @@ public class test2 {
         tec.getRobotReport(aut.getID());
         tec.setDefaultFootprint(aut.getFootPrint());
         tec.placeRobot(aut.getID(), mainTunnelLeft);
+//        tec.placeRobot(aut2.getID(), mainTunnelRight);
         tec.addComparator(new Heuristics().closest());
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
@@ -50,10 +51,7 @@ public class test2 {
         Missions.enqueueMission(m1);
 
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, true, 1);
-
-        // FIXME integrate color for robot via visualization
-//        String color = "#" + String.format("%06X", 0xFFFFFF & Color.CYAN.getRGB());
+        Missions.startMissionDispatchers(tec, true);
 
     }
 }
