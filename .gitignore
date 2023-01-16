@@ -43,3 +43,5 @@ SimpleReedsSheppCarPlanner/cmake_install.cmake
 SimpleReedsSheppCarPlanner/install_manifest.txt
 SimpleReedsSheppCarPlanner/libsimplereedssheppcarplanner.so
 
+# Result .txt files
+src/main/java/se/oru/coordination/coordination_oru/scenarios/*.txt

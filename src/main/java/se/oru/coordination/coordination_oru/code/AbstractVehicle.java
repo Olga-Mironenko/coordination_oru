@@ -1,6 +1,10 @@
 package se.oru.coordination.coordination_oru.code;
 
 import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -20,7 +24,14 @@ public abstract class AbstractVehicle {
     private final double yLength;
     private final Coordinate[] footPrint;
     private RobotReport currentRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
-    private RobotReport lastRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
+    private double cycleDistance;
+    private double totalDistance;
+    private long timeInterval;
+    private double averageSpeed;
+    private int cycles = -1;
+    private int stops = -1;
+    private final double startTime = System.nanoTime();
+    private long waitingTime = -2;
 
     public AbstractVehicle(int ID, int priorityID, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
         this.ID = ID;
@@ -39,7 +50,6 @@ public abstract class AbstractVehicle {
         };
         VehiclesHashMap.getInstance().getList().put(this.getID(), this);
     }
-
     @Override
     public String toString() {
         return "AbstractVehicle{" +
@@ -57,16 +67,65 @@ public abstract class AbstractVehicle {
 
     public abstract PoseSteering[] getPath(Pose initial, Pose goal, String map, Boolean inversePath);
 
-    // TODO calculate all statistics
     public void updateStatistics() {
-        System.out.println("Robot" + this.getID() + " "+ this.currentRobotReport);
-        System.out.println("Robot" + this.getID() + " "+ this.lastRobotReport);
+
+        // FIXME Need to fix the cycles and stops calculation. Might need to use last Robto Report.
+        if (this.currentRobotReport.getPathIndex() == -1) {
+            System.out.println("DONE");
+            this.cycles++;
+            System.out.println(cycles);
+        }
+        if (this.currentRobotReport.getVelocity() == 0.0){
+            waitingTime += 2;
+            stops++;
+        }
+        totalDistance = Math.round(((cycleDistance * cycles) +
+            currentRobotReport.getDistanceTraveled()) * 10.0) / 10.0;
+        timeInterval = Math.round(System.nanoTime() - startTime) / 1000_000_000;
+        averageSpeed = Math.round((totalDistance / timeInterval) * 10.0) / 10.0;
     }
 
-    // TODO implement writing statistics to a file with scenario name
-    public void printStatistics() {
+    public void writeStatistics() {
 
+        try {
+            String line1 = "Vehicle: V" + this.getID() + "  " +  this.getClass().getSimpleName() + "\n";
+            String line2 = "---------------------------------" + "\n";
+            String line3 = "Cycle distance: " + this.cycleDistance + " m" + "\n";
+            String line4 = "No. of completed cycles: " + this.cycles + "\n";
+            String line5 = "Total distance travelled: " + totalDistance + " m" + "\n";
+            String line6 = "No. of stops: " + this.stops + "\n";
+            String line7 = "Total waiting time: " + waitingTime + " s" + "\n";
+            String line8 = "Average speed: " + averageSpeed + " m/s" + "\n";
+            String line9 = "Total simulation time: " + timeInterval + " s" + "\n";
+            String line10 = "\n";
+
+            String fileName = "./src/main/java/se/oru/coordination/coordination_oru/scenarios/results.txt" ;
+            File file = new File(fileName);
+
+            // if file doesn't exist, then create it
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(line1);
+            bw.write(line2);
+            bw.write(line3);
+            bw.write(line4);
+            bw.write(line5);
+            bw.write(line6);
+            bw.write(line7);
+            bw.write(line8);
+            bw.write(line9);
+            bw.write(line10);
+            bw.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
     public int getID() {
         return ID;
     }
@@ -80,13 +139,11 @@ public abstract class AbstractVehicle {
     }
 
     public void setCurrentRobotReport(RobotReport currentRobotReport) {
-        this.setLastRobotReport();
         this.currentRobotReport = currentRobotReport;
         updateStatistics();
     }
 
-    public void setLastRobotReport() {
-        this.lastRobotReport = this.currentRobotReport;
+    public void setCycleDistance(double cycleDistance) {
+        this.cycleDistance = cycleDistance;
     }
-
 }

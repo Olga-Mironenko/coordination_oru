@@ -268,7 +268,7 @@ public class Missions {
 		}
 		catch (IOException e) { e.printStackTrace(); }
 	}
-	
+
 	private static class ScenarioContainer {
 		private String locationsJSON;
 		private String pathsJSON;
@@ -1128,14 +1128,15 @@ public class Missions {
 		}
 	}
 
+
 	/**
 	 * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
 	 * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
 	 * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
 	 * @param loop Set to <code>false</code> if missions should be de-queued once dispatched.
-	 * @param Vehicle The Vehicle object which should be considered dispatchable.
+	 * @param loopTime Set the time in minutes for which the simulation will run.
 	 */
-	public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop) {
+	public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, final long loopTime) {
 
 		for (int robotID : tec.getAllRobotIDs()) {
 			dispatchableRobots.add(robotID);
@@ -1146,7 +1147,7 @@ public class Missions {
 			missionDispatchThread = new Thread() {
 				@Override
 				public void run() {
-					while (true) {
+					while (loopTime > System.currentTimeMillis()) {
 						for (int robotID : dispatchableRobots) {
 							if (Missions.hasMissions(robotID)) {
 								Mission m = Missions.peekMission(robotID);
@@ -1194,14 +1195,22 @@ public class Missions {
 								}
 							}
 						}
-						updateRobotReports(tec);
+						updateRobotReports(tec); // Call to update all the robot reports
 						//Sleep for a little (2 sec)~
 						try { Thread.sleep(2000); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
+					writeStatistics(tec);
 				}
+
 			};
 			missionDispatchThread.start();
+		}
+	}
+
+	private static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
+		for (int robotID : tec.getAllRobotIDs()) {
+			VehiclesHashMap.getVehicle(robotID).writeStatistics();
 		}
 	}
 
