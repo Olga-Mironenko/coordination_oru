@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 
@@ -30,9 +31,11 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 
+import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 
 public class BrowserVisualization implements FleetVisualization {
 	
@@ -234,6 +237,38 @@ public class BrowserVisualization implements FleetVisualization {
 		String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+name, arrowGeom, "#ffffff", -1, true, null) + "}";
 		enqueueMessage(jsonString);
 		enqueueMessage(jsonStringArrow);
+		
+		makeOverlayText();
+	}
+	
+	protected void makeOverlayText() {
+		String text = "";
+		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
+		for (int id : idToVehicle.keySet()) {
+			text += "(Robot " + id + ") ";
+			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
+			double velocity = rr.getVelocity();
+			text += "velocity: " + (double) Math.round(velocity * 1000) / 1000;
+			text += "; " + stringifyMissions(Missions.getMissions(id));
+			text += "<br>";
+		}
+		setOverlayText(text);
+	}
+	
+	protected static String stringifyMissions(ArrayList<Mission> missions) {
+		if (missions == null) {
+			missions = new ArrayList<Mission>();
+		}
+		String text = missions.size() + " missions: [";
+		for (int i = 0; i < missions.size(); i++) {
+			if (i > 0) {
+				text += ", ";
+			}
+			Mission mission = missions.get(i);
+			text += mission.getPath().length;
+		}
+		text += "]";
+		return text;
 	}
 	
 	@Override

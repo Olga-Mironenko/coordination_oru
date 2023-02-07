@@ -30,7 +30,8 @@ import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 
 public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeCoordinator {
-
+	public static TrajectoryEnvelopeCoordinatorSimulation tec = null;
+	
 	protected static final long START_TIME = Calendar.getInstance().getTimeInMillis();
 	protected boolean useInternalCPs = true;
 	
@@ -95,6 +96,8 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 		this.DEFAULT_MAX_VELOCITY = MAX_VELOCITY;
 		this.DEFAULT_MAX_ACCELERATION = MAX_ACCELERATION;
 		this.DEFAULT_ROBOT_TRACKING_PERIOD = DEFAULT_ROBOT_TRACKING_PERIOD;
+		assert tec == null;
+		tec = this;
 	}
 	
 	/**
