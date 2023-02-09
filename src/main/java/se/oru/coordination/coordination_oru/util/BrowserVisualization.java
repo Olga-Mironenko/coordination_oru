@@ -61,7 +61,8 @@ public class BrowserVisualization implements FleetVisualization {
 		UPDATE_PERIOD = updatePeriodInMillis;
 		BrowserVisualization.setupVizMessageServer();
         Thread updateThread = new Thread("Visualization update thread") {
-        	public void run() {
+        	@Override
+            public void run() {
         		while (true) {
         			sendMessages();
         			try { Thread.sleep(UPDATE_PERIOD); }
@@ -242,7 +243,7 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 	
 	protected void makeOverlayText() {
-		String text = "";
+            String text = "accelerationCoef1: " + MissionUtils.accelerationCoef1 + "<br>";
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
 		for (int id : idToVehicle.keySet()) {
 			text += "(Robot " + id + ") ";
@@ -429,7 +430,8 @@ public class BrowserVisualization implements FleetVisualization {
 		BrowserVisualizationSocket.origin = origin;
 	}
 	
-	public void setMap(String mapYAMLFile) {
+	@Override
+    public void setMap(String mapYAMLFile) {
 		try {
 			File file = new File(mapYAMLFile);
 			BufferedReader br = new BufferedReader(new FileReader(file));

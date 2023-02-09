@@ -89,6 +89,20 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
             Pose poseOrig = gson.fromJson(array.get(1), Pose.class);
             Pose pose = new Pose(poseOrig.getX(), poseOrig.getY(), poseOrig.getTheta());
             MissionUtils.moveRobot(1, pose);
+        } else if (event.equals("keydown")) {
+            String code = gson.fromJson(array.get(1), String.class);
+            System.out.println("keydown: code=" + code);
+            Double multiplier = null;
+            if (code.equals("ArrowRight")) {
+                multiplier = 2.0;
+            } else if (code.equals("ArrowLeft")) {
+                multiplier = 0.5;
+            } else {
+                System.out.println("Unknown keydown code: " + code);
+            }
+            if (multiplier != null) {
+                MissionUtils.multiplyAccelerationCoef(multiplier);
+            }
 	} else {
             System.out.println("Unknown event: " + event);
         }

@@ -17,6 +17,7 @@ import se.oru.coordination.coordination_oru.NetworkConfiguration;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.TrackingCallback;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
+import se.oru.coordination.coordination_oru.util.MissionUtils;
 import se.oru.coordination.coordination_oru.util.Missions;
 
 public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
@@ -34,24 +35,24 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	protected double[] curvatureDampening = null;
 	private ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
 	private int numberOfReplicas = 1;
-	private Random rand = new Random(Calendar.getInstance().getTimeInMillis()); 
+	private Random rand = new Random(Calendar.getInstance().getTimeInMillis());
 	private TreeMap<Double,Double> slowDownProfile = null;
 	private boolean slowingDown = false;
 	private boolean useInternalCPs = true;
 	protected ArrayList<RobotReport> reportsList = new ArrayList<RobotReport>();
 	protected ArrayList<Long> reportTimeLists = new ArrayList<Long>();
-	
+
 	private HashMap<Integer,Integer> userCPReplacements = null;
 
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
 	}
-	
+
 	public TrajectoryEnvelopeTrackerRK4(TrajectoryEnvelope te, int timeStep, double temporalResolution, TrajectoryEnvelopeCoordinatorSimulation tec, TrackingCallback cb) {
 		this(te, timeStep, temporalResolution, 1.0, 0.1, tec, cb);
 		setNumberOfReplicas(tec.getNumberOfReplicas(), tec.getControlPeriod());
 	}
-	
+
 	private void computeInternalCriticalPoints() {
 		this.curvatureDampening = new double[te.getTrajectory().getPose().length];
 		this.curvatureDampening[0] = 1.0;
@@ -69,7 +70,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			this.curvatureDampening[i+1] = 1.0;
 		}
 	}
-	
+
 	public void setCurvatureDampening(int index, double dampening) {
 		this.curvatureDampening[index] = dampening;
 	}
@@ -81,11 +82,11 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	public void resetCurvatureDampening() {
 		for (int i  = 0; i < curvatureDampening.length; i++) curvatureDampening[i] = 1.0;
 	}
-	
+
 	public double[] getCurvatureDampening() {
 		return this.curvatureDampening;
 	}
-	
+
 	private void computeCurvatureDampening() {
 		PoseSteering[] path = this.traj.getPoseSteering();
 		double deltaSinTheta = 0;
@@ -106,7 +107,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		if (!backwards) return curvatureDampening[index];
 		return curvatureDampening[this.traj.getPose().length-1-index];
 	}
-	
+
 	public TrajectoryEnvelopeTrackerRK4(TrajectoryEnvelope te, int timeStep, double temporalResolution, double maxVelocity, double maxAcceleration, TrajectoryEnvelopeCoordinator tec, TrackingCallback cb) {
 		super(te, temporalResolution, tec, timeStep, cb);
 		this.MAX_VELOCITY = maxVelocity;
@@ -120,7 +121,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		this.th = new Thread(this, "RK4 tracker " + te.getComponent());
 		this.th.setPriority(Thread.MAX_PRIORITY);
 	}
-	
+
 	@Override
 	protected void onTrajectoryEnvelopeUpdate() {
 		synchronized(reportsList) { //FIXME not ok, all the mutex should be changed
@@ -134,15 +135,15 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			reportTimeLists.clear(); //semplify to avoid discontinuities ... to be fixed.
 		}
 	}
-	
+
 	@Override
-	public void startTracking() {		
+	public void startTracking() {
 		while (this.th == null) {
 			try { Thread.sleep(10); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
 		this.th.start();
-		if (useInternalCPs) this.startInternalCPThread();	
+		if (useInternalCPs) this.startInternalCPThread();
 	}
 
 	public static double computeDistance(Trajectory traj, int startIndex, int endIndex) {
@@ -156,11 +157,11 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	private double computeDistance(int startIndex, int endIndex) {
 		return computeDistance(this.traj, startIndex, endIndex);
 	}
-		
+
 	private void enqueueOneReport() {
-			
+
 		synchronized (reportsList) {
-			
+
 			//Before start, initialize the position
 			if (reportsList.isEmpty()) {
 				if (getRobotReport() != null) {
@@ -169,10 +170,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				}
 				return;
 			}
-			
+
 			long timeNow = Calendar.getInstance().getTimeInMillis();
 			final int numberOfReplicasReceiving = this.numberOfReplicas;
-				
+
 			timeNow = Calendar.getInstance().getTimeInMillis();
 			long timeOfArrival = timeNow;
 			if (NetworkConfiguration.getMaximumTxDelay() > 0) {
@@ -180,7 +181,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				int delay = (NetworkConfiguration.getMaximumTxDelay()-NetworkConfiguration.getMinimumTxDelay() > 0) ? rand.nextInt(NetworkConfiguration.getMaximumTxDelay()-NetworkConfiguration.getMinimumTxDelay()) : 0;
 				timeOfArrival = timeOfArrival + NetworkConfiguration.getMinimumTxDelay() + delay;
 			}
-				
+
 			//Get the message according to packet loss probability (numberOfReplicas trials)
 			boolean received = (NetworkConfiguration.PROBABILITY_OF_PACKET_LOSS > 0) ? false : true;
 			int trial = 0;
@@ -189,26 +190,26 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 					received = true;
 				trial++;
 			}
-			if (received) {		
-				//Delete old messages that, due to the communication delay, will arrive after this one.			
+			if (received) {
+				//Delete old messages that, due to the communication delay, will arrive after this one.
 				ArrayList<Long> reportTimeToRemove = new ArrayList<Long>();
 				ArrayList<RobotReport> reportToRemove = new ArrayList<RobotReport>();
-				
+
 				for (int index = 0; index < reportTimeLists.size(); index++) {
 					if (reportTimeLists.get(index) < timeOfArrival) break;
 					if (reportTimeLists.get(index) >= timeOfArrival) {
 						reportToRemove.add(reportsList.get(index));
 						reportTimeToRemove.add(reportTimeLists.get(index));
-					}	
+					}
 				}
-				
+
 				for (Long time : reportTimeToRemove) reportTimeLists.remove(time);
 				for (RobotReport report : reportToRemove) reportsList.remove(report);
-				
+
 				reportsList.add(0, getRobotReport()); //The new one is the one that will arrive later and is added in front of the queue.
 				reportTimeLists.add(0, timeOfArrival); //The oldest is in the end.
 			}
-			
+
 			//Keep alive just the most recent message before now.
 			if (reportTimeLists.get(reportTimeLists.size()-1) > timeNow) {
 				metaCSPLogger.severe("* ERROR * Unknown status Robot"+te.getRobotID());
@@ -217,7 +218,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			else {
 				ArrayList<Long> reportTimeToRemove = new ArrayList<Long>();
 				ArrayList<RobotReport> reportToRemove = new ArrayList<RobotReport>();
-				
+
 				for (int index = reportTimeLists.size()-1; index > 0; index--) {
 					if (reportTimeLists.get(index) > timeNow) break; //the first in the future
 					if (reportTimeLists.get(index) < timeNow && reportTimeLists.get(index-1) <= timeNow) {
@@ -225,11 +226,11 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 						reportTimeToRemove.add(reportTimeLists.get(index));
 					}
 				}
-	
+
 				for (Long time : reportTimeToRemove) reportTimeLists.remove(time);
 				for (RobotReport report : reportToRemove) reportsList.remove(report);
 			}
-			
+
 			//Check if the current status message is too old.
 			if (timeNow - reportTimeLists.get(reportTimeLists.size()-1) > tec.getControlPeriod() + TrajectoryEnvelopeCoordinator.MAX_TX_DELAY) { //the known delay
 				metaCSPLogger.severe("* ERROR * Status of Robot"+ te.getRobotID() + " is too old.");
@@ -237,7 +238,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				}
 		}
 	}
-	
+
 	@Override
 	public RobotReport getLastRobotReport() {
 		synchronized (reportsList) {
@@ -251,7 +252,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			@Override
 			public void run() {
 				userCPReplacements = new HashMap<Integer, Integer>();
-				
+
 				while (th.isAlive()) {
 					ArrayList<Integer> toRemove = new ArrayList<Integer>();
 					for (Integer i : internalCriticalPoints) {
@@ -266,14 +267,14 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 								userCPReplacements.put(i, criticalPoint);
 								metaCSPLogger.info("Set internal critical point (" + te.getComponent() + "): " + i + " replacing critical point " + criticalPoint);
 								setCriticalPoint(i);
-								break;					
+								break;
 							}
 						}
 					}
 					for (Integer i : toRemove) {
 						internalCriticalPoints.remove(i);
 					}
-					
+
 					try { Thread.sleep(trackingPeriodInMillis); }
 					catch (InterruptedException e) { e.printStackTrace(); }
 				}
@@ -281,8 +282,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		};
 		t.start();
 	}
-	
-	
+
+
 	private TreeMap<Double,Double> getSlowdownProfile() {
 		TreeMap<Double,Double> ret = new TreeMap<Double, Double>(Collections.reverseOrder());
 		State tempStateBW = new State(0.0, 0.0);
@@ -294,15 +295,17 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		while (tempStateBW.getVelocity() < MAX_VELOCITY*1.1) {
 			double dampeningBW = getCurvatureDampening(getRobotReport(tempStateBW).getPathIndex(), true);
 			//Use slightly conservative max deceleration (which is positive acceleration since we simulate FW dynamics)
-			integrateRK4(tempStateBW, time, deltaTime, false, MAX_VELOCITY*1.1, dampeningBW, MAX_ACCELERATION);
+
+			integrateRK4(tempStateBW, time, deltaTime, false, MAX_VELOCITY*1.1, dampeningBW, MAX_ACCELERATION, te.getRobotID());
+
 			time += deltaTime;
 			ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 		}
-		
+
 		//for (Double speed : ret.keySet()) System.out.println("@speed " + speed + " --> " + ret.get(speed));
 		return ret;
 	}
-	
+
 	private double computePositionToSlowDown() {
 		State tempStateFW = new State(state.getPosition(), state.getVelocity());
 		double time = 0.0;
@@ -315,7 +318,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			for (Double speed : this.slowDownProfile.keySet()) {
 				//Find your speed in the table (table is ordered w/ highest speed first)...
 				if (tempStateFW.getVelocity() > speed) {
-					//If this speed lands you after total dist you are OK (you've checked at lower speeds and either returned or breaked...) 
+					//If this speed lands you after total dist you are OK (you've checked at lower speeds and either returned or breaked...)
 					double landingPosition = tempStateFW.getPosition() + (firstTime ? 0.0 : slowDownProfile.get(prevSpeed));
 					if (landingPosition > totalDistance) {
 						//System.out.println("Found: speed = " + tempStateFW.getVelocity() + " space needed = " + slowDownProfile.get(prevSpeed) + " (delta = " + Math.abs(totalDistance-landingPosition) + ")");
@@ -328,30 +331,38 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				firstTime = false;
 				prevSpeed = speed;
 			}
-			
+
 			double dampeningFW = getCurvatureDampening(getRobotReport(tempStateFW).getPathIndex(), true);
-			integrateRK4(tempStateFW, time, deltaTime, false, MAX_VELOCITY, dampeningFW, MAX_ACCELERATION);
+			integrateRK4(tempStateFW, time, deltaTime, false, MAX_VELOCITY, dampeningFW, MAX_ACCELERATION, te.getRobotID());
 
 			time += deltaTime;
 		}
 		return -this.totalDistance;
 	}
-	
-	public static void integrateRK4(State state, double time, double deltaTime, boolean slowDown, double MAX_VELOCITY, double MAX_VELOCITY_DAMPENING_FACTOR, double MAX_ACCELERATION) {
+
+	public static void integrateRK4(
+			State state, double time, double deltaTime, boolean slowDown,
+			double MAX_VELOCITY, double MAX_VELOCITY_DAMPENING_FACTOR, double MAX_ACCELERATION,
+			int robotID
+	) {
+		if (robotID == 1) {
+			MAX_ACCELERATION *= MissionUtils.accelerationCoef1;
+		}
+
 		synchronized(state) {
 			Derivative a = Derivative.evaluate(state, time, 0.0, new Derivative(), slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
 			Derivative b = Derivative.evaluate(state, time, deltaTime/2.0, a, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
 			Derivative c = Derivative.evaluate(state, time, deltaTime/2.0, b, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR,MAX_ACCELERATION);
 			Derivative d = Derivative.evaluate(state, time, deltaTime, c, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
-	
-			double dxdt = (1.0f / 6.0f) * ( a.getVelocity() + 2.0f*(b.getVelocity() + c.getVelocity()) + d.getVelocity() ); 
-		    double dvdt = (1.0f / 6.0f) * ( a.getAcceleration() + 2.0f*(b.getAcceleration() + c.getAcceleration()) + d.getAcceleration() );
-			
+
+			double dxdt = (1.0f / 6.0f) * ( a.getVelocity() + 2.0f*(b.getVelocity() + c.getVelocity()) + d.getVelocity() );
+                        double dvdt = (1.0f / 6.0f) * (a.getAcceleration()
+                                + 2.0f * (b.getAcceleration() + c.getAcceleration()) + d.getAcceleration());
+
 		    state.setPosition(state.getPosition()+dxdt*deltaTime);
 		    state.setVelocity(state.getVelocity()+dvdt*deltaTime);
 		}
 	}
-	
 
 	@Override
 	public void setCriticalPoint(int criticalPointToSet, int extCPCounter) {
@@ -359,10 +370,12 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		final int criticalPoint = criticalPointToSet;
 		final int externalCPCount = extCPCounter;
 		final int numberOfReplicas = this.numberOfReplicas;
-		
+
 		//Define a thread that will send the information
 		Thread waitToTXThread = new Thread("Wait to TX thread for robot " + te.getRobotID()) {
-			public void run() {
+
+            @Override
+            public void run() {
 
 				int delayTx = 0;
 				if (NetworkConfiguration.getMaximumTxDelay() > 0) {
@@ -370,11 +383,11 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 					int delay = (NetworkConfiguration.getMaximumTxDelay()-NetworkConfiguration.getMinimumTxDelay() > 0) ? rand.nextInt(NetworkConfiguration.getMaximumTxDelay()-NetworkConfiguration.getMinimumTxDelay()) : 0;
 					delayTx = NetworkConfiguration.getMinimumTxDelay() + delay;
 				}
-				
+
 				//Sleep for delay in communication
 				try { Thread.sleep(delayTx); }
 				catch (InterruptedException e) { e.printStackTrace(); }
-				
+
 				//if possible (according to packet loss, send
 				synchronized (externalCPCounter)
 				{
@@ -401,7 +414,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 							setCriticalPoint(criticalPoint);
 							externalCPCounter = externalCPCount;
 						}
-											
+
 						if (!canStartTracking()) {
 							setCanStartTracking();
 						}
@@ -416,27 +429,27 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		};
 		//let's start the thread
 		waitToTXThread.start();
-		
+
 	}
-			
-	
+
+
 	@Override
 	public void setCriticalPoint(int criticalPointToSet) {
-				
+
 		if (this.criticalPoint != criticalPointToSet) {
-			
+
 			//A new intermediate index to stop at has been given
-			if (criticalPointToSet != -1 && criticalPointToSet > getRobotReport().getPathIndex()) {			
+			if (criticalPointToSet != -1 && criticalPointToSet > getRobotReport().getPathIndex()) {
 				//Store backups in case we are too late for critical point
 				double totalDistanceBKP = this.totalDistance;
 				int criticalPointBKP = this.criticalPoint;
 				double positionToSlowDownBKP = this.positionToSlowDown;
-	
+
 				this.criticalPoint = criticalPointToSet;
 				//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
 				this.totalDistance = computeDistance(0, criticalPointToSet);
 				this.positionToSlowDown = computePositionToSlowDown();
-				
+
 				//We are too late for critical point, restore everything
 				if (this.positionToSlowDown < state.getPosition()) {
 					metaCSPLogger.warning("Ignored critical point (" + te.getComponent() + "): " + criticalPointToSet + " because slowdown distance (" + this.positionToSlowDown +") < current distance (" + state.getPosition() + ")");
@@ -453,7 +466,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			else if (criticalPointToSet != -1 && criticalPointToSet <= getRobotReport().getPathIndex()) {
 				metaCSPLogger.warning("Ignored critical point (" + te.getComponent() + "): " + criticalPointToSet + " because robot is already at " + getRobotReport().getPathIndex() + " (and current CP is " + this.criticalPoint + ")");
 			}
-			
+
 			//The critical point has been reset, go to the end
 			else if (criticalPointToSet == -1) {
 				this.criticalPoint = criticalPointToSet;
@@ -462,14 +475,14 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
 			}
 		}
-		
+
 		//Same critical point was already set
 		else {
 			metaCSPLogger.warning("Critical point (" + te.getComponent() + ") " + criticalPointToSet + " was already set!");
 		}
-		
+
 	}
-	
+
 	@Override
 	public RobotReport getRobotReport() {
 		if (state == null) return null;
@@ -550,23 +563,24 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		}
 		this.numberOfReplicas = numberOfReplicas;
 	}
-	
+
 	public void setNumberOfReplicas(int coordinationNumberOfReplicas, int coordinationPeriodInMillis) {
 		this.numberOfReplicas = Math.max(1, (int)Math.ceil(coordinationNumberOfReplicas*(double)trackingPeriodInMillis/coordinationPeriodInMillis));
 	}
-	
+
 	@Override
 	public void run() {
 		this.elapsedTrackingTime = 0.0;
+
 		double deltaTime = 0.0;
 		boolean atCP = false;
 		int myRobotID = te.getRobotID();
 		int myTEID = te.getID();
-		
-		
+
+
 		while (true) {
-						
-			//End condition: passed the middle AND velocity < 0 AND no criticalPoint 			
+
+			//End condition: passed the middle AND velocity < 0 AND no criticalPoint
 			boolean skipIntegration = false;
 			//if (state.getPosition() >= totalDistance/2.0 && state.getVelocity() < 0.0) {
 			if (state.getPosition() >= this.positionToSlowDown && state.getVelocity() < 0.0) {
@@ -576,51 +590,63 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 					onPositionUpdate();
 					break;
 				}
-								
+
+				assert criticalPoint != -1 || atCP;
+
 				//Vel < 0 hence we are at CP, thus we need to skip integration
 				if (!atCP /*&& getRobotReport().getPathIndex() == criticalPoint*/) {
+					assert criticalPoint != -1 : state.getPosition();
+
+					// . . . . . . . . .
+					//       ^     C
 					int pathIndex = getRobotReport().getPathIndex();
 					metaCSPLogger.info("At critical point (" + te.getComponent() + "): " + criticalPoint + " (" + pathIndex + ")");
-					if (pathIndex > criticalPoint) metaCSPLogger.severe("* ATTENTION! STOPPED AFTER!! *");
+					if (pathIndex > criticalPoint) {
+						// . . . . . . . . .
+						//     C ^
+						metaCSPLogger.severe("* ATTENTION! STOPPED AFTER!! *");
+					}
+
 					atCP = true;
 				}
-				
-				skipIntegration = true;
-				
+
+				assert criticalPoint != -1 || atCP;
+
+				skipIntegration = true; // at current iteration
+
 			}
 
 			//Compute deltaTime
 			long timeStart = Calendar.getInstance().getTimeInMillis();
-			
+
 			//Update the robot's state via RK4 numerical integration
 			if (!skipIntegration) {
 				if (atCP) {
 					metaCSPLogger.info("Resuming from critical point (" + te.getComponent() + ")");
 					atCP = false;
 				}
-				slowingDown = false;
-				if (state.getPosition() >= positionToSlowDown) slowingDown = true;
+				slowingDown = state.getPosition() >= positionToSlowDown;
 				double dampening = getCurvatureDampening(getRobotReport().getPathIndex(), false);
-				integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION);
+				integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION, te.getRobotID());
 
 			}
-			
+
 			//Do some user function on position update
 			onPositionUpdate();
 			enqueueOneReport();
-						
+
 			//Sleep for tracking period
 			int delay = trackingPeriodInMillis;
 			if (NetworkConfiguration.getMaximumTxDelay() > 0) delay += rand.nextInt(NetworkConfiguration.getMaximumTxDelay());
 			try { Thread.sleep(delay); }
 			catch (InterruptedException e) { e.printStackTrace(); }
-			
+
 			//Advance time to reflect how much we have slept (~ trackingPeriod)
 			long deltaTimeInMillis = Calendar.getInstance().getTimeInMillis()-timeStart;
 			deltaTime = deltaTimeInMillis/this.temporalResolution;
 			elapsedTrackingTime += deltaTime;
 		}
-		
+
 		//continue transmitting until the coordinator will be informed of having reached the last position.
 		while (tec.getRobotReport(te.getRobotID()).getPathIndex() != -1)
 		{
@@ -628,7 +654,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			try { Thread.sleep(trackingPeriodInMillis); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
-		
+
 		//persevere with last path point in case listeners didn't catch it!
 		long timerStart = getCurrentTimeInMillis();
 		while (getCurrentTimeInMillis()-timerStart < WAIT_AMOUNT_AT_END) {
@@ -639,20 +665,20 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		metaCSPLogger.info("RK4 tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + myTEID + ")");
 	}
 
-	public static double[] computeDTs(Trajectory traj, double maxVel, double maxAccel) {
+	public static double[] computeDTs(Trajectory traj, double maxVel, double maxAccel, int robotID) {
 		double distance = computeDistance(traj, 0, traj.getPose().length-1);
 		State state = new State(0.0, 0.0);
 		double time = 0.0;
 		double deltaTime = 0.0001;
-		
+
 		ArrayList<Double> dts = new ArrayList<Double>();
 		HashMap<Integer,Double> times = new HashMap<Integer, Double>();
 		dts.add(0.0);
 		times.put(0, 0.0);
-		
+
 		//First compute time to stop (can do FW here...)
 		while (state.getPosition() < distance/2.0 && state.getVelocity() < maxVel) {
-			integrateRK4(state, time, deltaTime, false, maxVel, 1.0, maxAccel);
+			integrateRK4(state, time, deltaTime, false, maxVel, 1.0, maxAccel, robotID);
 			time += deltaTime;
 		}
 		double positionToSlowDown = distance-state.getPosition();
@@ -663,10 +689,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		while (true) {
 			if (state.getPosition() >= distance/2.0 && state.getVelocity() < 0.0) break;
 			if (state.getPosition() >= positionToSlowDown) {
-				integrateRK4(state, time, deltaTime, true, maxVel, 1.0, maxAccel);
+				integrateRK4(state, time, deltaTime, true, maxVel, 1.0, maxAccel, robotID);
 			}
 			else {
-				integrateRK4(state, time, deltaTime, false, maxVel, 1.0, maxAccel);				
+				integrateRK4(state, time, deltaTime, false, maxVel, 1.0, maxAccel, robotID);
 			}
 			//System.out.println("Time: " + time + " " + rr);
 			//System.out.println("Time: " + MetaCSPLogging.printDouble(time,4) + "\tpos: " + MetaCSPLogging.printDouble(state.getPosition(),4) + "\tvel: " + MetaCSPLogging.printDouble(state.getVelocity(),4));
@@ -678,18 +704,18 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			}
 		}
 		if (dts.size() < traj.getPose().length) {
-			times.put(traj.getPose().length-1, time);		
+			times.put(traj.getPose().length-1, time);
 			dts.add(time-times.get(traj.getPose().length-2));
 		}
-		
+
 		//System.out.println("Time: " + MetaCSPLogging.printDouble(time,4) + "\tpos: " + MetaCSPLogging.printDouble(state.getPosition(),4) + "\tvel: " + MetaCSPLogging.printDouble(state.getVelocity(),4));
-		
+
 		double[] ret = new double[dts.size()];
 		for (int i = 0; i < dts.size(); i++) ret[i] = dts.get(i);
 		return ret;
 
 	}
 
-	
+
 
 }

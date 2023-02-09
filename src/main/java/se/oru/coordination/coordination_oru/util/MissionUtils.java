@@ -10,6 +10,8 @@ import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 
 public class MissionUtils {
+    public static double accelerationCoef1 = 1.0;
+
     public static void removeMissions(int robotID) {
         while (true) {
             var mission = Missions.dequeueMission(robotID);
@@ -43,6 +45,13 @@ public class MissionUtils {
             int finish = i < nChunks - 1 ? chunkSize * (i + 1) : path.length - 1;
             PoseSteering[] chunk = Arrays.copyOfRange(path, start, finish + 1);
             Missions.enqueueMission(new Mission(robotID, chunk)); // TODO: cancel slowDown for all but the last chunk
+        }
+    }
+
+    public static void multiplyAccelerationCoef(double multiplier) {
+        double accelerationCoefNew = accelerationCoef1 * multiplier;
+        if (accelerationCoefNew >= 0.1) {
+            accelerationCoef1 = accelerationCoefNew;
         }
     }
 }
