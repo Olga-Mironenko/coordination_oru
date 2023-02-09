@@ -1,7 +1,10 @@
 package se.oru.coordination.coordination_oru.scenarios;
 
+import java.awt.Color;
+
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
+
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
@@ -9,8 +12,6 @@ import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
-
-import java.awt.*;
 
 public class Test2 {
     public static void main(String[] args) {
@@ -25,8 +26,8 @@ public class Test2 {
         AutonomousVehicle aut = new AutonomousVehicle(1, 0, Color.GREEN, 5, 2, YAML_FILE, 0.5, 0.5);
         AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.GREEN, 5, 2, YAML_FILE, 0.5, 0.5);
         System.out.println(VehiclesHashMap.getInstance().getList());
-        PoseSteering[] path = aut.getPath(mainTunnelLeft, mainTunnelRight, YAML_FILE, true);
-        PoseSteering[] path2 = aut2.getPath(mainTunnelRight, drawPoint19, YAML_FILE, true);
+        PoseSteering[] path = aut.getPath(mainTunnelLeft, mainTunnelRight, true);
+        PoseSteering[] path2 = aut2.getPath(mainTunnelRight, drawPoint19, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);

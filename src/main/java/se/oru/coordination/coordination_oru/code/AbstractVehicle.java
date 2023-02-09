@@ -1,15 +1,17 @@
 package se.oru.coordination.coordination_oru.code;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
+
+import com.vividsolutions.jts.geom.Coordinate;
+
 import se.oru.coordination.coordination_oru.RobotReport;
 
 public abstract class AbstractVehicle {
@@ -19,7 +21,7 @@ public abstract class AbstractVehicle {
     private final Color color;
     private final double maxVelocity;
     private final double maxAcceleration;
-    private final String map;
+    protected final String map;
     private final double xLength;
     private final double yLength;
     private final Coordinate[] footPrint;
@@ -65,7 +67,7 @@ public abstract class AbstractVehicle {
                 '}';
     }
 
-    public abstract PoseSteering[] getPath(Pose initial, Pose goal, String map, Boolean inversePath);
+    public abstract PoseSteering[] getPath(Pose initial, Pose goal, Boolean inversePath);
 
     public void updateStatistics() {
 

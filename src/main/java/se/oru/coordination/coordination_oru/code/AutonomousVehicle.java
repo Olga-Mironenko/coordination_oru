@@ -1,24 +1,24 @@
 package se.oru.coordination.coordination_oru.code;
 
+import java.awt.Color;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
-import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 
-import java.awt.*;
-import java.net.IDN;
-import java.text.DecimalFormat;
+import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 
 public class AutonomousVehicle extends AbstractVehicle {
 
     double cycleDistance;
+    int maxPathAttempts = 10;
 
     public AutonomousVehicle(int ID, int priorityID, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
         super(ID, priorityID, color, maxVelocity, maxAcceleration, map, xLength, yLength);
     }
 
     @Override
-    public PoseSteering[] getPath(Pose initial, Pose goal, String map, Boolean inversePath) {
+    public PoseSteering[] getPath(Pose initial, Pose goal, Boolean inversePath) {
 
         var rsp = new ReedsSheppCarPlanner();
         rsp.setMap(map);
@@ -28,16 +28,21 @@ public class AutonomousVehicle extends AbstractVehicle {
         rsp.setTurningRadius(0.01);
         rsp.setDistanceBetweenPathPoints(0.1);
 
-        PoseSteering[] pathFwd = null;
-        PoseSteering[] pathInv = null;
-        PoseSteering[] path = null;
         rsp.setStart(initial);
         rsp.setGoals(goal);
-        rsp.plan();
-        if (rsp.getPath() == null) throw new Error("No path found.");
-        pathFwd = rsp.getPath();
+
+        PoseSteering[] pathFwd = null;
+        for (int i = 1; i <= maxPathAttempts; i++) {
+            if (rsp.plan()) {
+		pathFwd = rsp.getPath();
+                break;
+            }
+        }
+        if (pathFwd == null) throw new Error("No path found.");
+
+        PoseSteering[] path = null;
         if (inversePath) {
-            pathInv = rsp.getPathInv();
+            PoseSteering[] pathInv = rsp.getPathInv();
             path = (PoseSteering[]) ArrayUtils.addAll(pathFwd, pathInv);
         }
         else {
