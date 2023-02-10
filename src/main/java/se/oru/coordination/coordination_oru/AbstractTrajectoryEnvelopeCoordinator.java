@@ -28,8 +28,8 @@ import org.metacsp.multi.allenInterval.AllenIntervalConstraint;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
-import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelopeSolver;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope.SpatialEnvelope;
+import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelopeSolver;
 import org.metacsp.time.Bounds;
 import org.metacsp.utility.UI.Callback;
 import org.metacsp.utility.logging.MetaCSPLogging;
@@ -127,6 +127,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected HashMap<Integer, Integer> robotTrackingPeriodInMillis = new HashMap<Integer, Integer>();
 	protected HashMap<Integer, Double> robotMaxVelocity = new HashMap<Integer, Double>();
 	protected HashMap<Integer, Double> robotMaxAcceleration = new HashMap<Integer, Double>();
+        public HashMap<Integer, Integer> numIntegrateCalls = new HashMap<Integer, Integer>();
 
 	protected HashSet<Integer> muted = new HashSet<Integer>();
 
@@ -846,8 +847,8 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				metaCSPLogger.info("Waiting thread finishes for " + robotID);
 				synchronized(solver) {
 					synchronized(stoppingPoints) {
-						stoppingPoints.get(robotID).remove((int)index);
-						stoppingTimes.get(robotID).remove((int)index);
+						stoppingPoints.get(robotID).remove(index);
+						stoppingTimes.get(robotID).remove(index);
 						stoppingPointTimers.remove(robotID);
 					}
 					updateDependencies();
@@ -1668,7 +1669,8 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected void setPriorityOfEDT(final int prio) {
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
-				public void run() {
+				@Override
+                public void run() {
 					Thread.currentThread().setPriority(prio);
 				}});
 		}

@@ -349,6 +349,15 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			MAX_ACCELERATION *= MissionUtils.accelerationCoef1;
 		}
 
+                var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
+                // numIntegrateCalls = {1: 11}
+                if (!numIntegrateCalls.containsKey(robotID)) {
+                    numIntegrateCalls.put(robotID, 0);
+                }
+                // numIntegrateCalls = {1: 11, 2: 0}
+                numIntegrateCalls.put(robotID, numIntegrateCalls.get(robotID) + 1);
+                // numIntegrateCalls = {1: 11, 2: 1}
+
 		synchronized(state) {
 			Derivative a = Derivative.evaluate(state, time, 0.0, new Derivative(), slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
 			Derivative b = Derivative.evaluate(state, time, deltaTime/2.0, a, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);

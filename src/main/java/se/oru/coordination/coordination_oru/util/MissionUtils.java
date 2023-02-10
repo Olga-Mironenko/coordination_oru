@@ -26,13 +26,13 @@ public class MissionUtils {
 
         Pose currentOrig = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(robotID).getPose();
         var vehicle = VehiclesHashMap.getVehicle(robotID);
-        PoseSteering[] path = vehicle.getPath(currentOrig, goal, false);
+        PoseSteering[] path = vehicle.getPath(currentOrig, goal, true);
 
         // nChunks=2, path=[p0, p1, p2]:
         // chunkSize: 1
         // chunk1: path[0:2] = [p0, p1]
         // chunk2: path[1:3] = [p1, p2]
-        int nChunks = 10;
+        int nChunks = 1;
         int chunkSize = Math.max(0, path.length / nChunks - 1); // make the last chunk always greater than others
         for (int i = 0; i < nChunks; i++) {
             // length=43 (0..42), nChunks=8: chunkSize=5

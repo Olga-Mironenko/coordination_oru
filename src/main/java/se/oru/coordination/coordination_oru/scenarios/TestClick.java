@@ -19,20 +19,20 @@ public class TestClick {
 
     public static void main(String[] args) {
 
-        final int loopMinutes = 1;
+        final int loopMinutes = 5;
         final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);
         final Pose mainTunnelLeft = new Pose(4.25,15.35, -Math.PI);
         final Pose mainTunnelRight = new Pose(80.05,24.75, Math.PI);
         final Pose drawPoint19 = new Pose(39.05,85.45,-Math.PI/2);
         final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
+        final int maxVelocity = 15;
 
-        AutonomousVehicle hum1 = new HumanDrivenVehicle(1, 0, Color.GREEN, 5, 2, YAML_FILE, 0.5, 0.5);
-        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.RED, 5, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle hum1 = new HumanDrivenVehicle(1, 0, Color.GREEN, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.RED, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
         System.out.println(VehiclesHashMap.getInstance().getList());
-        PoseSteering[] path2 = aut2.getPath(mainTunnelRight, drawPoint19, true);
 
         // Instantiate a trajectory envelope coordinator.
-        tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
+        tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, 2);
         // Need to set up infrastructure that maintains the representation
         tec.setupSolver(0, 100000000);
         // Start the thread that checks and enforces dependencies at every clock tick
@@ -52,11 +52,11 @@ public class TestClick {
         viz.setInitialTransform(7.0, 83.0, 15.5);
         tec.setVisualization(viz);
 
-        var m2 = new Mission(aut2.getID(), path2);
-
-        Missions.enqueueMission(m2);
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatchers(tec, true, loopTime);
 
+        PoseSteering[] path2 = aut2.getPath(mainTunnelRight, drawPoint19, true);
+        var m2 = new Mission(aut2.getID(), path2);
+        Missions.enqueueMission(m2);
     }
 }

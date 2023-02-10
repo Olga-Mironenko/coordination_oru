@@ -247,10 +247,20 @@ public class BrowserVisualization implements FleetVisualization {
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
 		for (int id : idToVehicle.keySet()) {
 			text += "(Robot " + id + ") ";
+
 			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
 			double velocity = rr.getVelocity();
 			text += "velocity: " + (double) Math.round(velocity * 1000) / 1000;
+
+                        int numCalls = 0;
+                        var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
+                        if (numIntegrateCalls.containsKey(id)) {
+                            numCalls = numIntegrateCalls.get(id);
+                        }
+                        text += "; numIntegrateCalls: " + numCalls;
+
 			text += "; " + stringifyMissions(Missions.getMissions(id));
+
 			text += "<br>";
 		}
 		setOverlayText(text);
