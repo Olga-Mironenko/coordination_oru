@@ -1,4 +1,4 @@
-package se.oru.coordination.coordination_oru.scenarios;
+package se.oru.coordination.coordination_oru.tests;
 
 import java.awt.Color;
 
@@ -45,6 +45,7 @@ public class TestClick {
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);
+        tec.setMotionPlanner(1, hum1.makePlanner()); // needed for re-planning
 
         // Set up a simple GUI (null means empty map, otherwise provide yaml file)
         var viz = new BrowserVisualization();

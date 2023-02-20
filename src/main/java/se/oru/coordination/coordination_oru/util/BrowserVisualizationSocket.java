@@ -92,16 +92,16 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         } else if (event.equals("keydown")) {
             String code = gson.fromJson(array.get(1), String.class);
             System.out.println("keydown: code=" + code);
-            Double multiplier = null;
+            Double delta = null;
             if (code.equals("ArrowRight")) {
-                multiplier = 2.0;
+                delta = 1.0;
             } else if (code.equals("ArrowLeft")) {
-                multiplier = 0.5;
+                delta = -1.0;
             } else {
                 System.out.println("Unknown keydown code: " + code);
             }
-            if (multiplier != null) {
-                MissionUtils.multiplyAccelerationCoef(multiplier);
+            if (delta != null) {
+                MissionUtils.changeTargetVelocity1(delta);
             }
 	} else {
             System.out.println("Unknown event: " + event);

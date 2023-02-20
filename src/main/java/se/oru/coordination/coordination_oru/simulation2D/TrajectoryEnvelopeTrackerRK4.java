@@ -296,7 +296,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			double dampeningBW = getCurvatureDampening(getRobotReport(tempStateBW).getPathIndex(), true);
 			//Use slightly conservative max deceleration (which is positive acceleration since we simulate FW dynamics)
 
-			integrateRK4(tempStateBW, time, deltaTime, false, MAX_VELOCITY*1.1, dampeningBW, MAX_ACCELERATION, te.getRobotID());
+			integrateRK4(tempStateBW, time, deltaTime, false, MAX_VELOCITY * 1.1, dampeningBW, MAX_ACCELERATION, -1);
 
 			time += deltaTime;
 			ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
@@ -345,8 +345,12 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			double MAX_VELOCITY, double MAX_VELOCITY_DAMPENING_FACTOR, double MAX_ACCELERATION,
 			int robotID
 	) {
+		// Use `targetVelocity`:
 		if (robotID == 1) {
-			MAX_ACCELERATION *= MissionUtils.accelerationCoef1;
+			MAX_VELOCITY = Math.min(MAX_VELOCITY, MissionUtils.targetVelocity1); // MAX_ACCELERATION or 0
+			if (! slowDown) {
+				slowDown = state.getVelocity() > MissionUtils.targetVelocity1; // -MAX_ACCELERATION
+			}
 		}
 
                 var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;

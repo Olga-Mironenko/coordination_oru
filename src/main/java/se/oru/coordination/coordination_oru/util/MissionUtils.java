@@ -6,11 +6,13 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
 import se.oru.coordination.coordination_oru.Mission;
+import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 
 public class MissionUtils {
-    public static double accelerationCoef1 = 1.0;
+    public static double targetVelocity1 = 5.0;
+    public static PoseSteering[] lastChunk = null;
 
     public static void removeMissions(int robotID) {
         while (true) {
@@ -44,14 +46,27 @@ public class MissionUtils {
             int start = chunkSize * i;
             int finish = i < nChunks - 1 ? chunkSize * (i + 1) : path.length - 1;
             PoseSteering[] chunk = Arrays.copyOfRange(path, start, finish + 1);
+
+            boolean isFirst = lastChunk == null;
+            lastChunk = chunk;
+            if (! isFirst) {
+                MissionUtils.changeTargetVelocity1(0);
+            }
             Missions.enqueueMission(new Mission(robotID, chunk)); // TODO: cancel slowDown for all but the last chunk
         }
     }
 
-    public static void multiplyAccelerationCoef(double multiplier) {
-        double accelerationCoefNew = accelerationCoef1 * multiplier;
-        if (accelerationCoefNew >= 0.1) {
-            accelerationCoef1 = accelerationCoefNew;
+    public static void changeTargetVelocity1(double delta) {
+        double targetVelocity1New = targetVelocity1 + delta;
+        if (targetVelocity1New > 0) {
+            targetVelocity1 = targetVelocity1New;
+
+            TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+            //tec.replanEnvelope(1); // doesn't work
+
+            RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(1);
+            tec.replacePath(1, lastChunk, rr.getPathIndex() + 20, false, null);
         }
     }
+
 }

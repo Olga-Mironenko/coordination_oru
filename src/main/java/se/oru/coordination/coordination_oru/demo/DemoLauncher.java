@@ -19,7 +19,7 @@ import se.oru.coordination.coordination_oru.util.StringUtils;
 
 public class DemoLauncher {
 
-	private static final String testsPackage = "se.oru.coordination.coordination_oru.scenarios";
+	private static final String testsPackage = "se.oru.coordination.coordination_oru.tests";
 	
 	private static void printUsage() {
 

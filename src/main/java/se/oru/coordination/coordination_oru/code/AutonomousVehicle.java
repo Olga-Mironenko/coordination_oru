@@ -17,9 +17,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         super(ID, priorityID, color, maxVelocity, maxAcceleration, map, xLength, yLength);
     }
 
-    @Override
-    public PoseSteering[] getPath(Pose initial, Pose goal, Boolean inversePath) {
-
+    public ReedsSheppCarPlanner makePlanner() {
         var rsp = new ReedsSheppCarPlanner();
         rsp.setMap(map);
         rsp.setRadius(0.01);
@@ -27,6 +25,13 @@ public class AutonomousVehicle extends AbstractVehicle {
         rsp.setFootprint(super.getFootPrint());
         rsp.setTurningRadius(0.01);
         rsp.setDistanceBetweenPathPoints(0.1);
+
+        return rsp;
+    }
+
+    @Override
+    public PoseSteering[] getPath(Pose initial, Pose goal, Boolean inversePath) {
+        var rsp = makePlanner();
 
         rsp.setStart(initial);
         rsp.setGoals(goal);
