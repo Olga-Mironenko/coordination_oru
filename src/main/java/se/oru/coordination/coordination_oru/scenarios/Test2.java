@@ -12,9 +12,10 @@ import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
+import se.oru.coordination.coordination_oru.util.NoPathFound;
 
 public class Test2 {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NoPathFound {
 
         final int loopMinutes = 1;
         final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);

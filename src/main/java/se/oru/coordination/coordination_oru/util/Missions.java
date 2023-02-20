@@ -76,7 +76,7 @@ public class Missions {
 	
 	protected static Thread missionDispatchThread = null;
 	protected static HashSet<Integer> dispatchableRobots = new HashSet<Integer>();
-	protected static HashMap<Integer,Boolean> loopMissions = new HashMap<Integer,Boolean>();
+	public static HashMap<Integer,Boolean> loopMissions = new HashMap<Integer,Boolean>();
 	
 	/**
 	 * Set the minimum acceptable distance between path poses. This is used to re-sample paths
@@ -1196,8 +1196,8 @@ public class Missions {
 							}
 						}
 						updateRobotReports(tec); // Call to update all the robot reports
-						//Sleep for a little (2 sec)~
-						try { Thread.sleep(2000); }
+						//Sleep for a little:
+						try { Thread.sleep(100); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
 					writeStatistics(tec);

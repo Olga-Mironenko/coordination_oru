@@ -13,11 +13,12 @@ import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
+import se.oru.coordination.coordination_oru.util.NoPathFound;
 
 public class TestClick {
     public static TrajectoryEnvelopeCoordinatorSimulation tec = null;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NoPathFound {
 
         final int loopMinutes = 5;
         final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);
@@ -55,6 +56,7 @@ public class TestClick {
 
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatchers(tec, true, loopTime);
+        Missions.loopMissions.put(1, false);
 
         PoseSteering[] path2 = aut2.getPath(mainTunnelRight, drawPoint19, true);
         var m2 = new Mission(aut2.getID(), path2);

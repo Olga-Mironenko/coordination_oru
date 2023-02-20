@@ -270,7 +270,7 @@ public class BrowserVisualization implements FleetVisualization {
 		if (missions == null) {
 			missions = new ArrayList<Mission>();
 		}
-		String text = missions.size() + " missions: [";
+		String text = missions.size() + " future missions: [";
 		for (int i = 0; i < missions.size(); i++) {
 			if (i > 0) {
 				text += ", ";

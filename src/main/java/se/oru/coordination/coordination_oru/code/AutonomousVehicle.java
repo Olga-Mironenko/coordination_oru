@@ -7,6 +7,7 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
+import se.oru.coordination.coordination_oru.util.NoPathFound;
 
 public class AutonomousVehicle extends AbstractVehicle {
 
@@ -30,7 +31,7 @@ public class AutonomousVehicle extends AbstractVehicle {
     }
 
     @Override
-    public PoseSteering[] getPath(Pose initial, Pose goal, Boolean inversePath) {
+    public PoseSteering[] getPath(Pose initial, Pose goal, Boolean inversePath) throws NoPathFound {
         var rsp = makePlanner();
 
         rsp.setStart(initial);
@@ -43,7 +44,7 @@ public class AutonomousVehicle extends AbstractVehicle {
                 break;
             }
         }
-        if (pathFwd == null) throw new Error("No path found.");
+        if (pathFwd == null) throw new NoPathFound();
 
         PoseSteering[] path = null;
         if (inversePath) {

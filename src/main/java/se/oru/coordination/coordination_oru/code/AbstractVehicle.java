@@ -13,6 +13,7 @@ import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import com.vividsolutions.jts.geom.Coordinate;
 
 import se.oru.coordination.coordination_oru.RobotReport;
+import se.oru.coordination.coordination_oru.util.NoPathFound;
 
 public abstract class AbstractVehicle {
 
@@ -67,7 +68,7 @@ public abstract class AbstractVehicle {
                 '}';
     }
 
-    public abstract PoseSteering[] getPath(Pose initial, Pose goal, Boolean inversePath);
+    public abstract PoseSteering[] getPath(Pose initial, Pose goal, Boolean inversePath) throws NoPathFound;
 
     public void updateStatistics() {
 

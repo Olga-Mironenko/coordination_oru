@@ -1883,6 +1883,8 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		System.out.println();
 	}
 
-
+	public boolean isMissionsPoolEmpty() {
+		return missionsPool.isEmpty();
+	}
 }
 
