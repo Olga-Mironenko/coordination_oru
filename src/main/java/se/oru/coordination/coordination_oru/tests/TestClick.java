@@ -33,8 +33,6 @@ public class TestClick {
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
         System.out.println(VehiclesHashMap.getInstance().getList());
 
-        // TODO: change robot color when v ~ 0
-
         // Instantiate a trajectory envelope coordinator.
         tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, 2);
         // Need to set up infrastructure that maintains the representation

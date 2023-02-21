@@ -9,9 +9,9 @@ import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 
 public class MissionUtils {
-    public static double targetVelocity1 = 0.1;
+    public static final double targetVelocityInitial1 = 0.1;
+    public static double targetVelocity1 = targetVelocityInitial1;
     // TODO: stops when it's 0.1 again
-    // TODO: reset velocity (to ~0) when mission finishes
     // TODO: race condition (click/keypress)
     // TODO: crashes on click and then (immediately) keypress
     // TODO: crashes on large initial velocity
@@ -55,6 +55,7 @@ public class MissionUtils {
             }
 
             if (lastUsedPath == null || rr.getPathIndex() == -1) {
+                targetVelocity1 = targetVelocityInitial1;
                 Missions.enqueueMission(new Mission(robotID, newPath));
             } else {
                 int replacementIndex = getReplacementIndex(robotID);
