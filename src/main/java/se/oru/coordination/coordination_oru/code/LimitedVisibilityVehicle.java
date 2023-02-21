@@ -6,8 +6,8 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
 public class LimitedVisibilityVehicle extends AbstractVehicle{
-    public LimitedVisibilityVehicle(int ID, int priorityID, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        super(ID, priorityID, color, maxVelocity, maxAcceleration, map, xLength, yLength);
+    public LimitedVisibilityVehicle(int ID, int priorityID, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+        super(ID, priorityID, colorMoving, colorStill, maxVelocity, maxAcceleration, map, xLength, yLength);
     }
 
     @Override

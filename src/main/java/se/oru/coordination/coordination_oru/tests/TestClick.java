@@ -28,9 +28,12 @@ public class TestClick {
         final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
         final int maxVelocity = 15;
 
-        AutonomousVehicle hum1 = new HumanDrivenVehicle(1, 0, Color.GREEN, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
-        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.RED, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle hum1 = new HumanDrivenVehicle(1, 0, Color.GREEN, Color.BLUE, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.RED, Color.RED, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
+        // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
         System.out.println(VehiclesHashMap.getInstance().getList());
+
+        // TODO: change robot color when v ~ 0
 
         // Instantiate a trajectory envelope coordinator.
         tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, 2);
@@ -42,7 +45,15 @@ public class TestClick {
         tec.setDefaultFootprint(hum1.getFootPrint());
         tec.placeRobot(hum1.getID(), mainTunnelLeft);
         tec.placeRobot(aut2.getID(), mainTunnelRight);
-        tec.addComparator(new Heuristics().closest());
+
+        Heuristics heuristics = new Heuristics();
+        heuristics.robotIDToPrecedence.put(1, 10);
+        heuristics.robotIDToPrecedence.put(2, 20);
+        // tec.addComparator(new Heuristics().closest());
+        // tec.addComparator(new Heuristics().lowestIDNumber());
+        tec.addComparator(heuristics.highestPrecedence());
+        // TODO: demos (regarding precedence)
+
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);

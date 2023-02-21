@@ -4,10 +4,10 @@ import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.RobotReport;
 
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.*;
 
 public class Heuristics {
+    public HashMap<Integer,Integer> robotIDToPrecedence = new HashMap<Integer, Integer>();
 
     // A robot closest to a critical section moves first via critical section: "closest"
     public Comparator<RobotAtCriticalSection> closest() {
@@ -27,6 +27,11 @@ public class Heuristics {
     // A robot with the lowest ID number moves first via critical section: "lowestIDNumber"
     public Comparator<RobotAtCriticalSection> lowestIDNumber() {
         return (o1, o2) -> o1.getRobotReport().getRobotID() - o2.getRobotReport().getRobotID();
+    }
+
+    // A robot with specific ID number moves first via critical section
+    public Comparator<RobotAtCriticalSection> highestPrecedence() {
+        return (o1, o2) -> robotIDToPrecedence.get(o1.getRobotReport().getRobotID())- robotIDToPrecedence.get(o2.getRobotReport().getRobotID());
     }
 
     // A robot with given priority on ID number moves first via critical section: "priorityToID"

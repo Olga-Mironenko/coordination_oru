@@ -24,8 +24,8 @@ public class Test2 {
         final Pose drawPoint19 = new Pose(39.05,85.45,-Math.PI/2);
         final String YAML_FILE = "maps/mine-map-test.yaml";
 
-        AutonomousVehicle aut = new AutonomousVehicle(1, 0, Color.GREEN, 5, 2, YAML_FILE, 0.5, 0.5);
-        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.GREEN, 5, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle aut = new AutonomousVehicle(1, 0, Color.GREEN, Color.GREEN, 5, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.GREEN, Color.GREEN, 5, 2, YAML_FILE, 0.5, 0.5);
         System.out.println(VehiclesHashMap.getInstance().getList());
         PoseSteering[] path = aut.getPath(mainTunnelLeft, mainTunnelRight, true);
         PoseSteering[] path2 = aut2.getPath(mainTunnelRight, drawPoint19, true);

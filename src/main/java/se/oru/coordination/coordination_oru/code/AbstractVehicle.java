@@ -19,7 +19,8 @@ public abstract class AbstractVehicle {
 
     private final int ID;
     private final int priorityID;
-    private final Color color;
+    private final Color colorMoving;
+    private final Color colorStill;
     private final double maxVelocity;
     private final double maxAcceleration;
     protected final String map;
@@ -36,10 +37,11 @@ public abstract class AbstractVehicle {
     private final double startTime = System.nanoTime();
     private long waitingTime = -2;
 
-    public AbstractVehicle(int ID, int priorityID, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+    public AbstractVehicle(int ID, int priorityID, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
         this.ID = ID;
         this.priorityID = priorityID;
-        this.color = color;
+        this.colorMoving = colorMoving;
+        this.colorStill = colorStill;
         this.maxVelocity = maxVelocity;
         this.maxAcceleration = maxAcceleration;
         this.map = map;
@@ -58,7 +60,7 @@ public abstract class AbstractVehicle {
         return "AbstractVehicle{" +
                 "ID=" + ID +
                 ", priorityID=" + priorityID +
-                ", color='" + color + '\'' +
+                ", color='" + colorMoving + '\'' +
                 ", maxVelocity=" + maxVelocity +
                 ", maxAcceleration=" + maxAcceleration +
                 ", map='" + map + '\'' +
@@ -133,8 +135,12 @@ public abstract class AbstractVehicle {
         return ID;
     }
 
-    public String getColor() {
-        return "#" + String.format("%06x", 0xFFFFFF & color.getRGB());
+    public String getColorCode() {
+        return "#" + String.format("%06x", 0xFFFFFF & getColor().getRGB());
+    }
+
+    public Color getColor() {
+        return currentRobotReport.getVelocity() > 0.1 ? colorMoving : colorStill;
     }
 
     public Coordinate[] getFootPrint() {

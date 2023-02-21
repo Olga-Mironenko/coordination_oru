@@ -717,7 +717,7 @@ public class Missions {
 	
 	/**
 	 * Load a roadmap stored in a give directory or file.
-	 * @param fileName The directory or file to load the roadmap from.
+	 * @param path The directory or file to load the roadmap from.
 	 * If a directory is given, the filename is assumed to he "roadmap.txt"
 	 * (the same convention used in saving, see {@link #saveRoadMap(String)}).
 	 */
@@ -1059,6 +1059,7 @@ public class Missions {
 	 * @param loop Set to <code>false</code> if missions should be de-queued once dispatched.
 	 * @param robotIDs The robot IDs which should be considered dispatchable.
 	 */
+	// TODO: remove code duplication
 	public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, int ... robotIDs) {
 
 		for (int robotID : robotIDs) {

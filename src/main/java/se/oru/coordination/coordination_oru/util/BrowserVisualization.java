@@ -212,6 +212,7 @@ public class BrowserVisualization implements FleetVisualization {
 		}
 	}
 
+	// TODO: remove code duplication
 	@Override
 	public void displayRobotState(TrajectoryEnvelope te, RobotReport rr, String... extraStatusInfo) {
 		double x = rr.getPathIndex() != -1 ? rr.getPose().getX() : te.getTrajectory().getPose()[0].getX();
@@ -228,7 +229,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 		String color = "#ff0000";
 		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
-		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColor();
+		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
 
 		Geometry geom = TrajectoryEnvelope.getFootprint(te.getFootprint(), x, y, theta);
 		this.updateRobotFootprintArea(geom);
@@ -298,7 +299,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 		String color = "#ff0000";
 		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
-		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColor();
+		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
 
 		Geometry geom = TrajectoryEnvelope.getFootprint(fp, x, y, theta);
 		this.updateRobotFootprintArea(geom);

@@ -9,7 +9,13 @@ import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 
 public class MissionUtils {
-    public static double targetVelocity1 = 5.0;
+    public static double targetVelocity1 = 0.1;
+    // TODO: stops when it's 0.1 again
+    // TODO: reset velocity (to ~0) when mission finishes
+    // TODO: race condition (click/keypress)
+    // TODO: crashes on click and then (immediately) keypress
+    // TODO: crashes on large initial velocity
+
     protected static PoseSteering[] lastUsedPath = null; // added as a new mission or as a replacement
     protected static Object pathLock = new Object(); // sentinel
 
@@ -30,9 +36,9 @@ public class MissionUtils {
             Pose currentPose = rr.getPose();
             var vehicle = VehiclesHashMap.getVehicle(robotID);
 
-            PoseSteering[] path = null;
+            PoseSteering[] newPath = null;
             try {
-                path = vehicle.getPath(currentPose, goal, false);
+                newPath = vehicle.getPath(currentPose, goal, false);
             } catch (NoPathFound exc) {
                 System.out.println("moveRobot: no path found");
                 return;
@@ -48,12 +54,15 @@ public class MissionUtils {
                 e.printStackTrace();
             }
 
-            if (rr.getPathIndex() == -1) {
-                Missions.enqueueMission(new Mission(robotID, path));
-                lastUsedPath = path;
+            if (lastUsedPath == null || rr.getPathIndex() == -1) {
+                Missions.enqueueMission(new Mission(robotID, newPath));
             } else {
-                MissionUtils.changePath1(path);
+                int replacementIndex = getReplacementIndex(robotID);
+                PoseSteering[] replacementPath = computeReplacementPath(lastUsedPath, replacementIndex, newPath);
+                MissionUtils.changePath(robotID, replacementPath, replacementIndex);
             }
+
+            lastUsedPath = newPath;
         }
     }
 
@@ -61,31 +70,38 @@ public class MissionUtils {
         double targetVelocity1New = targetVelocity1 + delta;
         if (targetVelocity1New > 0) {
             targetVelocity1 = targetVelocity1New;
+
             synchronized (pathLock) {
                 if (lastUsedPath != null) {
-                    changePath1(lastUsedPath);
+                    int replacementIndex = getReplacementIndex(1);
+
+                    // TODO: Instead of `lastUsedPath`, get the actual TE (because `replacementIndex` is the index
+                    // of the latter).
+                    changePath(1, lastUsedPath, replacementIndex);
                 }
             }
         }
     }
 
-    protected static void changePath1(PoseSteering[] newPath) {
+    protected static int getReplacementIndex(int robotID) {
+        TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+        RobotReport rr = tec.getRobotReport(robotID);
+        return Math.max(0, rr.getPathIndex() - 10);
+        // TODO: why does `- 10` work better than `+ 10`?
+    }
+
+    protected static void changePath(int robotID, PoseSteering[] replacementPath, int replacementIndex) {
         TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-        RobotReport rr = tec.getRobotReport(1);
-        int replacementIndex = Math.max(0, rr.getPathIndex() - 10); // TODO: why does `- 10` work better than `+ 10`?
+        tec.replacePath(robotID, replacementPath, replacementIndex, false, null);
 
-        PoseSteering[] replacementPath = computeReplacementPath(lastUsedPath, replacementIndex, newPath);
-        tec.replacePath(1, replacementPath, replacementIndex, false, null);
-
-        RobotReport rrNew = tec.getRobotReport(1);
-        System.out.println("changePath1: pose changed: " + rr.getPose() + " -> " + rrNew.getPose());
+        int replacementIndexNew = getReplacementIndex(robotID);
+        System.out.println("changePath1: replacementIndex: " + replacementIndex + " -> " + replacementIndexNew);
         // TODO: It changes significantly sometimes.
-
-        lastUsedPath = replacementPath;
     }
 
     public static PoseSteering[] computeReplacementPath(PoseSteering[] initialPath, int replacementIndex, PoseSteering[] newPath) {
+        replacementIndex = Math.min(replacementIndex, initialPath.length - 1); // TODO
         PoseSteering[] replacementPath = new PoseSteering[replacementIndex+newPath.length];
         for (int i = 0; i < replacementIndex; i++) replacementPath[i] = initialPath[i];
         for (int i = 0; i < newPath.length; i++) replacementPath[i+replacementIndex] = newPath[i];

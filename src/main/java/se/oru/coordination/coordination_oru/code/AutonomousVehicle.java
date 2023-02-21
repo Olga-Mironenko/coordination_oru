@@ -14,8 +14,8 @@ public class AutonomousVehicle extends AbstractVehicle {
     double cycleDistance;
     int maxPathAttempts = 10;
 
-    public AutonomousVehicle(int ID, int priorityID, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        super(ID, priorityID, color, maxVelocity, maxAcceleration, map, xLength, yLength);
+    public AutonomousVehicle(int ID, int priorityID, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+        super(ID, priorityID, colorMoving, colorStill, maxVelocity, maxAcceleration, map, xLength, yLength);
     }
 
     public ReedsSheppCarPlanner makePlanner() {
