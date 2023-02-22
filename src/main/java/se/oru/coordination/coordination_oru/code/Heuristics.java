@@ -24,14 +24,19 @@ public class Heuristics {
         return (o1, o2) -> (int) Math.signum(o1.getRobotReport().getDistanceTraveled() - o2.getRobotReport().getDistanceTraveled());
     }
 
-    // A robot with the lowest ID number moves first via critical section: "lowestIDNumber"
+    // A robot with the lowest ID number moves first via critical section
     public Comparator<RobotAtCriticalSection> lowestIDNumber() {
         return (o1, o2) -> o1.getRobotReport().getRobotID() - o2.getRobotReport().getRobotID();
     }
 
+    // A robot with the highest ID number moves first via critical section
+    public Comparator<RobotAtCriticalSection> highestIDNumber() {
+        return (o1, o2) -> o2.getRobotReport().getRobotID() - o1.getRobotReport().getRobotID();
+    }
+
     // A robot with specific ID number moves first via critical section
     public Comparator<RobotAtCriticalSection> highestPrecedence() {
-        return (o1, o2) -> robotIDToPrecedence.get(o1.getRobotReport().getRobotID())- robotIDToPrecedence.get(o2.getRobotReport().getRobotID());
+        return (o1, o2) -> robotIDToPrecedence.get(o2.getRobotReport().getRobotID()) - robotIDToPrecedence.get(o1.getRobotReport().getRobotID());
     }
 
     // A robot with given priority on ID number moves first via critical section: "priorityToID"

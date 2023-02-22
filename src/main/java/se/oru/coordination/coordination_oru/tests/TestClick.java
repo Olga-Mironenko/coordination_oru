@@ -26,7 +26,7 @@ public class TestClick {
         final Pose mainTunnelRight = new Pose(80.05,24.75, Math.PI);
         final Pose drawPoint19 = new Pose(39.05,85.45,-Math.PI/2);
         final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
-        final int maxVelocity = 15;
+        final int maxVelocity = 10;
 
         AutonomousVehicle hum1 = new HumanDrivenVehicle(1, 0, Color.GREEN, Color.BLUE, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
         AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.RED, Color.RED, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
@@ -45,11 +45,10 @@ public class TestClick {
         tec.placeRobot(aut2.getID(), mainTunnelRight);
 
         Heuristics heuristics = new Heuristics();
-        heuristics.robotIDToPrecedence.put(1, 10);
-        heuristics.robotIDToPrecedence.put(2, 20);
-        // tec.addComparator(new Heuristics().closest());
-        // tec.addComparator(new Heuristics().lowestIDNumber());
+        heuristics.robotIDToPrecedence.put(1, 20);
+        heuristics.robotIDToPrecedence.put(2, 10);
         tec.addComparator(heuristics.highestPrecedence());
+        //tec.addComparator(heuristics.highestIDNumber());
         // TODO: demos (regarding precedence)
 
         tec.setUseInternalCriticalPoints(false);

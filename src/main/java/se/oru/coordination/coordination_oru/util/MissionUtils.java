@@ -11,7 +11,6 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 public class MissionUtils {
     public static final double targetVelocityInitial1 = 0.1;
     public static double targetVelocity1 = targetVelocityInitial1;
-    // TODO: stops when it's 0.1 again
     // TODO: race condition (click/keypress)
     // TODO: crashes on click and then (immediately) keypress
     // TODO: crashes on large initial velocity
