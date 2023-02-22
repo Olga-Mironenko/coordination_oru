@@ -3,6 +3,7 @@ package se.oru.coordination.coordination_oru.util;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
+import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
@@ -57,8 +58,9 @@ public class MissionUtils {
                 targetVelocity1 = targetVelocityInitial1;
                 Missions.enqueueMission(new Mission(robotID, newPath));
             } else {
+                TrajectoryEnvelope te = TrajectoryEnvelopeCoordinatorSimulation.tec.getCurrentTrajectoryEnvelope(robotID);
                 int replacementIndex = getReplacementIndex(robotID);
-                PoseSteering[] replacementPath = computeReplacementPath(lastUsedPath, replacementIndex, newPath);
+                PoseSteering[] replacementPath = computeReplacementPath(te.getSpatialEnvelope().getPath(), replacementIndex, newPath);
                 MissionUtils.changePath(robotID, replacementPath, replacementIndex);
             }
 
@@ -75,9 +77,19 @@ public class MissionUtils {
                 if (lastUsedPath != null) {
                     int replacementIndex = getReplacementIndex(1);
 
-                    // TODO: Instead of `lastUsedPath`, get the actual TE (because `replacementIndex` is the index
-                    // of the latter).
-                    changePath(1, lastUsedPath, replacementIndex);
+                    // TODO: Instead of `lastUsedPath`, get the actual TE (because `replacementIndex` is the index of the latter).
+                    /*
+                     E.g.:
+                     - click at a point, wait
+                     - right*1, wait
+                     - click at another point (while the robot is moving), wait
+                     - left*1, wait
+                     - result: the robot jumps forward
+                     */
+
+                    TrajectoryEnvelope te = TrajectoryEnvelopeCoordinatorSimulation.tec.getCurrentTrajectoryEnvelope(1);
+
+                    changePath(1, te.getSpatialEnvelope().getPath(), replacementIndex);
                 }
             }
         }
