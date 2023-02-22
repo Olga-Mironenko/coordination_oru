@@ -1886,5 +1886,9 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	public boolean isMissionsPoolEmpty() {
 		return missionsPool.isEmpty();
 	}
+
+	public AbstractTrajectoryEnvelopeTracker getTracker(int robotID) {
+		return trackers.get(robotID);
+	}
 }
 

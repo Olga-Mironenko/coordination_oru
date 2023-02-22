@@ -729,6 +729,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	}
 
-
-
+	@Override
+	public State getState() {
+		return state;
+	}
 }

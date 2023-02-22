@@ -17,6 +17,7 @@ import org.metacsp.time.Bounds;
 import org.metacsp.utility.UI.Callback;
 import org.metacsp.utility.logging.MetaCSPLogging;
 
+import se.oru.coordination.coordination_oru.simulation2D.State;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 
 /**
@@ -497,6 +498,8 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 	public TrajectoryEnvelope getTrajectoryEnvelope() {
 		return this.te;
 	}
-	
-	
+
+	public State getState() {
+		return null;
+	}
 }
