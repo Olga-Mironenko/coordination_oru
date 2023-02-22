@@ -16,7 +16,6 @@ public class MissionUtils {
     // TODO: crashes on click and then (immediately) keypress
     // TODO: crashes on large initial velocity
 
-    protected static PoseSteering[] lastUsedPath = null; // added as a new mission or as a replacement
     protected static Object pathLock = new Object(); // sentinel
 
     protected static void removeMissions(int robotID) {
@@ -54,45 +53,39 @@ public class MissionUtils {
                 e.printStackTrace();
             }
 
-            if (lastUsedPath == null || rr.getPathIndex() == -1) {
+            PoseSteering[] currentPath = getCurrentPath(robotID);
+            if (currentPath == null || rr.getPathIndex() == -1) {
                 targetVelocity1 = targetVelocityInitial1;
                 Missions.enqueueMission(new Mission(robotID, newPath));
             } else {
-                TrajectoryEnvelope te = TrajectoryEnvelopeCoordinatorSimulation.tec.getCurrentTrajectoryEnvelope(robotID);
                 int replacementIndex = getReplacementIndex(robotID);
-                PoseSteering[] replacementPath = computeReplacementPath(te.getSpatialEnvelope().getPath(), replacementIndex, newPath);
+                PoseSteering[] replacementPath = computeReplacementPath(currentPath, replacementIndex, newPath);
                 MissionUtils.changePath(robotID, replacementPath, replacementIndex);
             }
-
-            lastUsedPath = newPath;
         }
     }
 
     public static void changeTargetVelocity1(double delta) {
+        int robotID = 1;
         double targetVelocity1New = targetVelocity1 + delta;
         if (targetVelocity1New > 0) {
             targetVelocity1 = targetVelocity1New;
 
             synchronized (pathLock) {
-                if (lastUsedPath != null) {
-                    int replacementIndex = getReplacementIndex(1);
-
-                    // TODO: Instead of `lastUsedPath`, get the actual TE (because `replacementIndex` is the index of the latter).
-                    /*
-                     E.g.:
-                     - click at a point, wait
-                     - right*1, wait
-                     - click at another point (while the robot is moving), wait
-                     - left*1, wait
-                     - result: the robot jumps forward
-                     */
-
-                    TrajectoryEnvelope te = TrajectoryEnvelopeCoordinatorSimulation.tec.getCurrentTrajectoryEnvelope(1);
-
-                    changePath(1, te.getSpatialEnvelope().getPath(), replacementIndex);
+                PoseSteering[] currentPath = getCurrentPath(robotID);
+                if (currentPath != null) {
+                    changePath(robotID, currentPath, getReplacementIndex(robotID));
                 }
             }
         }
+    }
+
+    protected static PoseSteering[] getCurrentPath(int robotID) {
+        TrajectoryEnvelope te = TrajectoryEnvelopeCoordinatorSimulation.tec.getCurrentTrajectoryEnvelope(robotID);
+        if (te == null) {
+            return null;
+        }
+        return te.getSpatialEnvelope().getPath();
     }
 
     protected static int getReplacementIndex(int robotID) {
@@ -115,6 +108,7 @@ public class MissionUtils {
     public static PoseSteering[] computeReplacementPath(PoseSteering[] initialPath, int replacementIndex, PoseSteering[] newPath) {
         replacementIndex = Math.min(replacementIndex, initialPath.length - 1); // TODO
         PoseSteering[] replacementPath = new PoseSteering[replacementIndex+newPath.length];
+        // TODO: replacementIndex: off by one error? (replacementIndex=2 -> preserve 3 points)
         for (int i = 0; i < replacementIndex; i++) replacementPath[i] = initialPath[i];
         for (int i = 0; i < newPath.length; i++) replacementPath[i+replacementIndex] = newPath[i];
         return replacementPath;
