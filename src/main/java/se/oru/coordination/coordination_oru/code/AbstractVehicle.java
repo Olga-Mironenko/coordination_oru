@@ -76,9 +76,9 @@ public abstract class AbstractVehicle {
 
         // FIXME Need to fix the cycles and stops calculation. Might need to use last Robto Report.
         if (this.currentRobotReport.getPathIndex() == -1) {
-            System.out.println("DONE");
+            //System.out.println("DONE");
             this.cycles++;
-            System.out.println(cycles);
+            //System.out.println(cycles);
         }
         if (this.currentRobotReport.getVelocity() == 0.0){
             waitingTime += 2;
