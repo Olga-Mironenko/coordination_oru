@@ -15,6 +15,8 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrack
 public class MissionUtils {
     public static final double targetVelocityInitial1 = 0.1;
     public static double targetVelocity1 = targetVelocityInitial1;
+    public static boolean isWorking = false;
+
     // TODO: race condition (click/keypress)
     // TODO: crashes on click and then (immediately) keypress
     // TODO: crashes on large initial velocity
@@ -31,37 +33,46 @@ public class MissionUtils {
     }
 
     public static void moveRobot(int robotID, Pose goal) {
-        synchronized (pathLock) {
-            waitUntilScheduledMissionStarts(robotID); // TODO: Fix the hack.
+        if (isWorking) {
+            return;
+        }
+        isWorking = true;
+        try {
+            synchronized (pathLock) {
+                waitUntilScheduledMissionStarts(robotID); // TODO: Fix the hack.
 
-            TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-            Object stateOrNothingAsLock = getRobotState(robotID);
-            if (stateOrNothingAsLock == null) {
-                stateOrNothingAsLock = new Object();
+                TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+                Object stateOrNothingAsLock = getRobotState(robotID);
+                if (stateOrNothingAsLock == null) {
+                    stateOrNothingAsLock = new Object();
+                }
+
+                //synchronized (stateOrNothingAsLock) { // seems like a deadlock with the tracker
+                RobotReport rr = tec.getRobotReport(robotID);
+                Pose currentPose = rr.getPose();
+                var vehicle = VehiclesHashMap.getVehicle(robotID);
+
+                PoseSteering[] newPath = null;
+                try {
+                    newPath = vehicle.getPath(currentPose, goal, false);
+                } catch (NoPathFound exc) {
+                    System.out.println("moveRobot: no path found");
+                    return;
+                }
+
+                PoseSteering[] currentPath = getCurrentPath(robotID);
+                if (currentPath == null || rr.getPathIndex() == -1) {
+                    targetVelocity1 = targetVelocityInitial1;
+                    Missions.enqueueMission(new Mission(robotID, newPath));
+                } else {
+                    int replacementIndex = getReplacementIndex(robotID);
+                    PoseSteering[] replacementPath = computeReplacementPath(currentPath, replacementIndex, newPath);
+                    MissionUtils.changePath(robotID, replacementPath, replacementIndex);
+                }
             }
-
-            //synchronized (stateOrNothingAsLock) { // seems like a deadlock with the tracker
-            RobotReport rr = tec.getRobotReport(robotID);
-            Pose currentPose = rr.getPose();
-            var vehicle = VehiclesHashMap.getVehicle(robotID);
-
-            PoseSteering[] newPath = null;
-            try {
-                newPath = vehicle.getPath(currentPose, goal, false);
-            } catch (NoPathFound exc) {
-                System.out.println("moveRobot: no path found");
-                return;
-            }
-
-            PoseSteering[] currentPath = getCurrentPath(robotID);
-            if (currentPath == null || rr.getPathIndex() == -1) {
-                targetVelocity1 = targetVelocityInitial1;
-                Missions.enqueueMission(new Mission(robotID, newPath));
-            } else {
-                int replacementIndex = getReplacementIndex(robotID);
-                PoseSteering[] replacementPath = computeReplacementPath(currentPath, replacementIndex, newPath);
-                MissionUtils.changePath(robotID, replacementPath, replacementIndex);
-            }
+        }
+        finally {
+            isWorking = false;
         }
     }
 
@@ -87,18 +98,33 @@ public class MissionUtils {
         return tracker.getState();
     }
 
+    // 0.1->1.1: OK
+    // 0.1->1.1->0.1: OK
+    // 0.1->1.1->2.1: breaks
+    // 0.1->1.1->0.1->1.1: breaks
     public static void changeTargetVelocity1(double delta) {
-        int robotID = 1;
-        double targetVelocity1New = targetVelocity1 + delta;
-        if (targetVelocity1New > 0) {
-            targetVelocity1 = targetVelocity1New;
+        if (isWorking) {
+            return;
+        }
+        isWorking = true;
+        try {
+            // TODO: sometimes doesn't get called
+            // ("hint": try to pause the websocket thread in the debugger)
+            int robotID = 1;
+            double targetVelocity1New = targetVelocity1 + delta;
+            if (targetVelocity1New > 0) {
+                targetVelocity1 = targetVelocity1New;
 
-            synchronized (pathLock) {
-                PoseSteering[] currentPath = getCurrentPath(robotID);
-                if (currentPath != null) {
-                    changePath(robotID, currentPath, getReplacementIndex(robotID));
+                synchronized (pathLock) {
+                    PoseSteering[] currentPath = getCurrentPath(robotID);
+                    if (currentPath != null) {
+                        changePath(robotID, currentPath, getReplacementIndex(robotID));
+                    }
                 }
             }
+        }
+        finally {
+            isWorking = false;
         }
     }
 
@@ -113,7 +139,7 @@ public class MissionUtils {
     protected static int getReplacementIndex(int robotID) {
         TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
         RobotReport rr = tec.getRobotReport(robotID);
-        return Math.max(0, rr.getPathIndex() - 10);
+        return Math.max(0, rr.getPathIndex() + 2);
         // TODO: why does `- 10` work better than `+ 10`?
     }
 
