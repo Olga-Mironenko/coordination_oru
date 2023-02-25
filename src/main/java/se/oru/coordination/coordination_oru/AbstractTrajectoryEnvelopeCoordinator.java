@@ -1690,7 +1690,11 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 * @return The current {@link TrajectoryEnvelope} of a robot.
 	 */
 	public TrajectoryEnvelope getCurrentTrajectoryEnvelope(int robotID) {
-		return trackers.get(robotID).getTrajectoryEnvelope();
+		var tracker = trackers.get(robotID);
+		if (tracker == null) {
+			return null;
+		}
+		return tracker.getTrajectoryEnvelope();
 	}
 
 	protected String[] getStatistics() {
