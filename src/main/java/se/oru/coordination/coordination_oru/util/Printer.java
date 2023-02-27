@@ -10,7 +10,7 @@ public class Printer {
 
     public static void print(String message) {
         long delta = System.currentTimeMillis() - initialMoment;
-        String line = String.format("%5d | %-5s | %s", delta, Thread.currentThread().getName(), message);
+        String line = String.format("%5d ms | %-5s | %s", delta, Thread.currentThread().getName(), message);
         System.err.println(line);
     }
 }
