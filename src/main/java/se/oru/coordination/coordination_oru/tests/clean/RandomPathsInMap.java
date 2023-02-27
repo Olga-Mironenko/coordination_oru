@@ -136,7 +136,7 @@ public class RandomPathsInMap {
 		
 		//Used to generate scenario loaded in the ScenarioLoading example
 		Missions.setMap(yamlFile);
-		Missions.saveScenario("testS");
+		Missions.saveScenario("testS"); // TODO: use in TestClick (for `loadScenario`)
 
 	}
 

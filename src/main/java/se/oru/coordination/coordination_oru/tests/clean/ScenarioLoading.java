@@ -49,7 +49,7 @@ public class ScenarioLoading {
 		tec.setUseInternalCriticalPoints(false);
 
 		//Load the scenario saved in "testS.zip"
-		Missions.loadScenario("testS");
+		Missions.loadScenario("testS"); // TODO: use in TestClick (to increase determinism)
 
 		//Define robot footprints
 		double xl = 1.0;
