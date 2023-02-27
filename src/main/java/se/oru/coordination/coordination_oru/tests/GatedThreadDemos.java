@@ -56,6 +56,8 @@ class DemoGatekeeper {
         Printer.resetTime();
         Printer.print("started");
 
+        GatedThread.enable();
+
         for (int child = 1; child <= 2; child++) {
             new GatedThread("child" + child) {
                 @Override
@@ -72,7 +74,7 @@ class DemoGatekeeper {
             }.start();
         }
 
-        GatedThread.getGatekeeper().run();
+        GatedThread.runGatekeeper();
     }
 }
 

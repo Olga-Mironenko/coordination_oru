@@ -24,6 +24,8 @@ public class TestClick {
         Printer.resetTime();
         Printer.print("started");
 
+        GatedThread.enable();
+
         new GatedThread("runDemo") {
             @Override
             public void runCore() {
@@ -35,7 +37,7 @@ public class TestClick {
             }
         }.start();
 
-        GatedThread.getGatekeeper().run();
+        GatedThread.runGatekeeper();
     }
 
     protected static void runDemo() throws NoPathFound {
