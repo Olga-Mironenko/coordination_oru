@@ -36,6 +36,7 @@ import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class BrowserVisualization implements FleetVisualization {
 	
@@ -60,12 +61,12 @@ public class BrowserVisualization implements FleetVisualization {
 	public BrowserVisualization(String serverHostNameOrIP, int updatePeriodInMillis) {
 		UPDATE_PERIOD = updatePeriodInMillis;
 		BrowserVisualization.setupVizMessageServer();
-        Thread updateThread = new Thread("Visualization update thread") {
+        Thread updateThread = new GatedThread("Visualization update thread") {
         	@Override
-            public void run() {
+            public void runCore() {
         		while (true) {
         			sendMessages();
-        			try { Thread.sleep(UPDATE_PERIOD); }
+        			try { GatedThread.sleep(UPDATE_PERIOD); }
         			catch (InterruptedException e) { e.printStackTrace(); }
         		}
         	}

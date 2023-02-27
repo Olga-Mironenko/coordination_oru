@@ -12,13 +12,12 @@ import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 
-import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
-import se.oru.coordination.coordination_oru.NetworkConfiguration;
-import se.oru.coordination.coordination_oru.RobotReport;
-import se.oru.coordination.coordination_oru.TrackingCallback;
-import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
+import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.util.MissionUtils;
 import se.oru.coordination.coordination_oru.util.Missions;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+
+import static se.oru.coordination.coordination_oru.util.gates.GatedThread.sleep;
 
 public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
 
@@ -118,7 +117,13 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		this.computeInternalCriticalPoints();
 		this.slowDownProfile = this.getSlowdownProfile();
 		this.positionToSlowDown = this.computePositionToSlowDown();
-		this.th = new Thread(this, "RK4 tracker " + te.getComponent());
+		TrajectoryEnvelopeTrackerRK4 self = this;
+		this.th = new GatedThread("RK4 tracker " + te.getComponent()) {
+			@Override
+			public void runCore() {
+				self.run();
+			}
+		};
 		this.th.setPriority(Thread.MAX_PRIORITY);
 	}
 
@@ -138,8 +143,9 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	@Override
 	public void startTracking() {
+		assert th != null; // TODO: remove the while loop
 		while (this.th == null) {
-			try { Thread.sleep(10); }
+			try { GatedThread.sleep(10); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
 		this.th.start();
@@ -248,9 +254,9 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	}
 
 	private void startInternalCPThread() {
-		Thread t = new Thread() {
+		Thread t = new GatedThread("internalCPThread") {
 			@Override
-			public void run() {
+			public void runCore() {
 				userCPReplacements = new HashMap<Integer, Integer>();
 
 				while (th.isAlive()) {
@@ -275,7 +281,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 						internalCriticalPoints.remove(i);
 					}
 
-					try { Thread.sleep(trackingPeriodInMillis); }
+					try { GatedThread.sleep(trackingPeriodInMillis); }
 					catch (InterruptedException e) { e.printStackTrace(); }
 				}
 			}
@@ -385,10 +391,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		final int numberOfReplicas = this.numberOfReplicas;
 
 		//Define a thread that will send the information
-		Thread waitToTXThread = new Thread("Wait to TX thread for robot " + te.getRobotID()) {
+		Thread waitToTXThread = new GatedThread("Wait to TX thread for robot " + te.getRobotID()) {
 
             @Override
-            public void run() {
+            public void runCore() {
 
 				int delayTx = 0;
 				if (NetworkConfiguration.getMaximumTxDelay() > 0) {
@@ -398,7 +404,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				}
 
 				//Sleep for delay in communication
-				try { Thread.sleep(delayTx); }
+				try { GatedThread.sleep(delayTx); }
 				catch (InterruptedException e) { e.printStackTrace(); }
 
 				//if possible (according to packet loss, send
@@ -448,6 +454,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	@Override
 	public void setCriticalPoint(int criticalPointToSet) {
+		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
 
 		if (this.criticalPoint != criticalPointToSet) {
 
@@ -651,7 +658,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			//Sleep for tracking period
 			int delay = trackingPeriodInMillis;
 			if (NetworkConfiguration.getMaximumTxDelay() > 0) delay += rand.nextInt(NetworkConfiguration.getMaximumTxDelay());
-			try { Thread.sleep(delay); }
+			try { GatedThread.sleep(delay); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 
 			//Advance time to reflect how much we have slept (~ trackingPeriod)
@@ -664,7 +671,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		while (tec.getRobotReport(te.getRobotID()).getPathIndex() != -1)
 		{
 			enqueueOneReport();
-			try { Thread.sleep(trackingPeriodInMillis); }
+			try { GatedThread.sleep(trackingPeriodInMillis); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
 
@@ -672,7 +679,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		long timerStart = getCurrentTimeInMillis();
 		while (getCurrentTimeInMillis()-timerStart < WAIT_AMOUNT_AT_END) {
 			//System.out.println("Waiting " + te.getComponent());
-			try { Thread.sleep(trackingPeriodInMillis); }
+			try { GatedThread.sleep(trackingPeriodInMillis); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
 		metaCSPLogger.info("RK4 tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + myTEID + ")");

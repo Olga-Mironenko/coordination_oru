@@ -14,11 +14,31 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.NoPathFound;
+import se.oru.coordination.coordination_oru.util.Printer;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class TestClick {
     public static TrajectoryEnvelopeCoordinatorSimulation tec = null;
 
-    public static void main(String[] args) throws NoPathFound {
+    public static void main(String[] args) {
+        Printer.resetTime();
+        Printer.print("started");
+
+        new GatedThread("runDemo") {
+            @Override
+            public void runCore() {
+                try {
+                    runDemo();
+                } catch (NoPathFound e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }.start();
+
+        GatedThread.getGatekeeper().run();
+    }
+
+    protected static void runDemo() throws NoPathFound {
 
         final int loopMinutes = 5;
         final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);

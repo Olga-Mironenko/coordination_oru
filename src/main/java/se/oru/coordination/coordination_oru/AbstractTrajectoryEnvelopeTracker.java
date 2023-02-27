@@ -19,6 +19,7 @@ import org.metacsp.utility.logging.MetaCSPLogging;
 
 import se.oru.coordination.coordination_oru.simulation2D.State;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 /**
  * This class provides the basic functionalities of a {@link TrajectoryEnvelope} tracker. Implementing
@@ -397,9 +398,9 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 	protected void startMonitoringThread() {
 				
 		//Start a thread that monitors the sub-envelopes and finishes them when appropriate
-		Thread monitorSubEnvelopes = new Thread("Abstract tracker " + te.getComponent()) {
+		Thread monitorSubEnvelopes = new GatedThread("Abstract tracker " + te.getComponent()) {
 			@Override
-			public void run() {	
+			public void runCore() {	
 
 				int prevSeqNumber = -1;
 
@@ -426,7 +427,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 						RobotReport rr = null;
 						while ((rr = tec.getRobotReport(te.getRobotID())) == null) {
 							metaCSPLogger.info("(waiting for "+te.getComponent()+"'s tracker to come online)");
-							try { Thread.sleep(100); }
+							try { GatedThread.sleep(100); }
 							catch (InterruptedException e) { e.printStackTrace(); }
 						}
 
@@ -469,7 +470,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 					}
 				
 					//Sleep a little...
-					try { Thread.sleep(trackingPeriodInMillis); }
+					try { GatedThread.sleep(trackingPeriodInMillis); }
 					catch (InterruptedException e) { e.printStackTrace(); }
 
 				}

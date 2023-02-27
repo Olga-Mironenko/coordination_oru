@@ -211,7 +211,7 @@
 //        Missions.startMissionDispatchers(tec, true, 0, 1, 2, 3, 4, 5, 6, 7);
 //
 //        for (int i = 0; i < pathArray0.size(); i++) {
-//            Thread.sleep(dt);
+//            GatedThread.sleep(dt);
 //            tec.replacePath(humAbstractVehicle1.getID(), pathArray0.get(i+1), pathArray0.get(i).length, false, null);
 //        }
 //

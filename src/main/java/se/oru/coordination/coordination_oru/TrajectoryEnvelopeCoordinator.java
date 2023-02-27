@@ -34,6 +34,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import aima.core.util.datastructure.Pair;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 
 /**
@@ -956,8 +957,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 		synchronized (replanningStoppingPoints) {
 			if (setMaxCPDependencies(robotsToReplan)) {
 				metaCSPLogger.info("Will re-plan for one of the following deadlocked robots: " + robotsToReplan + " (" + allConnectedRobots + ")...");
-				new Thread() {
-					public void run() {
+				new GatedThread("spawnReplanning") {
+					public void runCore() {
 						rePlanPath(robotsToReplan, allConnectedRobots);
 					}
 				}.start();
@@ -1097,10 +1098,10 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	protected void setupInferenceCallback() {
 
 		this.stopInference = false;
-		this.inference = new Thread("Coordinator inference") {
+		this.inference = new GatedThread("Coordinator inference") {
 
 			@Override
-			public void run() {
+			public void runCore() {
 
 				String fileName = new String(System.getProperty("user.home")+File.separator+"coordinator_stat.txt");
 				initStat(fileName, "Init statistics: @"+Calendar.getInstance().getTimeInMillis() + "\n");
@@ -1171,7 +1172,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					expectedSleepingTime = Math.max(500,CONTROL_PERIOD-Calendar.getInstance().getTimeInMillis()+threadLastUpdate);
 					effectiveSleepingTime = Calendar.getInstance().getTimeInMillis();
 					if (CONTROL_PERIOD > 0) {
-						try { Thread.sleep(expectedSleepingTime); }
+						try { GatedThread.sleep(expectedSleepingTime); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
 					effectiveSleepingTime = Calendar.getInstance().getTimeInMillis()-effectiveSleepingTime;

@@ -48,6 +48,7 @@ import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 /**
  * This class collects utility methods for storing {@link Mission}s, regulating their dispatch, maintaining locations
@@ -1068,9 +1069,9 @@ public class Missions {
 		}
 
 		if (missionDispatchThread == null) {
-			missionDispatchThread = new Thread() {
+			missionDispatchThread = new GatedThread("missionDispatchThread") {
 				@Override
-				public void run() {
+				public void runCore() {
 					while (true) {
 						for (int robotID : dispatchableRobots) {
 							if (Missions.hasMissions(robotID)) {
@@ -1120,7 +1121,7 @@ public class Missions {
 							}
 						}
 						//Sleep for a little (2 sec)
-						try { Thread.sleep(2000); }
+						try { GatedThread.sleep(2000); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
 				}
@@ -1145,9 +1146,9 @@ public class Missions {
 		}
 
 		if (missionDispatchThread == null) {
-			missionDispatchThread = new Thread() {
+			missionDispatchThread = new GatedThread("missionDispatchThread") {
 				@Override
-				public void run() {
+				public void runCore() {
 					while (loopTime > System.currentTimeMillis()) {
 						for (int robotID : dispatchableRobots) {
 							if (Missions.hasMissions(robotID)) {
@@ -1198,7 +1199,7 @@ public class Missions {
 						}
 						updateRobotReports(tec); // Call to update all the robot reports
 						//Sleep for a little:
-						try { Thread.sleep(100); }
+						try { GatedThread.sleep(100); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
 					writeStatistics(tec);

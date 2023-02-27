@@ -148,7 +148,7 @@
 //        Missions.startMissionDispatchers(tec, true, 1);
 //
 ////        for (int i = 0; i < pathArray0.size(); i++) {
-////            Thread.sleep(dt);
+////            GatedThread.sleep(dt);
 ////            tec.replacePath(humAutonomousVehicle1.getID(), pathArray0.get(i+1), pathArray0.get(i).length, false, null);
 ////        }
 //

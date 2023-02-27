@@ -25,8 +25,9 @@ public class Gatekeeper {
     }
 
     public void run() {
+        assert gateSelf == null;
+
         while (true) {
-            assert gateSelf == null;
             gateSelf = new Gate("gatekeeper's");
 
             Gate gate;

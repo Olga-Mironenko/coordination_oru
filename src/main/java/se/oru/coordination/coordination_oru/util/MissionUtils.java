@@ -11,6 +11,7 @@ import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.State;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class MissionUtils {
     public static final double targetVelocityInitial1 = 0.1;
@@ -82,7 +83,7 @@ public class MissionUtils {
         // If there is a scheduled mission, wait until it starts.
         try {
             while (! tec.isMissionsPoolEmpty() || Missions.hasMissions(robotID))
-                Thread.sleep(50);
+                GatedThread.sleep(50);
         }
         catch (InterruptedException e) {
             e.printStackTrace();

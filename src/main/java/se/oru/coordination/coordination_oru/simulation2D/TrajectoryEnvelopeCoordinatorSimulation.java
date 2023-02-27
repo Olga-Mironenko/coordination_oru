@@ -28,6 +28,7 @@ import se.oru.coordination.coordination_oru.TrackingCallback;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeCoordinator {
 	public static TrajectoryEnvelopeCoordinatorSimulation tec = null;
@@ -355,10 +356,10 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 		if (checkCollisions && (collisionThread == null) && (this.allCriticalSections.size() > 0)) {
 			// Start the collision checking thread. 
 			// The tread will be alive until there will be almost one critical section.
-			collisionThread = new Thread("Collision checking thread.") {
+			collisionThread = new GatedThread("Collision checking thread.") {
 
 				@Override
-				public void run() {
+				public void runCore() {
 					metaCSPLogger.info("Starting the collision checking thread.");
 					ArrayList<CriticalSection> previousCollidingCS = new ArrayList<CriticalSection>();
 					ArrayList<CriticalSection> newCollidingCS = new ArrayList<CriticalSection>();
@@ -418,7 +419,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 						}
 						previousCollidingCS.addAll(newCollidingCS);
 						
-						try { Thread.sleep((long)(1000.0/30.0)); }
+						try { GatedThread.sleep((long)(1000.0/30.0)); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
 					metaCSPLogger.info("Ending the collision checking thread.");

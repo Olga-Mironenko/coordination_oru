@@ -14,6 +14,11 @@ public class Gate {
         this.name = name;
     }
 
+    @Override
+    public String toString() {
+        return "Gate[" + name + "]";
+    }
+
     public void print(String message) {
         Printer.print(String.format("%-8s | %s", name, message));
     }

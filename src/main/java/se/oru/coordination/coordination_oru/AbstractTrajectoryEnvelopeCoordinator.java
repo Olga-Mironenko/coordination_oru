@@ -43,6 +43,7 @@ import aima.core.util.datastructure.Pair;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.util.FleetVisualization;
 import se.oru.coordination.coordination_oru.util.StringUtils;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 /**
  * This class provides coordination for a fleet of robots. An instantiatable {@link AbstractTrajectoryEnvelopeCoordinator}
@@ -835,13 +836,13 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 * @param duration Duration of the stopping.
 	 */
 	protected void spawnWaitingThread(final int robotID, final int index, final int duration) {
-		Thread stoppingPointTimer = new Thread() {
+		Thread stoppingPointTimer = new GatedThread("stoppingPointTimer") {
 			private long startTime = Calendar.getInstance().getTimeInMillis();
 			@Override
-			public void run() {
+			public void runCore() {
 				metaCSPLogger.info("Waiting thread starts for " + robotID);
 				while (Calendar.getInstance().getTimeInMillis()-startTime < duration) {
-					try { Thread.sleep(100); }
+					try { GatedThread.sleep(100); }
 					catch (InterruptedException e) { e.printStackTrace(); }
 				}
 				metaCSPLogger.info("Waiting thread finishes for " + robotID);
@@ -1438,13 +1439,13 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 						//canStartTracking becomes true when setCriticalPoint is called once
 						while (!trackers.containsKey(myTE.getRobotID()) || !trackers.get(myTE.getRobotID()).canStartTracking()) {
-							try { Thread.sleep(100); }
+							try { GatedThread.sleep(100); }
 							catch (InterruptedException e) { e.printStackTrace(); }							
 						}
 
 						//						//Sleep for one control period
 						//						//(allows to impose critical points before tracking actually starts)
-						//						try { Thread.sleep(CONTROL_PERIOD); }
+						//						try { GatedThread.sleep(CONTROL_PERIOD); }
 						//						catch (InterruptedException e) { e.printStackTrace(); }
 					}
 
@@ -1757,10 +1758,10 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected void setupInferenceCallback() {
 
 		this.stopInference = false;
-		this.inference = new Thread("Coordinator inference") {
+		this.inference = new GatedThread("Coordinator inference") {
 
 			@Override
-			public void run() {
+			public void runCore() {
 				long threadLastUpdate = Calendar.getInstance().getTimeInMillis();
 				int MAX_ADDED_MISSIONS = 1;
 
@@ -1785,7 +1786,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 					//Sleep a little...
 					if (CONTROL_PERIOD > 0) {
-						try { Thread.sleep(Math.max(0, CONTROL_PERIOD-Calendar.getInstance().getTimeInMillis()+threadLastUpdate)); }
+						try { GatedThread.sleep(Math.max(0, CONTROL_PERIOD-Calendar.getInstance().getTimeInMillis()+threadLastUpdate)); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
 
