@@ -139,7 +139,7 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner4 {
 
 		System.out.println("Added missions " + Missions.getMissions());
 
-		final Random rand = new Random(Calendar.getInstance().getTimeInMillis());
+		final Random rand = new Random(1); //Calendar.getInstance().getTimeInMillis());
 		//Start a mission dispatching thread for each robot, which will run forever
 		for (final int robotID : robotIDs) {
 			//For each robot, create a thread that dispatches the "next" mission when the robot is free 

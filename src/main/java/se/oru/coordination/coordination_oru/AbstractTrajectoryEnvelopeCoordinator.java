@@ -257,7 +257,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 * @return The absolute path of a temporary file which contains a copy of the resource.
 	 */
 	public static String getResourceAsFileName(String resource) {
-		Random rand = new Random(Calendar.getInstance().getTimeInMillis());
+ 		Random rand = new Random(1); //Calendar.getInstance().getTimeInMillis());
 		ClassLoader classLoader = TrajectoryEnvelopeCoordinator.class.getClassLoader();
 		File source = new File(classLoader.getResource(resource).getFile());
 		File dest = new File("." + 1+rand.nextInt(1000) + ".tempfile");
