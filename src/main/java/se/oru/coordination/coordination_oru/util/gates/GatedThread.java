@@ -43,6 +43,7 @@ abstract public class GatedThread extends Thread {
 
     public static void sleep(long millis) throws InterruptedException {
         if (isGated) {
+            Thread.sleep(millis / 10); // TODO: This is for the browser to catch up.
             gatekeeper.pauseCurrentThread("sleep(" + millis + ")", false);
         } else {
             Thread.sleep(millis);
