@@ -1,25 +1,39 @@
+package se.oru.coordination.coordination_oru.code;
+
 import java.util.HashMap;
 
-public class VehiclesHashMap<K, V> {
-    private static VehiclesHaspMap instance;
-    private HashMap<K, V> map;
+public class VehiclesHashMap {
+    private static VehiclesHashMap instance;
+    private int key;
+    private static HashMap<Integer, AbstractVehicle> list = new HashMap<>();
+    private static final Object lock = new Object();
 
-    private VehiclesHaspMap() {
-        map = new HashMap<>();
-    }
+    private VehiclesHashMap() {}
 
-    public static VehiclesHaspMap getInstance() {
+    public static VehiclesHashMap getInstance() {
         if (instance == null) {
-            instance = new VehiclesHaspMap();
+            synchronized (lock) {
+                if (instance == null) {
+                    instance = new VehiclesHashMap();
+                }
+            }
         }
         return instance;
     }
 
-    public void put(K key, V value) {
-        map.put(key, value);
+    public static AbstractVehicle getVehicle(int key) {
+        if (instance == null) {
+            synchronized (lock) {
+                if (instance == null) {
+                    instance = new VehiclesHashMap();
+                }
+            }
+        }
+        return instance.getList().get(key);
     }
 
-    public V get(K key) {
-        return map.get(key);
+    public synchronized static HashMap<Integer, AbstractVehicle> getList() {
+        return list;
     }
 }
+

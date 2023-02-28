@@ -6,19 +6,15 @@ import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 
 import java.awt.*;
-import java.net.IDN;
-import java.text.DecimalFormat;
 
 public class AutonomousVehicle extends AbstractVehicle {
-
-    double cycleDistance;
 
     public AutonomousVehicle(int ID, int priorityID, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
         super(ID, priorityID, color, maxVelocity, maxAcceleration, map, xLength, yLength);
     }
 
     @Override
-    public PoseSteering[] getPath(Pose initial, Pose goal, String map, Boolean inversePath) {
+    public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
 
         var rsp = new ReedsSheppCarPlanner();
         rsp.setMap(map);
@@ -28,11 +24,11 @@ public class AutonomousVehicle extends AbstractVehicle {
         rsp.setTurningRadius(0.01);
         rsp.setDistanceBetweenPathPoints(0.1);
 
-        PoseSteering[] pathFwd = null;
-        PoseSteering[] pathInv = null;
-        PoseSteering[] path = null;
+        PoseSteering[] pathFwd;
+        PoseSteering[] pathInv;
+        PoseSteering[] path;
         rsp.setStart(initial);
-        rsp.setGoals(goal);
+        rsp.setGoals(goals);
         rsp.plan();
         if (rsp.getPath() == null) throw new Error("No path found.");
         pathFwd = rsp.getPath();
@@ -43,16 +39,11 @@ public class AutonomousVehicle extends AbstractVehicle {
         else {
             path = pathFwd;
         }
-
-        for (int i = 0; i < path.length-1; i++) {
-            double deltaS = path[i].getPose().distanceTo(path[i + 1].getPose());
-            cycleDistance += deltaS;
-        }
-        VehiclesHashMap.getVehicle(super.getID()).setCycleDistance(Math.round(cycleDistance * 100.0)/100.0);
+        VehiclesHashMap.getVehicle(this.getID()).setPath(path);
         return path;
     }
 
-    public PoseSteering[] getPath(Pose initial, Pose goal, String map, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,
+    public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,
                                   double radius, double planningTime, double turningRadius, double distanceBetweenPathPoints) {
 
         var rsp = new ReedsSheppCarPlanner(planningAlgorithm);
@@ -63,11 +54,11 @@ public class AutonomousVehicle extends AbstractVehicle {
         rsp.setTurningRadius(turningRadius);
         rsp.setDistanceBetweenPathPoints(distanceBetweenPathPoints);
 
-        PoseSteering[] pathFwd = null;
-        PoseSteering[] pathInv = null;
-        PoseSteering[] path = null;
+        PoseSteering[] pathFwd;
+        PoseSteering[] pathInv;
+        PoseSteering[] path;
         rsp.setStart(initial);
-        rsp.setGoals(goal);
+        rsp.setGoals(goals);
         rsp.plan();
         if (rsp.getPath() == null) throw new Error("No path found.");
         pathFwd = rsp.getPath();
@@ -78,12 +69,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         else {
             path = pathFwd;
         }
-
-        for (int i = 0; i < path.length-1; i++) {
-            double deltaS = path[i].getPose().distanceTo(path[i + 1].getPose());
-            cycleDistance += deltaS;
-        }
-        VehiclesHashMap.getVehicle(super.getID()).setCycleDistance(cycleDistance);
+        VehiclesHashMap.getVehicle(this.getID()).setPath(path);
         return path;
     }
 

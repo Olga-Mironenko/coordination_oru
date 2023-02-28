@@ -11,25 +11,19 @@ import se.oru.coordination.coordination_oru.util.Missions;
 
 import java.awt.*;
 
-public class Test2 {
+public class Test1 {
     public static void main(String[] args) {
 
-        final int simulationTimeMinutes = 2;
-        double predictableDistance = 10.0;
-        final long simulationTime = System.currentTimeMillis() + (simulationTimeMinutes * 60 * 1000);
         final Pose mainTunnelLeft = new Pose(4.25,15.35, -Math.PI);
         final Pose mainTunnelRight = new Pose(80.05,24.75, Math.PI);
         final Pose drawPoint21 = new Pose(52.95,87.75,-Math.PI/2);
         final Pose orePass = new Pose(54.35,11.25,-Math.PI/2);
         final String YAML_FILE = "maps/mine-map-test.yaml";
 
-        final Pose[] autonomousVehicleGoal = {orePass};
-        final Pose[] limitedPredictabilityVehicleGoal = {mainTunnelRight};
+        final Pose[] goal = {orePass};
 
         var autonomousVehicle = new AutonomousVehicle(1, 0, Color.GREEN, 5, 2, YAML_FILE, 0.5, 0.5);
-        var limitedPredictabilityVehicle = new LimitedPredictabilityVehicle(2, 0, predictableDistance, Color.RED, 5, 2, YAML_FILE, 0.5, 0.5);
-        var autonomousVehiclePath = autonomousVehicle.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
-        var limitedPredictabilityVehiclePlan = limitedPredictabilityVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, YAML_FILE, true);
+        var autonomousVehiclePath = autonomousVehicle.getPlan(drawPoint21, goal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -40,7 +34,6 @@ public class Test2 {
 
         tec.setDefaultFootprint(autonomousVehicle.getFootPrint());
         tec.placeRobot(autonomousVehicle.getID(), drawPoint21);
-        tec.placeRobot(limitedPredictabilityVehicle.getID(), mainTunnelLeft);
         tec.addComparator(new Heuristics().closest());
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
@@ -53,12 +46,10 @@ public class Test2 {
         tec.setVisualization(viz);
 
         var m1 = new Mission(autonomousVehicle.getID(), autonomousVehiclePath);
-        var m2 = new Mission(limitedPredictabilityVehicle.getID(), limitedPredictabilityVehiclePlan);
 
         Missions.enqueueMission(m1);
-        Missions.enqueueMission(m2);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, simulationTime);
+        Missions.startMissionDispatchers(tec, false, 1);
 
     }
 }

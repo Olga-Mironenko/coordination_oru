@@ -1,19 +1,11 @@
 package se.oru.coordination.coordination_oru.util;
 
 
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-
-import javax.imageio.ImageIO;
-
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.util.AffineTransformation;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -23,16 +15,19 @@ import org.metacsp.multi.spatial.DE9IM.GeometricShapeDomain;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.util.AffineTransformation;
-
 import se.oru.coordination.coordination_oru.RobotReport;
-import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 public class BrowserVisualization implements FleetVisualization {
 	
@@ -213,7 +208,7 @@ public class BrowserVisualization implements FleetVisualization {
 		double x = rr.getPathIndex() != -1 ? rr.getPose().getX() : te.getTrajectory().getPose()[0].getX();
 		double y = rr.getPathIndex() != -1 ? rr.getPose().getY() : te.getTrajectory().getPose()[0].getY();
 		double theta = rr.getPathIndex() != -1 ? rr.getPose().getTheta() : te.getTrajectory().getPose()[0].getTheta();
-		
+
 		String name = "R"+te.getRobotID();
 		String extraData = " : " + rr.getPathIndex();
 		if (extraStatusInfo != null) {
@@ -224,7 +219,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 		String color = "#ff0000";
 		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
-		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColor();
+		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
 
 		Geometry geom = TrajectoryEnvelope.getFootprint(te.getFootprint(), x, y, theta);
 		this.updateRobotFootprintArea(geom);
@@ -252,7 +247,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 		String color = "#ff0000";
 		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
-		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColor();
+		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
 
 		Geometry geom = TrajectoryEnvelope.getFootprint(fp, x, y, theta);
 		this.updateRobotFootprintArea(geom);
@@ -303,9 +298,16 @@ public class BrowserVisualization implements FleetVisualization {
 
 	@Override
 	public void addEnvelope(TrajectoryEnvelope te) {
+
+		// Color the trajectory envelope with the same vehicle color
+		String color = "#efe007";
+		if (!VehiclesHashMap.getList().isEmpty()) {
+			color = VehiclesHashMap.getVehicle(te.getRobotID()).getColorCode();
+		}
+
 		GeometricShapeDomain dom = (GeometricShapeDomain)te.getEnvelopeVariable().getDomain();
 		Geometry geom = dom.getGeometry();
-		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+te.getID(), geom, "#efe007", -1, false, null) + "}";
+		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+te.getID(), geom, color, -1, false, null) + "}";
 		enqueueMessage(jsonString);
 	}
 

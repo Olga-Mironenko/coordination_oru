@@ -200,7 +200,7 @@
 //            }
 //        }
 //        var newPath = new PoseSteering[replaceIndex];
-//        System.arraycopy(path, 0, newPath, 0, replaceIndex);
+//        System.arraycopy(path, 0, `newPath`, 0, replaceIndex);
 //        return newPath;
 //    }
 //
