@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux pipefail
+set -eux -o pipefail
 
 # shellcheck disable=SC2012
 files_text=$(ls -t | head -n2)
