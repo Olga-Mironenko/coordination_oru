@@ -11,10 +11,7 @@ import se.oru.coordination.coordination_oru.code.Heuristics;
 import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.util.BrowserVisualization;
-import se.oru.coordination.coordination_oru.util.Missions;
-import se.oru.coordination.coordination_oru.util.NoPathFound;
-import se.oru.coordination.coordination_oru.util.Printer;
+import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class TestClick {
@@ -109,10 +106,10 @@ public class TestClick {
 
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatchers(tec, true, loopTime);
-        Missions.loopMissions.put(1, false);
 
-        PoseSteering[] path2 = aut2.getPath(mainTunnelRight, drawPoint19, true);
-        var m2 = new Mission(aut2.getID(), path2);
-        Missions.enqueueMission(m2);
+        MissionUtils.targetVelocity1 = 10;
+        Missions.enqueueMission(new Mission(hum1.getID(), hum1.getPath(orePassOppositePoint, orePass, true)));
+
+        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPath(mainTunnelRight, drawPoint19_bottom, true)));
     }
 }
