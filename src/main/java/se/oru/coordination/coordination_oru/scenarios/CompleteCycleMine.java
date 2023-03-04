@@ -6,8 +6,7 @@ import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
-import se.oru.coordination.coordination_oru.code.LimitedPredictabilityVehicle;
-import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
@@ -32,9 +31,8 @@ public class CompleteCycleMine {
 
         final Pose[] autonomousVehicleGoal = {orePass};
 
-        var autonomousVehicle1 = new AutonomousVehicle(1, 1, Color.GREEN, 12, 6, YAML_FILE, 0.5, 0.5);
-        var autonomousVehicle2 = new AutonomousVehicle(2, 1, Color.GREEN, 12, 6, YAML_FILE, 0.5, 0.5);
-        var drillRig = new LimitedPredictabilityVehicle(3, 1, predictableDistance, Color.YELLOW, 5, 2, YAML_FILE, 0.5, 0.5);
+        var autonomousVehicle1 = new AutonomousVehicle(YAML_FILE);
+        var autonomousVehicle2 = new AutonomousVehicle(YAML_FILE);
         PoseSteering[] autonomousVehicle1Path = autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
         PoseSteering[] autonomousVehicle2Path = autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
 
@@ -62,7 +60,7 @@ public class CompleteCycleMine {
         var viz = new BrowserVisualization();
         viz.setMap(YAML_FILE);
         viz.setFontScale(4);
-        viz.setInitialTransform(9.6, 60.8, -2.4);
+        viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
 
         var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehicle1Path);
@@ -73,6 +71,7 @@ public class CompleteCycleMine {
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatchers(tec, loopTime);
 
+        var drillRig = new LookAheadVehicle(YAML_FILE,  predictableDistance);
         tec.setForwardModel(drillRig.getID(), new ConstantAccelerationForwardModel(drillRig.getMaxAcceleration(), drillRig.getMaxVelocity(), tec.getTemporalResolution(),
                 tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(drillRig.getID())));
         final Pose[] drillRigGoal = {drawPoint38, drawPoint18, drawPoint24, mainTunnelRight};
@@ -82,8 +81,7 @@ public class CompleteCycleMine {
         var m3 = new Mission(drillRig.getID(), drillRigPath);
         Missions.enqueueMission(m3);
         tec.addMissions(m3);
-        tec.replacePath(drillRig.getID(), drillRigPath, 0, false, null);
 
-            // TODO How does a robot move? Which gives the command for robot to move?
+        // TODO How does a robot move? Which gives the command for robot to move?
         }
     }

@@ -4,7 +4,6 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
-import se.oru.coordination.coordination_oru.code.LimitedPredictabilityVehicle;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
@@ -22,7 +21,7 @@ public class Test1 {
 
         final Pose[] goal = {orePass};
 
-        var autonomousVehicle = new AutonomousVehicle(1, 0, Color.GREEN, 5, 2, YAML_FILE, 0.5, 0.5);
+        var autonomousVehicle = new AutonomousVehicle(YAML_FILE);
         var autonomousVehiclePath = autonomousVehicle.getPlan(drawPoint21, goal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
@@ -42,7 +41,9 @@ public class Test1 {
         // Set up a simple GUI (null means empty map, otherwise provide yaml file)
         var viz = new BrowserVisualization();
         viz.setMap(YAML_FILE);
-        viz.setInitialTransform(7.0, 83.0, 15.5);
+        viz.setFontScale(4);
+        viz.setFontScale(4);
+        viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
 
         var m1 = new Mission(autonomousVehicle.getID(), autonomousVehiclePath);

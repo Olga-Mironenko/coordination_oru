@@ -8,11 +8,17 @@ import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPla
 
 import java.awt.*;
 
-public class LimitedPredictabilityVehicle extends AbstractVehicle{
+public class LookAheadVehicle extends AbstractVehicle{
 
     private final double predictableDistance;
-    public LimitedPredictabilityVehicle(int ID, int priorityID, double predictableDistance, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        super(ID, priorityID, color, maxVelocity, maxAcceleration, map, xLength, yLength);
+
+    public LookAheadVehicle(String map, double predictableDistance) {
+        super(1, "LookAheadVehicle", Color.GREEN, 5, 2, map, 0.5, 0.5);
+        this.predictableDistance = predictableDistance;
+    }
+
+    public LookAheadVehicle(int priorityID, String type, double predictableDistance, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+        super(priorityID, type, color, maxVelocity, maxAcceleration, map, xLength, yLength);
         this.predictableDistance = predictableDistance;
     }
 
@@ -77,12 +83,13 @@ public class LimitedPredictabilityVehicle extends AbstractVehicle{
     }
 
     //FIXME Probably do the updated robot state. Does not avoid collisions
+    // TODO Remove previous path of human vehicle
     public PoseSteering[] getLimitedPath(int robotID, double predictableDistance, TrajectoryEnvelopeCoordinator tec) {
         synchronized (tec) {
         double distance = 0.0;
         double currentDistance = tec.getRobotReport(robotID).getDistanceTraveled();
         double totalDistance = this.getCycleDistance();
-        int index = Math.max(tec.getRobotReport(robotID).getPathIndex(), 0); // Avoid null point exception
+        int index = Math.max(tec.getRobotReport(robotID).getPathIndex(), 0); // Avoid null point exception for starting
         while (distance <= predictableDistance) {
             if ((currentDistance + predictableDistance) >= totalDistance)  {
                 return this.getPath(); // For last iteration less than predictable distance

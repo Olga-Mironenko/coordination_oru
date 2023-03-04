@@ -5,7 +5,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Time;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -16,11 +15,10 @@ import se.oru.coordination.coordination_oru.RobotReport;
 
 public abstract class AbstractVehicle {
 
+    public static int vehicleNumber = 1;
     private final int ID;
     private final int priorityID;
-
-    //    private final String Type;
-
+    private final String type;
     private Color color;
     private double maxVelocity;
     private double maxAcceleration;
@@ -31,9 +29,7 @@ public abstract class AbstractVehicle {
     private RobotReport currentRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
     private RobotReport lastRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
     private double cycleDistance;
-
     private double totalDistance;
-
     private long timeInterval;
     private double averageSpeed;
     private int cycles;
@@ -43,10 +39,10 @@ public abstract class AbstractVehicle {
     private int stops;
     private final double startTime = System.nanoTime();
     private PoseSteering[] path;
-    public AbstractVehicle(int ID, int priorityID, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        this.ID = ID;
+    public AbstractVehicle(int priorityID, String type, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+        this.ID = vehicleNumber;
         this.priorityID = priorityID;
-//        this.Type = this.getClass().getSimpleName();
+        this.type = this.getClass().getSimpleName();
         this.color = color;
         this.maxVelocity = maxVelocity;
         this.maxAcceleration = maxAcceleration;
@@ -60,13 +56,16 @@ public abstract class AbstractVehicle {
                 new Coordinate(-xLength, -yLength)        //front left
         };
         VehiclesHashMap.getList().put(this.ID, this);
+        vehicleNumber++;
     }
+
     @Override
     public String toString() {
         return "AbstractVehicle{" +
                 "ID=" + ID +
                 ", priorityID=" + priorityID +
-                ", color='" + color + '\'' +
+                ", type='" + type + '\'' +
+                ", color=" + color +
                 ", maxVelocity=" + maxVelocity +
                 ", maxAcceleration=" + maxAcceleration +
                 ", map='" + map + '\'' +
@@ -75,6 +74,7 @@ public abstract class AbstractVehicle {
                 ", footPrint=" + Arrays.toString(footPrint) +
                 '}';
     }
+
     public abstract PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath);
     public synchronized void updateStatistics() {
 
@@ -98,11 +98,11 @@ public abstract class AbstractVehicle {
         this.averageSpeed = Math.round((totalDistance / timeInterval) * 10.0) / 10.0;
     }
 
-
     //TODO Write the data in a csv file with each cycle results
     //TODO Separate Scenario general settings and robot settings
     //TODO Date, Day, Timing settings. Fix file name
     // FIXME Check statistics
+
     public void writeStatistics() {
 
         try {
@@ -155,6 +155,7 @@ public abstract class AbstractVehicle {
         }
     }
 
+    //TODO Do color blinking and vehicle stoppage
     public void blinkVehicle(Color colorOriginal, Color colorToggle, long blinkTimeSeconds) throws InterruptedException {
         VehiclesHashMap.getVehicle(this.ID).setColor(colorToggle);
         TimeUnit.SECONDS.sleep(blinkTimeSeconds);
@@ -168,6 +169,7 @@ public abstract class AbstractVehicle {
     public Color getColor() {
         return color;
     }
+
     public String getColorCode() {
         return "#" + String.format("%06x", 0xFFFFFF & color.getRGB());
     }
@@ -222,5 +224,9 @@ public abstract class AbstractVehicle {
 
     public void setColor(Color color) {
         this.color = color;
+    }
+
+    public String getType() {
+        return type;
     }
 }

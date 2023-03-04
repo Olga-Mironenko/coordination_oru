@@ -296,6 +296,7 @@ public class BrowserVisualization implements FleetVisualization {
 		return ret;
 	}
 
+	// TODO Implement safety distances
 	@Override
 	public void addEnvelope(TrajectoryEnvelope te) {
 

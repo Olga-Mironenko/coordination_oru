@@ -39,7 +39,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
-import se.oru.coordination.coordination_oru.code.LimitedPredictabilityVehicle;
+import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 
@@ -1141,12 +1141,15 @@ public class Missions {
 	 */
 	public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final long simulationTime) {
 
-		final boolean loop = true;
 		for (int robotID : tec.getAllRobotIDs()) {
 			dispatchableRobots.add(robotID);
-			// FIXME For drill rig only
-			if (robotID != 3) loopMissions.put(robotID, loop);
+			loopMissions.put(robotID, true);
+			// TODO Loop missions only for Autonomous vehicles. check line 1159 for dispatchable robots
+//			if (VehiclesHashMap.getVehicle(robotID).getType().equals("AutonomousVehicle")) {
+//				loopMissions.put(robotID, true);
+//			}
 		}
+		System.out.println(loopMissions);
 
 		if (missionDispatchThread == null) {
 			missionDispatchThread = new Thread() {
@@ -1202,11 +1205,8 @@ public class Missions {
 							}
 						}
 						//Sleep for a little (0.5 sec)
-						try {
-							Thread.sleep(500);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
+						try { Thread.sleep(500); }
+						catch (InterruptedException e) { e.printStackTrace(); }
 						synchronized (tec) {
 							updateRobotReports(tec); // Call to update all the robot reports
 							updatePathLimitedPredictableVehicles(tec); // Call to update limited predictable vehicles paths
@@ -1221,19 +1221,14 @@ public class Missions {
 	}
 
 	// TODO Delay Time for Human
+	// TODO Remove previous path followed by human
 	private static void updatePathLimitedPredictableVehicles(TrajectoryEnvelopeCoordinator tec) {
 		synchronized (tec) {
 		for (int robotID : tec.getAllRobotIDs()) {
-			if(VehiclesHashMap.getVehicle(robotID).getClass().getSimpleName().equals("LimitedPredictabilityVehicle")) {
-				LimitedPredictabilityVehicle L1 = (LimitedPredictabilityVehicle) VehiclesHashMap.getVehicle(robotID);
+			if(VehiclesHashMap.getVehicle(robotID).getClass().getSimpleName().equals("LookAheadVehicle")) {
+				LookAheadVehicle L1 = (LookAheadVehicle) VehiclesHashMap.getVehicle(robotID);
 				PoseSteering[] newPath = L1.getLimitedPath(robotID, L1.getPredictableDistance(), tec);
-				try{// FIXME Problem NullPoint Exception
-					tec.replacePath(robotID, newPath, 0, false, null);
-				}
-				catch (NullPointerException e){
-					System.out.println(VehiclesHashMap.getVehicle(2).getPath().length);
-					System.out.println(newPath.length);
-				}
+				tec.replacePath(robotID, newPath, 0, false, null);
 			}
 		}
 	}

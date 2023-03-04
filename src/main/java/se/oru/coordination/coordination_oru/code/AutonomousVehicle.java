@@ -9,8 +9,12 @@ import java.awt.*;
 
 public class AutonomousVehicle extends AbstractVehicle {
 
-    public AutonomousVehicle(int ID, int priorityID, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        super(ID, priorityID, color, maxVelocity, maxAcceleration, map, xLength, yLength);
+    public AutonomousVehicle(String map) {
+        super(1, "AutonomousVehicle", Color.YELLOW, 5, 2, map, 0.5, 0.5);
+    }
+
+    public AutonomousVehicle(int priorityID, String type, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+        super(priorityID, type, color, maxVelocity, maxAcceleration, map, xLength, yLength);
     }
 
     @Override
