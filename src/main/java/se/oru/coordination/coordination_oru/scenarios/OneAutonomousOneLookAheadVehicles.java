@@ -9,9 +9,7 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
 
-import java.awt.*;
-
-public class Test2 {
+public class OneAutonomousOneLookAheadVehicles {
     public static void main(String[] args) {
 
         final int simulationTimeMinutes = 2;

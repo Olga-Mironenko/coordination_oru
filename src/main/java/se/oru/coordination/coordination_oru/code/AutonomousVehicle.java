@@ -11,6 +11,7 @@ public class AutonomousVehicle extends AbstractVehicle {
 
     public AutonomousVehicle(String map) {
         super(1, "AutonomousVehicle", Color.YELLOW, 5, 2, map, 0.5, 0.5);
+
     }
 
     public AutonomousVehicle(int priorityID, String type, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {

@@ -1149,13 +1149,13 @@ public class Missions {
 //				loopMissions.put(robotID, true);
 //			}
 		}
-		System.out.println(loopMissions);
 
 		if (missionDispatchThread == null) {
 			missionDispatchThread = new Thread() {
 				@Override
 				public void run() {
-					while (simulationTime > System.currentTimeMillis()) {
+					while (true) {
+//					while (simulationTime > System.currentTimeMillis()) {
 						for (int robotID : dispatchableRobots) {
 							if (Missions.hasMissions(robotID)) {
 								Mission m = Missions.peekMission(robotID);
@@ -1207,10 +1207,8 @@ public class Missions {
 						//Sleep for a little (0.5 sec)
 						try { Thread.sleep(500); }
 						catch (InterruptedException e) { e.printStackTrace(); }
-						synchronized (tec) {
-							updateRobotReports(tec); // Call to update all the robot reports
-							updatePathLimitedPredictableVehicles(tec); // Call to update limited predictable vehicles paths
-						}
+						updateRobotReports(tec); // Call to update all the robot reports
+						updatePathLimitedPredictableVehicles(tec); // Call to update limited predictable vehicles paths
 					}
 //					writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
 				}
@@ -1223,15 +1221,13 @@ public class Missions {
 	// TODO Delay Time for Human
 	// TODO Remove previous path followed by human
 	private static void updatePathLimitedPredictableVehicles(TrajectoryEnvelopeCoordinator tec) {
-		synchronized (tec) {
 		for (int robotID : tec.getAllRobotIDs()) {
-			if(VehiclesHashMap.getVehicle(robotID).getClass().getSimpleName().equals("LookAheadVehicle")) {
+			if(VehiclesHashMap.getVehicle(robotID).getType().equals("LookAheadVehicle")) {
 				LookAheadVehicle L1 = (LookAheadVehicle) VehiclesHashMap.getVehicle(robotID);
 				PoseSteering[] newPath = L1.getLimitedPath(robotID, L1.getPredictableDistance(), tec);
 				tec.replacePath(robotID, newPath, 0, false, null);
 			}
 		}
-	}
 	}
 
 	private static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
@@ -1240,7 +1236,7 @@ public class Missions {
 		}
 	}
 
-	private synchronized static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
+	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
 		for (int robotID : tec.getAllRobotIDs()) {
 			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
 		}
@@ -1288,8 +1284,6 @@ public class Missions {
 		return resamplePath(retArray);
 	}
 
-
-	
 	/**
 	 * Create a mission following a given mission. The mission will make the follower robot navigate from its
 	 * current pose to the start pose of the leader's mission, after which the follower robot will follow the

@@ -18,7 +18,7 @@ public class CompleteCycleMine {
 
         final int loopMinutes = 5;
         final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);
-        final double predictableDistance = 20.0;
+        final double predictableDistance = 25.0;
         final Pose mainTunnelLeft = new Pose(4.25, 15.35, -Math.PI);
         final Pose mainTunnelRight = new Pose(80.05, 24.75, Math.PI);
         final Pose drawPoint16 = new Pose(16.75, 87.15, -Math.PI / 2);
@@ -71,16 +71,42 @@ public class CompleteCycleMine {
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatchers(tec, loopTime);
 
-        var drillRig = new LookAheadVehicle(YAML_FILE,  predictableDistance);
-        tec.setForwardModel(drillRig.getID(), new ConstantAccelerationForwardModel(drillRig.getMaxAcceleration(), drillRig.getMaxVelocity(), tec.getTemporalResolution(),
-                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(drillRig.getID())));
-        final Pose[] drillRigGoal = {drawPoint38, drawPoint18, drawPoint24, mainTunnelRight};
-        PoseSteering[] drillRigPath = drillRig.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
-        Thread.sleep(3000);
-        tec.placeRobot(drillRig.getID(), mainTunnelLeft);
-        var m3 = new Mission(drillRig.getID(), drillRigPath);
+        long missionTime = 1000;
+        var drillVehicle = new LookAheadVehicle(1, predictableDistance, Color.CYAN, 5, 2, YAML_FILE, 0.5, 0.5);
+        tec.setForwardModel(drillVehicle.getID(), new ConstantAccelerationForwardModel(drillVehicle.getMaxAcceleration(), drillVehicle.getMaxVelocity(), tec.getTemporalResolution(),
+                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(drillVehicle.getID())));
+//        final Pose[] drillRigGoal = {drawPoint38, drawPoint18, drawPoint24, mainTunnelRight};
+        final Pose[] drillRigGoal = {drawPoint38};
+
+        PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
+        Thread.sleep(missionTime);
+        tec.placeRobot(drillVehicle.getID(), mainTunnelLeft);
+        var m3 = new Mission(drillVehicle.getID(), drillRigPath);
         Missions.enqueueMission(m3);
         tec.addMissions(m3);
+
+//        while(true) {
+//            if (!tec.isDriving(drillVehicle.getID())) break;
+//        }
+//        System.out.println(tec.isDriving(drillVehicle.getID()));
+//        System.out.println(tec.isFree(drillVehicle.getID()));
+//        System.out.println(tec.isParked(drillVehicle.getID()));
+
+//        for (int i = 0; i < drillRigLocations.length; i++) {
+//            PoseSteering[] drillRigPath = drillVehicle.getPlan(drillRigLocations[i], new Pose[]{drillRigLocations[i++]}, YAML_FILE, false);
+//            Thread.sleep(missionTime);
+//            tec.placeRobot(drillVehicle.getID(), drillRigLocations[i]);
+//            var m = new Mission(drillVehicle.getID(), drillRigPath);
+//            Missions.enqueueMission(m);
+//            tec.addMissions(m);
+//        }
+
+//        PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
+//        Thread.sleep(1000);
+//        tec.placeRobot(drillVehicle.getID(), mainTunnelLeft);
+//        var m3 = new Mission(drillVehicle.getID(), drillRigPath);
+//        Missions.enqueueMission(m3);
+//        tec.addMissions(m3);
 
         // TODO How does a robot move? Which gives the command for robot to move?
         }

@@ -17,8 +17,8 @@ public class LookAheadVehicle extends AbstractVehicle{
         this.predictableDistance = predictableDistance;
     }
 
-    public LookAheadVehicle(int priorityID, String type, double predictableDistance, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        super(priorityID, type, color, maxVelocity, maxAcceleration, map, xLength, yLength);
+    public LookAheadVehicle(int priorityID, double predictableDistance, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+        super(priorityID, "LookAheadVehicle", color, maxVelocity, maxAcceleration, map, xLength, yLength);
         this.predictableDistance = predictableDistance;
     }
 
@@ -51,6 +51,7 @@ public class LookAheadVehicle extends AbstractVehicle{
         VehiclesHashMap.getVehicle(this.getID()).setPath(path);
         return path;
     }
+
 
     public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,
                         double radius, double planningTime, double turningRadius, double distanceBetweenPathPoints) {
@@ -86,22 +87,23 @@ public class LookAheadVehicle extends AbstractVehicle{
     // TODO Remove previous path of human vehicle
     public PoseSteering[] getLimitedPath(int robotID, double predictableDistance, TrajectoryEnvelopeCoordinator tec) {
         synchronized (tec) {
-        double distance = 0.0;
-        double currentDistance = tec.getRobotReport(robotID).getDistanceTraveled();
-        double totalDistance = this.getCycleDistance();
-        int index = Math.max(tec.getRobotReport(robotID).getPathIndex(), 0); // Avoid null point exception for starting
-        while (distance <= predictableDistance) {
-            if ((currentDistance + predictableDistance) >= totalDistance)  {
-                return this.getPath(); // For last iteration less than predictable distance
+            double distance = 0.0;
+            double currentDistance = tec.getRobotReport(robotID).getDistanceTraveled();
+            double totalDistance = this.getCycleDistance();
+            int pathIndex = Math.max(tec.getRobotReport(robotID).getPathIndex(), 0); // Avoid null point exception for starting
+
+            while (distance <= predictableDistance) {
+                if ((currentDistance + predictableDistance) >= totalDistance)  {
+                    return this.getPath(); // For last iteration less than predictable distance
             }
             else {
-                distance += this.getPath()[index].getPose().distanceTo(this.getPath()[index+1].getPose());
-                index++;
+                distance += this.getPath()[pathIndex].getPose().distanceTo(this.getPath()[pathIndex+1].getPose());
+                pathIndex++;
             }
         }
-        var newPath = new PoseSteering[index];
-        System.arraycopy(this.getPath(), 0, newPath, 0, index);
-        return newPath;
+            var newPath = new PoseSteering[pathIndex];
+            System.arraycopy(this.getPath(), 0, newPath, 0, pathIndex);
+            return newPath;
         }
     }
     public double getPredictableDistance() {
