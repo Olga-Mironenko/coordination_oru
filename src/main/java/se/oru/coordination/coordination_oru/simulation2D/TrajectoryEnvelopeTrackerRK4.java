@@ -132,6 +132,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	@Override
 	protected void onTrajectoryEnvelopeUpdate() {
 		synchronized(reportsList) { //FIXME not ok, all the mutex should be changed
+			this.criticalPoint = -1; // as after the object creation (for the further `setCriticalPoint` to work)
 			this.totalDistance = this.computeDistance(0, traj.getPose().length-1);
 			this.overallDistance = totalDistance;
 			this.internalCriticalPoints.clear();
