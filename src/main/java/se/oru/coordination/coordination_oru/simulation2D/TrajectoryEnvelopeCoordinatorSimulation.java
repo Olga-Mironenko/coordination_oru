@@ -1,11 +1,13 @@
 package se.oru.coordination.coordination_oru.simulation2D;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.metacsp.framework.BinaryConstraint;
+import org.metacsp.framework.Constraint;
+import org.metacsp.framework.ConstraintNetwork;
+import org.metacsp.framework.Variable;
+import org.metacsp.framework.multi.MultiBinaryConstraint;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.Trajectory;
@@ -281,7 +283,19 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	public long getCurrentTimeInMillis() {
 		return Calendar.getInstance().getTimeInMillis()-START_TIME;
 	}
-	
+
+	public String constraintsToGraphviz(Constraint[] constraints) {
+		String ret = "digraph { ";
+		for (Constraint c : constraints) {
+			Variable[] vs = c.getScope();
+			if (vs.length == 2) {
+				ret += "\"" + vs[0] + "\" -> \"" + vs[1] + "\" [label=\"" + c.getEdgeLabel() + "\"]; ";
+			}
+		}
+		ret += "}";
+		return ret;
+	}
+
 	@Override
 	protected String[] getStatistics() {
 		
@@ -289,12 +303,18 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 		String CONNECTOR_LEAF = (char)0x2514 + "" + (char)0x2500 + " ";
 		ArrayList<String> ret = new ArrayList<String>();
 		int numVar = solver.getConstraintNetwork().getVariables().length;
-		int numCon = solver.getConstraintNetwork().getConstraints().length;
+		Constraint[] constraints = solver.getConstraintNetwork().getConstraints();
+		int numCon = constraints.length;
 		
 		synchronized (trackers) {
 			ret.add("Status @ "  + getCurrentTimeInMillis() + " ms");
 			ret.add(CONNECTOR_BRANCH + 		"Eff period .......... " + EFFECTIVE_CONTROL_PERIOD + " ms");
 			ret.add(CONNECTOR_BRANCH + 		"Constraint network .. " + numVar + " variables, " + numCon + " constraints");
+			for (int i = 0; i < numCon; i++) {
+				ret.add(CONNECTOR_BRANCH + 		"constraints[" + i + "] = " + constraints[i]);
+			}
+			ret.add(CONNECTOR_BRANCH + constraintsToGraphviz(constraints));
+
 			HashSet<Integer> allRobots = new HashSet<Integer>();
 			for (Integer robotID : trackers.keySet()) {
 				allRobots.add(robotID);
