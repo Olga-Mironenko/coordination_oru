@@ -20,6 +20,8 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import static se.oru.coordination.coordination_oru.util.gates.GatedThread.sleep;
 
 public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
+	protected static final long constantDelayTime = 100;
+	// If non-negative, then time spent in the debugger (etc.) doesn't count.
 
 	protected static final long WAIT_AMOUNT_AT_END = 3000;
 	protected static final double EPSILON = 0.01;
@@ -662,7 +664,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			catch (InterruptedException e) { e.printStackTrace(); }
 
 			//Advance time to reflect how much we have slept (~ trackingPeriod)
-			long deltaTimeInMillis = Calendar.getInstance().getTimeInMillis()-timeStart;
+			long deltaTimeInMillis = constantDelayTime >= 0 ? constantDelayTime : Calendar.getInstance().getTimeInMillis()-timeStart;
 			deltaTime = deltaTimeInMillis/this.temporalResolution;
 			elapsedTrackingTime += deltaTime;
 		}
