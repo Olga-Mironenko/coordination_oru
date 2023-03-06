@@ -12,6 +12,7 @@ import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.*;
+import se.oru.coordination.coordination_oru.util.gates.Gate;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class TestClick {
@@ -66,6 +67,11 @@ public class TestClick {
         final Pose drawPoint38 = new Pose(20.1,25.7,-Math.PI/2);
         final Pose orePassOppositePoint = new Pose(53,32.4,-Math.PI/2);
 
+        final Pose hum1Start = drawPoint38;
+        final Pose hum1Finish = drawPoint23_bottom;
+        final Pose aut2Start = mainTunnelRight;
+        final Pose aut2Finish = drawPoint19_bottom;
+
         final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
         final int maxVelocity = 8;
 
@@ -82,8 +88,8 @@ public class TestClick {
         tec.startInference();
 
         tec.setDefaultFootprint(hum1.getFootPrint());
-        tec.placeRobot(hum1.getID(), orePassOppositePoint);
-        tec.placeRobot(aut2.getID(), mainTunnelRight);
+        tec.placeRobot(hum1.getID(), hum1Start);
+        tec.placeRobot(aut2.getID(), aut2Start);
 
         Heuristics heuristics = new Heuristics();
         heuristics.robotIDToPrecedence.put(1, 20);
@@ -107,9 +113,30 @@ public class TestClick {
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatchers(tec, true, loopTime);
 
-        MissionUtils.targetVelocity1 = 10;
-        Missions.enqueueMission(new Mission(hum1.getID(), hum1.getPath(orePassOppositePoint, orePass, true)));
+        if (hum1Finish == null) {
+            Missions.loopMissions.put(1, false);
+        } else {
+            MissionUtils.targetVelocity1 = 10;
+            Missions.enqueueMission(new Mission(hum1.getID(), hum1.getPath(hum1Start, hum1Finish, true)));
+        }
 
-        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPath(mainTunnelRight, drawPoint19_bottom, true)));
+        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPath(aut2Start, aut2Finish, true)));
+
+        final boolean isChangeVelocity = true;
+        if (isChangeVelocity) {
+            new GatedThread("change velocity") {
+                @Override
+                public void runCore() {
+                    for (int i = 0; i < 10; i++) {
+                        try {
+                            GatedThread.sleep(i);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    MissionUtils.changeTargetVelocity1(1);
+                }
+            }.start();
+        }
     }
 }

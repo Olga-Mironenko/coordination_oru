@@ -1098,7 +1098,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	protected void setupInferenceCallback() {
 
 		this.stopInference = false;
-		this.inference = new GatedThread("Coordinator inference") {
+		this.inference = new GatedThread("TrajectoryEnvelopeCoordinator inference") {
 
 			@Override
 			public void runCore() {
