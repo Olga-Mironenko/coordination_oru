@@ -68,7 +68,7 @@ public class TestClick {
         final Pose orePassOppositePoint = new Pose(53,32.4,-Math.PI/2);
 
         final Pose hum1Start = drawPoint38;
-        final Pose hum1Finish = drawPoint23_bottom;
+        final Pose hum1Finish = null; // drawPoint23_bottom;
         final Pose aut2Start = mainTunnelRight;
         final Pose aut2Finish = drawPoint19_bottom;
 
@@ -122,7 +122,7 @@ public class TestClick {
 
         Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPath(aut2Start, aut2Finish, true)));
 
-        final boolean isChangeVelocity = true;
+        final boolean isChangeVelocity = false;
         if (isChangeVelocity) {
             new GatedThread("change velocity") {
                 @Override

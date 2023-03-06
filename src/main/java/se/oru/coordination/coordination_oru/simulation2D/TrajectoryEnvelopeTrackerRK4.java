@@ -132,7 +132,6 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	@Override
 	protected void onTrajectoryEnvelopeUpdate() {
 		synchronized(reportsList) { //FIXME not ok, all the mutex should be changed
-			this.criticalPoint = -1; // as after the object creation (for the further `setCriticalPoint` to work)
 			this.totalDistance = this.computeDistance(0, traj.getPose().length-1);
 			this.overallDistance = totalDistance;
 			this.internalCriticalPoints.clear();
@@ -141,6 +140,12 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			this.positionToSlowDown = this.computePositionToSlowDown();
 			reportsList.clear();
 			reportTimeLists.clear(); //semplify to avoid discontinuities ... to be fixed.
+
+			if (this.criticalPoint != -1) {
+				int criticalPoint = this.criticalPoint;
+				this.criticalPoint = -1;
+				setCriticalPoint(criticalPoint);
+			}
 		}
 	}
 
@@ -462,36 +467,17 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		if (this.criticalPoint != criticalPointToSet) {
 
 			//A new intermediate index to stop at has been given
-			if (criticalPointToSet != -1 && criticalPointToSet > getRobotReport().getPathIndex()) {
-				//Store backups in case we are too late for critical point
-				double totalDistanceBKP = this.totalDistance;
-				int criticalPointBKP = this.criticalPoint;
-				double positionToSlowDownBKP = this.positionToSlowDown;
-
+			if (criticalPointToSet != -1) {
 				this.criticalPoint = criticalPointToSet;
 				//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
 				this.totalDistance = computeDistance(0, criticalPointToSet);
 				this.positionToSlowDown = computePositionToSlowDown();
 
-				//We are too late for critical point, restore everything
-				if (this.positionToSlowDown < state.getPosition()) {
-					metaCSPLogger.warning("Ignored critical point (" + te.getComponent() + "): " + criticalPointToSet + " because slowdown distance (" + this.positionToSlowDown +") < current distance (" + state.getPosition() + ")");
-					this.criticalPoint = criticalPointBKP;
-					this.totalDistance = totalDistanceBKP;
-					this.positionToSlowDown = positionToSlowDownBKP;
-				}
-				else {
-					metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
-				}
-			}
-
-			//Critical point <= current position, ignore -- WHY??
-			else if (criticalPointToSet != -1 && criticalPointToSet <= getRobotReport().getPathIndex()) {
-				metaCSPLogger.warning("Ignored critical point (" + te.getComponent() + "): " + criticalPointToSet + " because robot is already at " + getRobotReport().getPathIndex() + " (and current CP is " + this.criticalPoint + ")");
+				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
 			}
 
 			//The critical point has been reset, go to the end
-			else if (criticalPointToSet == -1) {
+			else {
 				this.criticalPoint = criticalPointToSet;
 				this.totalDistance = computeDistance(0, traj.getPose().length-1);
 				this.positionToSlowDown = computePositionToSlowDown();
