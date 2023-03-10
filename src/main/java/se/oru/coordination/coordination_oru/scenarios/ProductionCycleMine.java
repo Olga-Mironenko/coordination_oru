@@ -13,7 +13,7 @@ import se.oru.coordination.coordination_oru.util.Missions;
 
 import java.awt.*;
 
-public class CompleteCycleMine {
+public class ProductionCycleMine {
     public static void main(String[] args) throws InterruptedException {
 
         final int loopMinutes = 5;
@@ -30,6 +30,10 @@ public class CompleteCycleMine {
         final String YAML_FILE = "maps/mine-map-test.yaml";
 
         final Pose[] autonomousVehicleGoal = {orePass};
+
+        var drillVehicle = new LookAheadVehicle(1, predictableDistance, Color.CYAN, 5, 2, YAML_FILE, 0.5, 0.5);
+        var chargingVehicle = new LookAheadVehicle(1, 6*predictableDistance, Color.WHITE, 5, 2, YAML_FILE, 0.5, 0.5);
+
 
         var autonomousVehicle1 = new AutonomousVehicle(YAML_FILE);
         var autonomousVehicle2 = new AutonomousVehicle(YAML_FILE);
@@ -51,7 +55,7 @@ public class CompleteCycleMine {
         tec.setForwardModel(autonomousVehicle2.getID(), new ConstantAccelerationForwardModel(autonomousVehicle2.getMaxAcceleration(), autonomousVehicle2.getMaxVelocity(), tec.getTemporalResolution(),
                 tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(autonomousVehicle2.getID())));
 
-        tec.addComparator(new Heuristics().closest());
+        tec.addComparator(new Heuristics().lowestIDNumber());
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);
@@ -65,25 +69,37 @@ public class CompleteCycleMine {
 
         var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehicle1Path);
         var m2 = new Mission(autonomousVehicle2.getID(), autonomousVehicle2Path);
+        m2.setStoppingPoint(orePass, 5000);
 
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatchers(tec, loopTime);
 
-        long missionTime = 1000;
-        var drillVehicle = new LookAheadVehicle(1, predictableDistance, Color.CYAN, 5, 2, YAML_FILE, 0.5, 0.5);
-        tec.setForwardModel(drillVehicle.getID(), new ConstantAccelerationForwardModel(drillVehicle.getMaxAcceleration(), drillVehicle.getMaxVelocity(), tec.getTemporalResolution(),
+        long missionTime = 5000;
+          tec.setForwardModel(drillVehicle.getID(), new ConstantAccelerationForwardModel(drillVehicle.getMaxAcceleration(), drillVehicle.getMaxVelocity(), tec.getTemporalResolution(),
                 tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(drillVehicle.getID())));
-//        final Pose[] drillRigGoal = {drawPoint38, drawPoint18, drawPoint24, mainTunnelRight};
-        final Pose[] drillRigGoal = {drawPoint38};
+        tec.setForwardModel(chargingVehicle.getID(), new ConstantAccelerationForwardModel(chargingVehicle.getMaxAcceleration(), chargingVehicle.getMaxVelocity(), tec.getTemporalResolution(),
+                tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(chargingVehicle.getID())));
+
+        final Pose[] drillRigGoal = {drawPoint38, drawPoint18, drawPoint24, mainTunnelRight};
+        final Pose[] chargingVehicleGoal = {drawPoint24, drawPoint23, drawPoint18, drawPoint16, drawPoint38, mainTunnelLeft};
 
         PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
-        Thread.sleep(missionTime);
+        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE, false);
+        Thread.sleep(5000);
         tec.placeRobot(drillVehicle.getID(), mainTunnelLeft);
-        var m3 = new Mission(drillVehicle.getID(), drillRigPath);
-        Missions.enqueueMission(m3);
+        PoseSteering[] drillInitialPath = drillVehicle.getLimitedPath(drillVehicle.getID(), drillVehicle.getPredictableDistance(), tec);
+        var m3 = new Mission(drillVehicle.getID(), drillInitialPath);
+//        Missions.enqueueMission(m3);
         tec.addMissions(m3);
+        m3.setStoppingPoint(drawPoint38, 5000);
+        Thread.sleep(10000);
+        tec.placeRobot(chargingVehicle.getID(), mainTunnelRight);
+        PoseSteering[] chargingInitialPath = chargingVehicle.getLimitedPath(chargingVehicle.getID(), chargingVehicle.getPredictableDistance(), tec);
+        var m4 = new Mission(chargingVehicle.getID(), chargingInitialPath);
+        tec.addMissions(m4);
+
 
 //        while(true) {
 //            if (!tec.isDriving(drillVehicle.getID())) break;

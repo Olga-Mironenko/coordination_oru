@@ -1,6 +1,7 @@
 package se.oru.coordination.coordination_oru.scenarios;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
+import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
@@ -58,6 +59,7 @@ public class SevenAutonomousOneLookAheadVehicles {
         // Start the thread that checks and enforces dependencies at every clock tick
         tec.startInference();
 
+        PoseSteering[] lookAheadInitialPlan = lookAheadVehicle.getLimitedPath(lookAheadVehicle.getID(), predictableDistance, tec);
         tec.setDefaultFootprint(autonomousVehicle1.getFootPrint());
         tec.placeRobot(autonomousVehicle1.getID(), drawPoint17);
         tec.placeRobot(autonomousVehicle2.getID(), drawPoint19);
@@ -86,7 +88,7 @@ public class SevenAutonomousOneLookAheadVehicles {
         var m5 = new Mission(autonomousVehicle5.getID(), autonomousVehiclePath5);
         var m6 = new Mission(autonomousVehicle6.getID(), autonomousVehiclePath6);
         var m7 = new Mission(autonomousVehicle7.getID(), autonomousVehiclePath7);
-        var m8 = new Mission(lookAheadVehicle.getID(), lookAheadVehiclePlan);
+        var m8 = new Mission(lookAheadVehicle.getID(), lookAheadInitialPlan);
 
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);

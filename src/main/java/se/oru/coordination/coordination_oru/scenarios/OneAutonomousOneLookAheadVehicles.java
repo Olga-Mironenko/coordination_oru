@@ -51,13 +51,14 @@ public class OneAutonomousOneLookAheadVehicles {
         viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
 
+        var lookAheadVehicleInitialPlan = lookAheadVehicle.getLimitedPath(lookAheadVehicle.getID(), predictableDistance, tec);
         var m1 = new Mission(autonomousVehicle.getID(), autonomousVehiclePath);
-        var m2 = new Mission(lookAheadVehicle.getID(), lookAheadVehiclePlan);
+        var m2 = new Mission(lookAheadVehicle.getID(), lookAheadVehicleInitialPlan);
 
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, simulationTime);
+        Missions.startMissionDispatchers(tec, false, 1, 2);
 
     }
 }

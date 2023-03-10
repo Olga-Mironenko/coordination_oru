@@ -43,6 +43,8 @@ import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 
+import static se.oru.coordination.coordination_oru.code.LookAheadVehicle.updateLookAheadVehiclesPath;
+
 /**
  * This class collects utility methods for storing {@link Mission}s, regulating their dispatch, maintaining locations
  * and paths (i.e., a roadmap), finding shortest paths through the roadmap, and extracting information from YAML files.
@@ -1064,7 +1066,7 @@ public class Missions {
 	 * @param loop Set to <code>false</code> if missions should be de-queued once dispatched.
 	 * @param robotIDs The robot IDs which should be considered dispatchable.
 	 */
-	public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, int ... robotIDs) {
+	public synchronized static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, int ... robotIDs) {
 
 		for (int robotID : robotIDs) {
 			dispatchableRobots.add(robotID);
@@ -1139,7 +1141,7 @@ public class Missions {
 	 * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
 	 * @param simulationTime Set the time in nanoseconds for which the simulation will run.
 	 */
-	public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final long simulationTime) {
+	public synchronized static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final long simulationTime) {
 
 		for (int robotID : tec.getAllRobotIDs()) {
 			dispatchableRobots.add(robotID);
@@ -1207,8 +1209,8 @@ public class Missions {
 						//Sleep for a little (0.5 sec)
 						try { Thread.sleep(500); }
 						catch (InterruptedException e) { e.printStackTrace(); }
-						updateRobotReports(tec); // Call to update all the robot reports
-						updatePathLimitedPredictableVehicles(tec); // Call to update limited predictable vehicles paths
+//						updateRobotReports(tec); // Call to update all the robot reports
+						updateLookAheadVehiclesPath(tec); // Call to update limited predictable vehicles paths
 					}
 //					writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
 				}
@@ -1218,29 +1220,17 @@ public class Missions {
 		}
 	}
 
-	// TODO Delay Time for Human
-	// TODO Remove previous path followed by human
-	private static void updatePathLimitedPredictableVehicles(TrajectoryEnvelopeCoordinator tec) {
-		for (int robotID : tec.getAllRobotIDs()) {
-			if(VehiclesHashMap.getVehicle(robotID).getType().equals("LookAheadVehicle")) {
-				LookAheadVehicle L1 = (LookAheadVehicle) VehiclesHashMap.getVehicle(robotID);
-				PoseSteering[] newPath = L1.getLimitedPath(robotID, L1.getPredictableDistance(), tec);
-				tec.replacePath(robotID, newPath, 0, false, null);
-			}
-		}
-	}
+//	private static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
+//		for (int robotID : tec.getAllRobotIDs()) {
+//			VehiclesHashMap.getVehicle(robotID).writeStatistics();
+//		}
+//	}
 
-	private static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
-		for (int robotID : tec.getAllRobotIDs()) {
-			VehiclesHashMap.getVehicle(robotID).writeStatistics();
-		}
-	}
-
-	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
-		for (int robotID : tec.getAllRobotIDs()) {
-			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
-		}
-	}
+//	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
+//		for (int robotID : tec.getAllRobotIDs()) {
+//			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
+//		}
+//	}
 
 	/**
 	 * Read a path from a file.

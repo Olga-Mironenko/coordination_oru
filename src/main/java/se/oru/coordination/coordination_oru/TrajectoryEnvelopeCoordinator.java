@@ -1314,7 +1314,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							TrajectoryEnvelope oldEndParking = (TrajectoryEnvelope)aic.getTo();
 
 							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(te));
-							solver.removeVariable(te);
+//							solver.removeVariable(te);
 							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(oldEndParking));
 							solver.removeVariable(oldEndParking);
 

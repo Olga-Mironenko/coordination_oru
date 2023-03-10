@@ -52,7 +52,6 @@ public class LookAheadVehicle extends AbstractVehicle{
         return path;
     }
 
-
     public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,
                         double radius, double planningTime, double turningRadius, double distanceBetweenPathPoints) {
 
@@ -83,28 +82,38 @@ public class LookAheadVehicle extends AbstractVehicle{
         return path;
     }
 
-    //FIXME Probably do the updated robot state. Does not avoid collisions
-    // TODO Remove previous path of human vehicle
-    public PoseSteering[] getLimitedPath(int robotID, double predictableDistance, TrajectoryEnvelopeCoordinator tec) {
-        synchronized (tec) {
-            double distance = 0.0;
-            double currentDistance = tec.getRobotReport(robotID).getDistanceTraveled();
-            double totalDistance = this.getCycleDistance();
-            int pathIndex = Math.max(tec.getRobotReport(robotID).getPathIndex(), 0); // Avoid null point exception for starting
+    public synchronized static void updateLookAheadVehiclesPath(TrajectoryEnvelopeCoordinator tec) {
+        for (int robotID : tec.getAllRobotIDs()) {
+            if(VehiclesHashMap.getVehicle(robotID).getType().equals("LookAheadVehicle")) {
+                var lookAheadVehicle = (LookAheadVehicle) VehiclesHashMap.getVehicle(robotID);
+                PoseSteering[] newPath = lookAheadVehicle.getLimitedPath(robotID, lookAheadVehicle.getPredictableDistance(), tec);
+                tec.replacePath(robotID, newPath, 0, false, null);
+            }
+        }
+    }
 
-            while (distance <= predictableDistance) {
-                if ((currentDistance + predictableDistance) >= totalDistance)  {
-                    return this.getPath(); // For last iteration less than predictable distance
+    // TODO Delay Time for Human Vehicles not working
+    // FIXME Does not avoid collisions
+    // TODO Remove previous path of human vehicle
+    // TODO Remove  h form the end of simulation
+    public synchronized PoseSteering[] getLimitedPath(int robotID, double predictableDistance, TrajectoryEnvelopeCoordinator tec) {
+        double distance = 0.0;
+        double currentDistance = tec.getRobotReport(robotID).getDistanceTraveled();
+        double totalDistance = getCycleDistance();
+        int pathIndex = Math.max(tec.getRobotReport(robotID).getPathIndex(), 0); // Avoid null point exception for starting
+
+        while (distance <= predictableDistance) {
+            if ((currentDistance + predictableDistance) >= totalDistance)  {
+                return getPath(); // For last iteration less than predictable distance
             }
             else {
-                distance += this.getPath()[pathIndex].getPose().distanceTo(this.getPath()[pathIndex+1].getPose());
+                distance += getPath()[pathIndex].getPose().distanceTo(getPath()[pathIndex+1].getPose());
                 pathIndex++;
             }
         }
-            var newPath = new PoseSteering[pathIndex];
-            System.arraycopy(this.getPath(), 0, newPath, 0, pathIndex);
-            return newPath;
-        }
+        var newPath = new PoseSteering[pathIndex];
+        System.arraycopy(getPath(), 0, newPath, 0, pathIndex);
+        return newPath;
     }
     public double getPredictableDistance() {
         return predictableDistance;
