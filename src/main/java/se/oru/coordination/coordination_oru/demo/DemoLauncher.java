@@ -20,7 +20,8 @@ import se.oru.coordination.coordination_oru.util.StringUtils;
 public class DemoLauncher {
 
 	private static final String testsPackage = "se.oru.coordination.coordination_oru.tests";
-	
+	private static final String scenariosPackage = "se.oru.coordination.coordination_oru.scenarios";
+
 	private static void printUsage() {
 
 		System.out.println("Usage: ./gradlew run -Pdemo=<demo>\n\nAvailable options for <demo>");
@@ -65,14 +66,18 @@ public class DemoLauncher {
 		//Forces to loads the class so that license and (c) are printed even if no demo is invoked
 		Class.forName("se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator");
 		
-		if (args.length != 1) printUsage();
-		else {
+		if (args.length != 1) {
+			printUsage();
+			return;
+		}
+		for (String pkg : new String[] { testsPackage, scenariosPackage }) {
 			String className = args[0];
 			try {
-				Class<?> cl = Class.forName(testsPackage+"."+className);
+				Class<?> cl = Class.forName(pkg+"."+className);
 				Method meth = cl.getMethod("main", String[].class);
 			    String[] params = null;
 			    meth.invoke(null, (Object) params);
+				return;
 			}
 			catch (IllegalAccessException e) { e.printStackTrace(); }
 			catch (ClassNotFoundException e) { e.printStackTrace(); }
