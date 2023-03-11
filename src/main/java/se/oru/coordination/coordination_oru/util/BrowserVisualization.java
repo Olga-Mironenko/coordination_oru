@@ -219,7 +219,7 @@ public class BrowserVisualization implements FleetVisualization {
 		double x = rr.getPathIndex() != -1 ? rr.getPose().getX() : te.getTrajectory().getPose()[0].getX();
 		double y = rr.getPathIndex() != -1 ? rr.getPose().getY() : te.getTrajectory().getPose()[0].getY();
 		double theta = rr.getPathIndex() != -1 ? rr.getPose().getTheta() : te.getTrajectory().getPose()[0].getTheta();
-		
+
 		String name = "R"+te.getRobotID();
 		String extraData = " : " + rr.getPathIndex();
 		if (extraStatusInfo != null) {
@@ -353,11 +353,19 @@ public class BrowserVisualization implements FleetVisualization {
 		return ret;
 	}
 
+	// TODO Implement safety distances
 	@Override
 	public void addEnvelope(TrajectoryEnvelope te) {
+
+		// Color the trajectory envelope with the same vehicle color
+		String color = "#efe007";
+		if (!VehiclesHashMap.getList().isEmpty()) {
+			color = VehiclesHashMap.getVehicle(te.getRobotID()).getColorCode();
+		}
+
 		GeometricShapeDomain dom = (GeometricShapeDomain)te.getEnvelopeVariable().getDomain();
 		Geometry geom = dom.getGeometry();
-		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+te.getID(), geom, "#efe007", -1, false, null) + "}";
+		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+te.getID(), geom, color, -1, false, null) + "}";
 		enqueueMessage(jsonString);
 	}
 

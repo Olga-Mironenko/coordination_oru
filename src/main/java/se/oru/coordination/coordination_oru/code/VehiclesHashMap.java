@@ -32,7 +32,7 @@ public class VehiclesHashMap {
         return instance.getList().get(key);
     }
 
-    public HashMap<Integer, AbstractVehicle> getList() {
+    public synchronized static HashMap<Integer, AbstractVehicle> getList() {
         return list;
     }
 }

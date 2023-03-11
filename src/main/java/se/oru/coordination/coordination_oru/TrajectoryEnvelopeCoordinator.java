@@ -1260,7 +1260,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	 * @param <code>true</code> whether the robot should be at the current critical point before starting a re-plan.
 	 * @ATTENTION When the path is not concatenated, it is supposed the robot has already traversed the overall path.
 	 */
-	public void replacePath(int robotID, PoseSteering[] newPath, int breakingPathIndex, boolean concatenatePaths, Set<Integer> lockedRobotIDs) {
+	public synchronized void replacePath(int robotID, PoseSteering[] newPath, int breakingPathIndex, boolean concatenatePaths, Set<Integer> lockedRobotIDs) {
 
 		synchronized (solver) {
 
@@ -1316,7 +1316,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							TrajectoryEnvelope oldEndParking = (TrajectoryEnvelope)aic.getTo();
 
 							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(te));
-							solver.removeVariable(te);
+//							solver.removeVariable(te);
 							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(oldEndParking));
 							solver.removeVariable(oldEndParking);
 

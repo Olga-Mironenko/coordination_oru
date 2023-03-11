@@ -46,6 +46,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
+import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
@@ -1056,12 +1057,23 @@ public class Missions {
 	/**
 	 * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
 	 * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
+	 * This method will loop through all mission forever.
+	 * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
+	 * @param robotIDs The robot IDs which should be considered dispatchable.
+	 */
+	public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, int ... robotIDs) {
+		startMissionDispatchers(tec, true, robotIDs);
+	}
+
+	/**
+	 * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
+	 * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
 	 * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
 	 * @param loop Set to <code>false</code> if missions should be de-queued once dispatched.
 	 * @param robotIDs The robot IDs which should be considered dispatchable.
 	 */
 	// TODO: remove code duplication
-	public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, int ... robotIDs) {
+	public synchronized static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, int ... robotIDs) {
 
 		for (int robotID : robotIDs) {
 			dispatchableRobots.add(robotID);
@@ -1130,19 +1142,21 @@ public class Missions {
 		}
 	}
 
-
 	/**
 	 * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
 	 * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
 	 * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
-	 * @param loop Set to <code>false</code> if missions should be de-queued once dispatched.
-	 * @param loopTime Set the time in minutes for which the simulation will run.
+	 * @param simulationTime Set the time in nanoseconds for which the simulation will run.
 	 */
-	public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, final long loopTime) {
+	public synchronized static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final long simulationTime) {
 
 		for (int robotID : tec.getAllRobotIDs()) {
 			dispatchableRobots.add(robotID);
-			loopMissions.put(robotID, loop);
+			loopMissions.put(robotID, true);
+			// TODO Loop missions only for Autonomous vehicles. check line 1159 for dispatchable robots
+//			if (VehiclesHashMap.getVehicle(robotID).getType().equals("AutonomousVehicle")) {
+//				loopMissions.put(robotID, true);
+//			}
 		}
 
 		if (missionDispatchThread == null) {
@@ -1154,25 +1168,27 @@ public class Missions {
 							if (Missions.hasMissions(robotID)) {
 								Mission m = Missions.peekMission(robotID);
 								if (m != null) {
-									synchronized(tec) {
+									synchronized (tec) {
 										if (tec.isFree(m.getRobotID())) {
 											//cat with future missions if necessary
 											if (concatenatedMissions.containsKey(m)) {
 												ArrayList<Mission> catMissions = concatenatedMissions.get(m);
-												m = new Mission(m.getRobotID(), m.getFromLocation(), catMissions.get(catMissions.size()-1).getToLocation(), m.getFromPose(), catMissions.get(catMissions.size()-1).getToPose());
+												m = new Mission(m.getRobotID(), m.getFromLocation(), catMissions.get(catMissions.size() - 1).getToLocation(), m.getFromPose(), catMissions.get(catMissions.size() - 1).getToPose());
 												ArrayList<PoseSteering> path = new ArrayList<PoseSteering>();
 												for (int i = 0; i < catMissions.size(); i++) {
 													Mission oneMission = catMissions.get(i);
-													if (mdcs.containsKey(robotID)) mdcs.get(robotID).beforeMissionDispatch(oneMission);
+													if (mdcs.containsKey(robotID))
+														mdcs.get(robotID).beforeMissionDispatch(oneMission);
 													if (i == 0) path.add(oneMission.getPath()[0]);
-													for (int j = 1; j < oneMission.getPath().length-1; j++) {
+													for (int j = 1; j < oneMission.getPath().length - 1; j++) {
 														path.add(oneMission.getPath()[j]);
 													}
-													if (i == catMissions.size()-1) path.add(oneMission.getPath()[oneMission.getPath().length-1]);
+													if (i == catMissions.size() - 1)
+														path.add(oneMission.getPath()[oneMission.getPath().length - 1]);
 												}
 												m.setPath(path.toArray(new PoseSteering[path.size()]));
-											}
-											else if (mdcs.containsKey(robotID)) mdcs.get(robotID).beforeMissionDispatch(m);
+											} else if (mdcs.containsKey(robotID))
+												mdcs.get(robotID).beforeMissionDispatch(m);
 										}
 
 										//addMission returns true iff the robot was free to accept a new mission
@@ -1187,8 +1203,7 @@ public class Missions {
 														Missions.removeMissions(cm);
 													}
 												}
-											}
-											else {
+											} else {
 												Missions.dequeueMission(m.getRobotID());
 												Missions.enqueueMission(m);
 											}
@@ -1197,12 +1212,13 @@ public class Missions {
 								}
 							}
 						}
-						updateRobotReports(tec); // Call to update all the robot reports
-						//Sleep for a little:
-						try { GatedThread.sleep(100); }
+						//Sleep for a little (0.5 sec)
+						try { GatedThread.sleep(500); }
 						catch (InterruptedException e) { e.printStackTrace(); }
+//						updateRobotReports(tec); // Call to update all the robot reports
+						LookAheadVehicle.updateLookAheadVehiclesPath(tec); // Call to update limited predictable vehicles paths
 					}
-					writeStatistics(tec);
+//					writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
 				}
 
 			};
@@ -1210,28 +1226,17 @@ public class Missions {
 		}
 	}
 
-	private static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
-		for (int robotID : tec.getAllRobotIDs()) {
-			VehiclesHashMap.getVehicle(robotID).writeStatistics();
-		}
-	}
+//	private static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
+//		for (int robotID : tec.getAllRobotIDs()) {
+//			VehiclesHashMap.getVehicle(robotID).writeStatistics();
+//		}
+//	}
 
-	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
-		for (int robotID : tec.getAllRobotIDs()) {
-			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
-		}
-	}
-
-	/**
-	 * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
-	 * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
-	 * This method will loop through all mission forever.
-	 * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
-	 * @param robotIDs The robot IDs which should be considered dispatchable.
-	 */
-	public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, int ... robotIDs) {
-		startMissionDispatchers(tec, true, robotIDs);
-	}
+//	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
+//		for (int robotID : tec.getAllRobotIDs()) {
+//			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
+//		}
+//	}
 
 	/**
 	 * Read a path from a file.
@@ -1275,8 +1280,6 @@ public class Missions {
 		return resamplePath(retArray);
 	}
 
-
-	
 	/**
 	 * Create a mission following a given mission. The mission will make the follower robot navigate from its
 	 * current pose to the start pose of the leader's mission, after which the follower robot will follow the
