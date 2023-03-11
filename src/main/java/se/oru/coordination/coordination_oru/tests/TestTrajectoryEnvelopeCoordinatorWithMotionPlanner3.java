@@ -145,7 +145,7 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner3 {
 
 		System.out.println("Added missions " + Missions.getMissions());
 
-		final Random rand = new Random(Calendar.getInstance().getTimeInMillis());
+		final Random rand = new Random(1); //Calendar.getInstance().getTimeInMillis());
 		final int minDelay = 500;
 		final int maxDelay = 3000;
 		//Start a mission dispatching thread for each robot, which will run forever

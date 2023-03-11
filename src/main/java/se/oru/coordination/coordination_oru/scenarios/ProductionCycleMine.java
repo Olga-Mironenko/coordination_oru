@@ -34,11 +34,10 @@ public class ProductionCycleMine {
         var drillVehicle = new LookAheadVehicle(1, predictableDistance, Color.CYAN, 5, 2, YAML_FILE, 0.5, 0.5);
         var chargingVehicle = new LookAheadVehicle(1, 6*predictableDistance, Color.WHITE, 5, 2, YAML_FILE, 0.5, 0.5);
 
-
         var autonomousVehicle1 = new AutonomousVehicle(YAML_FILE);
         var autonomousVehicle2 = new AutonomousVehicle(YAML_FILE);
-        PoseSteering[] autonomousVehicle1Path = autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
-        PoseSteering[] autonomousVehicle2Path = autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
+        PoseSteering[] autonomousVehicle1Path = autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, true);
+        PoseSteering[] autonomousVehicle2Path = autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -85,8 +84,8 @@ public class ProductionCycleMine {
         final Pose[] drillRigGoal = {drawPoint38, drawPoint18, drawPoint24, mainTunnelRight};
         final Pose[] chargingVehicleGoal = {drawPoint24, drawPoint23, drawPoint18, drawPoint16, drawPoint38, mainTunnelLeft};
 
-        PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
-        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE, false);
+        PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, false);
+        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, false);
         Thread.sleep(5000);
         tec.placeRobot(drillVehicle.getID(), mainTunnelLeft);
         PoseSteering[] drillInitialPath = drillVehicle.getLimitedPath(drillVehicle.getID(), drillVehicle.getPredictableDistance(), tec);
@@ -109,7 +108,7 @@ public class ProductionCycleMine {
 //        System.out.println(tec.isParked(drillVehicle.getID()));
 
 //        for (int i = 0; i < drillRigLocations.length; i++) {
-//            PoseSteering[] drillRigPath = drillVehicle.getPlan(drillRigLocations[i], new Pose[]{drillRigLocations[i++]}, YAML_FILE, false);
+//            PoseSteering[] drillRigPath = drillVehicle.getPlan(drillRigLocations[i], new Pose[]{drillRigLocations[i++]}, false);
 //            Thread.sleep(missionTime);
 //            tec.placeRobot(drillVehicle.getID(), drillRigLocations[i]);
 //            var m = new Mission(drillVehicle.getID(), drillRigPath);
@@ -117,7 +116,7 @@ public class ProductionCycleMine {
 //            tec.addMissions(m);
 //        }
 
-//        PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
+//        PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, false);
 //        Thread.sleep(1000);
 //        tec.placeRobot(drillVehicle.getID(), mainTunnelLeft);
 //        var m3 = new Mission(drillVehicle.getID(), drillRigPath);

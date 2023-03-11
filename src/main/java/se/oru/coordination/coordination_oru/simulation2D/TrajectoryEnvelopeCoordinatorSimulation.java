@@ -1,11 +1,13 @@
 package se.oru.coordination.coordination_oru.simulation2D;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.metacsp.framework.BinaryConstraint;
+import org.metacsp.framework.Constraint;
+import org.metacsp.framework.ConstraintNetwork;
+import org.metacsp.framework.Variable;
+import org.metacsp.framework.multi.MultiBinaryConstraint;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.Trajectory;
@@ -28,13 +30,15 @@ import se.oru.coordination.coordination_oru.TrackingCallback;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeCoordinator {
-
+	public static TrajectoryEnvelopeCoordinatorSimulation tec = null;
+	
 	protected static final long START_TIME = Calendar.getInstance().getTimeInMillis();
 	protected boolean useInternalCPs = true;
 	
-	protected boolean checkCollisions = false;
+	protected boolean checkCollisions = false; // TODO
 	protected ArrayList<CollisionEvent> collisionsList = new ArrayList<CollisionEvent>();
 	protected Thread collisionThread = null;
 	
@@ -95,6 +99,8 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 		this.DEFAULT_MAX_VELOCITY = MAX_VELOCITY;
 		this.DEFAULT_MAX_ACCELERATION = MAX_ACCELERATION;
 		this.DEFAULT_ROBOT_TRACKING_PERIOD = DEFAULT_ROBOT_TRACKING_PERIOD;
+		assert tec == null;
+		tec = this;
 	}
 	
 	/**
@@ -277,7 +283,19 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	public long getCurrentTimeInMillis() {
 		return Calendar.getInstance().getTimeInMillis()-START_TIME;
 	}
-	
+
+	public String constraintsToGraphviz(Constraint[] constraints) {
+		String ret = "digraph { ";
+		for (Constraint c : constraints) {
+			Variable[] vs = c.getScope();
+			if (vs.length == 2) {
+				ret += "\"" + vs[0] + "\" -> \"" + vs[1] + "\" [label=\"" + c.getEdgeLabel() + "\"]; ";
+			}
+		}
+		ret += "}";
+		return ret;
+	}
+
 	@Override
 	protected String[] getStatistics() {
 		
@@ -285,12 +303,18 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 		String CONNECTOR_LEAF = (char)0x2514 + "" + (char)0x2500 + " ";
 		ArrayList<String> ret = new ArrayList<String>();
 		int numVar = solver.getConstraintNetwork().getVariables().length;
-		int numCon = solver.getConstraintNetwork().getConstraints().length;
+		Constraint[] constraints = solver.getConstraintNetwork().getConstraints();
+		int numCon = constraints.length;
 		
 		synchronized (trackers) {
 			ret.add("Status @ "  + getCurrentTimeInMillis() + " ms");
 			ret.add(CONNECTOR_BRANCH + 		"Eff period .......... " + EFFECTIVE_CONTROL_PERIOD + " ms");
 			ret.add(CONNECTOR_BRANCH + 		"Constraint network .. " + numVar + " variables, " + numCon + " constraints");
+			for (int i = 0; i < numCon; i++) {
+				ret.add(CONNECTOR_BRANCH + 		"constraints[" + i + "] = " + constraints[i]);
+			}
+			ret.add(CONNECTOR_BRANCH + constraintsToGraphviz(constraints));
+
 			HashSet<Integer> allRobots = new HashSet<Integer>();
 			for (Integer robotID : trackers.keySet()) {
 				allRobots.add(robotID);
@@ -352,10 +376,10 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 		if (checkCollisions && (collisionThread == null) && (this.allCriticalSections.size() > 0)) {
 			// Start the collision checking thread. 
 			// The tread will be alive until there will be almost one critical section.
-			collisionThread = new Thread("Collision checking thread.") {
+			collisionThread = new GatedThread("Collision checking thread.") {
 
 				@Override
-				public void run() {
+				public void runCore() {
 					metaCSPLogger.info("Starting the collision checking thread.");
 					ArrayList<CriticalSection> previousCollidingCS = new ArrayList<CriticalSection>();
 					ArrayList<CriticalSection> newCollidingCS = new ArrayList<CriticalSection>();
@@ -415,7 +439,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 						}
 						previousCollidingCS.addAll(newCollidingCS);
 						
-						try { Thread.sleep((long)(1000.0/30.0)); }
+						try { GatedThread.sleep((long)(1000.0/30.0)); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
 					metaCSPLogger.info("Ending the collision checking thread.");

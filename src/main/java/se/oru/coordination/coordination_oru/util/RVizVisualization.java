@@ -49,6 +49,7 @@ import se.oru.coordination.coordination_oru.util.FleetVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
 import com.vividsolutions.jts.geom.Polygon;
 //import org.ros.visualization_msgs.MarkerArray;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import visualization_msgs.MarkerArray;
 
 public class RVizVisualization implements FleetVisualization, NodeMain {
@@ -240,7 +241,7 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 		this.mapFileName = Missions.getProperty("image", mapYAMLFile);
 		if (prefix != null) this.mapFileName = prefix + File.separator + this.mapFileName;
 		while (!ready) {
-			try { Thread.sleep(100); }
+			try { GatedThread.sleep(100); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
 		if (mapFileName != null) {

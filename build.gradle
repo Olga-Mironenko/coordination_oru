@@ -83,6 +83,7 @@ dependencies {
 }
 
 run {
+    enableAssertions = true
     if (project.hasProperty("demo")) {
         args(demo)
     }

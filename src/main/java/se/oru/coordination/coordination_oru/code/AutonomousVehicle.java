@@ -10,17 +10,20 @@ import java.awt.*;
 public class AutonomousVehicle extends AbstractVehicle {
 
     public AutonomousVehicle(String map) {
-        super(1, "AutonomousVehicle", Color.YELLOW, 5, 2, map, 0.5, 0.5);
+        super(1, "AutonomousVehicle", Color.YELLOW, Color.YELLOW, 5, 2, map, 0.5, 0.5);
 
     }
 
-    public AutonomousVehicle(int priorityID, String type, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        super(priorityID, type, color, maxVelocity, maxAcceleration, map, xLength, yLength);
+    public AutonomousVehicle(int id, int priorityID, String type, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+        super(id, priorityID, type, colorMoving, colorStill, maxVelocity, maxAcceleration, map, xLength, yLength);
+    }
+
+    public AutonomousVehicle(int priorityID, String type, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+        super(priorityID, type, colorMoving, colorStill, maxVelocity, maxAcceleration, map, xLength, yLength);
     }
 
     @Override
-    public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
-
+    public PoseSteering[] getPlan(Pose initial, Pose[] goals, Boolean inversePath) {
         var rsp = new ReedsSheppCarPlanner();
         rsp.setMap(map);
         rsp.setRadius(0.01);

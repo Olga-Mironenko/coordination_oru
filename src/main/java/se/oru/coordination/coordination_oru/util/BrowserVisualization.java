@@ -1,11 +1,20 @@
 package se.oru.coordination.coordination_oru.util;
 
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.util.AffineTransformation;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import javax.imageio.ImageIO;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -15,19 +24,19 @@ import org.metacsp.multi.spatial.DE9IM.GeometricShapeDomain;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
-import se.oru.coordination.coordination_oru.RobotReport;
-import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.util.AffineTransformation;
+
+import se.oru.coordination.coordination_oru.Mission;
+import se.oru.coordination.coordination_oru.RobotReport;
+import se.oru.coordination.coordination_oru.code.AbstractVehicle;
+import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class BrowserVisualization implements FleetVisualization {
 	
@@ -52,11 +61,12 @@ public class BrowserVisualization implements FleetVisualization {
 	public BrowserVisualization(String serverHostNameOrIP, int updatePeriodInMillis) {
 		UPDATE_PERIOD = updatePeriodInMillis;
 		BrowserVisualization.setupVizMessageServer();
-        Thread updateThread = new Thread("Visualization update thread") {
-        	public void run() {
+        Thread updateThread = new GatedThread("Visualization update thread") {
+        	@Override
+            public void runCore() {
         		while (true) {
         			sendMessages();
-        			try { Thread.sleep(UPDATE_PERIOD); }
+        			try { GatedThread.sleep(UPDATE_PERIOD); }
         			catch (InterruptedException e) { e.printStackTrace(); }
         		}
         	}
@@ -203,6 +213,7 @@ public class BrowserVisualization implements FleetVisualization {
 		}
 	}
 
+	// TODO: remove code duplication
 	@Override
 	public void displayRobotState(TrajectoryEnvelope te, RobotReport rr, String... extraStatusInfo) {
 		double x = rr.getPathIndex() != -1 ? rr.getPose().getX() : te.getTrajectory().getPose()[0].getX();
@@ -229,6 +240,55 @@ public class BrowserVisualization implements FleetVisualization {
 		String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+name, arrowGeom, "#ffffff", -1, true, null) + "}";
 		enqueueMessage(jsonString);
 		enqueueMessage(jsonStringArrow);
+		
+		makeOverlayText();
+	}
+
+	protected static double round(double value) {
+		return (double) Math.round(value * 10) / 10;
+	}
+	
+	protected void makeOverlayText() {
+		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
+		String text = "";
+		if (idToVehicle.keySet().contains(MissionUtils.idHuman)) {
+			text += "targetVelocityHuman: " + round(MissionUtils.targetVelocityHuman) + "<br>";
+		}
+		for (int id : idToVehicle.keySet()) {
+			text += "(Robot " + id + ") ";
+
+			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
+			double velocity = rr.getVelocity();
+			text += "velocity: " + round(velocity);
+
+                        int numCalls = 0;
+                        var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
+                        if (numIntegrateCalls.containsKey(id)) {
+                            numCalls = numIntegrateCalls.get(id);
+                        }
+                        text += "; numIntegrateCalls: " + numCalls;
+
+			text += "; " + stringifyMissions(Missions.getMissions(id));
+
+			text += "<br>";
+		}
+		setOverlayText(text);
+	}
+	
+	protected static String stringifyMissions(ArrayList<Mission> missions) {
+		if (missions == null) {
+			missions = new ArrayList<Mission>();
+		}
+		String text = missions.size() + " future missions: [";
+		for (int i = 0; i < missions.size(); i++) {
+			if (i > 0) {
+				text += ", ";
+			}
+			Mission mission = missions.get(i);
+			text += mission.getPath().length;
+		}
+		text += "]";
+		return text;
 	}
 	
 	@Override
@@ -397,7 +457,8 @@ public class BrowserVisualization implements FleetVisualization {
 		BrowserVisualizationSocket.origin = origin;
 	}
 	
-	public void setMap(String mapYAMLFile) {
+	@Override
+    public void setMap(String mapYAMLFile) {
 		try {
 			File file = new File(mapYAMLFile);
 			BufferedReader br = new BufferedReader(new FileReader(file));

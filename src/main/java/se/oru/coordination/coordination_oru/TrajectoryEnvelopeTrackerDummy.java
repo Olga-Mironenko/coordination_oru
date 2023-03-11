@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru;
 
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelopeSolver;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 /**
  * This {@link AbstractTrajectoryEnvelopeTracker} is used to represent static robots, that is, robots
@@ -31,7 +32,13 @@ public abstract class TrajectoryEnvelopeTrackerDummy extends AbstractTrajectoryE
 		this.te = te;
 		this.traj = te.getTrajectory();
 		this.temporalResolution = temporalResolution;
-		this.th = new Thread(this, "Parking tracker " + te.getComponent());
+		TrajectoryEnvelopeTrackerDummy self = this;
+		this.th = new GatedThread("Parking tracker " + te.getComponent()) {
+			@Override
+			public void runCore() {
+				self.run();
+			}
+		};
 		this.th.start();
 	}
 	
@@ -55,9 +62,11 @@ public abstract class TrajectoryEnvelopeTrackerDummy extends AbstractTrajectoryE
 	 */
 	public void finishParking() {		
 		this.parkingFinished = true;
+		/*
 		synchronized(th) {
 			th.notify();
 		}
+		 */
 	}
 	
 	/**
@@ -95,21 +104,22 @@ public abstract class TrajectoryEnvelopeTrackerDummy extends AbstractTrajectoryE
 		metaCSPLogger.info("Parking starts for Robot " + te.getRobotID());
 		updateDeadline(this.te, DELTA_FUTURE);
 		onPositionUpdate();
-		/*while (!parkingFinished) {
-			updateDeadline(this.te, DELTA_FUTURE);
-			onPositionUpdate();
-			try { Thread.sleep(trackingPeriodInMillis); }
+		while (!parkingFinished) {
+			//updateDeadline(this.te, DELTA_FUTURE);
+			//onPositionUpdate();
+			try { GatedThread.sleep(trackingPeriodInMillis); }
 			catch (InterruptedException e) { e.printStackTrace(); }
-		}*/		
+		}/*
 		synchronized(th) {
 			try {
-				th.wait();
+				th.wait(); // This freezes `Gatekeeper`.
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				metaCSPLogger.severe(e.toString());
 			}
-		}
+		}*/
+
 		metaCSPLogger.info("Parking finishes for Robot " + te.getRobotID());
 		
 		fixDeadline(te, 0);
@@ -125,7 +135,7 @@ public abstract class TrajectoryEnvelopeTrackerDummy extends AbstractTrajectoryE
 //				}
 //			}
 //			
-//			try { Thread.sleep(trackingPeriodInMillis); }
+//			try { GatedThread.sleep(trackingPeriodInMillis); }
 //			catch (InterruptedException e) { e.printStackTrace(); }
 //		}
 		

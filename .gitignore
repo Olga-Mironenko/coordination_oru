@@ -35,6 +35,9 @@ logs/
 # IntelliJ IDEA
 .idea/
 
+# Eclipse
+.metadata/
+
 # SimpleReedsSheppCarPlanner 
 SimpleReedsSheppCarPlanner/CMakeCache.txt
 SimpleReedsSheppCarPlanner/CMakeFiles/
