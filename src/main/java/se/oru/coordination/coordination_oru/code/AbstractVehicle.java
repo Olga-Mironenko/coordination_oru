@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
@@ -16,9 +17,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import se.oru.coordination.coordination_oru.RobotReport;
 
 public abstract class AbstractVehicle {
-
-    public static int vehicleNumber = 1;
-    private final int ID;
+    private final int id;
     private final int priorityID;
     private final String type;
     private Color colorMoving;
@@ -42,8 +41,8 @@ public abstract class AbstractVehicle {
     private int stops;
     private final double startTime = System.nanoTime();
     private PoseSteering[] path;
-    public AbstractVehicle(int priorityID, String type, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        this.ID = vehicleNumber;
+    public AbstractVehicle(int id, int priorityID, String type, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+        this.id = id;
         this.priorityID = priorityID;
         this.type = this.getClass().getSimpleName();
         this.colorMoving = colorMoving;
@@ -53,20 +52,29 @@ public abstract class AbstractVehicle {
         this.map = map;
         this.xLength = xLength;
         this.yLength = yLength;
-        this.footPrint = new Coordinate[]{                // FIXME Currently allows four sided vehicles only
+        this.footPrint = new Coordinate[] {               // FIXME Currently allows four sided vehicles only
                 new Coordinate(-xLength, yLength),        //back left
                 new Coordinate(xLength, yLength),         //back right
                 new Coordinate(xLength, -yLength),        //front right
                 new Coordinate(-xLength, -yLength)        //front left
         };
-        VehiclesHashMap.getList().put(this.ID, this);
-        vehicleNumber++;
+        if (VehiclesHashMap.getList().containsKey(id)) {
+            throw new Error("ID " + id + " already exists.");
+        }
+        VehiclesHashMap.getList().put(id, this);
     }
 
-    @Override
+    public AbstractVehicle(int priorityID, String type, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+        this(
+                VehiclesHashMap.getList().isEmpty() ? 1 : Collections.max(VehiclesHashMap.getList().keySet()) + 1,
+                priorityID, type, colorMoving, colorStill, maxVelocity, maxAcceleration, map, xLength, yLength
+        );
+    }
+
+        @Override
     public String toString() {
         return "AbstractVehicle{" +
-                "ID=" + ID +
+                "ID=" + id +
                 ", priorityID=" + priorityID +
                 ", type='" + type + '\'' +
                 ", color=" + colorMoving +
@@ -161,13 +169,13 @@ public abstract class AbstractVehicle {
 
     //TODO Do color blinking and vehicle stoppage
     public void blinkVehicle(Color colorOriginal, Color colorToggle, long blinkTimeSeconds) throws InterruptedException {
-        VehiclesHashMap.getVehicle(this.ID).setColor(colorToggle);
+        VehiclesHashMap.getVehicle(this.id).setColor(colorToggle);
         TimeUnit.SECONDS.sleep(blinkTimeSeconds);
-        VehiclesHashMap.getVehicle(this.ID).setColor(colorOriginal);
+        VehiclesHashMap.getVehicle(this.id).setColor(colorOriginal);
     }
 
     public int getID() {
-        return ID;
+        return id;
     }
 
     public Color getColor() {

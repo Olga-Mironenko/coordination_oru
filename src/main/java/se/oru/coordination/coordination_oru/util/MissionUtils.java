@@ -10,12 +10,12 @@ import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.State;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class MissionUtils {
-    public static final double targetVelocityInitial1 = 0.1;
-    public static double targetVelocity1 = targetVelocityInitial1;
+    public static final double targetVelocityHumanInitial = 0.1;
+    public static double targetVelocityHuman = targetVelocityHumanInitial;
+    public static int idHuman = 0;
     public static boolean isWorking = false;
     public static boolean isEmergencyBreak = false;
 
@@ -64,7 +64,7 @@ public class MissionUtils {
 
                 PoseSteering[] currentPath = getCurrentPath(robotID);
                 if (currentPath == null || rr.getPathIndex() == -1) {
-                    targetVelocity1 = targetVelocityInitial1;
+                    targetVelocityHuman = targetVelocityHumanInitial;
                     Missions.enqueueMission(new Mission(robotID, newPath));
                 } else {
                     int replacementIndex = getReplacementIndex(robotID);
@@ -104,7 +104,7 @@ public class MissionUtils {
     // 0.1->1.1->0.1: OK
     // 0.1->1.1->2.1: breaks
     // 0.1->1.1->0.1->1.1: breaks
-    public static void changeTargetVelocity1(double delta) {
+    public static void changeTargetVelocityHuman(double delta) {
         if (isWorking) {
             return;
         }
@@ -112,10 +112,10 @@ public class MissionUtils {
         try {
             // TODO: sometimes doesn't get called
             // ("hint": try to pause the websocket thread in the debugger)
-            int robotID = 1;
-            double targetVelocity1New = targetVelocity1 + delta;
-            if (targetVelocity1New > 0) {
-                targetVelocity1 = targetVelocity1New;
+            int robotID = idHuman;
+            double targetVelocityNew = targetVelocityHuman + delta;
+            if (targetVelocityNew > 0) {
+                targetVelocityHuman = targetVelocityNew;
 
                 synchronized (pathLock) {
                     PoseSteering[] currentPath = getCurrentPath(robotID);

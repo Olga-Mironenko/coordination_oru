@@ -360,10 +360,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			int robotID
 	) {
 		// Use `targetVelocity`:
-		if (robotID == 1) {
-			MAX_VELOCITY = Math.min(MAX_VELOCITY, MissionUtils.targetVelocity1); // MAX_ACCELERATION or 0
+		if (robotID == MissionUtils.idHuman) {
+			MAX_VELOCITY = Math.min(MAX_VELOCITY, MissionUtils.targetVelocityHuman); // MAX_ACCELERATION or 0
 			if (! slowDown) {
-				slowDown = state.getVelocity() > MissionUtils.targetVelocity1; // -MAX_ACCELERATION
+				slowDown = state.getVelocity() > MissionUtils.targetVelocityHuman; // -MAX_ACCELERATION
 			}
 		}
 

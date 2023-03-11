@@ -249,8 +249,11 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 	
 	protected void makeOverlayText() {
-		String text = "targetVelocity1: " + round(MissionUtils.targetVelocity1) + "<br>";
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
+		String text = "";
+		if (idToVehicle.keySet().contains(MissionUtils.idHuman)) {
+			text += "targetVelocityHuman: " + round(MissionUtils.targetVelocityHuman) + "<br>";
+		}
 		for (int id : idToVehicle.keySet()) {
 			text += "(Robot " + id + ") ";
 

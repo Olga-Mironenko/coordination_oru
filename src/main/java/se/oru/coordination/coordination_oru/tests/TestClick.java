@@ -3,7 +3,6 @@ package se.oru.coordination.coordination_oru.tests;
 import java.awt.Color;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
-import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
@@ -12,7 +11,6 @@ import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.*;
-import se.oru.coordination.coordination_oru.util.gates.Gate;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class TestClick {
@@ -68,18 +66,18 @@ public class TestClick {
         final Pose drawPoint38 = new Pose(20.1,25.7,-Math.PI/2);
         final Pose orePassOppositePoint = new Pose(53,32.4,-Math.PI/2);
 
-        final Pose hum1Start = mainTunnelBetween19And20;
-        final Pose hum1Finish = null;
-        final boolean isHum1Return = false;
-        final boolean isHum1Loop = false;
-        final Pose aut2Start = mainTunnelRight;
-        final Pose aut2Finish = drawPoint19_bottom;
+        final Pose humStart = mainTunnelBetween19And20;
+        final Pose humFinish = null;
+        final boolean ishumReturn = false;
+        final boolean ishumLoop = false;
+        final Pose autStart = mainTunnelRight;
+        final Pose autFinish = drawPoint19_bottom;
 
         final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
         final int maxVelocity = 8;
 
-        AutonomousVehicle hum1 = new HumanDrivenVehicle(0, "HumanDrivenVehicle", Color.GREEN, Color.BLUE, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
-        AutonomousVehicle aut2 = new AutonomousVehicle(0, "AutonomousVehicle", Color.YELLOW, Color.YELLOW, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, "HumanDrivenVehicle", Color.GREEN, Color.BLUE, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle aut1 = new AutonomousVehicle(0, "AutonomousVehicle", Color.YELLOW, Color.YELLOW, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
         System.out.println(VehiclesHashMap.getInstance().getList());
 
@@ -90,22 +88,17 @@ public class TestClick {
         // Start the thread that checks and enforces dependencies at every clock tick
         tec.startInference();
 
-        tec.setDefaultFootprint(hum1.getFootPrint());
-        tec.placeRobot(hum1.getID(), hum1Start);
-        tec.placeRobot(aut2.getID(), aut2Start);
+        tec.setDefaultFootprint(hum0.getFootPrint());
+        tec.placeRobot(hum0.getID(), humStart);
+        tec.placeRobot(aut1.getID(), autStart);
 
         Heuristics heuristics = new Heuristics();
-        heuristics.robotIDToPrecedence.put(1, 20);
-        heuristics.robotIDToPrecedence.put(2, 10);
-        // tec.addComparator(heuristics.highestPrecedence());
-        //tec.addComparator(heuristics.lowestIDNumber());
         tec.addComparator(heuristics.highestIDNumber());
-        // TODO: demos (regarding precedence)
 
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);
-        //tec.setMotionPlanner(1, hum1.makePlanner()); // needed for re-planning
+        //tec.setMotionPlanner(1, hum0.makePlanner()); // needed for re-planning
 
         // Set up a simple GUI (null means empty map, otherwise provide yaml file)
         var viz = new BrowserVisualization();
@@ -115,14 +108,14 @@ public class TestClick {
 
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatchers(tec, loopTime);
-        Missions.loopMissions.put(1, isHum1Loop);
+        Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
-        if (hum1Finish != null) {
-            MissionUtils.targetVelocity1 = 10;
-            Missions.enqueueMission(new Mission(hum1.getID(), hum1.getPlan(hum1Start, new Pose[] { hum1Finish }, isHum1Return)));
+        if (humFinish != null) {
+            MissionUtils.targetVelocityHuman = 10;
+            Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[] { humFinish }, ishumReturn)));
         }
 
-        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, true)));
+        Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(autStart, new Pose[] { autFinish }, true)));
 
         final boolean isChangeVelocity = false;
         if (isChangeVelocity) {
@@ -136,7 +129,7 @@ public class TestClick {
                             throw new RuntimeException(e);
                         }
                     }
-                    MissionUtils.changeTargetVelocity1(1);
+                    MissionUtils.changeTargetVelocityHuman(1);
                 }
             }.start();
         }
@@ -147,9 +140,9 @@ public class TestClick {
                 @Override
                 public void runCore() {
                     GatedThread.skipCycles(100);
-                    MissionUtils.moveRobot(1, drawPoint20_bottom);
+                    MissionUtils.moveRobot(hum0.getID(), drawPoint20_bottom);
                     GatedThread.skipCycles(10);
-                    MissionUtils.changeTargetVelocity1(1); // requires emergency break
+                    MissionUtils.changeTargetVelocityHuman(1); // requires emergency break
                 }
             }.start();
         }
