@@ -52,6 +52,7 @@ public class TestClick {
         final Pose drawPoint18 = new Pose(31.6,84.6,-Math.PI/2);
         final Pose drawPoint19 = new Pose(39.05,85.45,-Math.PI/2);
         final Pose drawPoint19_bottom = new Pose(38.8,28.6,-Math.PI/2);
+        final Pose mainTunnelBetween19And20 = new Pose(43.57,17.85, -Math.PI);
         final Pose drawPoint20 = new Pose(46.0,85.2,-Math.PI/2);
         final Pose drawPoint20_bottom = new Pose(46.0,31.0,-Math.PI/2);
         final Pose drawPoint21 = new Pose(53.3,86.8,-Math.PI/2);
@@ -67,8 +68,10 @@ public class TestClick {
         final Pose drawPoint38 = new Pose(20.1,25.7,-Math.PI/2);
         final Pose orePassOppositePoint = new Pose(53,32.4,-Math.PI/2);
 
-        final Pose hum1Start = drawPoint38;
-        final Pose hum1Finish = null; // drawPoint23_bottom;
+        final Pose hum1Start = mainTunnelBetween19And20;
+        final Pose hum1Finish = null;
+        final boolean isHum1Return = false;
+        final boolean isHum1Loop = false;
         final Pose aut2Start = mainTunnelRight;
         final Pose aut2Finish = drawPoint19_bottom;
 
@@ -112,12 +115,11 @@ public class TestClick {
 
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatchers(tec, true, loopTime);
+        Missions.loopMissions.put(1, isHum1Loop);
 
-        if (hum1Finish == null) {
-            Missions.loopMissions.put(1, false);
-        } else {
+        if (hum1Finish != null) {
             MissionUtils.targetVelocity1 = 10;
-            Missions.enqueueMission(new Mission(hum1.getID(), hum1.getPath(hum1Start, hum1Finish, true)));
+            Missions.enqueueMission(new Mission(hum1.getID(), hum1.getPath(hum1Start, hum1Finish, isHum1Return)));
         }
 
         Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPath(aut2Start, aut2Finish, true)));
@@ -135,6 +137,19 @@ public class TestClick {
                         }
                     }
                     MissionUtils.changeTargetVelocity1(1);
+                }
+            }.start();
+        }
+
+        final boolean isNewMission = true;
+        if (isNewMission) {
+            new GatedThread("new mission") {
+                @Override
+                public void runCore() {
+                    GatedThread.skipCycles(100);
+                    MissionUtils.moveRobot(1, drawPoint20_bottom);
+                    GatedThread.skipCycles(10);
+                    MissionUtils.changeTargetVelocity1(1); // requires emergency break
                 }
             }.start();
         }

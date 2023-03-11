@@ -40,7 +40,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         PoseSteering[] pathFwd = null;
         for (int i = 1; i <= maxPathAttempts; i++) {
             if (rsp.plan()) {
-		pathFwd = rsp.getPath();
+		        pathFwd = rsp.getPath();
                 break;
             }
         }

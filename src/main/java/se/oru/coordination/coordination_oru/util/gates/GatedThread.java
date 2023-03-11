@@ -49,4 +49,18 @@ abstract public class GatedThread extends Thread {
             Thread.sleep(millis);
         }
     }
+
+    public static void sleepWithoutException(long millis) {
+        try {
+            sleep(millis);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void skipCycles(int numCycles) {
+        for (int i = 1; i <= numCycles; i++) {
+            sleepWithoutException(i);
+        }
+    }
 }

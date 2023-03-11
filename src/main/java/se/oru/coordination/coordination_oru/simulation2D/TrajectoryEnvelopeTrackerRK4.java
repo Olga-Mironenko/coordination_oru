@@ -588,6 +588,9 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 
 		while (true) {
+			if (MissionUtils.isEmergencyBreak) {
+				break;
+			}
 
 			//End condition: passed the middle AND velocity < 0 AND no criticalPoint
 			boolean skipIntegration = false;
@@ -614,6 +617,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 						// . . . . . . . . .
 						//     C ^
 						metaCSPLogger.severe("* ATTENTION! STOPPED AFTER!! *");
+						MissionUtils.isEmergencyBreak = true; // for others
+						break;
 					}
 
 					atCP = true;
