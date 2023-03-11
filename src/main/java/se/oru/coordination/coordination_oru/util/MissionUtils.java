@@ -56,9 +56,9 @@ public class MissionUtils {
 
                 PoseSteering[] newPath = null;
                 try {
-                    newPath = vehicle.getPath(currentPose, goal, false);
-                } catch (NoPathFound exc) {
-                    System.out.println("moveRobot: no path found");
+                    newPath = vehicle.getPlan(currentPose, new Pose[] { goal }, false);
+                } catch (Error exc) { // TODO: check for NoPathFound only
+                    System.out.println("moveRobot: no path found (or another error): " + exc);
                     return;
                 }
 

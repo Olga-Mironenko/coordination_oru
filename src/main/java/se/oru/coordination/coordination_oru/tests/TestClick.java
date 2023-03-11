@@ -78,8 +78,8 @@ public class TestClick {
         final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
         final int maxVelocity = 8;
 
-        AutonomousVehicle hum1 = new HumanDrivenVehicle(1, 0, Color.GREEN, Color.BLUE, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
-        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle hum1 = new HumanDrivenVehicle(0, "HumanDrivenVehicle", Color.GREEN, Color.BLUE, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle aut2 = new AutonomousVehicle(0, "AutonomousVehicle", Color.YELLOW, Color.YELLOW, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
         System.out.println(VehiclesHashMap.getInstance().getList());
 
@@ -105,7 +105,7 @@ public class TestClick {
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);
-        tec.setMotionPlanner(1, hum1.makePlanner()); // needed for re-planning
+        //tec.setMotionPlanner(1, hum1.makePlanner()); // needed for re-planning
 
         // Set up a simple GUI (null means empty map, otherwise provide yaml file)
         var viz = new BrowserVisualization();
@@ -114,15 +114,15 @@ public class TestClick {
         tec.setVisualization(viz);
 
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, true, loopTime);
+        Missions.startMissionDispatchers(tec, loopTime);
         Missions.loopMissions.put(1, isHum1Loop);
 
         if (hum1Finish != null) {
             MissionUtils.targetVelocity1 = 10;
-            Missions.enqueueMission(new Mission(hum1.getID(), hum1.getPath(hum1Start, hum1Finish, isHum1Return)));
+            Missions.enqueueMission(new Mission(hum1.getID(), hum1.getPlan(hum1Start, new Pose[] { hum1Finish }, isHum1Return)));
         }
 
-        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPath(aut2Start, aut2Finish, true)));
+        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, true)));
 
         final boolean isChangeVelocity = false;
         if (isChangeVelocity) {

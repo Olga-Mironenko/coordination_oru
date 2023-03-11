@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
@@ -13,7 +14,6 @@ import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import com.vividsolutions.jts.geom.Coordinate;
 
 import se.oru.coordination.coordination_oru.RobotReport;
-import se.oru.coordination.coordination_oru.util.NoPathFound;
 
 public abstract class AbstractVehicle {
 
@@ -21,11 +21,11 @@ public abstract class AbstractVehicle {
     private final int ID;
     private final int priorityID;
     private final String type;
-    private final Color colorMoving;
-    private final Color colorStill;
+    private Color colorMoving;
+    private Color colorStill;
     private double maxVelocity;
     private double maxAcceleration;
-    private final String map;
+    protected final String map;
     private final double xLength;
     private final double yLength;
     private final Coordinate[] footPrint;
@@ -42,7 +42,7 @@ public abstract class AbstractVehicle {
     private int stops;
     private final double startTime = System.nanoTime();
     private PoseSteering[] path;
-    public AbstractVehicle(int priorityID, String type, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+    public AbstractVehicle(int priorityID, String type, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
         this.ID = vehicleNumber;
         this.priorityID = priorityID;
         this.type = this.getClass().getSimpleName();
@@ -79,7 +79,7 @@ public abstract class AbstractVehicle {
                 '}';
     }
 
-    public abstract PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath);
+    public abstract PoseSteering[] getPlan(Pose initial, Pose[] goals, Boolean inversePath);
     public synchronized void updateStatistics() {
 
         // Loading and unloading times and stoppages are not considered
@@ -175,7 +175,7 @@ public abstract class AbstractVehicle {
     }
 
     public String getColorCode() {
-        return "#" + String.format("%06x", 0xFFFFFF & color.getRGB());
+        return "#" + String.format("%06x", 0xFFFFFF & getColor().getRGB());
     }
 
     public Coordinate[] getFootPrint() {
@@ -227,7 +227,8 @@ public abstract class AbstractVehicle {
     }
 
     public void setColor(Color color) {
-        this.color = color;
+        this.colorMoving = color;
+        this.colorStill = color;
     }
 
     public String getType() {

@@ -1163,7 +1163,7 @@ public class Missions {
 			missionDispatchThread = new GatedThread("missionDispatchThread") {
 				@Override
 				public void runCore() {
-					while (loopTime > System.currentTimeMillis()) {
+					while (simulationTime > System.currentTimeMillis()) {
 						for (int robotID : dispatchableRobots) {
 							if (Missions.hasMissions(robotID)) {
 								Mission m = Missions.peekMission(robotID);

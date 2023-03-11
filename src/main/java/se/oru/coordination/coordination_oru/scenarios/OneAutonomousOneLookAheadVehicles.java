@@ -26,8 +26,8 @@ public class OneAutonomousOneLookAheadVehicles {
 
         var autonomousVehicle = new AutonomousVehicle(YAML_FILE);
         var lookAheadVehicle = new LookAheadVehicle(YAML_FILE, predictableDistance);
-        var autonomousVehiclePath = autonomousVehicle.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
-        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, YAML_FILE, true);
+        var autonomousVehiclePath = autonomousVehicle.getPlan(drawPoint21, autonomousVehicleGoal, true);
+        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);

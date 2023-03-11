@@ -25,8 +25,8 @@ public class Test {
         var autonomousVehicle = new AutonomousVehicle(YAML_FILE);
         var autonomousVehicle2 = new AutonomousVehicle(YAML_FILE);
 //        var lookAheadVehicle = new LookAheadVehicle(YAML_FILE, 15);
-        var autonomousVehiclePath = autonomousVehicle.getPlan(mainTunnelLeft, goal1, YAML_FILE, true);
-        var autonomousVehiclePath2 = autonomousVehicle2.getPlan(mainTunnelRight, goal2, YAML_FILE, true);
+        var autonomousVehiclePath = autonomousVehicle.getPlan(mainTunnelLeft, goal1, true);
+        var autonomousVehiclePath2 = autonomousVehicle2.getPlan(mainTunnelRight, goal2, true);
 //        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, new Pose[] {mainTunnelRight}, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
