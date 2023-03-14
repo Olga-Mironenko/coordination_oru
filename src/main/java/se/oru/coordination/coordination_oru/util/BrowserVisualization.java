@@ -10,8 +10,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 import javax.imageio.ImageIO;
 
@@ -31,11 +30,13 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 
+import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class BrowserVisualization implements FleetVisualization {
@@ -272,23 +273,76 @@ public class BrowserVisualization implements FleetVisualization {
 
 			text += "<br>";
 		}
+		text += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
+		text += TrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString() + "<br>";
 		setOverlayText(text);
 	}
-	
+
 	protected static String stringifyMissions(ArrayList<Mission> missions) {
 		if (missions == null) {
 			missions = new ArrayList<Mission>();
 		}
-		String text = missions.size() + " future missions: [";
-		for (int i = 0; i < missions.size(); i++) {
-			if (i > 0) {
-				text += ", ";
+		synchronized (missions) {
+			String text = missions.size() + " future missions: [";
+			for (int i = 0; i < missions.size(); i++) {
+				if (i > 0) {
+					text += ", ";
+				}
+				Mission mission = missions.get(i);
+				text += mission.getPath().length;
 			}
-			Mission mission = missions.get(i);
-			text += mission.getPath().length;
+			text += "]";
+			return text;
 		}
-		text += "]";
+	}
+
+	protected static String stringifyCriticalSections(HashSet<CriticalSection> allCriticalSections) {
+		ArrayList<CriticalSection> criticalSections = new ArrayList<>(allCriticalSections);
+		criticalSections.sort(new Comparator<CriticalSection>() {
+			@Override
+			public int compare(CriticalSection cs1, CriticalSection cs2) {
+				int[] list1 = csToInts(cs1);
+				int[] list2 = csToInts(cs2);
+				for (int i = 0; i < list1.length; i++) {
+					int value = Integer.compare(list1[i], list2[i]);
+					if (value != 0)
+						return value;
+				}
+				return 0;
+			}
+
+			private int[] csToInts(CriticalSection cs) {
+				return new int[] {
+						(cs.getTe1() == null ? -1 : cs.getTe1().getRobotID()),
+						cs.getTe1Start(),
+						cs.getTe1End(),
+						(cs.getTe2() == null ? -1 : cs.getTe2().getRobotID()),
+						cs.getTe2Start(),
+						cs.getTe2End(),
+				};
+			}
+		});
+
+		String text = "Critical sections:";
+		if (criticalSections.isEmpty()) {
+			text += " none<br>";
+		} else {
+			text += "<br>";
+			for (CriticalSection cs : criticalSections) {
+				text += "- " + stringifyCriticalSection(cs) + "<br>";
+			}
+		}
 		return text;
+	}
+
+	protected static String stringifyCriticalSection(CriticalSection cs) {
+		synchronized (cs) {
+			String ret = "";
+			String robot1 = cs.getTe1() == null ? "null" : String.valueOf(cs.getTe1().getRobotID());
+			String robot2 = cs.getTe2() == null ? "null" : String.valueOf(cs.getTe2().getRobotID());
+			ret += robot1 + " [" + cs.getTe1Start() + ";" + cs.getTe1End() + "], " + robot2 + " [" + cs.getTe2Start() + ";" + cs.getTe2End() + "]";
+			return ret;
+		}
 	}
 	
 	@Override

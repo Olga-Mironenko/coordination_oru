@@ -17,7 +17,6 @@ public class MissionUtils {
     public static double targetVelocityHuman = targetVelocityHumanInitial;
     public static int idHuman = 0;
     public static boolean isWorking = false;
-    public static boolean isEmergencyBreak = false;
 
     // TODO: race condition (click/keypress)
     // TODO: crashes on click and then (immediately) keypress
