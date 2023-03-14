@@ -8,6 +8,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 /**
  * This class implements a simple planner based on the methods provided by the static class {@link Missions}.
@@ -133,7 +134,7 @@ public class RoadMapPlanner extends AbstractMotionPlanner {
 		rmp.setStart(start);
 		rmp.setGoals(goal1,goal2);
 
-		try { Thread.sleep(2000); }
+		try { GatedThread.sleep(2000); }
 		catch (InterruptedException e) { e.printStackTrace(); }
 
 		if (!rmp.plan()) throw new Error("No plan found!");
@@ -141,7 +142,7 @@ public class RoadMapPlanner extends AbstractMotionPlanner {
 
 		viz.addPath("path", path, 5, "#ff0000");
 
-		try { Thread.sleep(2000); }
+		try { GatedThread.sleep(2000); }
 		catch (InterruptedException e) { e.printStackTrace(); }
 
 		viz.removePath("path", path);

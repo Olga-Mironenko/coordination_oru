@@ -33,6 +33,7 @@ class Visualization {
 		this.overlay.addEventListener('mousedown', this.processMouseDown(this), false);
 		this.overlay.addEventListener('mousemove', this.processMouseMove(this), false);
 		this.overlay.addEventListener('mouseup', this.processMouseUp(this), false);
+		document.body.addEventListener('keydown', this.processKeyDown(this), false);
 
 		
 //		this.canvas.addEventListener('mousedown', this.processMouseDown(this), false);
@@ -176,7 +177,9 @@ class Visualization {
 			else {
 				var clickedKey = "";
 				var tPoint = viz.matrix.inverse().applyToPoint(viz.mousePos.x, viz.mousePos.y);
-				console.log("Clicked in (" + tPoint.x + "," + tPoint.y + ")");
+				console.log("Clicked at (" + tPoint.x + "," + tPoint.y + ")");
+				var message = JSON.stringify(["click", { x: tPoint.x, y: tPoint.y, theta: 0 }]);
+				websocket.send(message);
 				Object.keys(viz.geometries).forEach(function(key,index) {
 					// key: the name of the object key
 					// index: the ordinal position of the key within the object
@@ -194,6 +197,14 @@ class Visualization {
 				viz.selectedGeoms.clear();
 				viz.selectedGeoms.add(clickedKey);
 			}
+		};
+	}
+	
+	processKeyDown(viz) {
+		return function(e) {
+			console.log("keydown: code=" + e.code);
+			var message = JSON.stringify(["keydown", e.code]);
+			websocket.send(message);
 		};
 	}
 	

@@ -43,14 +43,14 @@ public class SevenAutonomousOneLookAheadVehicles {
         var autonomousVehicle5 = new AutonomousVehicle(YAML_FILE);
         var autonomousVehicle6 = new AutonomousVehicle(YAML_FILE);
         var autonomousVehicle7 = new AutonomousVehicle(YAML_FILE);
-        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath1 = autonomousVehicle1.getPlan(drawPoint17, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath2 = autonomousVehicle2.getPlan(drawPoint19, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath3 = autonomousVehicle3.getPlan(drawPoint20, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath4 = autonomousVehicle4.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath5 = autonomousVehicle5.getPlan(drawPoint22, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath6 = autonomousVehicle6.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath7 = autonomousVehicle7.getPlan(drawPoint24, autonomousVehicleGoal, YAML_FILE, true);
+        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, true);
+        var autonomousVehiclePath1 = autonomousVehicle1.getPlan(drawPoint17, autonomousVehicleGoal, true);
+        var autonomousVehiclePath2 = autonomousVehicle2.getPlan(drawPoint19, autonomousVehicleGoal, true);
+        var autonomousVehiclePath3 = autonomousVehicle3.getPlan(drawPoint20, autonomousVehicleGoal, true);
+        var autonomousVehiclePath4 = autonomousVehicle4.getPlan(drawPoint21, autonomousVehicleGoal, true);
+        var autonomousVehiclePath5 = autonomousVehicle5.getPlan(drawPoint22, autonomousVehicleGoal, true);
+        var autonomousVehiclePath6 = autonomousVehicle6.getPlan(drawPoint23, autonomousVehicleGoal, true);
+        var autonomousVehiclePath7 = autonomousVehicle7.getPlan(drawPoint24, autonomousVehicleGoal, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);

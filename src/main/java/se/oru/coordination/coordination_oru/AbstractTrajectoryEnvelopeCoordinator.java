@@ -6,30 +6,25 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.collections.comparators.ComparatorChain;
+import org.metacsp.framework.BinaryConstraint;
 import org.metacsp.framework.Constraint;
+import org.metacsp.framework.ConstraintNetwork;
+import org.metacsp.framework.Variable;
+import org.metacsp.framework.multi.MultiBinaryConstraint;
 import org.metacsp.multi.allenInterval.AllenIntervalConstraint;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
-import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelopeSolver;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope.SpatialEnvelope;
+import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelopeSolver;
 import org.metacsp.time.Bounds;
 import org.metacsp.utility.UI.Callback;
 import org.metacsp.utility.logging.MetaCSPLogging;
@@ -43,6 +38,7 @@ import aima.core.util.datastructure.Pair;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.util.FleetVisualization;
 import se.oru.coordination.coordination_oru.util.StringUtils;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 /**
  * This class provides coordination for a fleet of robots. An instantiatable {@link AbstractTrajectoryEnvelopeCoordinator}
@@ -127,6 +123,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected HashMap<Integer, Integer> robotTrackingPeriodInMillis = new HashMap<Integer, Integer>();
 	protected HashMap<Integer, Double> robotMaxVelocity = new HashMap<Integer, Double>();
 	protected HashMap<Integer, Double> robotMaxAcceleration = new HashMap<Integer, Double>();
+        public HashMap<Integer, Integer> numIntegrateCalls = new HashMap<Integer, Integer>();
 
 	protected HashSet<Integer> muted = new HashSet<Integer>();
 
@@ -255,7 +252,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 * @return The absolute path of a temporary file which contains a copy of the resource.
 	 */
 	public static String getResourceAsFileName(String resource) {
-		Random rand = new Random(Calendar.getInstance().getTimeInMillis());
+ 		Random rand = new Random(1); //Calendar.getInstance().getTimeInMillis());
 		ClassLoader classLoader = TrajectoryEnvelopeCoordinator.class.getClassLoader();
 		File source = new File(classLoader.getResource(resource).getFile());
 		File dest = new File("." + 1+rand.nextInt(1000) + ".tempfile");
@@ -834,20 +831,20 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 * @param duration Duration of the stopping.
 	 */
 	protected void spawnWaitingThread(final int robotID, final int index, final int duration) {
-		Thread stoppingPointTimer = new Thread() {
+		Thread stoppingPointTimer = new GatedThread("stoppingPointTimer") {
 			private long startTime = Calendar.getInstance().getTimeInMillis();
 			@Override
-			public void run() {
+			public void runCore() {
 				metaCSPLogger.info("Waiting thread starts for " + robotID);
 				while (Calendar.getInstance().getTimeInMillis()-startTime < duration) {
-					try { Thread.sleep(100); }
+					try { GatedThread.sleep(100); }
 					catch (InterruptedException e) { e.printStackTrace(); }
 				}
 				metaCSPLogger.info("Waiting thread finishes for " + robotID);
 				synchronized(solver) {
 					synchronized(stoppingPoints) {
-						stoppingPoints.get(robotID).remove((int)index);
-						stoppingTimes.get(robotID).remove((int)index);
+						stoppingPoints.get(robotID).remove(index);
+						stoppingTimes.get(robotID).remove(index);
 						stoppingPointTimers.remove(robotID);
 					}
 					updateDependencies();
@@ -1437,13 +1434,13 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 						//canStartTracking becomes true when setCriticalPoint is called once
 						while (!trackers.containsKey(myTE.getRobotID()) || !trackers.get(myTE.getRobotID()).canStartTracking()) {
-							try { Thread.sleep(100); }
+							try { GatedThread.sleep(100); }
 							catch (InterruptedException e) { e.printStackTrace(); }							
 						}
 
 						//						//Sleep for one control period
 						//						//(allows to impose critical points before tracking actually starts)
-						//						try { Thread.sleep(CONTROL_PERIOD); }
+						//						try { GatedThread.sleep(CONTROL_PERIOD); }
 						//						catch (InterruptedException e) { e.printStackTrace(); }
 					}
 
@@ -1668,7 +1665,8 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected void setPriorityOfEDT(final int prio) {
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
-				public void run() {
+				@Override
+                public void run() {
 					Thread.currentThread().setPriority(prio);
 				}});
 		}
@@ -1688,7 +1686,11 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 * @return The current {@link TrajectoryEnvelope} of a robot.
 	 */
 	public TrajectoryEnvelope getCurrentTrajectoryEnvelope(int robotID) {
-		return trackers.get(robotID).getTrajectoryEnvelope();
+		var tracker = trackers.get(robotID);
+		if (tracker == null) {
+			return null;
+		}
+		return tracker.getTrajectoryEnvelope();
 	}
 
 	protected String[] getStatistics() {
@@ -1751,10 +1753,10 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected void setupInferenceCallback() {
 
 		this.stopInference = false;
-		this.inference = new Thread("Coordinator inference") {
+		this.inference = new GatedThread("Coordinator inference") {
 
 			@Override
-			public void run() {
+			public void runCore() {
 				long threadLastUpdate = Calendar.getInstance().getTimeInMillis();
 				int MAX_ADDED_MISSIONS = 1;
 
@@ -1779,7 +1781,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 					//Sleep a little...
 					if (CONTROL_PERIOD > 0) {
-						try { Thread.sleep(Math.max(0, CONTROL_PERIOD-Calendar.getInstance().getTimeInMillis()+threadLastUpdate)); }
+						try { GatedThread.sleep(Math.max(0, CONTROL_PERIOD-Calendar.getInstance().getTimeInMillis()+threadLastUpdate)); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
 
@@ -1881,6 +1883,12 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		System.out.println();
 	}
 
+	public boolean isMissionsPoolEmpty() {
+		return missionsPool.isEmpty();
+	}
 
+	public AbstractTrajectoryEnvelopeTracker getTracker(int robotID) {
+		return trackers.get(robotID);
+	}
 }
 

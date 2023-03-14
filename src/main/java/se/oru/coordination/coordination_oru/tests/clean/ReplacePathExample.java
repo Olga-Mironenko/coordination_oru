@@ -11,6 +11,7 @@ import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
+import se.oru.coordination.coordination_oru.util.MissionUtils;
 import se.oru.coordination.coordination_oru.util.Missions;
 
 @DemoDescription(desc = "Example of replacing a path midway.")
@@ -87,9 +88,7 @@ public class ReplacePathExample {
 		rsp.setGoals(Missions.getLocationPose("R_4"));
 		rsp.plan();
 		if (rsp.getPath() == null) throw new Error("No path found.");
-		PoseSteering[] replacementPath = new PoseSteering[replacementIndex+rsp.getPath().length];
-		for (int i = 0; i < replacementIndex; i++) replacementPath[i] = initialPath[i];
-		for (int i = 0; i < rsp.getPath().length; i++) replacementPath[i+replacementIndex] = rsp.getPath()[i];
+		PoseSteering[] replacementPath = MissionUtils.computeReplacementPath(initialPath, replacementIndex, rsp.getPath());
 
 		Mission m = new Mission(1, initialPath);
 		Missions.enqueueMission(m);

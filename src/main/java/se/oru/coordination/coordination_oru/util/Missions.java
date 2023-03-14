@@ -12,8 +12,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -42,8 +49,7 @@ import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
-
-import static se.oru.coordination.coordination_oru.code.LookAheadVehicle.updateLookAheadVehiclesPath;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 /**
  * This class collects utility methods for storing {@link Mission}s, regulating their dispatch, maintaining locations
@@ -72,7 +78,7 @@ public class Missions {
 	
 	protected static Thread missionDispatchThread = null;
 	protected static HashSet<Integer> dispatchableRobots = new HashSet<Integer>();
-	protected static HashMap<Integer,Boolean> loopMissions = new HashMap<Integer,Boolean>();
+	public static HashMap<Integer,Boolean> loopMissions = new HashMap<Integer,Boolean>();
 	
 	/**
 	 * Set the minimum acceptable distance between path poses. This is used to re-sample paths
@@ -713,7 +719,7 @@ public class Missions {
 	
 	/**
 	 * Load a roadmap stored in a give directory or file.
-	 * @param fileName The directory or file to load the roadmap from.
+	 * @param path The directory or file to load the roadmap from.
 	 * If a directory is given, the filename is assumed to he "roadmap.txt"
 	 * (the same convention used in saving, see {@link #saveRoadMap(String)}).
 	 */
@@ -1066,6 +1072,7 @@ public class Missions {
 	 * @param loop Set to <code>false</code> if missions should be de-queued once dispatched.
 	 * @param robotIDs The robot IDs which should be considered dispatchable.
 	 */
+	// TODO: remove code duplication
 	public synchronized static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, int ... robotIDs) {
 
 		for (int robotID : robotIDs) {
@@ -1074,9 +1081,9 @@ public class Missions {
 		}
 
 		if (missionDispatchThread == null) {
-			missionDispatchThread = new Thread() {
+			missionDispatchThread = new GatedThread("missionDispatchThread") {
 				@Override
-				public void run() {
+				public void runCore() {
 					while (true) {
 						for (int robotID : dispatchableRobots) {
 							if (Missions.hasMissions(robotID)) {
@@ -1126,7 +1133,7 @@ public class Missions {
 							}
 						}
 						//Sleep for a little (2 sec)
-						try { Thread.sleep(2000); }
+						try { GatedThread.sleep(2000); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
 				}
@@ -1153,11 +1160,10 @@ public class Missions {
 		}
 
 		if (missionDispatchThread == null) {
-			missionDispatchThread = new Thread() {
+			missionDispatchThread = new GatedThread("missionDispatchThread") {
 				@Override
-				public void run() {
-					while (true) {
-//					while (simulationTime > System.currentTimeMillis()) {
+				public void runCore() {
+					while (simulationTime > System.currentTimeMillis()) {
 						for (int robotID : dispatchableRobots) {
 							if (Missions.hasMissions(robotID)) {
 								Mission m = Missions.peekMission(robotID);
@@ -1207,10 +1213,10 @@ public class Missions {
 							}
 						}
 						//Sleep for a little (0.5 sec)
-						try { Thread.sleep(500); }
+						try { GatedThread.sleep(500); }
 						catch (InterruptedException e) { e.printStackTrace(); }
-//						updateRobotReports(tec); // Call to update all the robot reports
-						updateLookAheadVehiclesPath(tec); // Call to update limited predictable vehicles paths
+						updateRobotReports(tec); // Call to update all the robot reports
+						LookAheadVehicle.updateLookAheadVehiclesPath(tec); // Call to update limited predictable vehicles paths
 					}
 //					writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
 				}
@@ -1226,11 +1232,11 @@ public class Missions {
 //		}
 //	}
 
-//	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
-//		for (int robotID : tec.getAllRobotIDs()) {
-//			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
-//		}
-//	}
+	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
+		for (int robotID : tec.getAllRobotIDs()) {
+			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
+		}
+	}
 
 	/**
 	 * Read a path from a file.
