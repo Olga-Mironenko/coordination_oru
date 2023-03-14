@@ -210,7 +210,11 @@ public class BrowserVisualization implements FleetVisualization {
 		double theta = rr.getPathIndex() != -1 ? rr.getPose().getTheta() : te.getTrajectory().getPose()[0].getTheta();
 
 		String name = "R"+te.getRobotID();
-		String extraData = " : " + rr.getPathIndex();
+		// Show percentage of path completed
+		String extraData = " : " + Math.round((double) rr.getPathIndex() /
+				(double) (VehiclesHashMap.getVehicle(rr.getRobotID()).getPath().length) * 100.0) + " %";
+		// Show path Index
+		//		String extraData = " : " + rr.getPathIndex();
 		if (extraStatusInfo != null) {
 			for (String st : extraStatusInfo) {
 				extraData += (" | " + st);

@@ -98,9 +98,9 @@ public abstract class AbstractVehicle {
         this.averageSpeed = Math.round((totalDistance / timeInterval) * 10.0) / 10.0;
     }
 
-    //TODO Write the data in a csv file with each cycle results
-    //TODO Separate Scenario general settings and robot settings
-    //TODO Date, Day, Timing settings. Fix file name
+    // TODO Write the data in a csv file with each cycle results
+    // TODO Separate Scenario general settings and robot settings
+    // TODO Date, Day, Timing settings. Fix file name
     // FIXME Check statistics
 
     public void writeStatistics() {
