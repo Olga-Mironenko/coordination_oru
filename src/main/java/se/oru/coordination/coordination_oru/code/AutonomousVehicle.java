@@ -11,7 +11,6 @@ public class AutonomousVehicle extends AbstractVehicle {
 
     public AutonomousVehicle(String map) {
         super(1, "AutonomousVehicle", Color.YELLOW, Color.YELLOW, 5, 2, map, 0.5, 0.5);
-
     }
 
     public AutonomousVehicle(int id, int priorityID, String type, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
@@ -20,6 +19,10 @@ public class AutonomousVehicle extends AbstractVehicle {
 
     public AutonomousVehicle(int priorityID, String type, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
         super(priorityID, type, colorMoving, colorStill, maxVelocity, maxAcceleration, map, xLength, yLength);
+    }
+
+    public AutonomousVehicle(int priorityID, String type, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
+        this(priorityID, type, color, color, maxVelocity, maxAcceleration, map, xLength, yLength);
     }
 
     @Override
@@ -51,7 +54,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         return path;
     }
 
-    public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,
+    public PoseSteering[] getPlan(Pose initial, Pose[] goals, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,
                                   double radius, double planningTime, double turningRadius, double distanceBetweenPathPoints) {
 
         var rsp = new ReedsSheppCarPlanner(planningAlgorithm);

@@ -47,8 +47,8 @@ public class ProductionCyclePathsAutonomousMine {
 
         var autonomousVehicle1 = new AutonomousVehicle(YAML_FILE);
         var autonomousVehicle2 = new AutonomousVehicle(YAML_FILE);
-        PoseSteering[] autonomousVehicle1Path = autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
-        PoseSteering[] autonomousVehicle2Path = autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
+        PoseSteering[] autonomousVehicle1Path = autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, true);
+        PoseSteering[] autonomousVehicle2Path = autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -101,10 +101,10 @@ public class ProductionCyclePathsAutonomousMine {
                 drawPoint20, drawPoint19, drawPoint18, drawPoint17, drawPoint16, drawPoint15,
                 drawPoint36, drawPoint37, drawPoint38, workStation3};
 
-        PoseSteering[] drillRigPath1 = drillVehicle.getPlan(mainTunnelLeft, new Pose[]{drawPoint38}, YAML_FILE, false);
-        PoseSteering[] drillRigPath2 = drillVehicle.getPlan(drawPoint38, new Pose[]{drawPoint18}, YAML_FILE, false);
-        PoseSteering[] drillRigPath3 = drillVehicle.getPlan(drawPoint18, new Pose[]{drawPoint24}, YAML_FILE, false);
-        PoseSteering[] drillRigPath4 = drillVehicle.getPlan(drawPoint24, new Pose[]{workStation1}, YAML_FILE, false);
+        PoseSteering[] drillRigPath1 = drillVehicle.getPlan(mainTunnelLeft, new Pose[]{drawPoint38}, false);
+        PoseSteering[] drillRigPath2 = drillVehicle.getPlan(drawPoint38, new Pose[]{drawPoint18}, false);
+        PoseSteering[] drillRigPath3 = drillVehicle.getPlan(drawPoint18, new Pose[]{drawPoint24}, false);
+        PoseSteering[] drillRigPath4 = drillVehicle.getPlan(drawPoint24, new Pose[]{workStation1}, false);
 //        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE, false);
 //        PoseSteering[] waterVehiclePath = waterVehicle.getPlan(mainTunnelRight, waterVehicleGoal, YAML_FILE, false,
 //                ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect, 0.01, 120, 0.01, 0.1);

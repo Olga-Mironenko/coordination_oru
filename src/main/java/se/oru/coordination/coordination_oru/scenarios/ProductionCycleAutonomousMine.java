@@ -47,8 +47,8 @@ public class ProductionCycleAutonomousMine {
 
         var autonomousVehicle1 = new AutonomousVehicle(YAML_FILE);
         var autonomousVehicle2 = new AutonomousVehicle(YAML_FILE);
-        PoseSteering[] autonomousVehicle1Path = autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
-        PoseSteering[] autonomousVehicle2Path = autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
+        PoseSteering[] autonomousVehicle1Path = autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, true);
+        PoseSteering[] autonomousVehicle2Path = autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -101,9 +101,9 @@ public class ProductionCycleAutonomousMine {
                 drawPoint20, drawPoint19, drawPoint18, drawPoint17, drawPoint16, drawPoint15,
                 drawPoint36, drawPoint37, drawPoint38, workStation3};
 
-        PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
-        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE, false);
-        PoseSteering[] waterVehiclePath = waterVehicle.getPlan(mainTunnelRight, waterVehicleGoal, YAML_FILE, false,
+        PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, false);
+        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal,false);
+        PoseSteering[] waterVehiclePath = waterVehicle.getPlan(mainTunnelRight, waterVehicleGoal, false,
                 ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect, 0.01, 120, 0.01, 0.1);
 
         Thread.sleep(5000);

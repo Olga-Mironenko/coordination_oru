@@ -328,7 +328,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			boolean firstTime = true;
 			for (Double speed : this.slowDownProfile.keySet()) {
 				//Find your speed in the table (table is ordered w/ highest speed first)...
-				if (tempStateFW.getVelocity() > speed) {
+				if (tempStateFW.getVelocity() > speed) { // TODO: Return the previous speed? (Prefer to stop earlier than to cross over.)
 					//If this speed lands you after total dist you are OK (you've checked at lower speeds and either returned or breaked...)
 					double landingPosition = tempStateFW.getPosition() + (firstTime ? 0.0 : slowDownProfile.get(prevSpeed));
 					if (landingPosition > totalDistance) {
@@ -619,6 +619,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 						if (emergencyBreaker.isStopped(myRobotID)) {
 							break;
 						}
+						// TODO: Do emergency break when `state.getPosition() >= this.positionToSlowDown` and
+						// `pathIndex > criticalPoint` (regardless of `state.getVelocity() < 0.0`)?
 					}
 
 					atCP = true;
