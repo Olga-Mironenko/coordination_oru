@@ -50,4 +50,4 @@ SimpleReedsSheppCarPlanner/libsimplereedssheppcarplanner.so
 src/main/java/se/oru/coordination/coordination_oru/scenarios/*.txt
 
 # Test Files
-src/main/java/se/oru/coordination/coordination_oru/scenarios/Test.java
+src/main/java/se/oru/coordination/coordination_oru/scenarios/Test*.java
