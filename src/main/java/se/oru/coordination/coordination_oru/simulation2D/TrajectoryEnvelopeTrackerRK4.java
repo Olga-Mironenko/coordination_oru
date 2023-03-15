@@ -1,11 +1,6 @@
 package se.oru.coordination.coordination_oru.simulation2D;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
@@ -44,6 +39,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	protected ArrayList<Long> reportTimeLists = new ArrayList<Long>();
 
 	private HashMap<Integer,Integer> userCPReplacements = null;
+
+	public static EmergencyBreaker emergencyBreaker = new EmergencyBreaker(false, false);
 
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
@@ -588,7 +585,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 
 		while (true) {
-			if (MissionUtils.isEmergencyBreak) {
+			if (emergencyBreaker.isStopped(myRobotID)) {
 				break;
 			}
 
@@ -617,8 +614,11 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 						// . . . . . . . . .
 						//     C ^
 						metaCSPLogger.severe("* ATTENTION! STOPPED AFTER!! *");
-						MissionUtils.isEmergencyBreak = true; // for others
-						break;
+
+						emergencyBreaker.stopRobots(myRobotID, pathIndex);
+						if (emergencyBreaker.isStopped(myRobotID)) {
+							break;
+						}
 					}
 
 					atCP = true;

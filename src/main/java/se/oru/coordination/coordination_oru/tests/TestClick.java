@@ -9,13 +9,13 @@ import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
 import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class TestClick {
-    public static TrajectoryEnvelopeCoordinatorSimulation tec = null;
-
     public static void main(String[] args) {
         Printer.resetTime();
         Printer.print("started");
@@ -70,19 +70,24 @@ public class TestClick {
         final Pose humFinish = null;
         final boolean ishumReturn = false;
         final boolean ishumLoop = false;
-        final Pose autStart = mainTunnelRight;
-        final Pose autFinish = drawPoint19_bottom;
+        final Pose aut1Start = mainTunnelRight;
+        final Pose aut1Finish = drawPoint19_bottom;
+        final Pose aut2Start = mainTunnelLeft;
+        final Pose aut2Finish = drawPoint18;
 
         final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
         final int maxVelocity = 8;
 
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, "HumanDrivenVehicle", Color.GREEN, Color.BLUE, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
         AutonomousVehicle aut1 = new AutonomousVehicle(0, "AutonomousVehicle", Color.YELLOW, Color.YELLOW, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle aut2 = new AutonomousVehicle(0, "AutonomousVehicle", Color.RED, Color.RED, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
         System.out.println(VehiclesHashMap.getInstance().getList());
 
+        TrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, true);
+
         // Instantiate a trajectory envelope coordinator.
-        tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, 2);
+        TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, 2);
         // Need to set up infrastructure that maintains the representation
         tec.setupSolver(0, 100000000);
         // Start the thread that checks and enforces dependencies at every clock tick
@@ -90,7 +95,8 @@ public class TestClick {
 
         tec.setDefaultFootprint(hum0.getFootPrint());
         tec.placeRobot(hum0.getID(), humStart);
-        tec.placeRobot(aut1.getID(), autStart);
+        tec.placeRobot(aut1.getID(), aut1Start);
+        tec.placeRobot(aut2.getID(), aut2Start);
 
         Heuristics heuristics = new Heuristics();
         tec.addComparator(heuristics.highestIDNumber());
@@ -115,7 +121,8 @@ public class TestClick {
             Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[] { humFinish }, ishumReturn)));
         }
 
-        Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(autStart, new Pose[] { autFinish }, true)));
+        Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, true)));
+        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, true)));
 
         final boolean isChangeVelocity = false;
         if (isChangeVelocity) {
