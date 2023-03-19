@@ -47,6 +47,8 @@ public class BrowserVisualization implements FleetVisualization {
 	private double robotFootprintXDim = -1;
 	private String overlayText = null;
 
+	public static boolean isStatusText = false;
+
 	public BrowserVisualization() {
 		this("localhost", 30);
 	}
@@ -264,15 +266,17 @@ public class BrowserVisualization implements FleetVisualization {
 		String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+name, arrowGeom, "#ffffff", -1, true, null) + "}";
 		enqueueMessage(jsonString);
 		enqueueMessage(jsonStringArrow);
-		
-		makeOverlayText();
+
+		if (isStatusText) {
+			setStatusText();
+		}
 	}
 
 	protected static double round(double value) {
 		return (double) Math.round(value * 10) / 10;
 	}
 	
-	protected void makeOverlayText() {
+	protected void setStatusText() {
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
 		String text = "";
 		if (idToVehicle.keySet().contains(MissionUtils.idHuman)) {
