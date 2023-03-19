@@ -15,7 +15,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import static se.oru.coordination.coordination_oru.util.gates.GatedThread.sleep;
 
 public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
-	protected static final long constantDelayTime = 100;
+	public static long constantDelayTime = -1;
 	// If non-negative, then time spent in the debugger (etc.) doesn't count.
 
 	protected static final long WAIT_AMOUNT_AT_END = 3000;

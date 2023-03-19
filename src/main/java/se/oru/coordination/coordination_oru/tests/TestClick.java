@@ -20,6 +20,7 @@ public class TestClick {
         Printer.resetTime();
         Printer.print("started");
 
+        TrajectoryEnvelopeTrackerRK4.constantDelayTime = 100;
         GatedThread.enable();
 
         new GatedThread("runDemo") {
