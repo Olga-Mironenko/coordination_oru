@@ -214,6 +214,24 @@ public class BrowserVisualization implements FleetVisualization {
 		}
 	}
 
+	private int evaluatePathPercentage(RobotReport rr) {
+		PoseSteering[] path = VehiclesHashMap.getVehicle(rr.getRobotID()).getPath();
+		if (path == null) {
+			return 0;
+		}
+
+		if (rr.getDistanceTraveled() == 0.0) {
+			return 0;
+		}
+
+		int pathIndex = rr.getPathIndex();
+		if (pathIndex == -1) {
+			return 100;
+		}
+
+		return (int) Math.round(pathIndex * 100.0 / path.length);
+	}
+
 	// TODO: remove code duplication
 	@Override
 	public void displayRobotState(TrajectoryEnvelope te, RobotReport rr, String... extraStatusInfo) {
@@ -222,9 +240,10 @@ public class BrowserVisualization implements FleetVisualization {
 		double theta = rr.getPathIndex() != -1 ? rr.getPose().getTheta() : te.getTrajectory().getPose()[0].getTheta();
 
 		String name = "R"+te.getRobotID();
+
 		// Show percentage of path completed
-		String extraData = " : " + Math.round((double) rr.getPathIndex() /
-				(double) (VehiclesHashMap.getVehicle(rr.getRobotID()).getPath().length) * 100.0) + " %";
+		String extraData = " : " + evaluatePathPercentage(rr) + " %";
+
 		// Show path Index
 		//		String extraData = " : " + rr.getPathIndex();
 		if (extraStatusInfo != null) {
