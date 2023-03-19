@@ -282,15 +282,19 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "(Robot " + id + ") ";
 
 			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
-			double velocity = rr.getVelocity();
-			text += "velocity: " + round(velocity);
+			if (rr == null) {
+				text += "no robot report";
+			} else {
+				double velocity = rr.getVelocity();
+				text += "velocity: " + round(velocity);
 
-                        int numCalls = 0;
-                        var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
-                        if (numIntegrateCalls.containsKey(id)) {
-                            numCalls = numIntegrateCalls.get(id);
-                        }
-                        text += "; numIntegrateCalls: " + numCalls;
+				int numCalls = 0;
+				var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
+				if (numIntegrateCalls.containsKey(id)) {
+					numCalls = numIntegrateCalls.get(id);
+				}
+				text += "; numIntegrateCalls: " + numCalls;
+			}
 
 			text += "; " + stringifyMissions(Missions.getMissions(id));
 
