@@ -19,6 +19,7 @@ public class SevenAutonomousOneLookAheadVehicles {
         final int simulationTimeMinutes = 10;
         final long simulationTime = System.currentTimeMillis() + (simulationTimeMinutes * 60 * 1000);
         double predictableDistance = 10.0 ;
+        final String YAML_FILE = "maps/mine-map-test.yaml";
         final Pose mainTunnelLeft = new Pose(4.25,15.35, -Math.PI);
         final Pose mainTunnelRight = new Pose(80.05,24.75, Math.PI);
         final Pose drawPoint17 = new Pose(24.15,85.55,-Math.PI/2);
@@ -29,28 +30,27 @@ public class SevenAutonomousOneLookAheadVehicles {
         final Pose drawPoint23 = new Pose(67.75,86.95,-Math.PI/2);
         final Pose drawPoint24 = new Pose(74.85,84.45,-Math.PI/2);
         final Pose orePass = new Pose(54.35,11.25,-Math.PI/2);
-        final String YAML_FILE = "maps/mine-map-test.yaml";
 
         final Pose[] autonomousVehicleGoal = {orePass};
         final Pose[] limitedPredictabilityVehicleGoal = {mainTunnelRight};
 
         //TODO I think controller kills everything up
-        var lookAheadVehicle = new LookAheadVehicle(1,predictableDistance, Color.CYAN, 5, 2, YAML_FILE, 0.5, 0.5);
-        var autonomousVehicle1 = new AutonomousVehicle(YAML_FILE);
-        var autonomousVehicle2 = new AutonomousVehicle(YAML_FILE);
-        var autonomousVehicle3 = new AutonomousVehicle(YAML_FILE);
-        var autonomousVehicle4 = new AutonomousVehicle(YAML_FILE);
-        var autonomousVehicle5 = new AutonomousVehicle(YAML_FILE);
-        var autonomousVehicle6 = new AutonomousVehicle(YAML_FILE);
-        var autonomousVehicle7 = new AutonomousVehicle(YAML_FILE);
-        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, true);
-        var autonomousVehiclePath1 = autonomousVehicle1.getPlan(drawPoint17, autonomousVehicleGoal, true);
-        var autonomousVehiclePath2 = autonomousVehicle2.getPlan(drawPoint19, autonomousVehicleGoal, true);
-        var autonomousVehiclePath3 = autonomousVehicle3.getPlan(drawPoint20, autonomousVehicleGoal, true);
-        var autonomousVehiclePath4 = autonomousVehicle4.getPlan(drawPoint21, autonomousVehicleGoal, true);
-        var autonomousVehiclePath5 = autonomousVehicle5.getPlan(drawPoint22, autonomousVehicleGoal, true);
-        var autonomousVehiclePath6 = autonomousVehicle6.getPlan(drawPoint23, autonomousVehicleGoal, true);
-        var autonomousVehiclePath7 = autonomousVehicle7.getPlan(drawPoint24, autonomousVehicleGoal, true);
+        var lookAheadVehicle = new LookAheadVehicle(1,predictableDistance, Color.CYAN, 5, 2, 0.5, 0.5);
+        var autonomousVehicle1 = new AutonomousVehicle();
+        var autonomousVehicle2 = new AutonomousVehicle();
+        var autonomousVehicle3 = new AutonomousVehicle();
+        var autonomousVehicle4 = new AutonomousVehicle();
+        var autonomousVehicle5 = new AutonomousVehicle();
+        var autonomousVehicle6 = new AutonomousVehicle();
+        var autonomousVehicle7 = new AutonomousVehicle();
+        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, YAML_FILE, true);
+        var autonomousVehiclePath1 = autonomousVehicle1.getPlan(drawPoint17, autonomousVehicleGoal, YAML_FILE, true);
+        var autonomousVehiclePath2 = autonomousVehicle2.getPlan(drawPoint19, autonomousVehicleGoal, YAML_FILE, true);
+        var autonomousVehiclePath3 = autonomousVehicle3.getPlan(drawPoint20, autonomousVehicleGoal, YAML_FILE,true);
+        var autonomousVehiclePath4 = autonomousVehicle4.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
+        var autonomousVehiclePath5 = autonomousVehicle5.getPlan(drawPoint22, autonomousVehicleGoal, YAML_FILE,true);
+        var autonomousVehiclePath6 = autonomousVehicle6.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
+        var autonomousVehiclePath7 = autonomousVehicle7.getPlan(drawPoint24, autonomousVehicleGoal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);

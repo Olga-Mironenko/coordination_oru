@@ -12,18 +12,28 @@ public class LookAheadVehicle extends AbstractVehicle {
 
     private final double predictableDistance;
 
-    public LookAheadVehicle(String map, double predictableDistance) {
-        super(1, "LookAheadVehicle", Color.GREEN, Color.GREEN, 5, 2, map, 0.5, 0.5);
+    public LookAheadVehicle(int id, int priorityID, double predictableDistance, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+        super(id, priorityID, color, colorInMotion, maxVelocity, maxAcceleration, xLength, yLength);
         this.predictableDistance = predictableDistance;
     }
 
-    public LookAheadVehicle(int priorityID, double predictableDistance, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        super(priorityID, "LookAheadVehicle", color, color, maxVelocity, maxAcceleration, map, xLength, yLength);
+    public LookAheadVehicle(int priorityID, double predictableDistance, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+        super(vehicleNumber, priorityID, color, colorInMotion, maxVelocity, maxAcceleration, xLength, yLength);
+        this.predictableDistance = predictableDistance;
+    }
+
+    public LookAheadVehicle(int priorityID, double predictableDistance, Color color, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+        super(vehicleNumber, priorityID, color, null, maxVelocity, maxAcceleration, xLength, yLength);
+        this.predictableDistance = predictableDistance;
+    }
+
+    public LookAheadVehicle(double predictableDistance) {
+        super(vehicleNumber, 1, Color.GREEN, null, 5, 2, 0.5, 0.5);
         this.predictableDistance = predictableDistance;
     }
 
     @Override
-    public PoseSteering[] getPlan(Pose initial, Pose[] goals, Boolean inversePath) {
+    public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
 
         var rsp = new ReedsSheppCarPlanner();
         rsp.setMap(map);

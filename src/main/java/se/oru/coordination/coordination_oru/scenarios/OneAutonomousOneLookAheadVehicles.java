@@ -13,8 +13,8 @@ public class OneAutonomousOneLookAheadVehicles {
     public static void main(String[] args) {
 
         final int simulationTimeMinutes = 2;
-        double predictableDistance = 10.0;
-        final long simulationTime = System.currentTimeMillis() + (simulationTimeMinutes * 60 * 1000);
+        double predictableDistance = 25.0;
+        long simulationTime = System.currentTimeMillis() + (simulationTimeMinutes * 60 * 1000);
         final Pose mainTunnelLeft = new Pose(4.25,15.35, -Math.PI);
         final Pose mainTunnelRight = new Pose(80.05,24.75, Math.PI);
         final Pose drawPoint21 = new Pose(52.95,87.75,-Math.PI/2);
@@ -24,13 +24,13 @@ public class OneAutonomousOneLookAheadVehicles {
         final Pose[] autonomousVehicleGoal = {orePass};
         final Pose[] limitedPredictabilityVehicleGoal = {mainTunnelRight};
 
-        var autonomousVehicle = new AutonomousVehicle(YAML_FILE);
-        var lookAheadVehicle = new LookAheadVehicle(YAML_FILE, predictableDistance);
-        var autonomousVehiclePath = autonomousVehicle.getPlan(drawPoint21, autonomousVehicleGoal, true);
-        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, true);
+        var autonomousVehicle = new AutonomousVehicle();
+        var lookAheadVehicle = new LookAheadVehicle(predictableDistance);
+        var autonomousVehiclePath = autonomousVehicle.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
+        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
-        final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
+        var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
         // Need to set up infrastructure that maintains the representation
         tec.setupSolver(0, 100000000);
         // Start the thread that checks and enforces dependencies at every clock tick
@@ -58,7 +58,7 @@ public class OneAutonomousOneLookAheadVehicles {
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, false, 1, 2);
+        Missions.startMissionDispatchers(tec, simulationTime);
 
     }
 }

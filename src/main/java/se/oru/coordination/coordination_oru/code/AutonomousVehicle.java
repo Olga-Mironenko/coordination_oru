@@ -9,24 +9,24 @@ import java.awt.*;
 
 public class AutonomousVehicle extends AbstractVehicle {
 
-    public AutonomousVehicle(String map) {
-        super(1, "AutonomousVehicle", Color.YELLOW, Color.YELLOW, 5, 2, map, 0.5, 0.5);
+    public AutonomousVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+        super(id, priorityID, color, colorInMotion, maxVelocity, maxAcceleration, xLength, yLength);
     }
 
-    public AutonomousVehicle(int id, int priorityID, String type, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        super(id, priorityID, type, colorMoving, colorStill, maxVelocity, maxAcceleration, map, xLength, yLength);
+    public AutonomousVehicle(int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+        super(vehicleNumber, priorityID, color, colorInMotion, maxVelocity, maxAcceleration, xLength, yLength);
     }
 
-    public AutonomousVehicle(int priorityID, String type, Color colorMoving, Color colorStill, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        super(priorityID, type, colorMoving, colorStill, maxVelocity, maxAcceleration, map, xLength, yLength);
+    public AutonomousVehicle(int priorityID, Color color, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+        super(vehicleNumber, priorityID, color, null, maxVelocity, maxAcceleration, xLength, yLength);
     }
 
-    public AutonomousVehicle(int priorityID, String type, Color color, double maxVelocity, double maxAcceleration, String map, double xLength, double yLength) {
-        this(priorityID, type, color, color, maxVelocity, maxAcceleration, map, xLength, yLength);
+    public AutonomousVehicle() {
+        super(vehicleNumber, 1, Color.YELLOW, null, 5, 2, 0.5, 0.5);
     }
 
     @Override
-    public PoseSteering[] getPlan(Pose initial, Pose[] goals, Boolean inversePath) {
+    public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
         var rsp = new ReedsSheppCarPlanner();
         rsp.setMap(map);
         rsp.setRadius(0.01);
@@ -54,7 +54,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         return path;
     }
 
-    public PoseSteering[] getPlan(Pose initial, Pose[] goals, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,
+    public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,
                                   double radius, double planningTime, double turningRadius, double distanceBetweenPathPoints) {
 
         var rsp = new ReedsSheppCarPlanner(planningAlgorithm);

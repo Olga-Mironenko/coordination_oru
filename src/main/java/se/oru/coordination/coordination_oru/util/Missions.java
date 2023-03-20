@@ -1215,7 +1215,7 @@ public class Missions {
 						//Sleep for a little (0.5 sec)
 						try { GatedThread.sleep(500); }
 						catch (InterruptedException e) { e.printStackTrace(); }
-						updateRobotReports(tec); // Call to update all the robot reports
+//						updateRobotReports(tec); // Call to update all the robot reports
 						LookAheadVehicle.updateLookAheadVehiclesPath(tec); // Call to update limited predictable vehicles paths
 					}
 //					writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
@@ -1232,11 +1232,11 @@ public class Missions {
 //		}
 //	}
 
-	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
-		for (int robotID : tec.getAllRobotIDs()) {
-			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
-		}
-	}
+//	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
+//		for (int robotID : tec.getAllRobotIDs()) {
+//			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
+//		}
+//	}
 
 	/**
 	 * Read a path from a file.

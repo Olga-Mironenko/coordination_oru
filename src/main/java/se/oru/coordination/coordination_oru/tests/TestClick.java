@@ -42,6 +42,7 @@ public class TestClick {
 
         final int loopMinutes = 5;
         final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);
+        final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
 
         final Pose mainTunnelLeft = new Pose(4.25,15.35, -Math.PI);
         final Pose mainTunnelRight = new Pose(80.05,24.75, Math.PI);
@@ -77,12 +78,11 @@ public class TestClick {
         final Pose aut2Start = mainTunnelLeft;
         final Pose aut2Finish = drawPoint18;
 
-        final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
         final int maxVelocity = 8;
 
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, "HumanDrivenVehicle", Color.GREEN, Color.BLUE, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
-        AutonomousVehicle aut1 = new AutonomousVehicle(0, "AutonomousVehicle", Color.YELLOW, Color.YELLOW, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
-        AutonomousVehicle aut2 = new AutonomousVehicle(0, "AutonomousVehicle", Color.RED, Color.RED, maxVelocity, 2, YAML_FILE, 0.5, 0.5);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, 2, 0.5, 0.5);
+        AutonomousVehicle aut1 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 0.5, 0.5);
+        AutonomousVehicle aut2 = new AutonomousVehicle(0, Color.RED, Color.RED, maxVelocity, 2, 0.5, 0.5);
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
         System.out.println(VehiclesHashMap.getInstance().getList());
 
@@ -120,11 +120,11 @@ public class TestClick {
 
         if (humFinish != null) {
             MissionUtils.targetVelocityHuman = 10;
-            Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[] { humFinish }, ishumReturn)));
+            Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[] { humFinish }, YAML_FILE, ishumReturn)));
         }
 
-        Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, true)));
-        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, true)));
+        Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, YAML_FILE,  true)));
+        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, YAML_FILE, true)));
 
         final boolean isChangeVelocity = false;
         if (isChangeVelocity) {

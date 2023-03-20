@@ -4,7 +4,6 @@ import java.util.HashMap;
 
 public class VehiclesHashMap {
     private static VehiclesHashMap instance;
-    private int key;
     private static HashMap<Integer, AbstractVehicle> list = new HashMap<>();
     private static final Object lock = new Object();
 

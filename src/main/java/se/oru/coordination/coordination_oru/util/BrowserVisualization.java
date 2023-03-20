@@ -216,24 +216,6 @@ public class BrowserVisualization implements FleetVisualization {
 		}
 	}
 
-	private int evaluatePathPercentage(RobotReport rr) {
-		PoseSteering[] path = VehiclesHashMap.getVehicle(rr.getRobotID()).getPath();
-		if (path == null) {
-			return 0;
-		}
-
-		if (rr.getDistanceTraveled() == 0.0) {
-			return 0;
-		}
-
-		int pathIndex = rr.getPathIndex();
-		if (pathIndex == -1) {
-			return 100;
-		}
-
-		return (int) Math.round(pathIndex * 100.0 / path.length);
-	}
-
 	// TODO: remove code duplication
 	@Override
 	public void displayRobotState(TrajectoryEnvelope te, RobotReport rr, String... extraStatusInfo) {
@@ -241,13 +223,16 @@ public class BrowserVisualization implements FleetVisualization {
 		double y = rr.getPathIndex() != -1 ? rr.getPose().getY() : te.getTrajectory().getPose()[0].getY();
 		double theta = rr.getPathIndex() != -1 ? rr.getPose().getTheta() : te.getTrajectory().getPose()[0].getTheta();
 
-		String name = "R"+te.getRobotID();
+		String name = "R" + te.getRobotID();
 
 		// Show percentage of path completed
-		String extraData = " : " + evaluatePathPercentage(rr) + " %";
+		String extraData = " : " + "0 %";
+		if (rr.getPathIndex() >= 0) {
+			extraData = " : " + Math.round((double) rr.getPathIndex() / (double) te.getPathLength() * 100) + " %";
+		}
 
 		// Show path Index
-		//		String extraData = " : " + rr.getPathIndex();
+//		String extraData = " : " + rr.getPathIndex();
 		if (extraStatusInfo != null) {
 			for (String st : extraStatusInfo) {
 				extraData += (" | " + st);
@@ -453,7 +438,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 		GeometricShapeDomain dom = (GeometricShapeDomain)te.getEnvelopeVariable().getDomain();
 		Geometry geom = dom.getGeometry();
-		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+te.getID(), geom, color, -1, false, null) + "}";
+		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_" + te.getID(), geom, color, -1, false, null) + "}";
 		enqueueMessage(jsonString);
 	}
 
@@ -461,7 +446,7 @@ public class BrowserVisualization implements FleetVisualization {
 	public void removeEnvelope(TrajectoryEnvelope te) {
 		String jsonString = "{ \"operation\" : \"removeGeometry\","
 				+ "\"data\" : "
-				+ "{ \"name\" : \""+ "_"+te.getID() +"\" }}";
+				+ "{ \"name\" : \"" + "_" + te.getID() + "\" }}";
 		enqueueMessage(jsonString);
 	}
 
