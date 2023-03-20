@@ -67,7 +67,8 @@ public class Missions {
 	protected static HashMap<Integer,MissionDispatchingCallback> mdcs = new HashMap<Integer, MissionDispatchingCallback>();
 	protected static HashMap<Mission,ArrayList<Mission>> concatenatedMissions = new HashMap<Mission, ArrayList<Mission>>();
 	//protected static String pathPrefix = "";
-	protected static SimpleDirectedWeightedGraph<String, DefaultWeightedEdge> graph = new SimpleDirectedWeightedGraph<String, DefaultWeightedEdge>(DefaultWeightedEdge.class); 
+	protected static SimpleDirectedWeightedGraph<String, DefaultWeightedEdge> graph = new SimpleDirectedWeightedGraph<String, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+	protected static String mapYAMLFilename = null;
 	protected static String mapYAML = null;
 	protected static String mapImageFilename = null;
 	protected static BufferedImage map = null;
@@ -188,6 +189,10 @@ public class Missions {
 	 */
 	public static Coordinate getMapOrigin() {
 		return Missions.mapOrigin;
+	}
+
+	public static String getMapYAMLFilename() {
+		return Missions.mapYAMLFilename;
 	}
 
 	/**
@@ -372,6 +377,7 @@ public class Missions {
 	 */
 	public static void setMap(String mapYAMLFile) {
 		try {
+			Missions.mapYAMLFilename = mapYAMLFile;
 			File file = new File(mapYAMLFile);
 			BufferedReader br = new BufferedReader(new FileReader(file));
 			String st;
