@@ -2,7 +2,6 @@ package se.oru.coordination.coordination_oru.util;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
-
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.Mission;
@@ -55,7 +54,7 @@ public class MissionUtils {
 
                 PoseSteering[] newPath = null;
                 try {
-                    newPath = vehicle.getPlan(currentPose, new Pose[] { goal }, Missions.getMapYAMLFilename(), false);
+                    newPath = vehicle.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
                 } catch (Error exc) { // TODO: check for NoPathFound only
                     System.out.println("moveRobot: no path found (or another error): " + exc);
                     return;
@@ -71,8 +70,7 @@ public class MissionUtils {
                     MissionUtils.changePath(robotID, replacementPath, replacementIndex);
                 }
             }
-        }
-        finally {
+        } finally {
             isWorking = false;
         }
     }
@@ -82,10 +80,9 @@ public class MissionUtils {
 
         // If there is a scheduled mission, wait until it starts.
         try {
-            while (! tec.isMissionsPoolEmpty() || Missions.hasMissions(robotID))
+            while (!tec.isMissionsPoolEmpty() || Missions.hasMissions(robotID))
                 GatedThread.sleep(50);
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -123,8 +120,7 @@ public class MissionUtils {
                     }
                 }
             }
-        }
-        finally {
+        } finally {
             isWorking = false;
         }
     }
@@ -156,10 +152,10 @@ public class MissionUtils {
 
     public static PoseSteering[] computeReplacementPath(PoseSteering[] initialPath, int replacementIndex, PoseSteering[] newPath) {
         replacementIndex = Math.min(replacementIndex, initialPath.length - 1); // TODO
-        PoseSteering[] replacementPath = new PoseSteering[replacementIndex+newPath.length];
+        PoseSteering[] replacementPath = new PoseSteering[replacementIndex + newPath.length];
         // TODO: replacementIndex: off by one error? (replacementIndex=2 -> preserve 3 points)
         for (int i = 0; i < replacementIndex; i++) replacementPath[i] = initialPath[i];
-        for (int i = 0; i < newPath.length; i++) replacementPath[i+replacementIndex] = newPath[i];
+        for (int i = 0; i < newPath.length; i++) replacementPath[i + replacementIndex] = newPath[i];
         return replacementPath;
     }
 }

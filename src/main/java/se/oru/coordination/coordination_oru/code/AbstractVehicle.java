@@ -1,19 +1,17 @@
 package se.oru.coordination.coordination_oru.code;
 
-import java.awt.Color;
+import com.vividsolutions.jts.geom.Coordinate;
+import org.metacsp.multi.spatioTemporal.paths.Pose;
+import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
+import se.oru.coordination.coordination_oru.RobotReport;
+
+import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-
-import org.metacsp.multi.spatioTemporal.paths.Pose;
-import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
-
-import com.vividsolutions.jts.geom.Coordinate;
-
-import se.oru.coordination.coordination_oru.RobotReport;
 
 public abstract class AbstractVehicle {
     public static int vehicleNumber = 1;
@@ -40,6 +38,7 @@ public abstract class AbstractVehicle {
     private long totalWaitingTime;
     private int stops;
     private PoseSteering[] path;
+
     public AbstractVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
         this.ID = id;
         this.priorityID = priorityID;
@@ -174,6 +173,7 @@ public abstract class AbstractVehicle {
         TimeUnit.SECONDS.sleep(blinkTimeSeconds);
         VehiclesHashMap.getVehicle(this.ID).setVehicleColor(colorOriginal);
     }
+
     public int getID() {
         return ID;
     }

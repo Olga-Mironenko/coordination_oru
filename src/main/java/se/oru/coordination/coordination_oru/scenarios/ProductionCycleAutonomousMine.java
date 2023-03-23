@@ -121,5 +121,5 @@ public class ProductionCycleAutonomousMine {
         var m5 = new Mission(waterVehicle.getID(), waterVehiclePath);
         tec.addMissions(m5);
 
-        }
     }
+}

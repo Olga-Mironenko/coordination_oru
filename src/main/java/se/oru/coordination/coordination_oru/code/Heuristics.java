@@ -4,10 +4,11 @@ import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.RobotReport;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
 
 public class Heuristics {
-    public HashMap<Integer,Integer> robotIDToPrecedence = new HashMap<Integer, Integer>();
+    public HashMap<Integer, Integer> robotIDToPrecedence = new HashMap<Integer, Integer>();
 
     // A robot closest to a critical section moves first via critical section: "closest"
     public Comparator<RobotAtCriticalSection> closest() {

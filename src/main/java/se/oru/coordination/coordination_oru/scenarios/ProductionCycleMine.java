@@ -32,7 +32,7 @@ public class ProductionCycleMine {
         final Pose[] autonomousVehicleGoal = {orePass};
 
         var drillVehicle = new LookAheadVehicle(1, predictableDistance, Color.CYAN, 5, 2, 0.5, 0.5);
-        var chargingVehicle = new LookAheadVehicle(1, 6*predictableDistance, Color.WHITE, 5, 2, 0.5, 0.5);
+        var chargingVehicle = new LookAheadVehicle(1, 6 * predictableDistance, Color.WHITE, 5, 2, 0.5, 0.5);
 
         var autonomousVehicle1 = new AutonomousVehicle();
         var autonomousVehicle2 = new AutonomousVehicle();
@@ -60,8 +60,7 @@ public class ProductionCycleMine {
         tec.setBreakDeadlocks(true, false, false);
 
         // Set up a simple GUI (null means empty map, otherwise provide yaml file)
-        var viz = new BrowserVisualization();
-        viz.setMap(YAML_FILE);
+        var viz = new BrowserVisualization(YAML_FILE);
         viz.setFontScale(4);
         viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
@@ -76,7 +75,7 @@ public class ProductionCycleMine {
         Missions.startMissionDispatchers(tec, loopTime);
 
         long missionTime = 5000;
-          tec.setForwardModel(drillVehicle.getID(), new ConstantAccelerationForwardModel(drillVehicle.getMaxAcceleration(), drillVehicle.getMaxVelocity(), tec.getTemporalResolution(),
+        tec.setForwardModel(drillVehicle.getID(), new ConstantAccelerationForwardModel(drillVehicle.getMaxAcceleration(), drillVehicle.getMaxVelocity(), tec.getTemporalResolution(),
                 tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(drillVehicle.getID())));
         tec.setForwardModel(chargingVehicle.getID(), new ConstantAccelerationForwardModel(chargingVehicle.getMaxAcceleration(), chargingVehicle.getMaxVelocity(), tec.getTemporalResolution(),
                 tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(chargingVehicle.getID())));
@@ -85,7 +84,7 @@ public class ProductionCycleMine {
         final Pose[] chargingVehicleGoal = {drawPoint24, drawPoint23, drawPoint18, drawPoint16, drawPoint38, mainTunnelLeft};
 
         PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
-        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE,  false);
+        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE, false);
         Thread.sleep(5000);
         tec.placeRobot(drillVehicle.getID(), mainTunnelLeft);
         PoseSteering[] drillInitialPath = drillVehicle.getLimitedPath(drillVehicle.getID(), drillVehicle.getPredictableDistance(), tec);
@@ -123,5 +122,5 @@ public class ProductionCycleMine {
 //        tec.addMissions(m3);
 
         // TODO How does a robot move? Which gives the command for robot to move?
-        }
     }
+}

@@ -1,9 +1,6 @@
 package se.oru.coordination.coordination_oru.tests;
 
-import java.awt.Color;
-
 import org.metacsp.multi.spatioTemporal.paths.Pose;
-
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
@@ -14,6 +11,8 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+
+import java.awt.*;
 
 public class TestClick {
     public static void main(String[] args) {
@@ -44,30 +43,30 @@ public class TestClick {
         final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);
         final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
 
-        final Pose mainTunnelLeft = new Pose(4.25,15.35, -Math.PI);
-        final Pose mainTunnelRight = new Pose(80.05,24.75, Math.PI);
-        final Pose orePass = new Pose(54.11,11.34,-Math.PI/2);
-        final Pose drawPoint15 = new Pose(9.9,84.5,-Math.PI/2);
-        final Pose drawPoint16 = new Pose(17.1,84.6,-Math.PI/2);
-        final Pose drawPoint17 = new Pose(24.3,85.45,-Math.PI/2);
-        final Pose drawPoint18 = new Pose(31.6,84.6,-Math.PI/2);
-        final Pose drawPoint19 = new Pose(39.05,85.45,-Math.PI/2);
-        final Pose drawPoint19_bottom = new Pose(38.8,28.6,-Math.PI/2);
-        final Pose mainTunnelBetween19And20 = new Pose(43.57,17.85, -Math.PI);
-        final Pose drawPoint20 = new Pose(46.0,85.2,-Math.PI/2);
-        final Pose drawPoint20_bottom = new Pose(46.0,31.0,-Math.PI/2);
-        final Pose drawPoint21 = new Pose(53.3,86.8,-Math.PI/2);
-        final Pose drawPoint21_bottom = new Pose(53.3,32.9,-Math.PI/2);
-        final Pose drawPoint22 = new Pose(60.3,86.9,-Math.PI/2);
-        final Pose drawPoint22_bottom = new Pose(60.3,33.5,-Math.PI/2);
-        final Pose drawPoint23 = new Pose(67.8,85.9,-Math.PI/2);
-        final Pose drawPoint23_bottom = new Pose(67.8,37.9,-Math.PI/2);
-        final Pose drawPoint24 = new Pose(75.1,83.5,-Math.PI/2);
-        final Pose drawPoint24_bottom = new Pose(75.1,39.1,-Math.PI/2);
-        final Pose drawPoint36 = new Pose(7.5,45.4,-Math.PI/2);
-        final Pose drawPoint37 = new Pose(19.4,34.5,-Math.PI/2);
-        final Pose drawPoint38 = new Pose(20.1,25.7,-Math.PI/2);
-        final Pose orePassOppositePoint = new Pose(53,32.4,-Math.PI/2);
+        final Pose mainTunnelLeft = new Pose(4.25, 15.35, -Math.PI);
+        final Pose mainTunnelRight = new Pose(80.05, 24.75, Math.PI);
+        final Pose orePass = new Pose(54.11, 11.34, -Math.PI / 2);
+        final Pose drawPoint15 = new Pose(9.9, 84.5, -Math.PI / 2);
+        final Pose drawPoint16 = new Pose(17.1, 84.6, -Math.PI / 2);
+        final Pose drawPoint17 = new Pose(24.3, 85.45, -Math.PI / 2);
+        final Pose drawPoint18 = new Pose(31.6, 84.6, -Math.PI / 2);
+        final Pose drawPoint19 = new Pose(39.05, 85.45, -Math.PI / 2);
+        final Pose drawPoint19_bottom = new Pose(38.8, 28.6, -Math.PI / 2);
+        final Pose mainTunnelBetween19And20 = new Pose(43.57, 17.85, -Math.PI);
+        final Pose drawPoint20 = new Pose(46.0, 85.2, -Math.PI / 2);
+        final Pose drawPoint20_bottom = new Pose(46.0, 31.0, -Math.PI / 2);
+        final Pose drawPoint21 = new Pose(53.3, 86.8, -Math.PI / 2);
+        final Pose drawPoint21_bottom = new Pose(53.3, 32.9, -Math.PI / 2);
+        final Pose drawPoint22 = new Pose(60.3, 86.9, -Math.PI / 2);
+        final Pose drawPoint22_bottom = new Pose(60.3, 33.5, -Math.PI / 2);
+        final Pose drawPoint23 = new Pose(67.8, 85.9, -Math.PI / 2);
+        final Pose drawPoint23_bottom = new Pose(67.8, 37.9, -Math.PI / 2);
+        final Pose drawPoint24 = new Pose(75.1, 83.5, -Math.PI / 2);
+        final Pose drawPoint24_bottom = new Pose(75.1, 39.1, -Math.PI / 2);
+        final Pose drawPoint36 = new Pose(7.5, 45.4, -Math.PI / 2);
+        final Pose drawPoint37 = new Pose(19.4, 34.5, -Math.PI / 2);
+        final Pose drawPoint38 = new Pose(20.1, 25.7, -Math.PI / 2);
+        final Pose orePassOppositePoint = new Pose(53, 32.4, -Math.PI / 2);
 
         final Pose humStart = mainTunnelBetween19And20;
         final Pose humFinish = null;
@@ -120,11 +119,11 @@ public class TestClick {
 
         if (humFinish != null) {
             MissionUtils.targetVelocityHuman = 10;
-            Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[] { humFinish }, YAML_FILE, ishumReturn)));
+            Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[]{humFinish}, YAML_FILE, ishumReturn)));
         }
 
-        Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, YAML_FILE,  true)));
-        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, YAML_FILE, true)));
+        Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[]{aut1Finish}, YAML_FILE, true)));
+        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[]{aut2Finish}, YAML_FILE, true)));
 
         final boolean isChangeVelocity = false;
         if (isChangeVelocity) {

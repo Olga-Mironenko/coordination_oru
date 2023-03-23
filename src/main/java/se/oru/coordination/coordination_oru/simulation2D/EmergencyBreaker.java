@@ -4,7 +4,6 @@ import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.CriticalSection;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -35,7 +34,7 @@ public class EmergencyBreaker {
         }
         if (useLocal) {
             String text = "local";
-            if (! localIds.isEmpty()) {
+            if (!localIds.isEmpty()) {
                 text += " (active for " + stringifyLocalIds() + ")";
             }
             texts.add(text);
@@ -53,7 +52,7 @@ public class EmergencyBreaker {
 
     public void stopRobots(int id, int pathIndex) {
         if (useGlobal) {
-            assert ! isGlobal;
+            assert !isGlobal;
             isGlobal = true;
         }
 
@@ -75,7 +74,7 @@ public class EmergencyBreaker {
                 myStart = cs.getTe1Start();
                 myEnd = cs.getTe1End();
                 opponentsEnvelope = cs.getTe2();
-            } else if (cs.getTe2() != null && cs.getTe2().getRobotID() == myRobotID)  {
+            } else if (cs.getTe2() != null && cs.getTe2().getRobotID() == myRobotID) {
                 myStart = cs.getTe2Start();
                 myEnd = cs.getTe2End();
                 opponentsEnvelope = cs.getTe1();

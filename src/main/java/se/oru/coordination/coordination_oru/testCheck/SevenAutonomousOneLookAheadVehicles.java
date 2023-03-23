@@ -1,4 +1,4 @@
-package se.oru.coordination.coordination_oru.scenarios;
+package se.oru.coordination.coordination_oru.testCheck;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;

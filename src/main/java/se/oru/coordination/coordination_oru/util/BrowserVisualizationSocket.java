@@ -1,23 +1,21 @@
 package se.oru.coordination.coordination_oru.util;
 
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.HashSet;
-
-import javax.imageio.ImageIO;
-
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
+import com.vividsolutions.jts.geom.Coordinate;
 import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
-import com.vividsolutions.jts.geom.Coordinate;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.HashSet;
 
 public class BrowserVisualizationSocket extends WebSocketAdapter {
 
@@ -53,8 +51,9 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
                     baos.close();
                     ByteBuffer bb = ByteBuffer.wrap(imageInBytes);
                     super.getRemote().sendBytes(bb);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                catch(IOException e) { e.printStackTrace(); }
             }
             if (BrowserVisualizationSocket.initialTranslation != null) {
                 try {
@@ -63,8 +62,9 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
                             + "\"data\" : "
                             + "{ \"scale\" : " + initialScale + ", \"x\" : " + initialTranslation.x + ", \"y\" : " + initialTranslation.y + "}}";
                     super.getRemote().sendString(setInitialTransformString);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                catch(IOException e) { e.printStackTrace(); }
             }
             try {
                 System.out.println("Sending initial font scale to newly connected client...");
@@ -72,8 +72,9 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
                         + "\"data\" : "
                         + "{ \"scale\" : " + fontScale + "}}";
                 super.getRemote().sendString(setFontScaleString);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            catch(IOException e) { e.printStackTrace(); }
         }
     }
 
@@ -103,7 +104,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
             if (delta != null) {
                 MissionUtils.changeTargetVelocityHuman(delta);
             }
-	} else {
+        } else {
             System.out.println("Unknown event: " + event);
         }
     }
@@ -112,7 +113,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
     public void onWebSocketClose(int statusCode, String reason) {
         System.out.println("Removing connection to client");
         ENDPOINTS.remove(super.getRemote());
-        super.onWebSocketClose(statusCode,reason);
+        super.onWebSocketClose(statusCode, reason);
         System.out.println("Socket Closed: [" + statusCode + "] " + reason);
     }
 

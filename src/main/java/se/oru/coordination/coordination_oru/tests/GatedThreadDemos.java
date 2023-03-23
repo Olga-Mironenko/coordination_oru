@@ -1,8 +1,8 @@
 package se.oru.coordination.coordination_oru.tests;
 
+import se.oru.coordination.coordination_oru.util.Printer;
 import se.oru.coordination.coordination_oru.util.gates.Gate;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
-import se.oru.coordination.coordination_oru.util.Printer;
 
 class Sleeper {
     public static void sleep(long millis) {
@@ -67,8 +67,11 @@ class DemoGatekeeper {
                         Sleeper.sleep(50);
                         Printer.print(name);
 
-                        try { sleep(step); }
-                        catch (InterruptedException e) { e.printStackTrace(); }
+                        try {
+                            sleep(step);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }.start();

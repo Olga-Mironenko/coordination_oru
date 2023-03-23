@@ -9,7 +9,7 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
 
-public class OneAutonomousOneLookAheadVehicles {
+public class RampScenario {
     public static void main(String[] args) {
 
         final int simulationTimeMinutes = 2;

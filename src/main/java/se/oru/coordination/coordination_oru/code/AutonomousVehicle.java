@@ -46,8 +46,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         if (inversePath) {
             pathInv = rsp.getPathInv();
             path = (PoseSteering[]) ArrayUtils.addAll(pathFwd, pathInv);
-        }
-        else {
+        } else {
             path = pathFwd;
         }
         VehiclesHashMap.getVehicle(this.getID()).setPath(path);
@@ -76,8 +75,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         if (inversePath) {
             pathInv = rsp.getPathInv();
             path = (PoseSteering[]) ArrayUtils.addAll(pathFwd, pathInv);
-        }
-        else {
+        } else {
             path = pathFwd;
         }
         VehiclesHashMap.getVehicle(this.getID()).setPath(path);

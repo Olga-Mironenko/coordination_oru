@@ -32,6 +32,16 @@ public class LookAheadVehicle extends AbstractVehicle {
         this.predictableDistance = predictableDistance;
     }
 
+    public synchronized static void updateLookAheadVehiclesPath(TrajectoryEnvelopeCoordinator tec) {
+        for (int robotID : tec.getAllRobotIDs()) {
+            if (VehiclesHashMap.getVehicle(robotID).getType().equals("LookAheadVehicle")) {
+                var lookAheadVehicle = (LookAheadVehicle) VehiclesHashMap.getVehicle(robotID);
+                PoseSteering[] newPath = lookAheadVehicle.getLimitedPath(robotID, lookAheadVehicle.getPredictableDistance(), tec);
+                tec.replacePath(robotID, newPath, 0, false, null);
+            }
+        }
+    }
+
     @Override
     public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
 
@@ -54,8 +64,7 @@ public class LookAheadVehicle extends AbstractVehicle {
         if (inversePath) {
             pathInv = rsp.getPathInv();
             path = (PoseSteering[]) ArrayUtils.addAll(pathFwd, pathInv);
-        }
-        else {
+        } else {
             path = pathFwd;
         }
         VehiclesHashMap.getVehicle(this.getID()).setPath(path);
@@ -63,7 +72,7 @@ public class LookAheadVehicle extends AbstractVehicle {
     }
 
     public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,
-                        double radius, double planningTime, double turningRadius, double distanceBetweenPathPoints) {
+                                  double radius, double planningTime, double turningRadius, double distanceBetweenPathPoints) {
 
         var rsp = new ReedsSheppCarPlanner(planningAlgorithm);
         rsp.setMap(map);
@@ -84,22 +93,11 @@ public class LookAheadVehicle extends AbstractVehicle {
         if (inversePath) {
             pathInv = rsp.getPathInv();
             path = (PoseSteering[]) ArrayUtils.addAll(pathFwd, pathInv);
-        }
-        else {
+        } else {
             path = pathFwd;
         }
         VehiclesHashMap.getVehicle(this.getID()).setPath(path);
         return path;
-    }
-
-    public synchronized static void updateLookAheadVehiclesPath(TrajectoryEnvelopeCoordinator tec) {
-        for (int robotID : tec.getAllRobotIDs()) {
-            if(VehiclesHashMap.getVehicle(robotID).getType().equals("LookAheadVehicle")) {
-                var lookAheadVehicle = (LookAheadVehicle) VehiclesHashMap.getVehicle(robotID);
-                PoseSteering[] newPath = lookAheadVehicle.getLimitedPath(robotID, lookAheadVehicle.getPredictableDistance(), tec);
-                tec.replacePath(robotID, newPath, 0, false, null);
-            }
-        }
     }
 
     // TODO Delay Time for Human Vehicles not working
@@ -113,11 +111,10 @@ public class LookAheadVehicle extends AbstractVehicle {
         int pathIndex = Math.max(tec.getRobotReport(robotID).getPathIndex(), 0); // Avoid null point exception for starting
 
         while (distance <= predictableDistance) {
-            if ((currentDistance + predictableDistance) >= totalDistance)  {
+            if ((currentDistance + predictableDistance) >= totalDistance) {
                 return getPath(); // For last iteration less than predictable distance
-            }
-            else {
-                distance += getPath()[pathIndex].getPose().distanceTo(getPath()[pathIndex+1].getPose());
+            } else {
+                distance += getPath()[pathIndex].getPose().distanceTo(getPath()[pathIndex + 1].getPose());
                 pathIndex++;
             }
         }
@@ -125,6 +122,7 @@ public class LookAheadVehicle extends AbstractVehicle {
         System.arraycopy(getPath(), 0, newPath, 0, pathIndex);
         return newPath;
     }
+
     public double getPredictableDistance() {
         return predictableDistance;
     }

@@ -6,6 +6,10 @@ abstract public class GatedThread extends Thread {
     protected static boolean isGated = false;
     protected static Gatekeeper gatekeeper;
 
+    public GatedThread(String name) {
+        super(name);
+    }
+
     /**
      * This function must be called before any other use of `GatedThread`.
      */
@@ -17,27 +21,6 @@ abstract public class GatedThread extends Thread {
     public static void runGatekeeper() {
         if (isGated) {
             gatekeeper.run();
-        }
-    }
-
-    public GatedThread(String name) {
-        super(name);
-    }
-
-    abstract public void runCore();
-
-    @Override
-    public void run() {
-        if (isGated) {
-            gatekeeper.pauseCurrentThread("initial", true); // at the beginning of each thread
-            Printer.print("ready");
-        }
-
-        runCore();
-
-        if (isGated) {
-            Printer.print("finished");
-            gatekeeper.processNextGate(); // at the end of each thread
         }
     }
 
@@ -61,6 +44,23 @@ abstract public class GatedThread extends Thread {
     public static void skipCycles(int numCycles) {
         for (int i = 1; i <= numCycles; i++) {
             sleepWithoutException(i);
+        }
+    }
+
+    abstract public void runCore();
+
+    @Override
+    public void run() {
+        if (isGated) {
+            gatekeeper.pauseCurrentThread("initial", true); // at the beginning of each thread
+            Printer.print("ready");
+        }
+
+        runCore();
+
+        if (isGated) {
+            Printer.print("finished");
+            gatekeeper.processNextGate(); // at the end of each thread
         }
     }
 }

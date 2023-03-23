@@ -1,13 +1,8 @@
 package se.oru.coordination.coordination_oru.tests.icaps2018.talk;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-
+import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
-
-import com.vividsolutions.jts.geom.Coordinate;
-
 import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
@@ -15,49 +10,52 @@ import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
-import se.oru.coordination.coordination_oru.util.JTSDrawingPanelVisualization;
+
+import java.util.ArrayList;
+import java.util.Comparator;
 
 @DemoDescription(desc = "Coordination with deadlock-inducing ordering heuristic (paths obtained with the ReedsSheppCarPlanner).")
 public class ThreeRobotsDeadlock {
-	
-	public static void main(String[] args) throws InterruptedException {
-		
-		double MAX_ACCEL = 1.0;
-		double MAX_VEL = 2.5;
-		//Instantiate a trajectory envelope coordinator.
-		//The TrajectoryEnvelopeCoordinatorSimulation implementation provides
-		// -- the factory method getNewTracker() which returns a trajectory envelope tracker
-		// -- the getCurrentTimeInMillis() method, which is used by the coordinator to keep time
-		//You still need to add one or more comparators to determine robot orderings thru critical sections (comparators are evaluated in the order in which they are added)
-		final TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(MAX_VEL,MAX_ACCEL);
-		tec.addComparator(new Comparator<RobotAtCriticalSection> () {
-			@Override
-			public int compare(RobotAtCriticalSection o1, RobotAtCriticalSection o2) {
-				int robot1ID = o1.getRobotReport().getRobotID();
-				int robot2ID = o2.getRobotReport().getRobotID();
-				if (robot1ID == 1 && robot2ID == 2) return -1;
-				if (robot1ID == 2 && robot2ID == 1) return 1;
-				if (robot1ID == 1 && robot2ID == 3) return 1;
-				if (robot1ID == 3 && robot2ID == 1) return -1;
-				if (robot1ID == 2 && robot2ID == 3) return -1;
-				if (robot1ID == 3 && robot2ID == 2) return 1;
-				return 0;
-			}
-		});
-		//You probably also want to provide a non-trivial forward model
-		//(the default assumes that robots can always stop)
-		tec.setForwardModel(1, new ConstantAccelerationForwardModel(MAX_ACCEL, MAX_VEL, tec.getTemporalResolution(), tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(1)));;
-		tec.setForwardModel(2, new ConstantAccelerationForwardModel(MAX_ACCEL, MAX_VEL, tec.getTemporalResolution(), tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(2)));
-		tec.setForwardModel(3, new ConstantAccelerationForwardModel(MAX_ACCEL, MAX_VEL, tec.getTemporalResolution(), tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(3)));
-		//comment out following (or set to true) to make the coordinator attempt to break the deadlock
-		tec.setBreakDeadlocks(false, false, false);
 
-		Coordinate footprint1 = new Coordinate(-0.25,0.25);
-		Coordinate footprint2 = new Coordinate(0.25,0.25);
-		Coordinate footprint3 = new Coordinate(0.25,-0.25);
-		Coordinate footprint4 = new Coordinate(-0.25,-0.25);
-		tec.setDefaultFootprint(footprint1, footprint2, footprint3, footprint4);
-		
+    public static void main(String[] args) throws InterruptedException {
+
+        double MAX_ACCEL = 1.0;
+        double MAX_VEL = 2.5;
+        //Instantiate a trajectory envelope coordinator.
+        //The TrajectoryEnvelopeCoordinatorSimulation implementation provides
+        // -- the factory method getNewTracker() which returns a trajectory envelope tracker
+        // -- the getCurrentTimeInMillis() method, which is used by the coordinator to keep time
+        //You still need to add one or more comparators to determine robot orderings thru critical sections (comparators are evaluated in the order in which they are added)
+        final TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(MAX_VEL, MAX_ACCEL);
+        tec.addComparator(new Comparator<RobotAtCriticalSection>() {
+            @Override
+            public int compare(RobotAtCriticalSection o1, RobotAtCriticalSection o2) {
+                int robot1ID = o1.getRobotReport().getRobotID();
+                int robot2ID = o2.getRobotReport().getRobotID();
+                if (robot1ID == 1 && robot2ID == 2) return -1;
+                if (robot1ID == 2 && robot2ID == 1) return 1;
+                if (robot1ID == 1 && robot2ID == 3) return 1;
+                if (robot1ID == 3 && robot2ID == 1) return -1;
+                if (robot1ID == 2 && robot2ID == 3) return -1;
+                if (robot1ID == 3 && robot2ID == 2) return 1;
+                return 0;
+            }
+        });
+        //You probably also want to provide a non-trivial forward model
+        //(the default assumes that robots can always stop)
+        tec.setForwardModel(1, new ConstantAccelerationForwardModel(MAX_ACCEL, MAX_VEL, tec.getTemporalResolution(), tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(1)));
+        ;
+        tec.setForwardModel(2, new ConstantAccelerationForwardModel(MAX_ACCEL, MAX_VEL, tec.getTemporalResolution(), tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(2)));
+        tec.setForwardModel(3, new ConstantAccelerationForwardModel(MAX_ACCEL, MAX_VEL, tec.getTemporalResolution(), tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(3)));
+        //comment out following (or set to true) to make the coordinator attempt to break the deadlock
+        tec.setBreakDeadlocks(false, false, false);
+
+        Coordinate footprint1 = new Coordinate(-0.25, 0.25);
+        Coordinate footprint2 = new Coordinate(0.25, 0.25);
+        Coordinate footprint3 = new Coordinate(0.25, -0.25);
+        Coordinate footprint4 = new Coordinate(-0.25, -0.25);
+        tec.setDefaultFootprint(footprint1, footprint2, footprint3, footprint4);
+
 //		Coordinate[] ret = new Coordinate[6];		
 //		ret[0] = new Coordinate(0.36, 0.0);
 //		ret[1] = new Coordinate(0.18, 0.36);
@@ -67,87 +65,87 @@ public class ThreeRobotsDeadlock {
 //		ret[5] = new Coordinate(0.18, -0.36);
 //		tec.setDefaultFootprint(ret);
 
-		//Need to setup infrastructure that maintains the representation
-		tec.setupSolver(0, 100000000);
-		//Start the thread that checks and enforces dependencies at every clock tick
-		tec.startInference();
-		
-		//Setup a simple GUI (null means empty map, otherwise provide yaml file)
-		//JTSDrawingPanelVisualization viz = new JTSDrawingPanelVisualization();
-		BrowserVisualization viz = new BrowserVisualization();
-		viz.setInitialTransform(73, 6, 0);
-		tec.setVisualization(viz);
-		
-		//tec.setUseInternalCriticalPoints(false);
-		
-		//MetaCSPLogging.setLevel(tec.getClass().getSuperclass(), Level.FINEST);
+        //Need to setup infrastructure that maintains the representation
+        tec.setupSolver(0, 100000000);
+        //Start the thread that checks and enforces dependencies at every clock tick
+        tec.startInference();
 
-		//Instantiate a simple motion planner
-		ReedsSheppCarPlanner rsp = new ReedsSheppCarPlanner();
-		rsp.setRadius(0.2);
-		rsp.setFootprint(tec.getDefaultFootprint());
-		rsp.setTurningRadius(4.0);
-		rsp.setDistanceBetweenPathPoints(0.5);
-	
-		Pose startPoseRobot1 = new Pose(3.0,3.0,Math.PI/4);
-		Pose goalPoseRobot1 = new Pose(10.0,10.0,Math.PI/4);
-		Pose startPoseRobot2 = new Pose(10.0,3.0,3*Math.PI/4);
-		Pose goalPoseRobot2 = new Pose(3.0,10.0,3*Math.PI/4);
-		Pose startPoseRobot3 = new Pose(3.0,6.5,0.0);
-		Pose goalPoseRobot3 = new Pose(10.0,6.5,0.0);
-		
-		//Place robots in their initial locations (looked up in the data file that was loaded above)
-		// -- creates a trajectory envelope for each location, representing the fact that the robot is parked
-		// -- each trajectory envelope has a path of one pose (the pose of the location)
-		// -- each trajectory envelope is the footprint of the corresponding robot in that pose
-		tec.placeRobot(1, startPoseRobot1);
-		tec.placeRobot(2, startPoseRobot2);
-		tec.placeRobot(3, startPoseRobot3);
+        //Setup a simple GUI (null means empty map, otherwise provide yaml file)
+        //JTSDrawingPanelVisualization viz = new JTSDrawingPanelVisualization();
+        BrowserVisualization viz = new BrowserVisualization();
+        viz.setInitialTransform(73, 6, 0);
+        tec.setVisualization(viz);
 
-		ArrayList<PoseSteering[]> paths = new ArrayList<PoseSteering[]>();
-		
-		rsp.setStart(startPoseRobot1);
-		rsp.setGoals(goalPoseRobot1);
-		if (!rsp.plan()) throw new Error ("No path between " + startPoseRobot1 + " and " + goalPoseRobot1);
-		PoseSteering[] pss1 = rsp.getPath();
-		paths.add(pss1);
-		
-		rsp.setStart(startPoseRobot2);
-		rsp.setGoals(goalPoseRobot2);
-		if (!rsp.plan()) throw new Error ("No path between " + startPoseRobot2 + " and " + goalPoseRobot2);
-		PoseSteering[] pss2 = rsp.getPath();
-		paths.add(pss2);
-		
-		rsp.setStart(startPoseRobot3);
-		rsp.setGoals(goalPoseRobot3);
-		if (!rsp.plan()) throw new Error ("No path between " + startPoseRobot3 + " and " + goalPoseRobot3);
-		PoseSteering[] pss3 = rsp.getPath();
-		paths.add(pss3);
+        //tec.setUseInternalCriticalPoints(false);
 
-		rsp.setStart(goalPoseRobot1);
-		rsp.setGoals(startPoseRobot1);
-		if (!rsp.plan()) throw new Error ("No path between " + goalPoseRobot1 + " and " + startPoseRobot1);
-		PoseSteering[] pssInv1 = rsp.getPath();
-		paths.add(pssInv1);
-		Mission m1 = new Mission(1,rsp.getPath());
-		
-		rsp.setStart(goalPoseRobot2);
-		rsp.setGoals(startPoseRobot2);
-		if (!rsp.plan()) throw new Error ("No path between " + goalPoseRobot2 + " and " + startPoseRobot2);
-		PoseSteering[] pssInv2 = rsp.getPath();
-		paths.add(pssInv2);
-		Mission m2 = new Mission(2,rsp.getPath());
-		
-		rsp.setStart(goalPoseRobot3);
-		rsp.setGoals(startPoseRobot3);
-		if (!rsp.plan()) throw new Error ("No path between " + goalPoseRobot3 + " and " + startPoseRobot3);
-		PoseSteering[] pssInv3 = rsp.getPath();
-		paths.add(pssInv3);
-		Mission m3 = new Mission(3,rsp.getPath());
-		
-		tec.addMissions(m1,m2,m3);
-		
-		//Start a mission dispatching thread for each robot, which will run forever
+        //MetaCSPLogging.setLevel(tec.getClass().getSuperclass(), Level.FINEST);
+
+        //Instantiate a simple motion planner
+        ReedsSheppCarPlanner rsp = new ReedsSheppCarPlanner();
+        rsp.setRadius(0.2);
+        rsp.setFootprint(tec.getDefaultFootprint());
+        rsp.setTurningRadius(4.0);
+        rsp.setDistanceBetweenPathPoints(0.5);
+
+        Pose startPoseRobot1 = new Pose(3.0, 3.0, Math.PI / 4);
+        Pose goalPoseRobot1 = new Pose(10.0, 10.0, Math.PI / 4);
+        Pose startPoseRobot2 = new Pose(10.0, 3.0, 3 * Math.PI / 4);
+        Pose goalPoseRobot2 = new Pose(3.0, 10.0, 3 * Math.PI / 4);
+        Pose startPoseRobot3 = new Pose(3.0, 6.5, 0.0);
+        Pose goalPoseRobot3 = new Pose(10.0, 6.5, 0.0);
+
+        //Place robots in their initial locations (looked up in the data file that was loaded above)
+        // -- creates a trajectory envelope for each location, representing the fact that the robot is parked
+        // -- each trajectory envelope has a path of one pose (the pose of the location)
+        // -- each trajectory envelope is the footprint of the corresponding robot in that pose
+        tec.placeRobot(1, startPoseRobot1);
+        tec.placeRobot(2, startPoseRobot2);
+        tec.placeRobot(3, startPoseRobot3);
+
+        ArrayList<PoseSteering[]> paths = new ArrayList<PoseSteering[]>();
+
+        rsp.setStart(startPoseRobot1);
+        rsp.setGoals(goalPoseRobot1);
+        if (!rsp.plan()) throw new Error("No path between " + startPoseRobot1 + " and " + goalPoseRobot1);
+        PoseSteering[] pss1 = rsp.getPath();
+        paths.add(pss1);
+
+        rsp.setStart(startPoseRobot2);
+        rsp.setGoals(goalPoseRobot2);
+        if (!rsp.plan()) throw new Error("No path between " + startPoseRobot2 + " and " + goalPoseRobot2);
+        PoseSteering[] pss2 = rsp.getPath();
+        paths.add(pss2);
+
+        rsp.setStart(startPoseRobot3);
+        rsp.setGoals(goalPoseRobot3);
+        if (!rsp.plan()) throw new Error("No path between " + startPoseRobot3 + " and " + goalPoseRobot3);
+        PoseSteering[] pss3 = rsp.getPath();
+        paths.add(pss3);
+
+        rsp.setStart(goalPoseRobot1);
+        rsp.setGoals(startPoseRobot1);
+        if (!rsp.plan()) throw new Error("No path between " + goalPoseRobot1 + " and " + startPoseRobot1);
+        PoseSteering[] pssInv1 = rsp.getPath();
+        paths.add(pssInv1);
+        Mission m1 = new Mission(1, rsp.getPath());
+
+        rsp.setStart(goalPoseRobot2);
+        rsp.setGoals(startPoseRobot2);
+        if (!rsp.plan()) throw new Error("No path between " + goalPoseRobot2 + " and " + startPoseRobot2);
+        PoseSteering[] pssInv2 = rsp.getPath();
+        paths.add(pssInv2);
+        Mission m2 = new Mission(2, rsp.getPath());
+
+        rsp.setStart(goalPoseRobot3);
+        rsp.setGoals(startPoseRobot3);
+        if (!rsp.plan()) throw new Error("No path between " + goalPoseRobot3 + " and " + startPoseRobot3);
+        PoseSteering[] pssInv3 = rsp.getPath();
+        paths.add(pssInv3);
+        Mission m3 = new Mission(3, rsp.getPath());
+
+        tec.addMissions(m1, m2, m3);
+
+        //Start a mission dispatching thread for each robot, which will run forever
 		/*int iteration = 0;
 		while(true) {
 			for (int i = 0; i < 3; i++) {
@@ -161,7 +159,7 @@ public class ThreeRobotsDeadlock {
 				}
 			}			
 			iteration++;
-		}*/				
-	}
-	
+		}*/
+    }
+
 }

@@ -1,16 +1,12 @@
 package se.oru.coordination.coordination_oru.scenarios;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
-import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
-import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
-
-import java.awt.*;
 
 public class EightAutonomousVehicles {
     public static void main(String[] args) {
@@ -19,16 +15,16 @@ public class EightAutonomousVehicles {
         final long simulationTime = System.currentTimeMillis() + (simulationTimeMinutes * 60 * 1000);
         final String YAML_FILE = "maps/mine-map-test.yaml";
 
-        final Pose mainTunnelLeft = new Pose(4.25,15.35, -Math.PI);
-        final Pose mainTunnelRight = new Pose(80.05,24.75, Math.PI);
-        final Pose drawPoint17 = new Pose(24.15,85.55,-Math.PI/2);
-        final Pose drawPoint19 = new Pose(38.75,86.35,-Math.PI/2);
-        final Pose drawPoint20 = new Pose(45.85,86.15,-Math.PI/2);
-        final Pose drawPoint21 = new Pose(52.95,87.75,-Math.PI/2);
-        final Pose drawPoint22 = new Pose(60.35,87.85,-Math.PI/2);
-        final Pose drawPoint23 = new Pose(67.75,86.95,-Math.PI/2);
-        final Pose drawPoint24 = new Pose(74.85,84.45,-Math.PI/2);
-        final Pose orePass = new Pose(54.35,11.25,-Math.PI/2);
+        final Pose mainTunnelLeft = new Pose(4.25, 15.35, -Math.PI);
+        final Pose mainTunnelRight = new Pose(80.05, 24.75, Math.PI);
+        final Pose drawPoint17 = new Pose(24.15, 85.55, -Math.PI / 2);
+        final Pose drawPoint19 = new Pose(38.75, 86.35, -Math.PI / 2);
+        final Pose drawPoint20 = new Pose(45.85, 86.15, -Math.PI / 2);
+        final Pose drawPoint21 = new Pose(52.95, 87.75, -Math.PI / 2);
+        final Pose drawPoint22 = new Pose(60.35, 87.85, -Math.PI / 2);
+        final Pose drawPoint23 = new Pose(67.75, 86.95, -Math.PI / 2);
+        final Pose drawPoint24 = new Pose(74.85, 84.45, -Math.PI / 2);
+        final Pose orePass = new Pose(54.35, 11.25, -Math.PI / 2);
 
         final Pose[] autonomousVehicleGoal = {orePass};
         final Pose[] autonomousVehicle8Goal = {mainTunnelRight};

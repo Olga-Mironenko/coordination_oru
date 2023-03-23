@@ -6,7 +6,6 @@ import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
-import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
@@ -102,9 +101,9 @@ public class ProductionCyclePathsAutonomousMine {
                 drawPoint36, drawPoint37, drawPoint38, workStation3};
 
         PoseSteering[] drillRigPath1 = drillVehicle.getPlan(mainTunnelLeft, new Pose[]{drawPoint38}, YAML_FILE, false);
-        PoseSteering[] drillRigPath2 = drillVehicle.getPlan(drawPoint38, new Pose[]{drawPoint18}, YAML_FILE,  false);
-        PoseSteering[] drillRigPath3 = drillVehicle.getPlan(drawPoint18, new Pose[]{drawPoint24}, YAML_FILE,  false);
-        PoseSteering[] drillRigPath4 = drillVehicle.getPlan(drawPoint24, new Pose[]{workStation1}, YAML_FILE,  false);
+        PoseSteering[] drillRigPath2 = drillVehicle.getPlan(drawPoint38, new Pose[]{drawPoint18}, YAML_FILE, false);
+        PoseSteering[] drillRigPath3 = drillVehicle.getPlan(drawPoint18, new Pose[]{drawPoint24}, YAML_FILE, false);
+        PoseSteering[] drillRigPath4 = drillVehicle.getPlan(drawPoint24, new Pose[]{workStation1}, YAML_FILE, false);
 //        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE, false);
 //        PoseSteering[] waterVehiclePath = waterVehicle.getPlan(mainTunnelRight, waterVehicleGoal, YAML_FILE, false,
 //                ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect, 0.01, 120, 0.01, 0.1);
@@ -130,5 +129,5 @@ public class ProductionCyclePathsAutonomousMine {
 //        var m5 = new Mission(waterVehicle.getID(), waterVehiclePath);
 //        tec.addMissions(m5);
 
-        }
     }
+}
