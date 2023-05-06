@@ -267,6 +267,7 @@ public class BrowserVisualization implements FleetVisualization {
 		if (idToVehicle.keySet().contains(MissionUtils.idHuman)) {
 			text += "targetVelocityHuman: " + round(MissionUtils.targetVelocityHuman) + "<br>";
 		}
+		text += TrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString() + "<br>";
 		for (int id : idToVehicle.keySet()) {
 			text += "(Robot " + id + ") ";
 
@@ -290,7 +291,6 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "<br>";
 		}
 		text += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
-		text += TrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString() + "<br>";
 		setOverlayText(text);
 	}
 
