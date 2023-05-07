@@ -1,11 +1,15 @@
 package se.oru.coordination.coordination_oru.code;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
+import se.oru.coordination.coordination_oru.util.Missions;
 
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 
 public class AutonomousVehicle extends AbstractVehicle {
 
@@ -27,31 +31,61 @@ public class AutonomousVehicle extends AbstractVehicle {
 
     @Override
     public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
-        var rsp = new ReedsSheppCarPlanner();
-        rsp.setMap(map);
-        rsp.setRadius(0.01);
-        rsp.setPlanningTimeInSecs(60);
-        rsp.setFootprint(super.getFootPrint());
-        rsp.setTurningRadius(0.01);
-        rsp.setDistanceBetweenPathPoints(0.1);
+        String filenameCache = null;
+        PoseSteering[] path = null;
+        if (goals.length == 1) {
+            Pose goal = goals[0];
+            String base = poseToString(initial) + "_" + poseToString(goal) + (inversePath ? "_inv" : "");
 
-        PoseSteering[] pathFwd;
-        PoseSteering[] pathInv;
-        PoseSteering[] path;
-        rsp.setStart(initial);
-        rsp.setGoals(goals);
-        rsp.plan();
-        if (rsp.getPath() == null) throw new Error("No path found.");
-        pathFwd = rsp.getPath();
-        if (inversePath) {
-            pathInv = rsp.getPathInv();
-            path = (PoseSteering[]) ArrayUtils.addAll(pathFwd, pathInv);
+            filenameCache = "paths/" + FilenameUtils.getBaseName(map) + "/" + base + ".path";
+            if (new File(filenameCache).isFile()) {
+                path = Missions.loadPathFromFile(filenameCache);
+            }
         }
-        else {
-            path = pathFwd;
+
+        if (path == null) {
+            var rsp = new ReedsSheppCarPlanner();
+            rsp.setMap(map);
+            rsp.setRadius(0.01);
+            rsp.setPlanningTimeInSecs(60);
+            rsp.setFootprint(super.getFootPrint());
+            rsp.setTurningRadius(0.01);
+            rsp.setDistanceBetweenPathPoints(0.1);
+
+            PoseSteering[] pathFwd;
+            PoseSteering[] pathInv;
+            rsp.setStart(initial);
+            rsp.setGoals(goals);
+            rsp.plan();
+            if (rsp.getPath() == null) throw new Error("No path found.");
+            pathFwd = rsp.getPath();
+            if (inversePath) {
+                pathInv = rsp.getPathInv();
+                path = (PoseSteering[]) ArrayUtils.addAll(pathFwd, pathInv);
+            } else {
+                path = pathFwd;
+            }
         }
+
         VehiclesHashMap.getVehicle(this.getID()).setPath(path);
+
+        if (filenameCache != null && ! new File(filenameCache).isFile()) {
+            try {
+                Missions.savePathToFile(path, filenameCache);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         return path;
+    }
+
+    private static String poseToString(Pose pose) {
+        return roundPoseCoordinate(pose.getX()) + "-" + roundPoseCoordinate(pose.getY());
+    }
+
+    private static double roundPoseCoordinate(double x) {
+        return Math.round(x * 1000) / 1000.0;
     }
 
     public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,

@@ -40,7 +40,7 @@ public class GridSimpleDiagonal {
     }
 
     protected static void runDemo() throws NoPathFound {
-        final boolean isLoading = true;
+        final boolean isLoading = false; // TODO: remove
 
         final int loopMinutes = 5;
         final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);
@@ -88,7 +88,7 @@ public class GridSimpleDiagonal {
         aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
         aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
         //aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
-        aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
+        //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
         //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
 
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15

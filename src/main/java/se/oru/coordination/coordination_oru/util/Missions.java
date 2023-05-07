@@ -1,15 +1,7 @@
 package se.oru.coordination.coordination_oru.util;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -1241,6 +1233,17 @@ public class Missions {
 	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
 		for (int robotID : tec.getAllRobotIDs()) {
 			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
+		}
+	}
+
+	public static void savePathToFile(PoseSteering[] path, String filename) throws IOException {
+		new File(filename).getParentFile().mkdirs();
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, false))) {
+			for (PoseSteering poseSteering : path) {
+				String line = poseSteering.getX() + "\t" + poseSteering.getY() + "\t" +poseSteering.getYaw();
+				writer.write(line);
+				writer.newLine();
+			}
 		}
 	}
 
