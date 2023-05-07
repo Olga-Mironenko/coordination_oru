@@ -13,6 +13,7 @@
 
 # Data
 *.json
+results/*
 
 # build files
 build/

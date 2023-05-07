@@ -6,8 +6,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.FileUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
@@ -40,6 +42,10 @@ public abstract class AbstractVehicle {
     private long totalWaitingTime;
     private int stops;
     private PoseSteering[] path;
+
+    private final String statisticsDirectory = "results";
+    private boolean isStatisticsDirectoryCleaned = false;
+
     public AbstractVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
         this.ID = id;
         this.priorityID = priorityID;
@@ -55,16 +61,21 @@ public abstract class AbstractVehicle {
                 new Coordinate(xLength, -yLength),        //front right
                 new Coordinate(-xLength, -yLength)        //front left
         };
+
         if (VehiclesHashMap.getList().containsKey(id)) {
             throw new Error("ID " + id + " already exists.");
         }
-        VehiclesHashMap.getList().put(this.ID, this);
+        VehiclesHashMap.getList().put(id, this);
         vehicleNumber++;
     }
 
     public AbstractVehicle(int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
-        this(vehicleNumber, priorityID, color, colorInMotion, maxVelocity, maxAcceleration, xLength, yLength);
+        this(
+                VehiclesHashMap.getList().isEmpty() ? 1 : Collections.max(VehiclesHashMap.getList().keySet()) + 1,
+                priorityID, color, colorInMotion, maxVelocity, maxAcceleration, xLength, yLength
+        );
     }
+
 
     public AbstractVehicle(int priorityID, Color color, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
         this(vehicleNumber, priorityID, color, null, maxVelocity, maxAcceleration, xLength, yLength);
@@ -87,25 +98,27 @@ public abstract class AbstractVehicle {
 
     public abstract PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath);
 
-    public synchronized void updateStatistics() {
+    private static boolean isStopped(RobotReport rr) {
+        return rr.getVelocity() < 1e-3;
+    }
 
+    public synchronized void updateStatistics() {
         // Loading and unloading times and stoppages are not considered
         if ((this.currentRobotReport.getPathIndex() == -1) && (this.lastRobotReport.getPathIndex() != -1))
             this.cycles++;
 
-        if ((this.currentRobotReport.getVelocity() == 0.0) && (this.lastRobotReport.getVelocity() != 0.0)) this.stops++;
+        if (isStopped(this.currentRobotReport)) {
+            if (! isStopped(this.lastRobotReport))
+                this.stops++;
 
-        if (this.currentRobotReport.getVelocity() == 0.0) {
             this.currentWaitingTime += 2;
             this.totalWaitingTime += 2;
-        }
-
-        if (this.currentRobotReport.getVelocity() != 0.0) {
             this.maxWaitingTime = Math.max(currentWaitingTime, maxWaitingTime);
         }
 
-        this.totalDistance = Math.round(((cycleDistance * cycles) +
-                currentRobotReport.getDistanceTraveled()) * 10.0) / 10.0;
+        this.totalDistance = Math.round(
+                (cycleDistance * cycles + currentRobotReport.getDistanceTraveled()) * 10.0
+        ) / 10.0;
         this.timeInterval = Math.round(System.nanoTime() - startTime) / 1000_000_000;
         this.averageSpeed = Math.round((totalDistance / timeInterval) * 10.0) / 10.0;
     }
@@ -134,7 +147,14 @@ public abstract class AbstractVehicle {
             String line13 = "Total simulation time: " + timeInterval + " s" + "\n";
             String line14 = "\n";
 
-            String fileName = "./src/main/java/se/oru/coordination/coordination_oru/scenarios/results.txt";
+            if (! isStatisticsDirectoryCleaned) {
+                File dir = new File(statisticsDirectory);
+                dir.mkdirs();
+                FileUtils.cleanDirectory(dir);
+                isStatisticsDirectoryCleaned = true;
+            }
+
+            String fileName = statisticsDirectory + "/" + this.ID + ".txt";
             File file = new File(fileName);
 
             // if file doesn't exist, then create it
@@ -143,7 +163,7 @@ public abstract class AbstractVehicle {
             }
 
             //FIXME Use a loop for ease
-            FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+            FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
             BufferedWriter bw = new BufferedWriter(fw);
             bw.write(line0);
 //            bw.write(line1);

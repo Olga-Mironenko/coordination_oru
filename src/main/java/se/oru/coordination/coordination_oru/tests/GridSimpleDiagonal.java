@@ -71,19 +71,25 @@ public class GridSimpleDiagonal {
         final Pose aut2Finish = column3Bottom;
         final Pose aut3Start = row1Left;
         final Pose aut3Finish = row3Right;
-        //final Pose aut4Start = row2Left;
-        //final Pose aut4Finish = row2Right;
+        final Pose aut4Start = row2Left;
+        final Pose aut4Finish = row2Right;
         final Pose aut5Start = row3Left;
         final Pose aut5Finish = row1Right;
 
         final int maxVelocity = 15;
 
+        AutonomousVehicle aut1 = null;
+        AutonomousVehicle aut2 = null;
+        AutonomousVehicle aut3 = null;
+        AutonomousVehicle aut4 = null;
+        AutonomousVehicle aut5 = null;
+
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, 2, 1.5, 1.5);
-        //    AutonomousVehicle aut1 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
-        //    AutonomousVehicle aut2 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
-        AutonomousVehicle aut3 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
-        AutonomousVehicle aut4 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
-        AutonomousVehicle aut5 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
+        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
+        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
+        //aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
+        aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
+        //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
 
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
         System.out.println(VehiclesHashMap.getInstance().getList());
@@ -99,11 +105,11 @@ public class GridSimpleDiagonal {
 
         tec.setDefaultFootprint(hum0.getFootPrint());
         tec.placeRobot(hum0.getID(), humStart);
-        //    tec.placeRobot(aut1.getID(), aut1Start);
-        //    tec.placeRobot(aut2.getID(), aut2Start);
-        tec.placeRobot(aut3.getID(), aut3Start);
-        //tec.placeRobot(aut4.getID(), aut4Start);
-        tec.placeRobot(aut5.getID(), aut5Start);
+        if (aut1 != null) tec.placeRobot(aut1.getID(), aut1Start);
+        if (aut2 != null) tec.placeRobot(aut2.getID(), aut2Start);
+        if (aut3 != null) tec.placeRobot(aut3.getID(), aut3Start);
+        if (aut4 != null) tec.placeRobot(aut4.getID(), aut4Start);
+        if (aut5 != null) tec.placeRobot(aut5.getID(), aut5Start);
 
         Heuristics heuristics = new Heuristics();
         tec.addComparator(heuristics.highestIDNumber());
@@ -135,11 +141,11 @@ public class GridSimpleDiagonal {
         }
 
         if (! isLoading) {
-            //    Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, YAML_FILE,  true)));
-            //    Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, YAML_FILE, true)));
-            Missions.enqueueMission(new Mission(aut3.getID(), aut3.getPlan(aut3Start, new Pose[]{aut3Finish}, YAML_FILE, true)));
-            //Missions.enqueueMission(new Mission(aut4.getID(), aut4.getPlan(aut4Start, new Pose[] { aut4Finish }, YAML_FILE, true)));
-            Missions.enqueueMission(new Mission(aut5.getID(), aut5.getPlan(aut5Start, new Pose[]{aut5Finish}, YAML_FILE, true)));
+            if (aut1 != null) Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, YAML_FILE, true)));
+            if (aut2 != null) Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, YAML_FILE, true)));
+            if (aut3 != null) Missions.enqueueMission(new Mission(aut3.getID(), aut3.getPlan(aut3Start, new Pose[] { aut3Finish }, YAML_FILE, true)));
+            if (aut4 != null) Missions.enqueueMission(new Mission(aut4.getID(), aut4.getPlan(aut4Start, new Pose[] { aut4Finish }, YAML_FILE, true)));
+            if (aut5 != null) Missions.enqueueMission(new Mission(aut5.getID(), aut5.getPlan(aut5Start, new Pose[] { aut5Finish }, YAML_FILE, true)));
 
             Missions.saveScenario("GridSimpleDiagonal");
         }
