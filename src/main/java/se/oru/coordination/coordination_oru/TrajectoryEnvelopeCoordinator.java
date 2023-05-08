@@ -593,7 +593,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	}
 
 	@Override
-	protected void updateDependencies() {
+	public void updateDependencies() {
 		synchronized(solver) {
 			if (this.fake) {
 				for (int robotID : trackers.keySet()) setCriticalPoint(robotID, -1, true);

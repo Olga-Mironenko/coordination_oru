@@ -1,16 +1,20 @@
 package se.oru.coordination.coordination_oru.util;
 
+import edu.uci.ics.jung.algorithms.importance.AbstractRanker;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
-import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
-import se.oru.coordination.coordination_oru.Mission;
-import se.oru.coordination.coordination_oru.RobotReport;
+import se.oru.coordination.coordination_oru.*;
+import se.oru.coordination.coordination_oru.code.Heuristics;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.State;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 
 public class MissionUtils {
     public static final double targetVelocityHumanInitial = 0.1;
@@ -40,7 +44,7 @@ public class MissionUtils {
         isWorking = true;
         try {
             synchronized (pathLock) {
-                waitUntilScheduledMissionStarts(robotID); // TODO: Fix the hack.
+                //waitUntilScheduledMissionStarts(robotID);
 
                 TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
                 Object stateOrNothingAsLock = getRobotState(robotID);
@@ -55,7 +59,7 @@ public class MissionUtils {
 
                 PoseSteering[] newPath = null;
                 try {
-                    newPath = vehicle.getPlan(currentPose, new Pose[] { goal }, Missions.getMapYAMLFilename(), false);
+                    newPath = vehicle.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
                 } catch (Error exc) { // TODO: check for NoPathFound only
                     System.out.println("moveRobot: no path found (or another error): " + exc);
                     return;
@@ -71,8 +75,7 @@ public class MissionUtils {
                     MissionUtils.changePath(robotID, replacementPath, replacementIndex);
                 }
             }
-        }
-        finally {
+        } finally {
             isWorking = false;
         }
     }
@@ -156,10 +159,82 @@ public class MissionUtils {
 
     public static PoseSteering[] computeReplacementPath(PoseSteering[] initialPath, int replacementIndex, PoseSteering[] newPath) {
         replacementIndex = Math.min(replacementIndex, initialPath.length - 1); // TODO
-        PoseSteering[] replacementPath = new PoseSteering[replacementIndex+newPath.length];
+        PoseSteering[] replacementPath = new PoseSteering[replacementIndex + newPath.length];
         // TODO: replacementIndex: off by one error? (replacementIndex=2 -> preserve 3 points)
         for (int i = 0; i < replacementIndex; i++) replacementPath[i] = initialPath[i];
-        for (int i = 0; i < newPath.length; i++) replacementPath[i+replacementIndex] = newPath[i];
+        for (int i = 0; i < newPath.length; i++) replacementPath[i + replacementIndex] = newPath[i];
         return replacementPath;
+    }
+
+    public static void forceDriving(int robotID) {
+        TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+
+        tec.resetComparators();
+        tec.addComparator(new Heuristics().lowestIDNumber());
+        tec.updateDependencies();
+
+        final ArrayList<CriticalSection> criticalSectionsWithHighPriority = findCriticalSectionsWithHighPriority(robotID, tec.allCriticalSections);
+
+        TrackingCallback cb = new TrackingCallback(null) {
+
+            @Override
+            public void onTrackingStart() { }
+
+            @Override
+            public void onTrackingFinished() { }
+
+            @Override
+            public String[] onPositionUpdate() {
+                if (criticalSectionsWithHighPriority.isEmpty()) {
+                    return null;
+                }
+
+                var cs = tec.allCriticalSections;
+                if (areAllCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsWithHighPriority)) {
+                    tec.resetComparators();
+                    tec.addComparator(new Heuristics().highestIDNumber());
+                    criticalSectionsWithHighPriority.clear();
+                }
+                return null;
+            }
+
+            @Override
+            public void onNewGroundEnvelope() { }
+
+            @Override
+            public void beforeTrackingStart() { }
+
+            @Override
+            public void beforeTrackingFinished() { }
+        };
+
+        tec.addTrackingCallback(robotID, cb);
+    }
+
+    protected static ArrayList<CriticalSection> findCriticalSectionsWithHighPriority(
+            int robotID,
+            HashSet<CriticalSection> allCriticalSections) {
+        ArrayList<CriticalSection> criticalSectionsSorted =
+                CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, robotID);
+
+        assert robotID != -1;
+        for (CriticalSection cs : criticalSectionsSorted) {
+            int id1 = cs.getTe1() == null ? -1 : cs.getTe1().getRobotID();
+            int id2 = cs.getTe2() == null ? -1 : cs.getTe2().getRobotID();
+            assert id1 == robotID || id2 == robotID;
+            return new ArrayList<>(Arrays.asList(cs));
+        }
+        return new ArrayList<>();
+    }
+
+    protected static boolean areAllCriticalSectionsWithHighPriorityGone(
+            HashSet<CriticalSection> allCriticalSections,
+            ArrayList<CriticalSection> criticalSectionsWithHighPriority) {
+        for (CriticalSection cs : criticalSectionsWithHighPriority) {
+            if (allCriticalSections.contains(cs)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

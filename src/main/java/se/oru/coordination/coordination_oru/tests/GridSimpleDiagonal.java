@@ -58,25 +58,25 @@ public class GridSimpleDiagonal {
         final Pose row1Right = new Pose(57.0,44.0,-Math.PI/2);
         final Pose row2Right = new Pose(57.0,30.0,-Math.PI/2);
         final Pose row3Right = new Pose(57.0,15.5,-Math.PI/2);
-
+        final Pose center = new Pose(30.0,30.0,-Math.PI/2);
 
         final Pose humStart = column2Top;
         //    final Pose humFinish = null;
         final Pose humFinish = column2Bottom;
         final boolean ishumReturn = true;
         final boolean ishumLoop = true;
-        final Pose aut1Start = column1Top;
-        final Pose aut1Finish = column1Bottom;
+        final Pose aut1Start = row1Left;
+        final Pose aut1Finish = row1Right;
         final Pose aut2Start = column3Top;
         final Pose aut2Finish = column3Bottom;
         final Pose aut3Start = row1Left;
         final Pose aut3Finish = row3Right;
-        final Pose aut4Start = row2Left;
-        final Pose aut4Finish = row2Right;
+        final Pose aut4Start = column1Top;
+        final Pose aut4Finish = column1Bottom;
         final Pose aut5Start = row3Left;
         final Pose aut5Finish = row1Right;
 
-        final int maxVelocity = 15;
+        final int maxVelocity = 5;
 
         AutonomousVehicle aut1 = null;
         AutonomousVehicle aut2 = null;
@@ -86,9 +86,9 @@ public class GridSimpleDiagonal {
 
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, 2, 1.5, 1.5);
         aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
-        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
+        //aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
         //aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
-        //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
+        aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
         //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
 
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
@@ -172,10 +172,12 @@ public class GridSimpleDiagonal {
             new GatedThread("new mission") {
                 @Override
                 public void runCore() {
-                    GatedThread.skipCycles(100);
-                    MissionUtils.moveRobot(hum0.getID(), column2Bottom);
-                    GatedThread.skipCycles(10);
-                    MissionUtils.changeTargetVelocityHuman(1); // requires emergency break
+                    GatedThread.skipCycles(40); // wait until `hum1` gives way to `aut1`
+                    Printer.print("new mission: moving");
+                    //MissionUtils.moveRobot(hum0.getID(), center);
+                    MissionUtils.forceDriving(hum0.getID());
+                    //GatedThread.skipCycles(10);
+                    //MissionUtils.changeTargetVelocityHuman(1); // requires emergency break
                 }
             }.start();
         }

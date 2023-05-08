@@ -313,33 +313,14 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 
 	protected static String stringifyCriticalSections(HashSet<CriticalSection> allCriticalSections) {
-		ArrayList<CriticalSection> criticalSections = new ArrayList<>(allCriticalSections);
-		criticalSections.sort(new Comparator<CriticalSection>() {
-			@Override
-			public int compare(CriticalSection cs1, CriticalSection cs2) {
-				int[] list1 = csToInts(cs1);
-				int[] list2 = csToInts(cs2);
-				for (int i = 0; i < list1.length; i++) {
-					int value = Integer.compare(list1[i], list2[i]);
-					if (value != 0)
-						return value;
-				}
-				return 0;
-			}
+		Integer robotID = MissionUtils.idHuman;
 
-			private int[] csToInts(CriticalSection cs) {
-				return new int[] {
-						(cs.getTe1() == null ? -1 : cs.getTe1().getRobotID()),
-						cs.getTe1Start(),
-						cs.getTe1End(),
-						(cs.getTe2() == null ? -1 : cs.getTe2().getRobotID()),
-						cs.getTe2Start(),
-						cs.getTe2End(),
-				};
-			}
-		});
+		ArrayList<CriticalSection> criticalSections =
+				robotID == null
+				? CriticalSection.sortCriticalSections(allCriticalSections)
+				: CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, MissionUtils.idHuman);
 
-		String text = "Critical sections:";
+		String text = "Critical sections" + (robotID == null ? "" : " for " + robotID) + ":";
 		if (criticalSections.isEmpty()) {
 			text += " none<br>";
 		} else {

@@ -14,11 +14,7 @@ import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.collections.comparators.ComparatorChain;
-import org.metacsp.framework.BinaryConstraint;
 import org.metacsp.framework.Constraint;
-import org.metacsp.framework.ConstraintNetwork;
-import org.metacsp.framework.Variable;
-import org.metacsp.framework.multi.MultiBinaryConstraint;
 import org.metacsp.multi.allenInterval.AllenIntervalConstraint;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
@@ -1013,6 +1009,10 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 */
 	public void addComparator(Comparator<RobotAtCriticalSection> c) {
 		this.comparators.addComparator(c);
+	}
+
+	public void resetComparators() {
+		this.comparators = new ComparatorChain();
 	}
 
 	/**
