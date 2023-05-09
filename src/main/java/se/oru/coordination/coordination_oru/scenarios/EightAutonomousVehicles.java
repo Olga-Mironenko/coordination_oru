@@ -38,14 +38,14 @@ public class EightAutonomousVehicles {
         var autonomousVehicle6 = new AutonomousVehicle();
         var autonomousVehicle7 = new AutonomousVehicle();
         var autonomousVehicle8 = new AutonomousVehicle();
-        var autonomousVehiclePath1 = autonomousVehicle1.getPlan(drawPoint17, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath2 = autonomousVehicle2.getPlan(drawPoint19, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath3 = autonomousVehicle3.getPlan(drawPoint20, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath4 = autonomousVehicle4.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath5 = autonomousVehicle5.getPlan(drawPoint22, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath6 = autonomousVehicle6.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath7 = autonomousVehicle7.getPlan(drawPoint24, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath8 = autonomousVehicle8.getPlan(mainTunnelLeft, autonomousVehicle8Goal, YAML_FILE, true);
+        autonomousVehicle1.getPlan(drawPoint17, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle2.getPlan(drawPoint19, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle3.getPlan(drawPoint20, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle4.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle5.getPlan(drawPoint22, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle6.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle7.getPlan(drawPoint24, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle8.getPlan(mainTunnelLeft, autonomousVehicle8Goal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -75,14 +75,14 @@ public class EightAutonomousVehicles {
         viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
 
-        var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehiclePath1);
-        var m2 = new Mission(autonomousVehicle2.getID(), autonomousVehiclePath2);
-        var m3 = new Mission(autonomousVehicle3.getID(), autonomousVehiclePath3);
-        var m4 = new Mission(autonomousVehicle4.getID(), autonomousVehiclePath4);
-        var m5 = new Mission(autonomousVehicle5.getID(), autonomousVehiclePath5);
-        var m6 = new Mission(autonomousVehicle6.getID(), autonomousVehiclePath6);
-        var m7 = new Mission(autonomousVehicle7.getID(), autonomousVehiclePath7);
-        var m8 = new Mission(autonomousVehicle8.getID(), autonomousVehiclePath8);
+        var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehicle1.getPath());
+        var m2 = new Mission(autonomousVehicle2.getID(), autonomousVehicle2.getPath());
+        var m3 = new Mission(autonomousVehicle3.getID(), autonomousVehicle3.getPath());
+        var m4 = new Mission(autonomousVehicle4.getID(), autonomousVehicle4.getPath());
+        var m5 = new Mission(autonomousVehicle5.getID(), autonomousVehicle5.getPath());
+        var m6 = new Mission(autonomousVehicle6.getID(), autonomousVehicle6.getPath());
+        var m7 = new Mission(autonomousVehicle7.getID(), autonomousVehicle7.getPath());
+        var m8 = new Mission(autonomousVehicle8.getID(), autonomousVehicle8.getPath());
 
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);

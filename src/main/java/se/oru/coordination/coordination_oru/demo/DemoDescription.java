@@ -7,6 +7,6 @@ import java.lang.annotation.RetentionPolicy;
 
 public @interface DemoDescription {
 
-    public String desc() default "N/A";
+    String desc() default "N/A";
 
 }

@@ -3,8 +3,8 @@ package se.oru.coordination.coordination_oru.simulation2D;
 public class Derivative {
 
     public static double EPSILON = 0.0001;
-    private double velocity;
-    private double acceleration;
+    private final double velocity;
+    private final double acceleration;
 
     public Derivative() {
         this.velocity = 0.0;

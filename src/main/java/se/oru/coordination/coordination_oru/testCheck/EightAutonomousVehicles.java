@@ -1,23 +1,20 @@
-package se.oru.coordination.coordination_oru.scenarios;
+package se.oru.coordination.coordination_oru.testCheck;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
-import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
 
-import java.awt.*;
-
-public class SevenAutonomousOneLookAheadVehicles {
+public class EightAutonomousVehicles {
     public static void main(String[] args) {
 
         final int simulationTimeMinutes = 10;
         final long simulationTime = System.currentTimeMillis() + (simulationTimeMinutes * 60 * 1000);
-        double predictableDistance = 10.0;
         final String YAML_FILE = "maps/mine-map-test.yaml";
+
         final Pose mainTunnelLeft = new Pose(4.25, 15.35, -Math.PI);
         final Pose mainTunnelRight = new Pose(80.05, 24.75, Math.PI);
         final Pose drawPoint17 = new Pose(24.15, 85.55, -Math.PI / 2);
@@ -30,8 +27,9 @@ public class SevenAutonomousOneLookAheadVehicles {
         final Pose orePass = new Pose(54.35, 11.25, -Math.PI / 2);
 
         final Pose[] autonomousVehicleGoal = {orePass};
-        final Pose[] limitedLookAheadVehicleGoal = {mainTunnelRight};
+        final Pose[] autonomousVehicle8Goal = {mainTunnelRight};
 
+        //TODO I think controller kills everything up
         var autonomousVehicle1 = new AutonomousVehicle();
         var autonomousVehicle2 = new AutonomousVehicle();
         var autonomousVehicle3 = new AutonomousVehicle();
@@ -39,7 +37,7 @@ public class SevenAutonomousOneLookAheadVehicles {
         var autonomousVehicle5 = new AutonomousVehicle();
         var autonomousVehicle6 = new AutonomousVehicle();
         var autonomousVehicle7 = new AutonomousVehicle();
-        var lookAheadVehicle = new LookAheadVehicle(1, predictableDistance, Color.CYAN, 5, 2, 0.5, 0.5);
+        var autonomousVehicle8 = new AutonomousVehicle();
         autonomousVehicle1.getPlan(drawPoint17, autonomousVehicleGoal, YAML_FILE, true);
         autonomousVehicle2.getPlan(drawPoint19, autonomousVehicleGoal, YAML_FILE, true);
         autonomousVehicle3.getPlan(drawPoint20, autonomousVehicleGoal, YAML_FILE, true);
@@ -47,7 +45,7 @@ public class SevenAutonomousOneLookAheadVehicles {
         autonomousVehicle5.getPlan(drawPoint22, autonomousVehicleGoal, YAML_FILE, true);
         autonomousVehicle6.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
         autonomousVehicle7.getPlan(drawPoint24, autonomousVehicleGoal, YAML_FILE, true);
-        lookAheadVehicle.getPlan(mainTunnelLeft, limitedLookAheadVehicleGoal, YAML_FILE, true);
+        autonomousVehicle8.getPlan(mainTunnelLeft, autonomousVehicle8Goal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -64,7 +62,7 @@ public class SevenAutonomousOneLookAheadVehicles {
         tec.placeRobot(autonomousVehicle5.getID(), drawPoint22);
         tec.placeRobot(autonomousVehicle6.getID(), drawPoint23);
         tec.placeRobot(autonomousVehicle7.getID(), drawPoint24);
-        tec.placeRobot(lookAheadVehicle.getID(), mainTunnelLeft);
+        tec.placeRobot(autonomousVehicle8.getID(), mainTunnelLeft);
         tec.addComparator(new Heuristics().closest());
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
@@ -73,7 +71,7 @@ public class SevenAutonomousOneLookAheadVehicles {
         // Set up a simple GUI (null means empty map, otherwise provide yaml file)
         var viz = new BrowserVisualization();
         viz.setMap(YAML_FILE);
-        viz.setFontScale(0);
+//        viz.setFontScale(4);
         viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
 
@@ -84,7 +82,7 @@ public class SevenAutonomousOneLookAheadVehicles {
         var m5 = new Mission(autonomousVehicle5.getID(), autonomousVehicle5.getPath());
         var m6 = new Mission(autonomousVehicle6.getID(), autonomousVehicle6.getPath());
         var m7 = new Mission(autonomousVehicle7.getID(), autonomousVehicle7.getPath());
-        var m8 = new Mission(lookAheadVehicle.getID(), lookAheadVehicle.getLimitedPath(lookAheadVehicle.getID(), predictableDistance, tec));
+        var m8 = new Mission(autonomousVehicle8.getID(), autonomousVehicle8.getPath());
 
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);

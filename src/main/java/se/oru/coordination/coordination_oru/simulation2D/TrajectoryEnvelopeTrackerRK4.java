@@ -28,9 +28,9 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
     protected ArrayList<RobotReport> reportsList = new ArrayList<RobotReport>();
     protected ArrayList<Long> reportTimeLists = new ArrayList<Long>();
     private Thread th = null;
-    private ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
+    private final ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
     private int numberOfReplicas = 1;
-    private Random rand = new Random(1); //Calendar.getInstance().getTimeInMillis());
+    private final Random rand = new Random(1); //Calendar.getInstance().getTimeInMillis());
     private TreeMap<Double, Double> slowDownProfile = null;
     private boolean slowingDown = false;
     private boolean useInternalCPs = true;
@@ -152,11 +152,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
         time = 0.0;
         while (true) {
             if (state.getPosition() >= distance / 2.0 && state.getVelocity() < 0.0) break;
-            if (state.getPosition() >= positionToSlowDown) {
-                integrateRK4(state, time, deltaTime, true, maxVel, 1.0, maxAccel, robotID);
-            } else {
-                integrateRK4(state, time, deltaTime, false, maxVel, 1.0, maxAccel, robotID);
-            }
+            integrateRK4(state, time, deltaTime, state.getPosition() >= positionToSlowDown, maxVel, 1.0, maxAccel, robotID);
             //System.out.println("Time: " + time + " " + rr);
             //System.out.println("Time: " + MetaCSPLogging.printDouble(time,4) + "\tpos: " + MetaCSPLogging.printDouble(state.getPosition(),4) + "\tvel: " + MetaCSPLogging.printDouble(state.getVelocity(),4));
             time += deltaTime;
@@ -302,7 +298,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
             }
 
             //Get the message according to packet loss probability (numberOfReplicas trials)
-            boolean received = (NetworkConfiguration.PROBABILITY_OF_PACKET_LOSS > 0) ? false : true;
+            boolean received = !(NetworkConfiguration.PROBABILITY_OF_PACKET_LOSS > 0);
             int trial = 0;
             while (!received && trial < numberOfReplicasReceiving) {
                 if (rand.nextDouble() < (1 - NetworkConfiguration.PROBABILITY_OF_PACKET_LOSS)) //the real packet loss probability

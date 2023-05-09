@@ -261,7 +261,7 @@ public class RandomPathsInMap {
                     //if (robotID%2 == 0) totalIterations = 19;
                     String lastDestination = "R_" + (robotID - 1);
                     long startTime = Calendar.getInstance().getTimeInMillis();
-                    while (true && totalIterations > 0) {
+                    while (totalIterations > 0) {
                         synchronized (tec.getSolver()) {
                             if (tec.isFree(robotID)) {
                                 if (!firstTime) {

@@ -16,8 +16,6 @@ public class CollisionEvent {
         this.reports[1] = report2;
     }
 
-    ;
-
     /**
      * Get the time when the collision happens.
      *
@@ -26,8 +24,6 @@ public class CollisionEvent {
     public long getTime() {
         return this.time;
     }
-
-    ;
 
     /**
      * Get the reports of the robots where the collision happens (the current ones, without delays).
@@ -38,8 +34,6 @@ public class CollisionEvent {
         return this.reports;
     }
 
-    ;
-
     /**
      * Get an informative string related to the collision event.
      *
@@ -49,6 +43,5 @@ public class CollisionEvent {
         return "Robots: [" + this.reports[0].getRobotID() + "," + this.reports[1].getRobotID() + "], PathIndices: [" + this.reports[0].getPathIndex() + ", " + this.reports[1].getPathIndex() + "], Poses: " + this.reports[0].getPose().toString() + ", " + this.reports[1].getPose().toString() + ".";
     }
 
-    ;
 }
 

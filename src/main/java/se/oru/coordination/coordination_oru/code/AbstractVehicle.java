@@ -84,7 +84,7 @@ public abstract class AbstractVehicle {
                 '}';
     }
 
-    public abstract PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath);
+    public abstract void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath);
 
     public synchronized void updateStatistics() {
 
@@ -167,7 +167,6 @@ public abstract class AbstractVehicle {
     }
 
     //TODO Do color blinking and vehicle stoppage
-
     public void blinkVehicle(Color colorOriginal, Color colorToggle, long blinkTimeSeconds) throws InterruptedException {
         VehiclesHashMap.getVehicle(this.ID).setVehicleColor(colorToggle);
         TimeUnit.SECONDS.sleep(blinkTimeSeconds);

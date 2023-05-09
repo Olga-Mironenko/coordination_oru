@@ -25,11 +25,9 @@ public class TestReedsSheppCarPlannerMulitpleCircles {
         rsp.setRadius(0.5);
         rsp.setStart(new Pose(2.0, 2.0, 0.0));
         rsp.setGoals(new Pose(2.0, 38.0, 0.0));
-        rsp.setCirclePositions(new Coordinate[]{
-                new Coordinate(-1.0, 0.0),
+        rsp.setCirclePositions(new Coordinate(-1.0, 0.0),
                 new Coordinate(0.0, 0.0),
-                new Coordinate(1.0, 0.0),
-        });
+                new Coordinate(1.0, 0.0));
         rsp.setDistanceBetweenPathPoints(distanceBetweenPathPoints);
         rsp.setTurningRadius(2.0);
         if (rsp.plan()) {

@@ -26,8 +26,8 @@ public class RampScenario {
 
         var autonomousVehicle = new AutonomousVehicle();
         var lookAheadVehicle = new LookAheadVehicle(predictableDistance);
-        var autonomousVehiclePath = autonomousVehicle.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
-        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, YAML_FILE, true);
+        autonomousVehicle.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
+        lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
         var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -51,7 +51,7 @@ public class RampScenario {
         tec.setVisualization(viz);
 
         var lookAheadVehicleInitialPlan = lookAheadVehicle.getLimitedPath(lookAheadVehicle.getID(), predictableDistance, tec);
-        var m1 = new Mission(autonomousVehicle.getID(), autonomousVehiclePath);
+        var m1 = new Mission(autonomousVehicle.getID(), autonomousVehicle.getPath());
         var m2 = new Mission(lookAheadVehicle.getID(), lookAheadVehicleInitialPlan);
 
         Missions.enqueueMission(m1);

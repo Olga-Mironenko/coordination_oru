@@ -2,7 +2,8 @@ package se.oru.coordination.coordination_oru.util;
 
 public class Pair<T extends Comparable<T>> {
 
-    private T p1, p2;
+    private final T p1;
+    private final T p2;
 
     public Pair(T p1, T p2) {
         this.p1 = p1;
@@ -34,9 +35,7 @@ public class Pair<T extends Comparable<T>> {
 
     @Override
     public boolean equals(Object otherPair) {
-        if (otherPair instanceof Pair<?> && ((Pair<?>) otherPair).p1.equals(this.p1) && ((Pair<?>) otherPair).p2.equals(this.p2))
-            return true;
-        return false;
+        return otherPair instanceof Pair<?> && ((Pair<?>) otherPair).p1.equals(this.p1) && ((Pair<?>) otherPair).p2.equals(this.p2);
     }
 
     @Override

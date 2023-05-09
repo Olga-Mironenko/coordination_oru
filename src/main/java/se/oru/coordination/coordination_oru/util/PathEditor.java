@@ -28,12 +28,12 @@ import java.util.TreeMap;
 public class PathEditor {
 
     private static String PREFIX = null;
-    private static int EMPTY_MAP_DIM = 10000;
+    private static final int EMPTY_MAP_DIM = 10000;
     private static double OBSTACLE_SIZE = 2.0;
     private static double MAX_TURNING_RADIUS = 5.0;
     private static double MIN_DISTANCE_BETWEEN_PATH_POINTS = 0.4;
-    private static boolean USE_MP = false;
-    private static String TEMP_MAP_DIR = ".tempMapsPathEditor";
+    private static final boolean USE_MP = false;
+    private static final String TEMP_MAP_DIR = ".tempMapsPathEditor";
     private String pathFileName = null;
     private String mapFileName = null;
     private String mapImgFileName = null;
@@ -41,21 +41,21 @@ public class PathEditor {
     private String posesFileName = null;
     private boolean selectionPathPointInputListen = false;
     private String selectionString = "";
-    private ArrayList<Integer> selectedPathPointsInt = new ArrayList<Integer>();
+    private final ArrayList<Integer> selectedPathPointsInt = new ArrayList<Integer>();
     private boolean selectionObsInputListen = false;
-    private ArrayList<Integer> selectedObsInt = new ArrayList<Integer>();
-    private ArrayList<Geometry> obstacles = new ArrayList<Geometry>();
+    private final ArrayList<Integer> selectedObsInt = new ArrayList<Integer>();
+    private final ArrayList<Geometry> obstacles = new ArrayList<Geometry>();
     private ArrayList<PoseSteering> path = null;
-    private ArrayList<ArrayList<PoseSteering>> oldPaths = new ArrayList<ArrayList<PoseSteering>>();
+    private final ArrayList<ArrayList<PoseSteering>> oldPaths = new ArrayList<ArrayList<PoseSteering>>();
     private JTSDrawingPanel panel = null;
     private double deltaX = 0.1;
     private double deltaY = 0.1;
     private double deltaT = 0.1;
-    private double deltaTR = 0.1;
+    private final double deltaTR = 0.1;
     private String newFileSuffix = ".new";
     private Coordinate[] obstacleFootprint = null;
-    private ArrayList<Pose> obstacleCenters = new ArrayList<Pose>();
-    private ArrayList<String> obstacleNames = new ArrayList<String>();
+    private final ArrayList<Pose> obstacleCenters = new ArrayList<Pose>();
+    private final ArrayList<String> obstacleNames = new ArrayList<String>();
 
     public PathEditor(String pathFileName, String mapFileName, String posesFileName, double deltaX, double deltaY, double deltaTheta, String newFileSuffix) {
         this.pathFileName = pathFileName;
@@ -106,9 +106,7 @@ public class PathEditor {
 
     public void setObstacleFootprint(Coordinate[] footprint) {
         this.obstacleFootprint = new Coordinate[footprint.length + 1];
-        for (int i = 0; i < footprint.length; i++) {
-            obstacleFootprint[i] = footprint[i];
-        }
+        System.arraycopy(footprint, 0, obstacleFootprint, 0, footprint.length);
         obstacleFootprint[footprint.length] = footprint[0];
     }
 
@@ -138,9 +136,9 @@ public class PathEditor {
                         String obsName = oneline[0];
                         obstacleNames.add(obsName);
                         ps = new Pose(
-                                new Double(oneline[1]).doubleValue(),
-                                new Double(oneline[2]).doubleValue(),
-                                new Double(oneline[3]).doubleValue());
+                                Double.parseDouble(oneline[1]),
+                                Double.parseDouble(oneline[2]),
+                                Double.parseDouble(oneline[3]));
                         Geometry obs = makeObstacle(ps);
                         int id = obstacles.size() - 1;
                         panel.addGeometry("obs_" + id, obs, false, false, true, "#cc3300");
@@ -242,7 +240,7 @@ public class PathEditor {
     private void highlightPathPoints() {
         for (int selectedPathPointOneInt : selectedPathPointsInt) {
             if (selectedPathPointOneInt >= 0 && selectedPathPointOneInt < path.size()) {
-                panel.addArrow("" + selectedPathPointOneInt, path.get(selectedPathPointOneInt).getPose(), Color.red);
+                panel.addArrow(String.valueOf(selectedPathPointOneInt), path.get(selectedPathPointOneInt).getPose(), Color.red);
             }
         }
         panel.updatePanel();
@@ -269,7 +267,7 @@ public class PathEditor {
         if (path != null) {
             selectionString = "";
             selectedPathPointsInt.clear();
-            for (int i = 0; i < path.size(); i++) panel.addArrow("" + i, path.get(i).getPose(), Color.gray);
+            for (int i = 0; i < path.size(); i++) panel.addArrow(String.valueOf(i), path.get(i).getPose(), Color.gray);
             panel.updatePanel();
         }
     }
@@ -285,7 +283,7 @@ public class PathEditor {
 
     private void restorePath() {
         if (!oldPaths.isEmpty()) {
-            for (int i = 0; i < path.size(); i++) panel.removeGeometry("" + i);
+            for (int i = 0; i < path.size(); i++) panel.removeGeometry(String.valueOf(i));
             path = oldPaths.get(oldPaths.size() - 1);
             oldPaths.remove(oldPaths.size() - 1);
             clearPathPointSelection();
@@ -467,7 +465,7 @@ public class PathEditor {
                     clearPathPointSelection();
                     System.out.println("Input selection (poses): " + selectionString);
                 } else if (selectionPathPointInputListen) {
-                    for (int i = 0; i < path.size(); i++) panel.addArrow("" + i, path.get(i).getPose(), Color.gray);
+                    for (int i = 0; i < path.size(); i++) panel.addArrow(String.valueOf(i), path.get(i).getPose(), Color.gray);
                     try {
                         if (selectionString.contains("-")) {
                             int first = Integer.parseInt(selectionString.substring(0, selectionString.indexOf("-")));
@@ -527,7 +525,7 @@ public class PathEditor {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!selectedPathPointsInt.isEmpty()) {
-                    for (int i = 0; i < path.size(); i++) panel.removeGeometry("" + i);
+                    for (int i = 0; i < path.size(); i++) panel.removeGeometry(String.valueOf(i));
                     backupPath();
                     ArrayList<PoseSteering> toRemove = new ArrayList<PoseSteering>();
                     for (int selectedPathPointOneInt : selectedPathPointsInt) {
@@ -994,15 +992,15 @@ public class PathEditor {
                     PoseSteering ps = null;
                     if (oneline.length == 4) {
                         ps = new PoseSteering(
-                                new Double(oneline[0]).doubleValue(),
-                                new Double(oneline[1]).doubleValue(),
-                                new Double(oneline[2]).doubleValue(),
-                                new Double(oneline[3]).doubleValue());
+                                Double.parseDouble(oneline[0]),
+                                Double.parseDouble(oneline[1]),
+                                Double.parseDouble(oneline[2]),
+                                Double.parseDouble(oneline[3]));
                     } else {
                         ps = new PoseSteering(
-                                new Double(oneline[0]).doubleValue(),
-                                new Double(oneline[1]).doubleValue(),
-                                new Double(oneline[2]).doubleValue(),
+                                Double.parseDouble(oneline[0]),
+                                Double.parseDouble(oneline[1]),
+                                Double.parseDouble(oneline[2]),
                                 0.0);
                     }
                     ret.add(ps);
@@ -1015,7 +1013,7 @@ public class PathEditor {
         this.path = ret;
         for (int i = 0; i < path.size(); i++) {
             Pose pose = path.get(i).getPose();
-            panel.addArrow("" + i, pose, Color.gray);
+            panel.addArrow(String.valueOf(i), pose, Color.gray);
         }
         panel.updatePanel();
     }

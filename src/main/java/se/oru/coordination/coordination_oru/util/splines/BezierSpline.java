@@ -35,7 +35,7 @@ public class BezierSpline extends Spline {
      * @param controlPoints Control points of spline (x0,y0,z0,x1,y1,z1,...)
      * @param nParts        Number of parts in generated spline.
      */
-    public BezierSpline(double controlPoints[], int nParts) {
+    public BezierSpline(double[] controlPoints, int nParts) {
         controlPoints_ = controlPoints;
         nParts_ = nParts;
     }
@@ -56,7 +56,7 @@ public class BezierSpline extends Spline {
         int n = controlPoints_.length / 3;
         int length = (n - 3) * nParts_ + 1;
 
-        double spline[] = new double[length * 3];
+        double[] spline = new double[length * 3];
 
         p(0, 0, controlPoints_, spline, 0);
 
@@ -72,7 +72,7 @@ public class BezierSpline extends Spline {
     }
 
 
-    private void p(int i, double t, double cp[], double spline[], int index) {
+    private void p(int i, double t, double[] cp, double[] spline, int index) {
         double x = 0.0;
         double y = 0.0;
         double z = 0.0;
@@ -86,7 +86,7 @@ public class BezierSpline extends Spline {
             z += b * cp[k++];
         }
 
-        spline[index + 0] = x;
+        spline[index] = x;
         spline[index + 1] = y;
         spline[index + 2] = z;
     }

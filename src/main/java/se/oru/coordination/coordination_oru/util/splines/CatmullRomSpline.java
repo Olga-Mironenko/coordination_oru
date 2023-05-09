@@ -34,12 +34,12 @@ public class CatmullRomSpline extends CubicSpline {
      * @param controlPoints Control points of spline (x0,y0,z0,x1,y1,z1,...)
      * @param nParts        Number of parts in generated spline.
      */
-    public CatmullRomSpline(double controlPoints[], int nParts) {
+    public CatmullRomSpline(double[] controlPoints, int nParts) {
         super(controlPoints, nParts);
     }
 
 
-    protected void initialize(double controlPoints[], int nParts) {
+    protected void initialize(double[] controlPoints, int nParts) {
         nParts_ = nParts;
 
         // Endpoints are added twice to force in the generated array

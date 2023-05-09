@@ -22,7 +22,7 @@ public class UPFAdapter {
     public static String roadMapFile = "missions/icaps_locations_and_paths_4.txt";
 
     private TrajectoryEnvelopeCoordinatorSimulation tec = null;
-    private HashMap<String, Integer> robotsToIDs = new HashMap<String, Integer>();
+    private final HashMap<String, Integer> robotsToIDs = new HashMap<String, Integer>();
     private ReedsSheppCarPlanner motionPlanner = null;
 
     /**

@@ -195,7 +195,7 @@ public class Waves {
                 public void run() {
                     boolean firstTime = true;
                     long startTime = Calendar.getInstance().getTimeInMillis();
-                    while (true && !Missions.getMissions(robotID).isEmpty()) {
+                    while (!Missions.getMissions(robotID).isEmpty()) {
                         synchronized (tec.getSolver()) {
                             Mission m = Missions.peekMission(robotID);
                             if (tec.addMissions(m)) {

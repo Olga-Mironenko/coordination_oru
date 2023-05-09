@@ -86,7 +86,7 @@ public class ContinuePathExample {
         rsp.plan();
         if (rsp.getPath() == null) throw new Error("No path found.");
         PoseSteering[] pathR0L6 = new PoseSteering[replaceIndex + rsp.getPath().length];
-        for (int i = 0; i < replaceIndex; i++) pathR0L6[i] = pathL0R0[i];
+        System.arraycopy(pathL0R0, 0, pathR0L6, 0, replaceIndex);
         for (int i = 0; i < rsp.getPath().length; i++) pathR0L6[i + replaceIndex] = rsp.getPath()[i];
 
         Mission m = new Mission(1, pathL0R0);

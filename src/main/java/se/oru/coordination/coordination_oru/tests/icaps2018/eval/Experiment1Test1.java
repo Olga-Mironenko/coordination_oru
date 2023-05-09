@@ -20,8 +20,7 @@ public class Experiment1Test1 {
     public static int usedRobots = 0;
 
     public static boolean inUse(int robotID) {
-        if (robotID <= usedRobots) return true;
-        return false;
+        return robotID <= usedRobots;
     }
 
     public static void main(String[] args) throws InterruptedException {

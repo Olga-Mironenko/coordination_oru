@@ -42,7 +42,7 @@ public class BrowserVisualization implements FleetVisualization {
 
     public static boolean isStatusText = false;
     private static int UPDATE_PERIOD = 30;
-    private ArrayList<String> msgQueue = new ArrayList<String>();
+    private final ArrayList<String> msgQueue = new ArrayList<String>();
     private double robotFootprintArea = -1;
     private double robotFootprintXDim = -1;
     private String overlayText = null;
@@ -339,7 +339,7 @@ public class BrowserVisualization implements FleetVisualization {
     protected void setStatusText() {
         HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
         String text = "";
-        if (idToVehicle.keySet().contains(MissionUtils.idHuman)) {
+        if (idToVehicle.containsKey(MissionUtils.idHuman)) {
             text += "targetVelocityHuman: " + round(MissionUtils.targetVelocityHuman) + "<br>";
         }
         for (int id : idToVehicle.keySet()) {

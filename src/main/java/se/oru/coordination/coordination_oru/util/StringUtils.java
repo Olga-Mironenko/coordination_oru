@@ -101,7 +101,7 @@ public class StringUtils {
                 while (sb.length() < maxWidth) {
                     sb.append(" ");
                 }
-                result.add(indentString + sb.toString());
+                result.add(indentString + sb);
                 last = i;
                 count = words[i].length();
             }
@@ -115,7 +115,7 @@ public class StringUtils {
         while (sb.length() < maxWidth) {
             sb.append(" ");
         }
-        result.add(indentString + sb.toString());
+        result.add(indentString + sb);
         return result;
     }
 

@@ -22,8 +22,6 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 
     public static ReedsSheppCarPlannerLib INSTANCE = null;
 
-    ;
-
     static {
         NativeLibrary.addSearchPath("simplereedssheppcarplanner", "SimpleReedsSheppCarPlanner");
         INSTANCE = Native.loadLibrary("simplereedssheppcarplanner", ReedsSheppCarPlannerLib.class);
@@ -63,9 +61,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
         super.setFootprint(coords);
         GeometryFactory gf = new GeometryFactory();
         Coordinate[] newCoords = new Coordinate[coords.length + 1];
-        for (int i = 0; i < coords.length; i++) {
-            newCoords[i] = coords[i];
-        }
+        System.arraycopy(coords, 0, newCoords, 0, coords.length);
         newCoords[newCoords.length - 1] = coords[0];
         Polygon footprint = gf.createPolygon(newCoords);
         GeometrySmoother gs = new GeometrySmoother(gf);
@@ -165,6 +161,6 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
         return true;
     }
 
-    public static enum PLANNING_ALGORITHM {RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT}
+    public enum PLANNING_ALGORITHM {RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT}
 
 }

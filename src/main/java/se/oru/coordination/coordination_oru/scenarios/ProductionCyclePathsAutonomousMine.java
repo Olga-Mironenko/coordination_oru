@@ -1,7 +1,6 @@
 package se.oru.coordination.coordination_oru.scenarios;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
-import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
@@ -46,8 +45,8 @@ public class ProductionCyclePathsAutonomousMine {
 
         var autonomousVehicle1 = new AutonomousVehicle();
         var autonomousVehicle2 = new AutonomousVehicle();
-        PoseSteering[] autonomousVehicle1Path = autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
-        PoseSteering[] autonomousVehicle2Path = autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -76,8 +75,8 @@ public class ProductionCyclePathsAutonomousMine {
         viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
 
-        var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehicle1Path);
-        var m2 = new Mission(autonomousVehicle2.getID(), autonomousVehicle2Path);
+        var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehicle1.getPath());
+        var m2 = new Mission(autonomousVehicle2.getID(), autonomousVehicle2.getPath());
 //        m1.setStoppingPoint(orePass, 5000);
 //        m2.setStoppingPoint(orePass, 5000);
 
@@ -100,17 +99,17 @@ public class ProductionCyclePathsAutonomousMine {
                 drawPoint20, drawPoint19, drawPoint18, drawPoint17, drawPoint16, drawPoint15,
                 drawPoint36, drawPoint37, drawPoint38, workStation3};
 
-        PoseSteering[] drillRigPath1 = drillVehicle.getPlan(mainTunnelLeft, new Pose[]{drawPoint38}, YAML_FILE, false);
-        PoseSteering[] drillRigPath2 = drillVehicle.getPlan(drawPoint38, new Pose[]{drawPoint18}, YAML_FILE, false);
-        PoseSteering[] drillRigPath3 = drillVehicle.getPlan(drawPoint18, new Pose[]{drawPoint24}, YAML_FILE, false);
-        PoseSteering[] drillRigPath4 = drillVehicle.getPlan(drawPoint24, new Pose[]{workStation1}, YAML_FILE, false);
+        drillVehicle.getPlan(mainTunnelLeft, new Pose[]{drawPoint38}, YAML_FILE, false);
+        drillVehicle.getPlan(drawPoint38, new Pose[]{drawPoint18}, YAML_FILE, false);
+        drillVehicle.getPlan(drawPoint18, new Pose[]{drawPoint24}, YAML_FILE, false);
+        drillVehicle.getPlan(drawPoint24, new Pose[]{workStation1}, YAML_FILE, false);
 //        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE, false);
 //        PoseSteering[] waterVehiclePath = waterVehicle.getPlan(mainTunnelRight, waterVehicleGoal, YAML_FILE, false,
 //                ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect, 0.01, 120, 0.01, 0.1);
 
         Thread.sleep(5000);
         tec.placeRobot(drillVehicle.getID(), mainTunnelLeft);
-        var m3 = new Mission(drillVehicle.getID(), drillRigPath1);
+        var m3 = new Mission(drillVehicle.getID(), drillVehicle.getPath());
         tec.addMissions(m3);
 //        Thread.sleep(2000);
 //        var m5 = new Mission(drillVehicle.getID(), drillRigPath3);

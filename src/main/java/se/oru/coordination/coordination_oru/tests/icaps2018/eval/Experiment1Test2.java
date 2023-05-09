@@ -19,8 +19,7 @@ public class Experiment1Test2 {
     public static int usedRobots = 0;
 
     public static boolean inUse(int robotID) {
-        if (robotID <= usedRobots) return true;
-        return false;
+        return robotID <= usedRobots;
     }
 
     private static PoseSteering[] getSinePath(double period, double magnitude, Pose from, Pose to) {

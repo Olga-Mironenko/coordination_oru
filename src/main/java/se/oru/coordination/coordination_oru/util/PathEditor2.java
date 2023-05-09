@@ -28,7 +28,7 @@ import java.util.Map.Entry;
 public class PathEditor2 {
 
     private static int newLocationCounter = 0;
-    private static String TEMP_MAP_DIR = ".tempMapsPathEditor";
+    private static final String TEMP_MAP_DIR = ".tempMapsPathEditor";
     private String selectionsFile = null;
     private String outputDir = null;
     private double PP_max_turning_radius = 5.0;
@@ -56,9 +56,9 @@ public class PathEditor2 {
     private double deltaX = 0.1;
     private double deltaY = 0.1;
     private double deltaT = 0.01;
-    private double deltaTR = 0.1;
-    private double deltaSD = 0.5;
-    private double deltaD = 0.1;
+    private final double deltaTR = 0.1;
+    private final double deltaSD = 0.5;
+    private final double deltaD = 0.1;
 
     @Deprecated
     public PathEditor2() {
@@ -137,14 +137,14 @@ public class PathEditor2 {
                         if (Missions.isKnownPath(entry.getKey(), entry1.getKey())) {
                             PoseSteering[] path = Missions.getShortestPath(entry.getKey(), entry1.getKey());
                             ArrayList<PoseSteering> pathAL = new ArrayList<PoseSteering>();
-                            for (PoseSteering ps : path) pathAL.add(ps);
+                            Collections.addAll(pathAL, path);
                             allPaths.put(entry.getKey() + "->" + entry1.getKey(), pathAL);
                             isInversePath.put(entry.getKey() + "->" + entry1.getKey(), false);
                         }
                         if (Missions.isKnownPath(entry1.getKey(), entry.getKey())) {
                             PoseSteering[] path = Missions.getShortestPath(entry1.getKey(), entry.getKey());
                             ArrayList<PoseSteering> pathAL = new ArrayList<PoseSteering>();
-                            for (PoseSteering ps : path) pathAL.add(ps);
+                            Collections.addAll(pathAL, path);
                             allPaths.put(entry1.getKey() + "->" + entry.getKey(), pathAL);
                             isInversePath.put(entry1.getKey() + "->" + entry.getKey(), false);
                         }
@@ -212,7 +212,7 @@ public class PathEditor2 {
         //for (int i = 0; i < footprint.length; i++) System.out.println(i + ": " + footprint[i]);
         if (!footprint[0].equals(footprint[footprint.length - 1])) {
             Coordinate[] fn = new Coordinate[footprint.length + 1];
-            for (int i = 0; i < footprint.length; i++) fn[i] = footprint[i];
+            System.arraycopy(footprint, 0, fn, 0, footprint.length);
             fn[fn.length - 1] = fn[0];
             //for (int j = 0; j < fn.length; j++) System.out.println(j + "*: " + fn[j]);
             this.PP_footprint = fn;
@@ -336,7 +336,7 @@ public class PathEditor2 {
             Pose goalPose = Missions.getLocationPose(locationIDs.get(selectedLocsInt.get(i + 1)));
             PoseSteering[] path = computeSpline(startPose, goalPose);
             if (i == 0) overallPath.add(path[0]);
-            for (int j = 1; j < path.length; j++) overallPath.add(path[j]);
+            overallPath.addAll(Arrays.asList(path).subList(1, path.length));
         }
         String pathName = locationIDs.get(selectedLocsInt.get(0)) + "->" + locationIDs.get(selectedLocsInt.get(selectedLocsInt.size() - 1));
         allPaths.put(pathName, overallPath);
@@ -382,7 +382,7 @@ public class PathEditor2 {
                         for (int j = 0; j < locationIDs.size(); j++) {
                             if (locationIDs.get(j).equals(oneline[i])) {
                                 oneSelection.add(j);
-                                str += ("" + j);
+                                str += (String.valueOf(j));
                                 if (i != oneline.length - 1) str += ",";
                                 break;
                             }
@@ -684,7 +684,7 @@ public class PathEditor2 {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String helpStr = getHelp();
-                JLabel label = new JLabel(new String("<html>").concat(helpStr.replace("\n", "<br/>")).concat("</html>"));
+                JLabel label = new JLabel("<html>".concat(helpStr.replace("\n", "<br/>")).concat("</html>"));
                 label.setFont(new Font("Sans", Font.BOLD, 22));
                 JOptionPane.showMessageDialog(panel, label);
             }
@@ -999,7 +999,7 @@ public class PathEditor2 {
                                 Pose goalPose = Missions.getLocationPose(locationIDs.get(onePreset.get(i + 1)));
                                 PoseSteering[] path = computeSpline(startPose, goalPose);
                                 if (i == 0) overallPath.add(path[0]);
-                                for (int j = 1; j < path.length; j++) overallPath.add(path[j]);
+                                overallPath.addAll(Arrays.asList(path).subList(1, path.length));
                             }
                             allPaths.put(pathName, overallPath);
                             isInversePath.put(pathName, false);

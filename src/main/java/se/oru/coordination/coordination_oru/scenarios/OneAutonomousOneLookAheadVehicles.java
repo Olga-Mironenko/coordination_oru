@@ -12,6 +12,7 @@ import se.oru.coordination.coordination_oru.util.Missions;
 public class OneAutonomousOneLookAheadVehicles {
     public static void main(String[] args) {
 
+        final String YAML_FILE = "maps/mine-map-test.yaml";
         final int simulationTimeMinutes = 2;
         double predictableDistance = 25.0;
         long simulationTime = System.currentTimeMillis() + (simulationTimeMinutes * 60 * 1000);
@@ -19,15 +20,14 @@ public class OneAutonomousOneLookAheadVehicles {
         final Pose mainTunnelRight = new Pose(80.05, 24.75, Math.PI);
         final Pose drawPoint21 = new Pose(52.95, 87.75, -Math.PI / 2);
         final Pose orePass = new Pose(54.35, 11.25, -Math.PI / 2);
-        final String YAML_FILE = "maps/mine-map-test.yaml";
 
         final Pose[] autonomousVehicleGoal = {orePass};
-        final Pose[] limitedPredictabilityVehicleGoal = {mainTunnelRight};
+        final Pose[] limitedLookAheadVehicleGoal = {mainTunnelRight};
 
         var autonomousVehicle = new AutonomousVehicle();
         var lookAheadVehicle = new LookAheadVehicle(predictableDistance);
-        var autonomousVehiclePath = autonomousVehicle.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
-        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, YAML_FILE, true);
+        autonomousVehicle.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
+        lookAheadVehicle.getPlan(mainTunnelLeft, limitedLookAheadVehicleGoal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
         var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -45,13 +45,14 @@ public class OneAutonomousOneLookAheadVehicles {
         tec.setBreakDeadlocks(true, false, false);
 
         // Set up a simple GUI (null means empty map, otherwise provide yaml file)
-        var viz = new BrowserVisualization(YAML_FILE);
+        var viz = new BrowserVisualization();
+        viz.setMap(YAML_FILE);
         viz.setFontScale(4);
         viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
 
         var lookAheadVehicleInitialPlan = lookAheadVehicle.getLimitedPath(lookAheadVehicle.getID(), predictableDistance, tec);
-        var m1 = new Mission(autonomousVehicle.getID(), autonomousVehiclePath);
+        var m1 = new Mission(autonomousVehicle.getID(), autonomousVehicle.getPath());
         var m2 = new Mission(lookAheadVehicle.getID(), lookAheadVehicleInitialPlan);
 
         Missions.enqueueMission(m1);

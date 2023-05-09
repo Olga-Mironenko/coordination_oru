@@ -13,9 +13,12 @@ import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
  */
 public class Dependency implements Comparable<Dependency> {
 
-    private int robotIDWaiting, robotIDDriving;
-    private TrajectoryEnvelope teWaiting, teDriving;
-    private int waitingPoint, thresholdPoint;
+    private final int robotIDWaiting;
+    private final int robotIDDriving;
+    private final TrajectoryEnvelope teWaiting;
+    private final TrajectoryEnvelope teDriving;
+    private final int waitingPoint;
+    private final int thresholdPoint;
 
     public Dependency(TrajectoryEnvelope teWaiting, TrajectoryEnvelope teDriving, int waitingPoint, int thresholdPoint) {
         this.teWaiting = teWaiting;

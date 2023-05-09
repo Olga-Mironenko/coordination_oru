@@ -419,8 +419,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
                                             }
                                             newCollidingCS.add(cs);
                                         }
-                                    } else if (previousCollidingCS.contains(cs))
-                                        previousCollidingCS.remove(cs); //remove the ones that are not colliding anymore
+                                    } else previousCollidingCS.remove(cs); //remove the ones that are not colliding anymore
                                 }
                             }
                         }

@@ -26,7 +26,7 @@ public class AutonomousVehicle extends AbstractVehicle {
     }
 
     @Override
-    public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
+    public void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
         var rsp = new ReedsSheppCarPlanner();
         rsp.setMap(map);
         rsp.setRadius(0.01);
@@ -50,11 +50,10 @@ public class AutonomousVehicle extends AbstractVehicle {
             path = pathFwd;
         }
         VehiclesHashMap.getVehicle(this.getID()).setPath(path);
-        return path;
     }
 
-    public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,
-                                  double radius, double planningTime, double turningRadius, double distanceBetweenPathPoints) {
+    public void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath, ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm,
+                        double radius, double planningTime, double turningRadius, double distanceBetweenPathPoints) {
 
         var rsp = new ReedsSheppCarPlanner(planningAlgorithm);
         rsp.setMap(map);
@@ -79,7 +78,6 @@ public class AutonomousVehicle extends AbstractVehicle {
             path = pathFwd;
         }
         VehiclesHashMap.getVehicle(this.getID()).setPath(path);
-        return path;
     }
 
 }

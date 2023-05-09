@@ -44,10 +44,7 @@ package se.oru.coordination.coordination_oru.util;
 import com.vividsolutions.jts.geom.*;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Provides package-private helper methods for the {@link JTS}
@@ -69,7 +66,7 @@ public class GeometrySmoother {
      * vertex distance and a constant number of points
      * per smoothed segment.
      */
-    private SmootherControl DEFAULT_CONTROL = new SmootherControl() {
+    private final SmootherControl DEFAULT_CONTROL = new SmootherControl() {
         public double getMinLength() {
             return 0.0;
         }
@@ -83,11 +80,10 @@ public class GeometrySmoother {
      * The current SmootherControl instance.
      */
     private SmootherControl control;
-    ;
     /**
      * Cache of previously calculated interpolation parameters
      */
-    private Map<Integer, WeakReference<InterpPoint[]>> lookup =
+    private final Map<Integer, WeakReference<InterpPoint[]>> lookup =
             new HashMap<Integer, WeakReference<InterpPoint[]>>();
 
     /**
@@ -136,9 +132,7 @@ public class GeometrySmoother {
                         smoothN);
 
                 int copyN = i < N - 1 ? segment.length - 1 : segment.length;
-                for (int k = 0; k < copyN; k++) {
-                    smoothCoords.add(segment[k]);
-                }
+                smoothCoords.addAll(Arrays.asList(segment).subList(0, copyN));
             }
         }
         smoothCoords.add(coords[N - 1]);
@@ -181,9 +175,7 @@ public class GeometrySmoother {
                         smoothN);
 
                 int copyN = i < N - 1 ? segment.length - 1 : segment.length;
-                for (int k = 0; k < copyN; k++) {
-                    smoothCoords.add(segment[k]);
-                }
+                smoothCoords.addAll(Arrays.asList(segment).subList(0, copyN));
             }
         }
 

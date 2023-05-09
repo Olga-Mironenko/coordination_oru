@@ -17,9 +17,9 @@ import java.util.Random;
 
 public class Basement {
 
-    private static Random rand = new Random(123213);
+    private static final Random rand = new Random(123213);
 
-    private static ArrayList<Pair<Integer>> placements = new ArrayList<Pair<Integer>>();
+    private static final ArrayList<Pair<Integer>> placements = new ArrayList<Pair<Integer>>();
 
     private static Coordinate[] makeRandomFootprint(int centerX, int centerY, int minVerts, int maxVerts, double minRadius, double maxRadius) {
         // Split a full circle into numVerts step, this is how much to advance each part
@@ -141,7 +141,7 @@ public class Basement {
         goalPoses.get(7).add(new Pose(24.0, 11.0, 0.0));
 
         //set the map yalm file
-        String yamlFile = new String("maps/basement.yaml");
+        String yamlFile = "maps/basement.yaml";
 
         //Set the default motion planner
         ReedsSheppCarPlanner rsp_ = new ReedsSheppCarPlanner();

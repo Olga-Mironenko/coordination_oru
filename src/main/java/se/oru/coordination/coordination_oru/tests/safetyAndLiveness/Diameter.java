@@ -219,7 +219,7 @@ public class Diameter {
                         break;
                     }
                     try {
-                        Thread.sleep(2 * tec.getControlPeriod());
+                        Thread.sleep(2L * tec.getControlPeriod());
                     } catch (InterruptedException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();

@@ -12,8 +12,8 @@ import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
  */
 public class CriticalSection {
 
-    private TrajectoryEnvelope te1;
-    private TrajectoryEnvelope te2;
+    private final TrajectoryEnvelope te1;
+    private final TrajectoryEnvelope te2;
     private int te1Start = -1;
     private int te2Start = -1;
     private int te1End = -1;
@@ -48,11 +48,9 @@ public class CriticalSection {
             if (!(te1.equals(other.te1) && te2.equals(other.te2) || te1.equals(other.te2) && te2.equals(other.te1)))
                 return false;
             if (te1.equals(other.te1) && te2.equals(other.te2)) {
-                if (te1End != other.te1End || te2End != other.te2End || te1Start != other.te1Start || te2Start != other.te2Start)
-                    return false;
+                return te1End == other.te1End && te2End == other.te2End && te1Start == other.te1Start && te2Start == other.te2Start;
             } else if (te1.equals(other.te2) && te2.equals(other.te1)) {
-                if (te1End != other.te2End || te2End != other.te1End || te1Start != other.te2Start || te2Start != other.te1Start)
-                    return false;
+                return te1End == other.te2End && te2End == other.te1End && te1Start == other.te2Start && te2Start == other.te1Start;
             }
         }
         return true;

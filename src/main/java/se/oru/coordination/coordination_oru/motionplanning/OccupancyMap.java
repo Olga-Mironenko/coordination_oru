@@ -39,6 +39,7 @@ public class OccupancyMap {
     private BufferedImage bimg = null;
     private BufferedImage bimg_original = null;
     private ArrayList<Geometry> obstacles = new ArrayList<Geometry>();
+
     /**
      * Create a new empty occupancy map (no obstacles, all in C_free).
      *
@@ -198,7 +199,7 @@ public class OccupancyMap {
         g2.drawImage(bimg, 0, 0, bimg.getWidth(), bimg.getHeight(), 0, 0, bimg.getWidth(), bimg.getHeight(), null);
 
         ShapeWriter writer = new ShapeWriter();
-        float dash1[] = {2.0f};
+        float[] dash1 = {2.0f};
         BasicStroke dashed = new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10.0f, dash1, 0.0f);
         g2.setStroke(dashed);
 
@@ -435,7 +436,7 @@ public class OccupancyMap {
         for (int y = 0; y < bimg.getHeight(); y++) {
             for (int x = 0; x < bimg.getWidth(); x++) {
                 Color c = new Color(bimg.getRGB(x, y));
-                this.occupancyMapLinearBits.set(y * mapWidth + x, c.getRed() / 255.0 < this.threshold ? true : false);
+                this.occupancyMapLinearBits.set(y * mapWidth + x, c.getRed() / 255.0 < this.threshold);
             }
         }
         this.occupancyMapLinearBits.set(bimg.getHeight() * bimg.getWidth(), true);

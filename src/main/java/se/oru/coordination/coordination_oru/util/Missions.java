@@ -59,7 +59,7 @@ public class Missions {
 
     protected static Thread missionDispatchThread = null;
     protected static HashSet<Integer> dispatchableRobots = new HashSet<Integer>();
-    private static Logger metaCSPLogger = MetaCSPLogging.getLogger(Missions.class);
+    private static final Logger metaCSPLogger = MetaCSPLogging.getLogger(Missions.class);
 
     /**
      * Set the minimum acceptable distance between path poses. This is used to re-sample paths
@@ -275,7 +275,7 @@ public class Missions {
             zis.close();
         } catch (IOException e) {
             e.printStackTrace();
-            throw new Error("Unable to estract the ZIP file: " + e.toString());
+            throw new Error("Unable to estract the ZIP file: " + e);
         }
         return json;
     }
@@ -330,7 +330,7 @@ public class Missions {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            throw new Error("Unable to save the scenario: " + e.toString());
+            throw new Error("Unable to save the scenario: " + e);
         }
     }
 
@@ -466,9 +466,7 @@ public class Missions {
                 //PoseSteering[] onePath = loadKnownPath(oneShortestPath.get(i),oneShortestPath.get(i+1));
                 PoseSteering[] onePath = paths.get(oneShortestPath.get(i) + "->" + oneShortestPath.get(i + 1));
                 if (i == 0) allPoses.add(onePath[0]);
-                for (int j = 1; j < onePath.length - 1; j++) {
-                    allPoses.add(onePath[j]);
-                }
+                allPoses.addAll(Arrays.asList(onePath).subList(1, onePath.length - 1));
                 if (i == oneShortestPath.size() - 2) allPoses.add(onePath[onePath.length - 1]);
             }
             if (k == 0) overallShortestPath.add(allPoses.get(0));
@@ -772,7 +770,7 @@ public class Missions {
             in.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            throw new Error("Unable to load the required scenario: " + e.toString());
+            throw new Error("Unable to load the required scenario: " + e);
         }
         Missions.buildGraph();
     }
@@ -1067,7 +1065,7 @@ public class Missions {
      */
     public static void concatenateMissions(Mission... m) {
         ArrayList<Mission> toAdd = new ArrayList<Mission>();
-        for (Mission oneM : m) toAdd.add(oneM);
+        Collections.addAll(toAdd, m);
         concatenatedMissions.put(m[0], toAdd);
     }
 
@@ -1358,13 +1356,13 @@ public class Missions {
     }
 
     private static class ScenarioContainer {
-        private String locationsJSON;
-        private String pathsJSON;
-        private String missionsJSON;
-        private String mapYAMLJSON;
-        private String mapImageFilenameJSON;
-        private String mapResolutionJSON;
-        private String mapOriginJSON;
+        private final String locationsJSON;
+        private final String pathsJSON;
+        private final String missionsJSON;
+        private final String mapYAMLJSON;
+        private final String mapImageFilenameJSON;
+        private final String mapResolutionJSON;
+        private final String mapOriginJSON;
 
         private ScenarioContainer() {
             this.missionsJSON = Missions.getJSONString(Missions.missions);

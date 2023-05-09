@@ -78,7 +78,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
     protected AtomicInteger criticalSectionCounter = new AtomicInteger(0);
     protected TrajectoryEnvelopeSolver solver = null;
     protected Thread inference = null;
-    protected volatile Boolean stopInference = new Boolean(true);
+    protected volatile Boolean stopInference = Boolean.TRUE;
     //protected JTSDrawingPanel panel = null;
     protected FleetVisualization viz = null;
     protected TreeSet<Pair<TrajectoryEnvelope, Long>> missionsPool = new TreeSet<Pair<TrajectoryEnvelope, Long>>(new Comparator<Pair<TrajectoryEnvelope, Long>>() {
@@ -1075,7 +1075,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
      */
     protected void spawnWaitingThread(final int robotID, final int index, final int duration) {
         Thread stoppingPointTimer = new GatedThread("stoppingPointTimer") {
-            private long startTime = Calendar.getInstance().getTimeInMillis();
+            private final long startTime = Calendar.getInstance().getTimeInMillis();
 
             @Override
             public void runCore() {
@@ -1199,9 +1199,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
             GeometryFactory gf = new GeometryFactory();
             Coordinate[] footprint = this.getFootprint(robotID);
             Coordinate[] newFoot = new Coordinate[footprint.length + 1];
-            for (int j = 0; j < footprint.length; j++) {
-                newFoot[j] = footprint[j];
-            }
+            System.arraycopy(footprint, 0, newFoot, 0, footprint.length);
             newFoot[footprint.length] = footprint[0];
             Geometry obstacle = gf.createPolygon(newFoot);
             AffineTransformation at = new AffineTransformation();
@@ -1234,8 +1232,6 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
         }
         return true;
     }
-
-    ;
 
     /**
      * Set a motion planner to be used for re-planning for a specific
@@ -1302,10 +1298,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
                             int minStart1 = currentReports.containsKey(drivingEnvelopes.get(i).getRobotID()) ? currentReports.get(drivingEnvelopes.get(i).getRobotID()).getPathIndex() : -1;
                             int minStart2 = currentReports.containsKey(envelopesToTrack.get(j).getRobotID()) ? currentReports.get(envelopesToTrack.get(j).getRobotID()).getPathIndex() : -1;
                             double maxDimensionOfSmallestRobot = Math.min(getMaxFootprintDimension(drivingEnvelopes.get(i).getRobotID()), getMaxFootprintDimension(envelopesToTrack.get(j).getRobotID()));
-                            for (CriticalSection cs : getCriticalSections(null, null, drivingEnvelopes.get(i), minStart1, envelopesToTrack.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot)) {
-                                this.allCriticalSections.add(cs);
-                                //metaCSPLogger.info("computeCriticalSections(): add (1) " + cs);
-                            }
+                            Collections.addAll(this.allCriticalSections, getCriticalSections(null, null, drivingEnvelopes.get(i), minStart1, envelopesToTrack.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot));
                         }
                     }
                 }
@@ -1317,10 +1310,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
                             int minStart1 = currentReports.containsKey(envelopesToTrack.get(i).getRobotID()) ? currentReports.get(envelopesToTrack.get(i).getRobotID()).getPathIndex() : -1;
                             int minStart2 = currentReports.containsKey(envelopesToTrack.get(j).getRobotID()) ? currentReports.get(envelopesToTrack.get(j).getRobotID()).getPathIndex() : -1;
                             double maxDimensionOfSmallestRobot = Math.min(getMaxFootprintDimension(envelopesToTrack.get(i).getRobotID()), getMaxFootprintDimension(envelopesToTrack.get(j).getRobotID()));
-                            for (CriticalSection cs : getCriticalSections(null, null, envelopesToTrack.get(i), minStart1, envelopesToTrack.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot)) {
-                                this.allCriticalSections.add(cs);
-                                //metaCSPLogger.info("computeCriticalSections(): add (2) " + cs);
-                            }
+                            Collections.addAll(this.allCriticalSections, getCriticalSections(null, null, envelopesToTrack.get(i), minStart1, envelopesToTrack.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot));
                         }
                     }
                 }
@@ -1332,10 +1322,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
                             int minStart1 = currentReports.containsKey(drivingEnvelopes.get(i).getRobotID()) ? currentReports.get(drivingEnvelopes.get(i).getRobotID()).getPathIndex() : -1;
                             int minStart2 = currentReports.containsKey(currentParkingEnvelopes.get(j).getRobotID()) ? currentReports.get(currentParkingEnvelopes.get(j).getRobotID()).getPathIndex() : -1;
                             double maxDimensionOfSmallestRobot = Math.min(getMaxFootprintDimension(drivingEnvelopes.get(i).getRobotID()), getMaxFootprintDimension(currentParkingEnvelopes.get(j).getRobotID()));
-                            for (CriticalSection cs : getCriticalSections(null, null, drivingEnvelopes.get(i), minStart1, currentParkingEnvelopes.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot)) {
-                                this.allCriticalSections.add(cs);
-                                //metaCSPLogger.info("computeCriticalSections(): add (3) " + cs);
-                            }
+                            Collections.addAll(this.allCriticalSections, getCriticalSections(null, null, drivingEnvelopes.get(i), minStart1, currentParkingEnvelopes.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot));
                         }
                     }
                 }
@@ -1347,10 +1334,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
                             int minStart1 = currentReports.containsKey(envelopesToTrack.get(i).getRobotID()) ? currentReports.get(envelopesToTrack.get(i).getRobotID()).getPathIndex() : -1;
                             int minStart2 = currentReports.containsKey(currentParkingEnvelopes.get(j).getRobotID()) ? currentReports.get(currentParkingEnvelopes.get(j).getRobotID()).getPathIndex() : -1;
                             double maxDimensionOfSmallestRobot = Math.min(getMaxFootprintDimension(envelopesToTrack.get(i).getRobotID()), getMaxFootprintDimension(currentParkingEnvelopes.get(j).getRobotID()));
-                            for (CriticalSection cs : getCriticalSections(null, null, envelopesToTrack.get(i), minStart1, currentParkingEnvelopes.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot)) {
-                                this.allCriticalSections.add(cs);
-                                //metaCSPLogger.info("computeCriticalSections(): add (4) " + cs);
-                            }
+                            Collections.addAll(this.allCriticalSections, getCriticalSections(null, null, envelopesToTrack.get(i), minStart1, currentParkingEnvelopes.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot));
                         }
                     }
                 }
@@ -1662,9 +1646,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
                 //				String finalDestLocation = "";
                 ArrayList<PoseSteering> overallPath = new ArrayList<PoseSteering>();
                 for (Mission m : e.getValue()) {
-                    for (PoseSteering ps : m.getPath()) {
-                        overallPath.add(ps);
-                    }
+                    Collections.addAll(overallPath, m.getPath());
                 }
 
                 //Create a big overall driving envelope
@@ -1680,7 +1662,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
                             int stoppingPoint = te.getSequenceNumber(new Coordinate(stoppingPose.getX(), stoppingPose.getY()));
                             if (stoppingPoint == te.getPathLength() - 1) stoppingPoint -= 2;
                             int duration = entry.getValue();
-                            if (!stoppingPoints.keySet().contains(robotID)) {
+                            if (!stoppingPoints.containsKey(robotID)) {
                                 stoppingPoints.put(robotID, new ArrayList<Integer>());
                                 stoppingTimes.put(robotID, new ArrayList<Integer>());
                             }
@@ -1696,7 +1678,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
                         Mission m = e.getValue().get(i);
                         Pose destPose = m.getToPose();
                         int stoppingPoint = te.getSequenceNumber(new Coordinate(destPose.getX(), destPose.getY()));
-                        if (!stoppingPoints.keySet().contains(robotID)) {
+                        if (!stoppingPoints.containsKey(robotID)) {
                             stoppingPoints.put(robotID, new ArrayList<Integer>());
                             stoppingTimes.put(robotID, new ArrayList<Integer>());
                         }
@@ -1815,8 +1797,6 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
             metaCSPLogger.info(s);
         }
     }
-
-    ;
 
     /**
      * Specifies what happens when a new mission is dispatched.

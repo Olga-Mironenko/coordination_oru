@@ -15,7 +15,7 @@ public abstract class TrajectoryEnvelopeTrackerDummy extends AbstractTrajectoryE
     private Thread th = null;
     private boolean parkingFinished = false;
     private int currentIndex = -1;
-    private long DELTA_FUTURE = 0;
+    private final long DELTA_FUTURE = 0;
 
     /**
      * Create a new {@link TrajectoryEnvelopeTrackerDummy} representing that a robot with a given ID is parked

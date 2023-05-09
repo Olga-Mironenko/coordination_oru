@@ -36,8 +36,8 @@ public class ProductionCycleMine {
 
         var autonomousVehicle1 = new AutonomousVehicle();
         var autonomousVehicle2 = new AutonomousVehicle();
-        PoseSteering[] autonomousVehicle1Path = autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
-        PoseSteering[] autonomousVehicle2Path = autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -65,8 +65,8 @@ public class ProductionCycleMine {
         viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
 
-        var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehicle1Path);
-        var m2 = new Mission(autonomousVehicle2.getID(), autonomousVehicle2Path);
+        var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehicle1.getPath());
+        var m2 = new Mission(autonomousVehicle2.getID(), autonomousVehicle2.getPath());
         m2.setStoppingPoint(orePass, 5000);
 
         Missions.enqueueMission(m1);
@@ -83,8 +83,8 @@ public class ProductionCycleMine {
         final Pose[] drillRigGoal = {drawPoint38, drawPoint18, drawPoint24, mainTunnelRight};
         final Pose[] chargingVehicleGoal = {drawPoint24, drawPoint23, drawPoint18, drawPoint16, drawPoint38, mainTunnelLeft};
 
-        PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
-        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE, false);
+        drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
+        chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE, false);
         Thread.sleep(5000);
         tec.placeRobot(drillVehicle.getID(), mainTunnelLeft);
         PoseSteering[] drillInitialPath = drillVehicle.getLimitedPath(drillVehicle.getID(), drillVehicle.getPredictableDistance(), tec);

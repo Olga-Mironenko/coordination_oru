@@ -16,9 +16,9 @@ import java.util.Random;
 
 public class MinimalExample {
 
-    private static Random rand = new Random(123213);
+    private static final Random rand = new Random(123213);
 
-    private static ArrayList<Pair<Integer>> placements = new ArrayList<Pair<Integer>>();
+    private static final ArrayList<Pair<Integer>> placements = new ArrayList<Pair<Integer>>();
 
     private static Coordinate[] makeRandomFootprint(int centerX, int centerY, int minVerts, int maxVerts, double minRadius, double maxRadius) {
         // Split a full circle into numVerts step, this is how much to advance each part

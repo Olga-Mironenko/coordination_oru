@@ -136,7 +136,6 @@ public class Experiment2 {
         for (int robotID : robotIDs) {
             tec.setMotionPlanner(robotID, rsp.getCopy(false));
             tec.setForwardModel(robotID, new ConstantAccelerationForwardModel(MAX_ACCEL, MAX_VEL, tec.getTemporalResolution(), tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(robotID)));
-            ;
             String startLocName = "L_" + locationCounter;
             Pose startLoc = Missions.getLocation(startLocName);
             String endLocName = "R_" + locationCounter;
@@ -200,7 +199,7 @@ public class Experiment2 {
                     if (robotID % 2 == 0) totalIterations = 19;
                     String lastDestination = "R_" + (robotID - 1);
                     long startTime = Calendar.getInstance().getTimeInMillis();
-                    while (true && totalIterations > 0) {
+                    while (totalIterations > 0) {
                         synchronized (tec) {
                             if (tec.isFree(robotID)) {
                                 if (!firstTime) {

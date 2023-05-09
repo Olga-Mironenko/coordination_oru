@@ -24,7 +24,7 @@ package se.oru.coordination.coordination_oru.util.splines;
  * @author <a href="mailto:jacob.dreyer@geosoft.no">Jacob Dreyer</a>
  */
 public abstract class Spline {
-    protected double controlPoints_[];
+    protected double[] controlPoints_;
     protected int nParts_;
 
     public abstract double[] generate();

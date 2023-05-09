@@ -218,7 +218,7 @@ public class ParkingArrayNew {
                     int totalIterations = 12;
                     long startTime = Calendar.getInstance().getTimeInMillis();
 
-                    while (true && totalIterations > 0) {
+                    while (totalIterations > 0) {
                         synchronized (tec.getSolver()) {
                             if (tec.isFree(robotID)) {
                                 if (!firstTime) {

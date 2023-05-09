@@ -30,8 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 public class RVizVisualization implements FleetVisualization, NodeMain {
 
-    private static String rvizEntry = "" +
-            "    - Class: rviz/MarkerArray\n" +
+    private static final String rvizEntry = "    - Class: rviz/MarkerArray\n" +
             "      Enabled: true\n" +
             "      Marker Topic: /ROBOTi/deps\n" +
             "      Name: MarkerArray\n" +
@@ -241,8 +240,8 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
                 ChannelBuffer buffer = ChannelBuffers.copiedBuffer(ByteOrder.nativeOrder(), data.getData());
                 occMap.setData(buffer);
                 occMap.getHeader().setFrameId(mapFrameID);
-                occMap.getInfo().setHeight((int) (img.getHeight()));
-                occMap.getInfo().setWidth((int) (img.getWidth()));
+                occMap.getInfo().setHeight(img.getHeight());
+                occMap.getInfo().setWidth(img.getWidth());
                 geometry_msgs.Pose pose = node.getTopicMessageFactory().newFromType(geometry_msgs.Pose._TYPE);
                 pose.getPosition().setX(0);
                 pose.getPosition().setY(0);

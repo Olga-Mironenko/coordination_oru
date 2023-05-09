@@ -54,7 +54,7 @@ public class MissionUtils {
 
                 PoseSteering[] newPath = null;
                 try {
-                    newPath = vehicle.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
+                    vehicle.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
                 } catch (Error exc) { // TODO: check for NoPathFound only
                     System.out.println("moveRobot: no path found (or another error): " + exc);
                     return;
@@ -154,8 +154,8 @@ public class MissionUtils {
         replacementIndex = Math.min(replacementIndex, initialPath.length - 1); // TODO
         PoseSteering[] replacementPath = new PoseSteering[replacementIndex + newPath.length];
         // TODO: replacementIndex: off by one error? (replacementIndex=2 -> preserve 3 points)
-        for (int i = 0; i < replacementIndex; i++) replacementPath[i] = initialPath[i];
-        for (int i = 0; i < newPath.length; i++) replacementPath[i + replacementIndex] = newPath[i];
+        if (replacementIndex >= 0) System.arraycopy(initialPath, 0, replacementPath, 0, replacementIndex);
+        System.arraycopy(newPath, 0, replacementPath, replacementIndex, newPath.length);
         return replacementPath;
     }
 }

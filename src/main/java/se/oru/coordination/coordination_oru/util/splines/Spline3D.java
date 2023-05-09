@@ -9,6 +9,7 @@ public class Spline3D {
     private Coordinate[] coords = null;
     private Coordinate[] controlPoints = null;
     private Type type = null;
+
     public Spline3D(double[] points, Coordinate[] controlPoints, Type type) {
         this.type = type;
         this.controlPoints = controlPoints;
@@ -74,6 +75,6 @@ public class Spline3D {
         return ret;
     }
 
-    public static enum Type {SPLINE_BEZIER, SPLINE_CUBIC, SPLINE_CATMULL_ROM}
+    public enum Type {SPLINE_BEZIER, SPLINE_CUBIC, SPLINE_CATMULL_ROM}
 
 }
