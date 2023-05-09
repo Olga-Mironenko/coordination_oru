@@ -326,20 +326,10 @@ public class BrowserVisualization implements FleetVisualization {
 		} else {
 			text += "<br>";
 			for (CriticalSection cs : criticalSections) {
-				text += "- " + stringifyCriticalSection(cs) + "<br>";
+				text += "- " + cs.toStringForVisualization() + "<br>";
 			}
 		}
 		return text;
-	}
-
-	protected static String stringifyCriticalSection(CriticalSection cs) {
-		synchronized (cs) {
-			String ret = "";
-			String robot1 = cs.getTe1() == null ? "null" : String.valueOf(cs.getTe1().getRobotID());
-			String robot2 = cs.getTe2() == null ? "null" : String.valueOf(cs.getTe2().getRobotID());
-			ret += robot1 + " [" + cs.getTe1Start() + ";" + cs.getTe1End() + "], " + robot2 + " [" + cs.getTe2Start() + ";" + cs.getTe2End() + "]";
-			return ret;
-		}
 	}
 	
 	@Override

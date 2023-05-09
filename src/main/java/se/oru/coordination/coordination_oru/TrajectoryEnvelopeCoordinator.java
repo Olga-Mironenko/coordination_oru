@@ -583,12 +583,20 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 		RobotAtCriticalSection r1atcs = new RobotAtCriticalSection(robotReport1, cs);
 		RobotAtCriticalSection r2atcs = new RobotAtCriticalSection(robotReport2, cs);
+
 		boolean ret = false;
-		if (this.comparators.size() > 0) ret = (this.comparators.compare(r1atcs,r2atcs) < 0);
+
+		if (cs.te1Higher != cs.te2Higher)
+			ret = cs.te1Higher;
+		else if (this.comparators.size() > 0)
+			ret = (this.comparators.compare(r1atcs,r2atcs) < 0);
 		//No ordering function, decide an ordering based on distance (closest goes first)
-		else ret = ((cs.getTe2Start()-robotReport2.getPathIndex()) > (cs.getTe1Start()-robotReport1.getPathIndex()));
+		else
+			ret = ((cs.getTe2Start()-robotReport2.getPathIndex()) > (cs.getTe1Start()-robotReport1.getPathIndex()));
+
 		if (ret && muted.contains(robotReport2.getRobotID())) return false;
 		if (!ret && muted.contains(robotReport1.getRobotID())) return true;
+
 		return ret;
 	}
 

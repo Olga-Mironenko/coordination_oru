@@ -171,47 +171,15 @@ public class MissionUtils {
     public static void forceDriving(int robotID) {
         TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-        tec.resetComparators();
-        tec.addComparator(new Heuristics().lowestIDNumber());
-        tec.updateDependencies();
-
         final ArrayList<CriticalSection> criticalSectionsWithHighPriority =
                 selectCriticalSectionsWithHighPriority(robotID, tec.allCriticalSections, 20.0, Integer.MAX_VALUE);
-
-        TrackingCallback cb = new TrackingCallback(null) {
-
-            @Override
-            public void onTrackingStart() { }
-
-            @Override
-            public void onTrackingFinished() { }
-
-            @Override
-            public String[] onPositionUpdate() {
-                if (criticalSectionsWithHighPriority.isEmpty()) {
-                    return null;
-                }
-
-                var cs = tec.allCriticalSections;
-                if (areAllCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsWithHighPriority)) {
-                    tec.resetComparators();
-                    tec.addComparator(new Heuristics().highestIDNumber());
-                    criticalSectionsWithHighPriority.clear();
-                }
-                return null;
+        for (CriticalSection cs : criticalSectionsWithHighPriority) {
+            if (cs.getTe1().getRobotID() == robotID) {
+                cs.te1Higher = true;
+            } else {
+                cs.te2Higher = true;
             }
-
-            @Override
-            public void onNewGroundEnvelope() { }
-
-            @Override
-            public void beforeTrackingStart() { }
-
-            @Override
-            public void beforeTrackingFinished() { }
-        };
-
-        tec.addTrackingCallback(robotID, cb);
+        }
     }
 
     protected static ArrayList<CriticalSection> selectCriticalSectionsWithHighPriority(
@@ -234,13 +202,13 @@ public class MissionUtils {
         int indexCurrent = getPathIndex(robotID);
         double distance = 0.0;
 
-        assert robotID != -1;
         for (CriticalSection cs : criticalSectionsSorted) {
             if (cs.getTe1() == null || cs.getTe2() == null) {
                 continue;
             }
             int id1 = cs.getTe1().getRobotID();
             int id2 = cs.getTe2().getRobotID();
+            assert robotID != -1;
             assert id1 == robotID || id2 == robotID;
 
             int indexSection = -1;
@@ -274,6 +242,7 @@ public class MissionUtils {
                 break;
             }
         }
+
         assert criticalSectionsSelected.size() <= maxCount;
         return criticalSectionsSelected;
     }

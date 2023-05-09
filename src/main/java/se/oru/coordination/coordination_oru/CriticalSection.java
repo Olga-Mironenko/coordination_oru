@@ -26,6 +26,8 @@ public class CriticalSection {
 	private int te2End = -1;
 	private int te1Break = -1;
 	private int te2Break = -1;
+	public boolean te1Higher = false;
+	public boolean te2Higher = false;
 
 	public CriticalSection(TrajectoryEnvelope te1, TrajectoryEnvelope te2, int te1Start, int te2Start, int te1End, int te2End) {
 		this.te1 = te1;
@@ -123,6 +125,15 @@ public class CriticalSection {
 		String robot1 = (te1 == null ? "null" : "Robot"+te1.getRobotID());
 		String robot2 = (te2 == null ? "null" : "Robot"+te2.getRobotID());
 		ret += "CriticalSection (" + robot1 + " [" + te1Start + ";" + te1End + "], " + robot2 + " [" + te2Start + ";" + te2End + "])";
+		return ret;
+	}
+
+	public String toStringForVisualization() {
+		String ret = "";
+		String robot1 = getTe1() == null ? "null" : String.valueOf(getTe1().getRobotID());
+		String robot2 = getTe2() == null ? "null" : String.valueOf(getTe2().getRobotID());
+		ret += robot1 + (te1Higher ? "*" : "") + " [" + getTe1Start() + ";" + getTe1End() + "], ";
+		ret += robot2 + (te2Higher ? "*" : "") + " [" + getTe2Start() + ";" + getTe2End() + "]";
 		return ret;
 	}
 
