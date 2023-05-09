@@ -1,6 +1,5 @@
 package se.oru.coordination.coordination_oru.util;
 
-import edu.uci.ics.jung.algorithms.importance.AbstractRanker;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
@@ -13,7 +12,6 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 
 public class MissionUtils {
@@ -140,10 +138,14 @@ public class MissionUtils {
         return te.getSpatialEnvelope().getPath();
     }
 
-    protected static int getReplacementIndex(int robotID) {
+    protected static int getPathIndex(int robotID) {
         TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
         RobotReport rr = tec.getRobotReport(robotID);
-        return Math.max(0, rr.getPathIndex() + 2);
+        return rr.getPathIndex();
+    }
+
+    protected static int getReplacementIndex(int robotID) {
+        return Math.max(0, getPathIndex(robotID) + 2);
         // TODO: why does `- 10` work better than `+ 10`?
     }
 
@@ -173,7 +175,8 @@ public class MissionUtils {
         tec.addComparator(new Heuristics().lowestIDNumber());
         tec.updateDependencies();
 
-        final ArrayList<CriticalSection> criticalSectionsWithHighPriority = findCriticalSectionsWithHighPriority(robotID, tec.allCriticalSections);
+        final ArrayList<CriticalSection> criticalSectionsWithHighPriority =
+                selectCriticalSectionsWithHighPriority(robotID, tec.allCriticalSections, 20.0, Integer.MAX_VALUE);
 
         TrackingCallback cb = new TrackingCallback(null) {
 
@@ -211,20 +214,68 @@ public class MissionUtils {
         tec.addTrackingCallback(robotID, cb);
     }
 
-    protected static ArrayList<CriticalSection> findCriticalSectionsWithHighPriority(
+    protected static ArrayList<CriticalSection> selectCriticalSectionsWithHighPriority(
             int robotID,
-            HashSet<CriticalSection> allCriticalSections) {
+            HashSet<CriticalSection> allCriticalSections,
+            double maxDistance,
+            int maxCount) {
+        assert maxCount >= 0;
+        if (maxCount == 0) {
+            return new ArrayList<>();
+        }
+
+        assert maxDistance >= 0.0;
+
         ArrayList<CriticalSection> criticalSectionsSorted =
                 CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, robotID);
+        ArrayList<CriticalSection> criticalSectionsSelected = new ArrayList<>();
+
+        PoseSteering[] currentPath = getCurrentPath(robotID);
+        int indexCurrent = getPathIndex(robotID);
+        double distance = 0.0;
 
         assert robotID != -1;
         for (CriticalSection cs : criticalSectionsSorted) {
-            int id1 = cs.getTe1() == null ? -1 : cs.getTe1().getRobotID();
-            int id2 = cs.getTe2() == null ? -1 : cs.getTe2().getRobotID();
+            if (cs.getTe1() == null || cs.getTe2() == null) {
+                continue;
+            }
+            int id1 = cs.getTe1().getRobotID();
+            int id2 = cs.getTe2().getRobotID();
             assert id1 == robotID || id2 == robotID;
-            return new ArrayList<>(Arrays.asList(cs));
+
+            int indexSection = -1;
+            if (id1 == robotID) {
+                indexSection = cs.getTe1Start();
+            } else {
+                indexSection = cs.getTe2Start();
+            }
+            if (indexSection == -1) {
+                continue;
+            }
+
+            //assert indexSection >= indexCurrent;  // commented because of a bug
+            while (indexSection > indexCurrent) {
+                PoseSteering poseCurrent = currentPath[indexCurrent];
+                PoseSteering poseNext = currentPath[indexCurrent + 1];
+                double step = BrowserVisualization.computeDistanceBetweenPoses(poseCurrent.getPose(), poseNext.getPose());
+                distance += step;
+                indexCurrent += 1;
+
+                if (distance > maxDistance) {
+                    break;
+                }
+            }
+            if (distance > maxDistance) {
+                break;
+            }
+
+            criticalSectionsSelected.add(cs);
+            if (criticalSectionsSelected.size() == maxCount) {
+                break;
+            }
         }
-        return new ArrayList<>();
+        assert criticalSectionsSelected.size() <= maxCount;
+        return criticalSectionsSelected;
     }
 
     protected static boolean areAllCriticalSectionsWithHighPriorityGone(

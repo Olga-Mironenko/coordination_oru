@@ -475,6 +475,10 @@ public class BrowserVisualization implements FleetVisualization {
 		Geometry ret = at.transform(arrow);
 		return ret;
 	}
+
+	public static double computeDistanceBetweenPoses(Pose pose1, Pose pose2) {
+		return Math.sqrt(Math.pow((pose2.getX()-pose1.getX()),2)+Math.pow((pose2.getY()-pose1.getY()),2));
+	}
 	
 	private Geometry createArrow(Pose pose1, Pose pose2) {		
 		GeometryFactory gf = new GeometryFactory();
@@ -482,7 +486,7 @@ public class BrowserVisualization implements FleetVisualization {
 		double aux1 = 0.8;
 		double aux2 = 0.3;
 		double factor = Math.sqrt(robotFootprintArea)*0.5;
-		double distance = Math.sqrt(Math.pow((pose2.getX()-pose1.getX()),2)+Math.pow((pose2.getY()-pose1.getY()),2))/factor;
+		double distance = computeDistanceBetweenPoses(pose1, pose2)/factor;
 		double theta = Math.atan2(pose2.getY() - pose1.getY(), pose2.getX() - pose1.getX());
 		Coordinate[] coords = new Coordinate[8];
 		coords[0] = new Coordinate(0.0,-aux2);
