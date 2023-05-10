@@ -2,7 +2,6 @@ package se.oru.coordination.coordination_oru.scenarios;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
-import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
@@ -60,7 +59,7 @@ public class SevenAutonomousOneLookAheadVehicles {
         tec.startInference();
 
         PoseSteering[] lookAheadInitialPlan = lookAheadVehicle.getLimitedPath(lookAheadVehicle.getID(), predictableDistance, tec);
-        tec.setDefaultFootprint(autonomousVehicle1.getFootPrint());
+        tec.setDefaultFootprint(autonomousVehicle1.getFootprint());
         tec.placeRobot(autonomousVehicle1.getID(), drawPoint17);
         tec.placeRobot(autonomousVehicle2.getID(), drawPoint19);
         tec.placeRobot(autonomousVehicle3.getID(), drawPoint20);

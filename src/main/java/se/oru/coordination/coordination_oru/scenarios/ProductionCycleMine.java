@@ -46,7 +46,7 @@ public class ProductionCycleMine {
         // Start the thread that checks and enforces dependencies at every clock tick
         tec.startInference();
 
-        tec.setDefaultFootprint(autonomousVehicle1.getFootPrint());
+        tec.setDefaultFootprint(autonomousVehicle1.getFootprint());
         tec.placeRobot(autonomousVehicle1.getID(), drawPoint16);
         tec.placeRobot(autonomousVehicle2.getID(), drawPoint23);
         tec.setForwardModel(autonomousVehicle1.getID(), new ConstantAccelerationForwardModel(autonomousVehicle1.getMaxAcceleration(), autonomousVehicle1.getMaxVelocity(), tec.getTemporalResolution(),

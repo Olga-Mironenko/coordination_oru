@@ -26,7 +26,8 @@ public abstract class AbstractVehicle {
     private final double maxAcceleration;
     private final double xLength;
     private final double yLength;
-    private final Coordinate[] footPrint;
+    private final Coordinate[] footprint;
+    public Coordinate[] innerFootprint = null;
     private final double startTime = System.nanoTime();
     private Color color;
     private Color colorInMotion;
@@ -55,18 +56,22 @@ public abstract class AbstractVehicle {
         this.maxAcceleration = maxAcceleration;
         this.xLength = xLength;
         this.yLength = yLength;
-        this.footPrint = new Coordinate[]{               // FIXME Currently allows four sided vehicles only
-                new Coordinate(-xLength, yLength),        //back left
-                new Coordinate(xLength, yLength),         //back right
-                new Coordinate(xLength, -yLength),        //front right
-                new Coordinate(-xLength, -yLength)        //front left
-        };
+        this.footprint = makeFootprint(xLength, yLength);
 
         if (VehiclesHashMap.getList().containsKey(id)) {
             throw new Error("ID " + id + " already exists.");
         }
         VehiclesHashMap.getList().put(id, this);
         vehicleNumber++;
+    }
+
+    public static Coordinate[] makeFootprint(double xLength, double yLength) {
+        return new Coordinate[]{               // FIXME Currently allows four sided vehicles only
+                new Coordinate(-xLength, yLength),        //back left
+                new Coordinate(xLength, yLength),         //back right
+                new Coordinate(xLength, -yLength),        //front right
+                new Coordinate(-xLength, -yLength)        //front left
+        };
     }
 
     public AbstractVehicle(int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
@@ -92,7 +97,8 @@ public abstract class AbstractVehicle {
                 ", maxAcceleration=" + maxAcceleration +
                 ", xLength=" + xLength +
                 ", yLength=" + yLength +
-                ", footPrint=" + Arrays.toString(footPrint) +
+                ", footprint=" + Arrays.toString(footprint) +
+                (innerFootprint == null ? "" : ", innerFootprint=" + Arrays.toString(innerFootprint)) +
                 '}';
     }
 
@@ -211,8 +217,8 @@ public abstract class AbstractVehicle {
         return "#" + String.format("%06x", 0xFFFFFF & getColor().getRGB());
     }
 
-    public Coordinate[] getFootPrint() {
-        return footPrint;
+    public Coordinate[] getFootprint() {
+        return footprint;
     }
 
     public RobotReport getCurrentRobotReport() {

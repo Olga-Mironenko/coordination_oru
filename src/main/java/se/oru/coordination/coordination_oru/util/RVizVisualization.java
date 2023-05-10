@@ -369,7 +369,7 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 		}
 	}
 	
-	@Override
+	//@Override
 	public void displayRobotState(Polygon fp, RobotReport rr, String ... extraStatusInfo) {
 		if (ready) {
 			double x = rr.getPose().getX();

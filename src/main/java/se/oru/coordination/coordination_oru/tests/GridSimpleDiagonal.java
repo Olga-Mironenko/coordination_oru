@@ -2,13 +2,11 @@ package se.oru.coordination.coordination_oru.tests;
 
 import java.awt.Color;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 
 import se.oru.coordination.coordination_oru.Mission;
-import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
-import se.oru.coordination.coordination_oru.code.Heuristics;
-import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
-import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.code.*;
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
@@ -94,14 +92,19 @@ public class GridSimpleDiagonal {
         AutonomousVehicle aut4 = null;
         AutonomousVehicle aut5 = null;
 
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, 2, 1.5, 1.5);
-        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
-        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
-        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
-        //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
-        //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
+        double maxAcceleration = 2;
+        double xLength = 2.5;
+        double yLength = 1.5;
+        double xLengthInner = 1.5;
+        double yLengthInner = 1.0;
 
-        // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, maxAcceleration, xLength, yLength);
+        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
+        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
+        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
+        //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
+        //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
+
         System.out.println(VehiclesHashMap.getInstance().getList());
 
         TrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
@@ -113,7 +116,15 @@ public class GridSimpleDiagonal {
         // Start the thread that checks and enforces dependencies at every clock tick
         tec.startInference();
 
-        tec.setDefaultFootprint(hum0.getFootPrint());
+        Coordinate[] innerFootprint = AbstractVehicle.makeFootprint(xLengthInner, yLengthInner);
+        for (AbstractVehicle vehicle : new AbstractVehicle[] { hum0, aut1, aut2, aut3, aut4, aut5 }) {
+            if (vehicle != null) {
+                vehicle.innerFootprint = innerFootprint;
+                tec.setFootprint(vehicle.getID(), vehicle.getFootprint());
+                tec.setInnerFootprint(vehicle.getID(), vehicle.innerFootprint);
+            }
+        }
+
         tec.placeRobot(hum0.getID(), humStart);
         if (aut1 != null) tec.placeRobot(aut1.getID(), aut1Start);
         if (aut2 != null) tec.placeRobot(aut2.getID(), aut2Start);

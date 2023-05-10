@@ -1,16 +1,12 @@
 package se.oru.coordination.coordination_oru.scenarios;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
-import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
-import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
-
-import java.awt.*;
 
 public class EightAutonomousVehicles {
     public static void main(String[] args) {
@@ -58,7 +54,7 @@ public class EightAutonomousVehicles {
         // Start the thread that checks and enforces dependencies at every clock tick
         tec.startInference();
 
-        tec.setDefaultFootprint(autonomousVehicle1.getFootPrint());
+        tec.setDefaultFootprint(autonomousVehicle1.getFootprint());
         tec.placeRobot(autonomousVehicle1.getID(), drawPoint17);
         tec.placeRobot(autonomousVehicle2.getID(), drawPoint19);
         tec.placeRobot(autonomousVehicle3.getID(), drawPoint20);

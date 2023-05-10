@@ -36,7 +36,7 @@ public class OneAutonomousOneLookAheadVehicles {
         // Start the thread that checks and enforces dependencies at every clock tick
         tec.startInference();
 
-        tec.setDefaultFootprint(autonomousVehicle.getFootPrint());
+        tec.setDefaultFootprint(autonomousVehicle.getFootprint());
         tec.placeRobot(autonomousVehicle.getID(), drawPoint21);
         tec.placeRobot(lookAheadVehicle.getID(), mainTunnelLeft);
         tec.addComparator(new Heuristics().closest());

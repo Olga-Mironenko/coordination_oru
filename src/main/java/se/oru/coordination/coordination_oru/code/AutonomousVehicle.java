@@ -48,7 +48,7 @@ public class AutonomousVehicle extends AbstractVehicle {
             rsp.setMap(map);
             rsp.setRadius(0.01);
             rsp.setPlanningTimeInSecs(60);
-            rsp.setFootprint(super.getFootPrint());
+            rsp.setFootprint(super.getFootprint());
             rsp.setTurningRadius(0.01);
             rsp.setDistanceBetweenPathPoints(0.1);
 
@@ -95,7 +95,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         rsp.setMap(map);
         rsp.setRadius(radius);
         rsp.setPlanningTimeInSecs(planningTime);
-        rsp.setFootprint(super.getFootPrint());
+        rsp.setFootprint(super.getFootprint());
         rsp.setTurningRadius(turningRadius);
         rsp.setDistanceBetweenPathPoints(distanceBetweenPathPoints);
 

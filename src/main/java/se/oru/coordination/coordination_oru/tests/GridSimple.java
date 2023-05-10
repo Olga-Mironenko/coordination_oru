@@ -96,7 +96,7 @@ public class GridSimple {
         // Start the thread that checks and enforces dependencies at every clock tick
         tec.startInference();
 
-        tec.setDefaultFootprint(hum0.getFootPrint());
+        tec.setDefaultFootprint(hum0.getFootprint());
         tec.placeRobot(hum0.getID(), humStart);
     //    tec.placeRobot(aut1.getID(), aut1Start);
     //    tec.placeRobot(aut2.getID(), aut2Start);

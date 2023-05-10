@@ -55,8 +55,8 @@ public class JTSDrawingPanelVisualization implements FleetVisualization {
 		if (rr.getPathIndex() != -1) panel.addGeometry(name, TrajectoryEnvelope.getFootprint(te.getFootprint(), x, y, theta), false, true, false, "#FF0000");
 		else panel.addGeometry(name, TrajectoryEnvelope.getFootprint(te.getFootprint(), te.getTrajectory().getPose()[0].getX(), te.getTrajectory().getPose()[0].getY(), te.getTrajectory().getPose()[0].getTheta()), false, true, false, "#4286F4");
 	}
-	
-	@Override
+
+	//@Override
 	public void displayRobotState(Polygon fp, RobotReport rr, String ... extraStatusInfo) {
 		double x = rr.getPose().getX();
 		double y = rr.getPose().getY();

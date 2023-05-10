@@ -43,8 +43,6 @@ public class BrowserVisualization implements FleetVisualization {
 	
 	private ArrayList<String> msgQueue = new ArrayList<String>();
 	private static int UPDATE_PERIOD = 30;
-	private double robotFootprintArea = -1;
-	private double robotFootprintXDim = -1;
 	private String overlayText = null;
 
 	public static boolean isStatusText = false;
@@ -98,19 +96,6 @@ public class BrowserVisualization implements FleetVisualization {
 	
 	public void setOverlayText(String text) {
 		this.overlayText = text;
-	}
-
-	private void updateRobotFootprintArea(Geometry geom) {
-		if (robotFootprintArea == -1) {
-			robotFootprintArea = geom.getArea();
-			double minX = Double.MAX_VALUE;
-			double maxX = Double.MIN_VALUE;
-			for (Coordinate coord : geom.getCoordinates()) {
-				if (coord.x < minX) minX = coord.x;
-				if (coord.x > maxX) maxX = coord.x;
-			}
-			this.robotFootprintXDim = maxX-minX;
-		}
 	}
 	
 	public void setInitialTransform(double scale, double xTrans, double yTrans) {
@@ -216,7 +201,6 @@ public class BrowserVisualization implements FleetVisualization {
 		}
 	}
 
-	// TODO: remove code duplication
 	@Override
 	public void displayRobotState(TrajectoryEnvelope te, RobotReport rr, String... extraStatusInfo) {
 		double x = rr.getPathIndex() != -1 ? rr.getPose().getX() : te.getTrajectory().getPose()[0].getX();
@@ -239,21 +223,41 @@ public class BrowserVisualization implements FleetVisualization {
 			}
 		}
 
-		String color = "#ff0000";
+		String color = "#000000";
 		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
 		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
 
-		Geometry geom = TrajectoryEnvelope.getFootprint(te.getFootprint(), x, y, theta);
-		this.updateRobotFootprintArea(geom);
-		double scale = Math.sqrt(robotFootprintArea)*0.2;
-		Geometry arrowGeom = createArrow(rr.getPose(), robotFootprintXDim/scale, scale);
-		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, color, -1, true, extraData) + "}";
-		String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+name, arrowGeom, "#ffffff", -1, true, null) + "}";
-		enqueueMessage(jsonString);
-		enqueueMessage(jsonStringArrow);
+		drawRobotFootprint(x, y, theta, rr.getPose(), color, name, extraData, te.getFootprint());
+
+		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+		Coordinate[] innerFootprint = tec.getInnerFootprint(rr.getRobotID());
+		Polygon innerFootprintPolygon = TrajectoryEnvelope.createFootprintPolygon(innerFootprint);
+		drawRobotFootprint(x, y, theta, null, "#ff0000", name + "-inner", "", innerFootprintPolygon);
 
 		if (isStatusText) {
 			setStatusText();
+		}
+	}
+
+	protected void drawRobotFootprint(double x, double y, double theta, Pose poseArrow, String color, String name, String extraData, Polygon footprint) {
+		Geometry geom = TrajectoryEnvelope.getFootprint(footprint, x, y, theta);
+		double robotFootprintArea = geom.getArea();
+		double minX = Double.MAX_VALUE;
+		double maxX = Double.MIN_VALUE;
+		for (Coordinate coord : geom.getCoordinates()) {
+			if (coord.x < minX) minX = coord.x;
+			if (coord.x > maxX) maxX = coord.x;
+		}
+		double robotFootprintXDim = maxX - minX;
+
+		double scale = Math.sqrt(robotFootprintArea) * 0.2;
+		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, color, -1, true, extraData) + "}";
+		enqueueMessage(jsonString);
+
+		if (poseArrow != null) {
+			Geometry arrowGeom = createArrow(poseArrow, robotFootprintXDim / scale, scale);
+			String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_" + name, arrowGeom, "#ffffff", -1, true, null) + "}";
+			enqueueMessage(jsonStringArrow);
 		}
 	}
 
@@ -332,34 +336,6 @@ public class BrowserVisualization implements FleetVisualization {
 		return text;
 	}
 	
-	@Override
-	public void displayRobotState(Polygon fp, RobotReport rr, String... extraStatusInfo) {
-		double x = rr.getPose().getX();
-		double y = rr.getPose().getY();
-		double theta = rr.getPose().getTheta();
-		
-		String name = "R"+rr.getRobotID();
-		String extraData = " : " + rr.getPathIndex();
-		if (extraStatusInfo != null) {
-			for (String st : extraStatusInfo) {
-				extraData += (" | " + st);
-			}
-		}
-
-		String color = "#ff0000";
-		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
-		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
-
-		Geometry geom = TrajectoryEnvelope.getFootprint(fp, x, y, theta);
-		this.updateRobotFootprintArea(geom);
-		double scale = Math.sqrt(robotFootprintArea)*0.2;
-		Geometry arrowGeom = createArrow(rr.getPose(), robotFootprintXDim/scale, scale);
-		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, color, -1, true, extraData) + "}";
-		String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_"+name, arrowGeom, "#ffffff", -1, true, null) + "}";
-		enqueueMessage(jsonString);
-		enqueueMessage(jsonStringArrow);
-	}
-	
 	public void addPath(String pathName, PoseSteering[] ps, double arrowLength, String color) {
 		for (int i = 0; i < ps.length; i++) {
 			Geometry arrowGeom = createArrow(ps[i].getPose(), arrowLength, 0.2*arrowLength);		
@@ -397,7 +373,6 @@ public class BrowserVisualization implements FleetVisualization {
 		return ret;
 	}
 
-	// TODO Implement safety distances
 	@Override
 	public void addEnvelope(TrajectoryEnvelope te) {
 
@@ -475,7 +450,7 @@ public class BrowserVisualization implements FleetVisualization {
 		double aux = 1.8;
 		double aux1 = 0.8;
 		double aux2 = 0.3;
-		double factor = Math.sqrt(robotFootprintArea)*0.5;
+		double factor = 2;
 		double distance = computeDistanceBetweenPoses(pose1, pose2)/factor;
 		double theta = Math.atan2(pose2.getY() - pose1.getY(), pose2.getX() - pose1.getX());
 		Coordinate[] coords = new Coordinate[8];

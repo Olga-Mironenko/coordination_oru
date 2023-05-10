@@ -116,6 +116,8 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected HashMap<Integer,Coordinate[]> footprints = new HashMap<Integer, Coordinate[]>();
 	protected HashMap<Integer,Double> maxFootprintDimensions = new HashMap<Integer, Double>();
 
+	protected HashMap<Integer,Coordinate[]> innerFootprints = new HashMap<Integer, Coordinate[]>();
+
 	protected HashMap<Integer, Integer> robotTrackingPeriodInMillis = new HashMap<Integer, Integer>();
 	protected HashMap<Integer, Double> robotMaxVelocity = new HashMap<Integer, Double>();
 	protected HashMap<Integer, Double> robotMaxAcceleration = new HashMap<Integer, Double>();
@@ -365,6 +367,11 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		return null;
 	}
 
+	public Coordinate[] getInnerFootprint(int robotID) {
+		if (this.innerFootprints.containsKey(robotID)) return this.innerFootprints.get(robotID);
+		return null;
+	}
+
 	/**
 	 * Get a {@link Geometry} representing the footprint of a given robot.
 	 * @param robotID the ID of the robot
@@ -547,6 +554,10 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	public void setFootprint(int robotID, Coordinate ... coordinates) {
 		this.footprints.put(robotID, coordinates);
 		maxFootprintDimensions.put(robotID, computeMaxFootprintDimension(coordinates));
+	}
+
+	public void setInnerFootprint(int robotID, Coordinate ... coordinates) {
+		this.innerFootprints.put(robotID, coordinates);
 	}
 
 	protected double computeMaxFootprintDimension(Coordinate[] coords) {
