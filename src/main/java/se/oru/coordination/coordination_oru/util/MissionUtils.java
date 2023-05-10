@@ -180,6 +180,39 @@ public class MissionUtils {
                 cs.te2Higher = true;
             }
         }
+
+        TrackingCallback cb = new TrackingCallback(null) {
+            @Override
+            public void onTrackingStart() { }
+
+            @Override
+            public void onTrackingFinished() { }
+
+            @Override
+            public String[] onPositionUpdate() {
+                if (areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsWithHighPriority)) {
+                    for (CriticalSection cs : criticalSectionsWithHighPriority) {
+                        if (tec.allCriticalSections.contains(cs)) {
+                            cs.te1Higher = false;
+                            cs.te2Higher = false;
+                        }
+                    }
+                    criticalSectionsWithHighPriority.clear();
+                }
+                return null;
+            }
+
+            @Override
+            public void onNewGroundEnvelope() { }
+
+            @Override
+            public void beforeTrackingStart() { }
+
+            @Override
+            public void beforeTrackingFinished() { }
+        };
+
+        tec.addTrackingCallback(robotID, cb);
     }
 
     protected static ArrayList<CriticalSection> selectCriticalSectionsWithHighPriority(
@@ -256,5 +289,16 @@ public class MissionUtils {
             }
         }
         return true;
+    }
+
+    protected static boolean areSomeCriticalSectionsWithHighPriorityGone(
+            HashSet<CriticalSection> allCriticalSections,
+            ArrayList<CriticalSection> criticalSectionsWithHighPriority) {
+        for (CriticalSection cs : criticalSectionsWithHighPriority) {
+            if (! allCriticalSections.contains(cs)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

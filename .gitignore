@@ -16,6 +16,8 @@
 results/
 paths/
 
+notes/
+
 # build files
 build/
 .gradle/

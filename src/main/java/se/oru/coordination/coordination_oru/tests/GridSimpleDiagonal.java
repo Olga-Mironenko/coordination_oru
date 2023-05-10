@@ -62,9 +62,12 @@ public class GridSimpleDiagonal {
         final Pose row3Right = new Pose(57.0,15.5,-Math.PI/2);
         final Pose center = new Pose(30.0,30.0,-Math.PI/2);
 
-        final Pose humStart = column2Top;
-        //    final Pose humFinish = null;
-        final Pose humFinish = column2Bottom;
+//        final Pose humStart = column2Top;
+//        final Pose humFinish = column2Bottom;  // null;
+
+        final Pose humStart = column3Top;
+        final Pose humFinish = column3Bottom;
+
         final boolean ishumReturn = true;
         final boolean ishumLoop = true;
 
@@ -180,7 +183,7 @@ public class GridSimpleDiagonal {
                 @Override
                 public void runCore() {
                     // wait until `hum1` gives way to `aut1`
-                    while (Printer.getMillis() < 18000) {
+                    while (Printer.getMillis() < 13000) {
                         GatedThread.skipCycles(1);
                     }
 
