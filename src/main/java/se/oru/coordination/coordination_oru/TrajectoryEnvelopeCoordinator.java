@@ -1096,7 +1096,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	private void updateParkedEnvelopeVisualizations() {
 		if (this.viz != null) {
 			for (TrajectoryEnvelope te : this.currentParkingEnvelopes) {
-				viz.displayRobotState(te, getRobotReport(te.getRobotID()));
+				//viz.displayRobotState(te, getRobotReport(te.getRobotID()));
 				//viz.addEnvelope(te);
 			}
 		}

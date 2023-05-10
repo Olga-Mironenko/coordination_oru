@@ -227,19 +227,19 @@ public class BrowserVisualization implements FleetVisualization {
 		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
 		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
 
-		drawRobotFootprint(x, y, theta, rr.getPose(), color, name, extraData, te.getFootprint());
+		drawRobotFootprint(x, y, theta, rr.getPose(), "#bbbbbb", name, extraData, false, te.getFootprint());
 
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 		Coordinate[] innerFootprint = tec.getInnerFootprint(rr.getRobotID());
 		Polygon innerFootprintPolygon = TrajectoryEnvelope.createFootprintPolygon(innerFootprint);
-		drawRobotFootprint(x, y, theta, null, "#ff0000", name + "-inner", "", innerFootprintPolygon);
+		drawRobotFootprint(x, y, theta, null, color, "_" + name + "-inner", "", true, innerFootprintPolygon);
 
 		if (isStatusText) {
 			setStatusText();
 		}
 	}
 
-	protected void drawRobotFootprint(double x, double y, double theta, Pose poseArrow, String color, String name, String extraData, Polygon footprint) {
+	protected void drawRobotFootprint(double x, double y, double theta, Pose poseArrow, String color, String name, String extraData, boolean filled, Polygon footprint) {
 		Geometry geom = TrajectoryEnvelope.getFootprint(footprint, x, y, theta);
 		double robotFootprintArea = geom.getArea();
 		double minX = Double.MAX_VALUE;
@@ -251,7 +251,7 @@ public class BrowserVisualization implements FleetVisualization {
 		double robotFootprintXDim = maxX - minX;
 
 		double scale = Math.sqrt(robotFootprintArea) * 0.2;
-		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, color, -1, true, extraData) + "}";
+		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, color, -1, filled, extraData) + "}";
 		enqueueMessage(jsonString);
 
 		if (poseArrow != null) {
@@ -450,7 +450,7 @@ public class BrowserVisualization implements FleetVisualization {
 		double aux = 1.8;
 		double aux1 = 0.8;
 		double aux2 = 0.3;
-		double factor = 2;
+		double factor = 1.5;
 		double distance = computeDistanceBetweenPoses(pose1, pose2)/factor;
 		double theta = Math.atan2(pose2.getY() - pose1.getY(), pose2.getX() - pose1.getX());
 		Coordinate[] coords = new Coordinate[8];
