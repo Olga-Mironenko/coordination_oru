@@ -115,7 +115,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		this.overallDistance = totalDistance;
 		this.computeInternalCriticalPoints();
 		this.slowDownProfile = this.getSlowdownProfile();
-		this.positionToSlowDown = this.computePositionToSlowDown();
+		this.positionToSlowDown = this.computePositionToSlowDown(false);
 		TrajectoryEnvelopeTrackerRK4 self = this;
 		this.th = new GatedThread("RK4 tracker " + te.getComponent()) {
 			@Override
@@ -134,7 +134,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			this.internalCriticalPoints.clear();
 			this.computeInternalCriticalPoints();
 			this.slowDownProfile = this.getSlowdownProfile();
-			this.positionToSlowDown = this.computePositionToSlowDown();
+			this.positionToSlowDown = this.computePositionToSlowDown(false);
 			reportsList.clear();
 			reportTimeLists.clear(); //semplify to avoid discontinuities ... to be fixed.
 
@@ -303,24 +303,28 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		double time = 0.0;
 		double deltaTime = 0.5*(this.trackingPeriodInMillis/this.temporalResolution);
 		//Compute where to slow down (can do forward here for both states...)
-		while (tempStateBW.getVelocity() < MAX_VELOCITY*1.1) {
+
+		double coef = 1.1; // slightly more than 1.0 to model speed which is greater than any actual speed
+		while (tempStateBW.getVelocity() < MAX_VELOCITY*coef) {
 			double dampeningBW = getCurvatureDampening(getRobotReport(tempStateBW).getPathIndex(), true);
 			//Use slightly conservative max deceleration (which is positive acceleration since we simulate FW dynamics)
 
-			integrateRK4(tempStateBW, time, deltaTime, false, MAX_VELOCITY * 1.1, dampeningBW, MAX_ACCELERATION, -1);
+			integrateRK4(tempStateBW, time, deltaTime, false, MAX_VELOCITY*coef, dampeningBW, MAX_ACCELERATION, -1);
 
 			time += deltaTime;
 			ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 		}
 
 		//for (Double speed : ret.keySet()) System.out.println("@speed " + speed + " --> " + ret.get(speed));
-		return ret;
+		return ret; // map each speed to the stopping distance for it
 	}
 
-	private double computePositionToSlowDown() {
+	private double computePositionToSlowDown(boolean isRealCriticalPoint) {
 		State tempStateFW = new State(state.getPosition(), state.getVelocity());
 		double time = 0.0;
 		double deltaTime = 0.5*(this.trackingPeriodInMillis/this.temporalResolution);
+		double prevPosition = state.getPosition();
+		TreeMap<Double, Double> positionToLandingPosition = new TreeMap<>();
 
 		//Compute where to slow down (can do forward here, we have the slowdown profile...)
 		while (tempStateFW.getPosition() < this.totalDistance) {
@@ -328,13 +332,16 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			boolean firstTime = true;
 			for (Double speed : this.slowDownProfile.keySet()) {
 				//Find your speed in the table (table is ordered w/ highest speed first)...
-				if (tempStateFW.getVelocity() > speed) { // TODO: Return the previous speed? (Prefer to stop earlier than to cross over.)
+				if (tempStateFW.getVelocity() > speed) {
 					//If this speed lands you after total dist you are OK (you've checked at lower speeds and either returned or breaked...)
-					double landingPosition = tempStateFW.getPosition() + (firstTime ? 0.0 : slowDownProfile.get(prevSpeed));
+					assert ! firstTime; // otherwise, `slowDownProfile` must contain more entries
+					double landingPosition = tempStateFW.getPosition() + slowDownProfile.get(prevSpeed);
+					positionToLandingPosition.put(tempStateFW.getPosition(), landingPosition);
+					// `prevSpeed` >= actual speed, so `landingPosition` >= actual position
 					if (landingPosition > totalDistance) {
 						//System.out.println("Found: speed = " + tempStateFW.getVelocity() + " space needed = " + slowDownProfile.get(prevSpeed) + " (delta = " + Math.abs(totalDistance-landingPosition) + ")");
 						//System.out.println("Position to slow down = " + tempStateFW.getPosition());
-						return tempStateFW.getPosition();
+						return prevPosition;
 					}
 					//System.out.println("Found: speed = " + tempStateFW.getVelocity() + " space needed = " + slowDownProfile.get(speed) + " (undershoot by " + (totalDistance-tempStateFW.getPosition()+slowDownProfile.get(speed)) + ")");
 					break;
@@ -343,12 +350,13 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				prevSpeed = speed;
 			}
 
+			prevPosition = tempStateFW.getPosition();
 			double dampeningFW = getCurvatureDampening(getRobotReport(tempStateFW).getPathIndex(), true);
 			integrateRK4(tempStateFW, time, deltaTime, false, MAX_VELOCITY, dampeningFW, MAX_ACCELERATION, te.getRobotID());
 
 			time += deltaTime;
 		}
-		return -this.totalDistance;
+		return -this.totalDistance; // essentially force slowing down
 	}
 
 	public static void integrateRK4(
@@ -468,7 +476,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				this.criticalPoint = criticalPointToSet;
 				//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
 				this.totalDistance = computeDistance(0, criticalPointToSet);
-				this.positionToSlowDown = computePositionToSlowDown();
+				this.positionToSlowDown = computePositionToSlowDown(true);
 
 				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
 			}
@@ -477,7 +485,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			else {
 				this.criticalPoint = criticalPointToSet;
 				this.totalDistance = computeDistance(0, traj.getPose().length-1);
-				this.positionToSlowDown = computePositionToSlowDown();
+				this.positionToSlowDown = computePositionToSlowDown(false);
 				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
 			}
 		}
@@ -643,8 +651,16 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				}
 				slowingDown = state.getPosition() >= positionToSlowDown;
 				double dampening = getCurvatureDampening(getRobotReport().getPathIndex(), false);
-				integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION, te.getRobotID());
 
+				// Prefer to stop earlier than to cross over.
+				State stateTemp = new State(state.getPosition(), state.getVelocity());
+				integrateRK4(stateTemp, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION, te.getRobotID());
+				if (! slowingDown && stateTemp.getPosition() >= positionToSlowDown) {
+					slowingDown = true;
+					integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION, te.getRobotID());
+				} else {
+					state = stateTemp;
+				}
 			}
 
 			//Do some user function on position update

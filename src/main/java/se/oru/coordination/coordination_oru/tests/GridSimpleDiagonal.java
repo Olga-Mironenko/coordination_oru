@@ -63,8 +63,8 @@ public class GridSimpleDiagonal {
 //        final Pose humStart = column2Top;
 //        final Pose humFinish = column2Bottom;  // null;
 
-        final Pose humStart = column3Top;
-        final Pose humFinish = column3Bottom;
+        final Pose humStart = column2Top;
+        final Pose humFinish = column2Bottom;
 
         final boolean ishumReturn = true;
         final boolean ishumLoop = true;
@@ -93,7 +93,7 @@ public class GridSimpleDiagonal {
         AutonomousVehicle aut5 = null;
 
         double maxAcceleration = 2;
-        double xLength = 2.5;
+        double xLength = 2.0;
         double yLength = 1.5;
         double xLengthInner = 1.5;
         double yLengthInner = 1.0;
@@ -188,8 +188,8 @@ public class GridSimpleDiagonal {
             }.start();
         }
 
-        final boolean isNewMission = true;
-        if (isNewMission) {
+        final boolean isForcing = false;
+        if (isForcing) {
             new GatedThread("new mission") {
                 @Override
                 public void runCore() {
