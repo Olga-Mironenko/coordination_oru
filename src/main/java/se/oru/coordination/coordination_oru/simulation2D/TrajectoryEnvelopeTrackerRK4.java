@@ -17,6 +17,8 @@ import static se.oru.coordination.coordination_oru.util.gates.GatedThread.sleep;
 public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
 	public static double coefDeltaTimeForSlowDown = 0.1;
 
+	public static double coefAccelerationToDeceleration = 3.0;
+
 	protected static final long WAIT_AMOUNT_AT_END = 3000;
 	protected static final double EPSILON = 0.01;
 	protected final double MAX_VELOCITY;
@@ -113,7 +115,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		this.totalDistance = this.computeDistance(0, traj.getPose().length-1);
 		this.overallDistance = totalDistance;
 		this.computeInternalCriticalPoints();
-		this.slowDownProfile = this.getSlowdownProfile();
+		this.slowDownProfile = this.computeSlowdownProfile();
 		this.positionToSlowDown = this.computePositionToSlowDown(false);
 		TrajectoryEnvelopeTrackerRK4 self = this;
 		this.th = new GatedThread("RK4 tracker " + te.getComponent()) {
@@ -132,7 +134,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			this.overallDistance = totalDistance;
 			this.internalCriticalPoints.clear();
 			this.computeInternalCriticalPoints();
-			this.slowDownProfile = this.getSlowdownProfile();
+			this.slowDownProfile = this.computeSlowdownProfile();
 			this.positionToSlowDown = this.computePositionToSlowDown(false);
 			reportsList.clear();
 			reportTimeLists.clear(); //semplify to avoid discontinuities ... to be fixed.
@@ -294,24 +296,30 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	}
 
 
-	private TreeMap<Double,Double> getSlowdownProfile() {
+	private TreeMap<Double,Double> computeSlowdownProfile() {
+		final double coef = 1.1; // slightly more than 1.0 to model speed which is greater than any actual speed
+
 		TreeMap<Double,Double> ret = new TreeMap<Double, Double>();
-		State tempStateBW = new State(0.0, 0.0);
+		State tempStateBW = new State(0.0, MAX_VELOCITY*coef);
 		ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
 		double time = 0.0;
 		double deltaTime = coefDeltaTimeForSlowDown * this.trackingPeriodInMillis /this.temporalResolution;
 		//Compute where to slow down (can do forward here for both states...)
 
-		double coef = 1.1; // slightly more than 1.0 to model speed which is greater than any actual speed
-		while (tempStateBW.getVelocity() < MAX_VELOCITY*coef) {
+		while (tempStateBW.getVelocity() > 0.0) {
 			double dampeningBW = getCurvatureDampening(getRobotReport(tempStateBW).getPathIndex(), true);
-			//Use slightly conservative max deceleration (which is positive acceleration since we simulate FW dynamics)
+			//Use slightly conservative max deceleration (which is positive acceleration since we simulate FW dynamics).
+			// (This is regarding dampeningBW < 1?)
 
-			integrateRK4(tempStateBW, time, deltaTime, false, MAX_VELOCITY*coef, dampeningBW, MAX_ACCELERATION, -1);
+			integrateRK4(tempStateBW, time, deltaTime, true, MAX_VELOCITY*coef, dampeningBW, MAX_ACCELERATION, -1);
+			ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
 			time += deltaTime;
-			ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
+		}
+
+		for (var entry : ret.entrySet()) {
+			ret.put(entry.getKey(), tempStateBW.getPosition() - entry.getValue());
 		}
 
 		//for (Double speed : ret.keySet()) System.out.println("@speed " + speed + " --> " + ret.get(speed));
@@ -364,6 +372,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			double MAX_VELOCITY, double MAX_VELOCITY_DAMPENING_FACTOR, double MAX_ACCELERATION,
 			int robotID
 	) {
+		assert MAX_VELOCITY_DAMPENING_FACTOR == 1.0; // this is just to check whether it can be different
+
+		double MAX_DECELERATION = MAX_ACCELERATION * coefAccelerationToDeceleration;
+
 		// Use `targetVelocity`:
 		if (robotID == MissionUtils.idHuman) {
 			MAX_VELOCITY = Math.min(MAX_VELOCITY, MissionUtils.targetVelocityHuman); // MAX_ACCELERATION or 0
@@ -382,10 +394,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
                 // numIntegrateCalls = {1: 11, 2: 1}
 
 		synchronized(state) {
-			Derivative a = Derivative.evaluate(state, time, 0.0, new Derivative(), slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
-			Derivative b = Derivative.evaluate(state, time, deltaTime/2.0, a, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
-			Derivative c = Derivative.evaluate(state, time, deltaTime/2.0, b, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR,MAX_ACCELERATION);
-			Derivative d = Derivative.evaluate(state, time, deltaTime, c, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
+			Derivative a = Derivative.evaluate(state, time, 0.0, new Derivative(), slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION, MAX_DECELERATION);
+			Derivative b = Derivative.evaluate(state, time, deltaTime/2.0, a, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION, MAX_DECELERATION);
+			Derivative c = Derivative.evaluate(state, time, deltaTime/2.0, b, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR,MAX_ACCELERATION, MAX_DECELERATION);
+			Derivative d = Derivative.evaluate(state, time, deltaTime, c, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION, MAX_DECELERATION);
 
 			double dxdt = (1.0f / 6.0f) * ( a.getVelocity() + 2.0f*(b.getVelocity() + c.getVelocity()) + d.getVelocity() );
                         double dvdt = (1.0f / 6.0f) * (a.getAcceleration()

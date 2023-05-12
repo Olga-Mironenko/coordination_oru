@@ -63,7 +63,7 @@ public class GridSimpleDiagonal {
 //        final Pose humFinish = column2Bottom;  // null;
 
         final Pose humStart = column2Top;
-        final Pose humFinish = column2Bottom;
+        final Pose humFinish = center;
 
         final boolean ishumReturn = true;
         final boolean ishumLoop = true;
@@ -102,8 +102,8 @@ public class GridSimpleDiagonal {
         // TODO: `maxAcceleration` passed here is not used by `tec`.
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, maxAcceleration, xLength, yLength);
         aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
-        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
-        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
+        //aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
+        //aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
         //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
         //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
 
@@ -113,6 +113,7 @@ public class GridSimpleDiagonal {
 
         // Instantiate a trajectory envelope coordinator.
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, maxAcceleration, trackingPeriod);
+
         // Need to set up infrastructure that maintains the representation
         tec.setupSolver(0, 100000000);
         // Start the thread that checks and enforces dependencies at every clock tick
