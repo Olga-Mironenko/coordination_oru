@@ -296,7 +296,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 
 	private TreeMap<Double,Double> getSlowdownProfile() {
-		TreeMap<Double,Double> ret = new TreeMap<Double, Double>(Collections.reverseOrder());
+		TreeMap<Double,Double> ret = new TreeMap<Double, Double>();
 		State tempStateBW = new State(0.0, 0.0);
 		ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
@@ -320,43 +320,47 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	}
 
 	private double computePositionToSlowDown(boolean isRealCriticalPoint) {
-		State tempStateFW = new State(state.getPosition(), state.getVelocity());
+		if (state.getPosition() >= this.totalDistance) {
+			return state.getPosition(); // essentially force slowing down
+		}
+
+		State stateToBe = new State(state.getPosition(), Math.max(0, state.getVelocity()));
 		double time = 0.0;
 		double deltaTime = 0.5*(this.trackingPeriodInMillis/this.temporalResolution);
-		double prevPosition = state.getPosition();
+		Double prevPosition = null;
 		TreeMap<Double, Double> positionToLandingPosition = new TreeMap<>();
 
 		//Compute where to slow down (can do forward here, we have the slowdown profile...)
-		while (tempStateFW.getPosition() < this.totalDistance) {
-			double prevSpeed = -1.0;
-			boolean firstTime = true;
-			for (Double speed : this.slowDownProfile.keySet()) {
-				//Find your speed in the table (table is ordered w/ highest speed first)...
-				if (tempStateFW.getVelocity() > speed) {
-					//If this speed lands you after total dist you are OK (you've checked at lower speeds and either returned or breaked...)
-					assert ! firstTime; // otherwise, `slowDownProfile` must contain more entries
-					double landingPosition = tempStateFW.getPosition() + slowDownProfile.get(prevSpeed);
-					positionToLandingPosition.put(tempStateFW.getPosition(), landingPosition);
-					// `prevSpeed` >= actual speed, so `landingPosition` >= actual position
-					if (landingPosition > totalDistance) {
-						//System.out.println("Found: speed = " + tempStateFW.getVelocity() + " space needed = " + slowDownProfile.get(prevSpeed) + " (delta = " + Math.abs(totalDistance-landingPosition) + ")");
-						//System.out.println("Position to slow down = " + tempStateFW.getPosition());
-						return prevPosition;
-					}
-					//System.out.println("Found: speed = " + tempStateFW.getVelocity() + " space needed = " + slowDownProfile.get(speed) + " (undershoot by " + (totalDistance-tempStateFW.getPosition()+slowDownProfile.get(speed)) + ")");
-					break;
+		while (stateToBe.getPosition() < this.totalDistance) {
+			var approximation = slowDownProfile.ceilingEntry(stateToBe.getVelocity());
+			assert approximation != null; // otherwise, `slowDownProfile` must contain entries for greater speeds
+
+			double speedApproximate = approximation.getKey();
+			assert speedApproximate >= stateToBe.getVelocity();
+
+			double stoppingDistanceApproximate = approximation.getValue();
+			// stoppingDistanceApproximate >= actual stopping distance
+
+			double landingPosition = stateToBe.getPosition() + stoppingDistanceApproximate;
+			if (landingPosition > totalDistance) {
+				//System.out.println("Found: speed = " + stateToBe.getVelocity() + " space needed = " + slowDownProfile.get(prevSpeed) + " (delta = " + Math.abs(totalDistance-landingPosition) + ")");
+				//System.out.println("Position to slow down = " + stateToBe.getPosition());
+				if (prevPosition == null) {
+					return state.getPosition();
 				}
-				firstTime = false;
-				prevSpeed = speed;
+				return prevPosition; // at `prevPosition`, `landingPosition <= totalDistance`
 			}
 
-			prevPosition = tempStateFW.getPosition();
-			double dampeningFW = getCurvatureDampening(getRobotReport(tempStateFW).getPathIndex(), true);
-			integrateRK4(tempStateFW, time, deltaTime, false, MAX_VELOCITY, dampeningFW, MAX_ACCELERATION, te.getRobotID());
+			prevPosition = stateToBe.getPosition();
+
+			double dampeningFW = getCurvatureDampening(getRobotReport(stateToBe).getPathIndex(), true);
+			integrateRK4(stateToBe, time, deltaTime, false, MAX_VELOCITY, dampeningFW, MAX_ACCELERATION, te.getRobotID());
+			assert stateToBe.getPosition() > prevPosition;
 
 			time += deltaTime;
 		}
-		return -this.totalDistance; // essentially force slowing down
+
+		throw new RuntimeException("we should have returned a value in the loop");
 	}
 
 	public static void integrateRK4(
