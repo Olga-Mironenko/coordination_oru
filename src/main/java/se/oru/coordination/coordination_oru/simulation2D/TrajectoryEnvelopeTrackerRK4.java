@@ -15,8 +15,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import static se.oru.coordination.coordination_oru.util.gates.GatedThread.sleep;
 
 public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
-	public static long constantDelayTime = -1;
-	// If non-negative, then time spent in the debugger (etc.) doesn't count.
+	public static double coefDeltaTimeForSlowDown = 0.1;
 
 	protected static final long WAIT_AMOUNT_AT_END = 3000;
 	protected static final double EPSILON = 0.01;
@@ -301,7 +300,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
 		double time = 0.0;
-		double deltaTime = 0.5*(this.trackingPeriodInMillis/this.temporalResolution);
+		double deltaTime = coefDeltaTimeForSlowDown * this.trackingPeriodInMillis /this.temporalResolution;
 		//Compute where to slow down (can do forward here for both states...)
 
 		double coef = 1.1; // slightly more than 1.0 to model speed which is greater than any actual speed
@@ -326,9 +325,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 		State stateToBe = new State(state.getPosition(), Math.max(0, state.getVelocity()));
 		double time = 0.0;
-		double deltaTime = 0.5*(this.trackingPeriodInMillis/this.temporalResolution);
+		double deltaTime = coefDeltaTimeForSlowDown * this.trackingPeriodInMillis / this.temporalResolution;
 		Double prevPosition = null;
-		TreeMap<Double, Double> positionToLandingPosition = new TreeMap<>();
 
 		//Compute where to slow down (can do forward here, we have the slowdown profile...)
 		while (stateToBe.getPosition() < this.totalDistance) {
@@ -343,8 +341,6 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 			double landingPosition = stateToBe.getPosition() + stoppingDistanceApproximate;
 			if (landingPosition > totalDistance) {
-				//System.out.println("Found: speed = " + stateToBe.getVelocity() + " space needed = " + slowDownProfile.get(prevSpeed) + " (delta = " + Math.abs(totalDistance-landingPosition) + ")");
-				//System.out.println("Position to slow down = " + stateToBe.getPosition());
 				if (prevPosition == null) {
 					return state.getPosition();
 				}
@@ -678,8 +674,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			catch (InterruptedException e) { e.printStackTrace(); }
 
 			//Advance time to reflect how much we have slept (~ trackingPeriod)
-			long deltaTimeInMillis = constantDelayTime >= 0 ? constantDelayTime : Calendar.getInstance().getTimeInMillis()-timeStart;
-			deltaTime = deltaTimeInMillis/this.temporalResolution;
+ 			long deltaTimeInMillis = GatedThread.isEnabled() ? delay : Calendar.getInstance().getTimeInMillis() - timeStart;
+			deltaTime = deltaTimeInMillis / this.temporalResolution;
 			elapsedTrackingTime += deltaTime;
 		}
 

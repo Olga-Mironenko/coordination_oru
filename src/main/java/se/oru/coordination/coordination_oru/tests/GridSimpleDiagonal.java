@@ -22,7 +22,6 @@ public class GridSimpleDiagonal {
         print("started");
 
         BrowserVisualization.isStatusText = true;
-        TrajectoryEnvelopeTrackerRK4.constantDelayTime = 100;
         GatedThread.enable();
 
         new GatedThread("runDemo") {
@@ -84,7 +83,10 @@ public class GridSimpleDiagonal {
         final Pose aut5Start = row3Left;
         final Pose aut5Finish = row1Right;
 
-        final int maxVelocity = 5;
+        final double precisionCoefficient = 1;
+        final double maxVelocity = 5.0 * precisionCoefficient;
+        final double maxAcceleration = 2.0 * precisionCoefficient;
+        final int trackingPeriod = (int) Math.round(100 / precisionCoefficient);
 
         AutonomousVehicle aut1 = null;
         AutonomousVehicle aut2 = null;
@@ -92,12 +94,12 @@ public class GridSimpleDiagonal {
         AutonomousVehicle aut4 = null;
         AutonomousVehicle aut5 = null;
 
-        double maxAcceleration = 2;
         double xLength = 2.0;
         double yLength = 1.5;
         double xLengthInner = 1.5;
         double yLengthInner = 1.0;
 
+        // TODO: `maxAcceleration` passed here is not used by `tec`.
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, maxAcceleration, xLength, yLength);
         aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
         aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
@@ -110,7 +112,7 @@ public class GridSimpleDiagonal {
         TrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
 
         // Instantiate a trajectory envelope coordinator.
-        TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, 2);
+        TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, maxAcceleration, trackingPeriod);
         // Need to set up infrastructure that maintains the representation
         tec.setupSolver(0, 100000000);
         // Start the thread that checks and enforces dependencies at every clock tick

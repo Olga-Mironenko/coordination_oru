@@ -14,6 +14,10 @@ abstract public class GatedThread extends Thread {
         gatekeeper = new Gatekeeper();
     }
 
+    public static boolean isEnabled() {
+        return isGated;
+    }
+
     public static void runGatekeeper() {
         if (isGated) {
             gatekeeper.run();

@@ -21,7 +21,6 @@ public class TestClick {
         Printer.print("started");
 
         BrowserVisualization.isStatusText = true;
-        TrajectoryEnvelopeTrackerRK4.constantDelayTime = 100;
         GatedThread.enable();
 
         new GatedThread("runDemo") {
