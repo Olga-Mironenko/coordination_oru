@@ -480,17 +480,45 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	@Override
 	public void setCriticalPoint(int criticalPointToSet) {
 		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
+		RobotReport rr = getRobotReport();
+		int robotID = rr.getRobotID();
 
 		if (this.criticalPoint != criticalPointToSet) {
 
 			//A new intermediate index to stop at has been given
 			if (criticalPointToSet != -1) {
-				this.criticalPoint = criticalPointToSet;
-				//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
-				this.totalDistance = computeDistance(0, criticalPointToSet);
-				this.positionToSlowDown = computePositionToSlowDown(true);
+				TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+				HashSet<CriticalSection> css = tec.allCriticalSections;
+				boolean isSlowingDown = true;
+				if (robotID == MissionUtils.idHuman && criticalPointToSet <= rr.getPathIndex()) {
+					for (CriticalSection cs : css) {
+						Integer start = cs.getStart(robotID);
+						if (start == null) {
+							continue;
+						}
+						Integer end = cs.getEnd(robotID);
+						assert end != null;
 
-				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
+						final int margin = 3; // TODO: can it be greater?
+
+						if (start - margin <= criticalPointToSet && criticalPointToSet <= end + margin) {
+							cs.setHigher(robotID, true);
+							isSlowingDown = false;
+						}
+					}
+					assert ! isSlowingDown;
+				}
+
+				if (isSlowingDown) {
+					this.criticalPoint = criticalPointToSet;
+					//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
+					this.totalDistance = computeDistance(0, criticalPointToSet);
+					this.positionToSlowDown = computePositionToSlowDown(true);
+
+					metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
+				}
+				// TODO: If not `isSlowingDown`, `this.criticalPoint` becomes outdated sometimes?
+				// (Unless `setCriticalPoint` is always called for `-1` before getting called for real points.)
 			}
 
 			//The critical point has been reset, go to the end
@@ -612,7 +640,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			//End condition: passed the middle AND velocity < 0 AND no criticalPoint
 			boolean skipIntegration = false;
 			//if (state.getPosition() >= totalDistance/2.0 && state.getVelocity() < 0.0) {
-			if (state.getPosition() >= this.positionToSlowDown && state.getVelocity() < 0.0) {
+			if (state.getPosition() >= this.positionToSlowDown && state.getVelocity() < 0.0) { // waiting for another robot
 				if (criticalPoint == -1 && !atCP) {
 					//set state to final position, just in case it didn't quite get there (it's certainly close enough)
 					state = new State(totalDistance, 0.0);

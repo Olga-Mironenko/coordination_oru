@@ -174,11 +174,7 @@ public class MissionUtils {
         final ArrayList<CriticalSection> criticalSectionsWithHighPriority =
                 selectCriticalSectionsWithHighPriority(robotID, tec.allCriticalSections, 20.0, Integer.MAX_VALUE);
         for (CriticalSection cs : criticalSectionsWithHighPriority) {
-            if (cs.getTe1().getRobotID() == robotID) {
-                cs.te1Higher = true;
-            } else {
-                cs.te2Higher = true;
-            }
+            cs.setHigher(robotID, true);
         }
 
         TrackingCallback cb = new TrackingCallback(null) {
@@ -239,17 +235,9 @@ public class MissionUtils {
             if (cs.getTe1() == null || cs.getTe2() == null) {
                 continue;
             }
-            int id1 = cs.getTe1().getRobotID();
-            int id2 = cs.getTe2().getRobotID();
-            assert robotID != -1;
-            assert id1 == robotID || id2 == robotID;
 
-            int indexSection = -1;
-            if (id1 == robotID) {
-                indexSection = cs.getTe1Start();
-            } else {
-                indexSection = cs.getTe2Start();
-            }
+            Integer indexSection = cs.getStart(robotID);
+            assert indexSection != null;
             if (indexSection == -1) {
                 continue;
             }

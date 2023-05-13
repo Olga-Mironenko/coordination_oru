@@ -118,7 +118,53 @@ public class CriticalSection {
 	public void setTe2Break(int te2Break) {
 		this.te2Break = te2Break;
 	}
-		
+
+	public Integer getTe1RobotID() {
+		if (getTe1() == null) {
+			return null;
+		}
+		return getTe1().getRobotID();
+	}
+
+	public Integer getTe2RobotID() {
+		if (getTe2() == null) {
+			return null;
+		}
+		return getTe2().getRobotID();
+	}
+
+	public boolean isTe1(int robotID) {
+		boolean isTe1 = getTe1RobotID() == robotID;
+		boolean isTe2 = getTe2RobotID() == robotID;
+		assert isTe1 != isTe2;
+		return isTe1;
+	}
+
+	public boolean isTe2(int robotID) {
+		boolean isTe1 = getTe1RobotID() == robotID;
+		boolean isTe2 = getTe2RobotID() == robotID;
+		assert isTe1 != isTe2;
+		return isTe2;
+	}
+
+	public Integer getStart(int robotID) {
+		return isTe1(robotID) ? getTe1Start() : isTe2(robotID) ? getTe2Start() : null;
+	}
+
+	public Integer getEnd(int robotID) {
+		return isTe1(robotID) ? getTe1End() : isTe2(robotID) ? getTe2End() : null;
+	}
+
+	public void setHigher(int robotID, boolean isHigher) {
+		if (isTe1(robotID)) {
+			te1Higher = isHigher;
+		} else if (isTe2(robotID)) {
+			te2Higher = isHigher;
+		} else {
+			throw new RuntimeException();
+		}
+	}
+
 	@Override
 	public String toString() {
 		String ret = "";

@@ -133,7 +133,7 @@ public class GridTest {
 
         var viz = new BrowserVisualization();
         viz.setMap(YAML_FILE);
-        viz.setInitialTransform(7.0, 45.0, 5.0);
+        viz.setInitialTransform(7.0, 5.0, 5.0);
         tec.setVisualization(viz);
 
         Missions.setMap(YAML_FILE);
