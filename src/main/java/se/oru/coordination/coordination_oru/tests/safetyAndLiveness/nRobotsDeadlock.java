@@ -17,7 +17,6 @@ import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPla
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
-import se.oru.coordination.coordination_oru.util.RVizVisualization;
 
 @DemoDescription(desc = "Coordination with deadlock-inducing ordering heuristic (paths obtained with the ReedsSheppCarPlanner).")
 public class nRobotsDeadlock {
@@ -132,7 +131,7 @@ public class nRobotsDeadlock {
 			if (!rsp.plan()) throw new Error ("No path between " + startPoses.get(robotIDs[i]) + " and " + goalPoses.get(robotIDs[i]));
 			for (int j = 0; j < NUMBER_MISSIONS; j++) {
 				Missions.enqueueMission(new Mission(robotIDs[i], rsp.getPath()));
-				Missions.enqueueMission(new Mission(robotIDs[i], rsp.getPathInv()));
+				Missions.enqueueMission(new Mission(robotIDs[i], rsp.getPathInverseWithoutFirstAndLastPose()));
 			}
 			status.put(robotIDs[i], false);
 		}

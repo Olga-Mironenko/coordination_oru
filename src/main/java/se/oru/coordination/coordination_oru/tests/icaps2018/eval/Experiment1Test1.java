@@ -17,7 +17,6 @@ import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
-import se.oru.coordination.coordination_oru.util.JTSDrawingPanelVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.RVizVisualization;
 
@@ -129,7 +128,7 @@ public class Experiment1Test1 {
 			rsp.clearObstacles();
 			if (!rsp.plan()) throw new Error ("No path along goals " + posesRobot);			
 			PoseSteering[] robotPath = rsp.getPath();
-			PoseSteering[] robotPathInv = rsp.getPathInv();
+			PoseSteering[] robotPathInv = rsp.getPathInverseWithoutFirstAndLastPose();
 			
 			Missions.enqueueMission(new Mission(robotID, robotPath));
 			Missions.enqueueMission(new Mission(robotID, robotPathInv));

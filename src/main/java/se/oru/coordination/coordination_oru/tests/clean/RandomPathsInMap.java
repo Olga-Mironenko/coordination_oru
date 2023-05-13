@@ -1,7 +1,6 @@
 package se.oru.coordination.coordination_oru.tests.clean;
 
 import java.util.HashMap;
-import java.util.HashSet;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
@@ -10,7 +9,6 @@ import com.vividsolutions.jts.geom.Coordinate;
 
 import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.Mission;
-import se.oru.coordination.coordination_oru.NetworkConfiguration;
 import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner.PLANNING_ALGORITHM;
@@ -121,7 +119,7 @@ public class RandomPathsInMap {
 			rsp.plan();
 			if (rsp.getPath() == null) throw new Error("No path found.");
 			path = rsp.getPath();
-			pathInv = rsp.getPathInv();
+			pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
 
 			//Enqueue forward and backwards mission
 			Mission m = new Mission(robotID, path, startLocName, endLocName, Missions.getLocationPose(startLocName), Missions.getLocationPose(endLocName));

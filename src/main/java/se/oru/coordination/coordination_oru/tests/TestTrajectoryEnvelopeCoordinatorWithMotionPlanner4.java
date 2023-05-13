@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Random;
 
@@ -20,7 +19,6 @@ import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.RobotReport;
-import se.oru.coordination.coordination_oru.TrackingCallback;
 import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
@@ -131,7 +129,7 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner4 {
 			rsp.clearObstacles();
 			if (!rsp.plan()) throw new Error ("No path along goals " + posesRobot);			
 			PoseSteering[] robotPath = rsp.getPath();
-			PoseSteering[] robotPathInv = rsp.getPathInv();
+			PoseSteering[] robotPathInv = rsp.getPathInverseWithoutFirstAndLastPose();
 			
 			Missions.enqueueMission(new Mission(robotID, robotPath));
 			Missions.enqueueMission(new Mission(robotID, robotPathInv));

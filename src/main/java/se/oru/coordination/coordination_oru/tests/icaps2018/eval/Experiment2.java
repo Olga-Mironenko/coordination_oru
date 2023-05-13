@@ -2,7 +2,6 @@ package se.oru.coordination.coordination_oru.tests.icaps2018.eval;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -20,8 +19,6 @@ import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.util.BrowserVisualization;
-import se.oru.coordination.coordination_oru.util.JTSDrawingPanelVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.RVizVisualization;
 
@@ -163,7 +160,7 @@ public class Experiment2 {
 				rsp.setGoals(endLoc);
 				rsp.plan();
 				path = rsp.getPath();
-				pathInv = rsp.getPathInv();
+				pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
 				if (cachePaths) {
 					Missions.writePath(pathFilename, path);
 					Missions.writePath(pathFilenameInv, pathInv);

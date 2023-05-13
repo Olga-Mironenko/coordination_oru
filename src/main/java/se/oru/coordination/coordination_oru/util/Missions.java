@@ -569,7 +569,7 @@ public class Missions {
 
 	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose finish, boolean isInverse) {
 		PoseSteering[] pathForward = vehicle.getPlan(start, new Pose[] { finish }, Missions.mapYAMLFilename, false);
-		PoseSteering[] pathBackward = AbstractMotionPlanner.inversePath(pathForward);
+		PoseSteering[] pathBackward = AbstractMotionPlanner.inversePathWithoutFirstAndLastPose(pathForward);
 		if (isInverse) {
 			PoseSteering[] pathTotal = (PoseSteering[]) ArrayUtils.addAll(pathForward, pathBackward);
 			Missions.enqueueMission(new Mission(vehicle.getID(), pathTotal));

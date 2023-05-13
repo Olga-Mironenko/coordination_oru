@@ -7,13 +7,9 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Random;
-import java.util.logging.Level;
 
-import org.jgrapht.alg.util.Pair;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
-import org.metacsp.utility.logging.MetaCSPLogging;
 
 import com.vividsolutions.jts.geom.Coordinate;
 
@@ -23,13 +19,11 @@ import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.NetworkConfiguration;
 import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.RobotReport;
-import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
-import se.oru.coordination.coordination_oru.util.RVizVisualization;
 
 @DemoDescription(desc = "Coordination on paths obtained from the ReedsSheppCarPlanner for five robots navigating in a random map.")
 public class RandomPathsInMap {
@@ -227,7 +221,7 @@ public class RandomPathsInMap {
 					throw new Error("No path found.");
 				}
 				path = rsp.getPath();
-				pathInv = rsp.getPathInv();
+				pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
 				if (cachePaths) {
 					Missions.writePath(pathFilename, path);
 					Missions.writePath(pathFilenameInv, pathInv);

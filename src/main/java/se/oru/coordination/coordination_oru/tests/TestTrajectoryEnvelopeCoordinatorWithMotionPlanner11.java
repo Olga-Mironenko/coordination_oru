@@ -1,6 +1,5 @@
 package se.oru.coordination.coordination_oru.tests;
 
-import java.io.File;
 import java.util.Comparator;
 
 import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
@@ -80,19 +79,19 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner11 {
 		rsp.setGoals(Missions.getLocation("dest1"));
 		rsp.plan();
 		Missions.enqueueMission(new Mission(1,rsp.getPath()));
-		Missions.enqueueMission(new Mission(1,rsp.getPathInv()));
+		Missions.enqueueMission(new Mission(1,rsp.getPathInverseWithoutFirstAndLastPose()));
 		
 		rsp.setStart(Missions.getLocation("r2p"));
 		rsp.setGoals(Missions.getLocation("dest2"));
 		rsp.plan();
 		Missions.enqueueMission(new Mission(2,rsp.getPath()));
-		Missions.enqueueMission(new Mission(2,rsp.getPathInv()));
+		Missions.enqueueMission(new Mission(2,rsp.getPathInverseWithoutFirstAndLastPose()));
 		
 		rsp.setStart(Missions.getLocation("r3p"));
 		rsp.setGoals(Missions.getLocation("dest3"));
 		rsp.plan();
 		Missions.enqueueMission(new Mission(3,rsp.getPath()));
-		Missions.enqueueMission(new Mission(3,rsp.getPathInv()));
+		Missions.enqueueMission(new Mission(3,rsp.getPathInverseWithoutFirstAndLastPose()));
 	
 		System.out.println("Added missions " + Missions.getMissions());
 

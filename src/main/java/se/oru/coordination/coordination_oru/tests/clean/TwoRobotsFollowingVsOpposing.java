@@ -6,20 +6,16 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 
 import com.vividsolutions.jts.geom.Coordinate;
 
-import se.oru.coordination.coordination_oru.NetworkConfiguration;
 import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.RobotReport;
-import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
-import se.oru.coordination.coordination_oru.util.JTSDrawingPanelVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
-import se.oru.coordination.coordination_oru.util.RVizVisualization;
 
 @DemoDescription(desc = "Example showing coordination in opposing directions (following should happen here).")
 public class TwoRobotsFollowingVsOpposing {
@@ -117,25 +113,25 @@ public class TwoRobotsFollowingVsOpposing {
 		rsp.setGoals(goalRobot11,goalRobot12,goalRobot13);
 		rsp.plan();
 		Missions.enqueueMission(new Mission(1,rsp.getPath()));
-		Missions.enqueueMission(new Mission(1,rsp.getPathInv()));
+		Missions.enqueueMission(new Mission(1,rsp.getPathInverseWithoutFirstAndLastPose()));
 
 		rsp.setStart(startRobot2);
 		rsp.setGoals(goalRobot21,goalRobot22,goalRobot23);
 		rsp.plan();
 		Missions.enqueueMission(new Mission(2,rsp.getPath()));
-		Missions.enqueueMission(new Mission(2,rsp.getPathInv()));
+		Missions.enqueueMission(new Mission(2,rsp.getPathInverseWithoutFirstAndLastPose()));
 		
 		rsp.setStart(startRobot3);
 		rsp.setGoals(goalRobot31,goalRobot32,goalRobot33);
 		rsp.plan();
 		Missions.enqueueMission(new Mission(3,rsp.getPath()));
-		Missions.enqueueMission(new Mission(3,rsp.getPathInv()));
+		Missions.enqueueMission(new Mission(3,rsp.getPathInverseWithoutFirstAndLastPose()));
 
 		rsp.setStart(startRobot4);
 		rsp.setGoals(goalRobot41,goalRobot42,goalRobot43);
 		rsp.plan();
 		Missions.enqueueMission(new Mission(4,rsp.getPath()));
-		Missions.enqueueMission(new Mission(4,rsp.getPathInv()));
+		Missions.enqueueMission(new Mission(4,rsp.getPathInverseWithoutFirstAndLastPose()));
 		
 		System.out.println("Added missions " + Missions.getMissions());
 		

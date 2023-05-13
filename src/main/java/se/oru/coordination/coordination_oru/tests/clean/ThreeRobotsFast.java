@@ -11,9 +11,7 @@ import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
-import se.oru.coordination.coordination_oru.util.JTSDrawingPanelVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
-import se.oru.coordination.coordination_oru.util.RVizVisualization;
 
 @DemoDescription(desc = "Three robots coordinating at high speed (paths obtained with the ReedsSheppCarPlanner).")
 public class ThreeRobotsFast {
@@ -83,19 +81,19 @@ public class ThreeRobotsFast {
 		rsp.setGoals(Missions.getLocation("dest1"));
 		rsp.plan();
 		Missions.enqueueMission(new Mission(1,rsp.getPath()));
-		Missions.enqueueMission(new Mission(1,rsp.getPathInv()));
+		Missions.enqueueMission(new Mission(1,rsp.getPathInverseWithoutFirstAndLastPose()));
 		
 		rsp.setStart(Missions.getLocation("r2p"));
 		rsp.setGoals(Missions.getLocation("dest2"));
 		rsp.plan();
 		Missions.enqueueMission(new Mission(2,rsp.getPath()));
-		Missions.enqueueMission(new Mission(2,rsp.getPathInv()));
+		Missions.enqueueMission(new Mission(2,rsp.getPathInverseWithoutFirstAndLastPose()));
 		
 		rsp.setStart(Missions.getLocation("r3p"));
 		rsp.setGoals(Missions.getLocation("dest3"));
 		rsp.plan();
 		Missions.enqueueMission(new Mission(3,rsp.getPath()));
-		Missions.enqueueMission(new Mission(3,rsp.getPathInv()));
+		Missions.enqueueMission(new Mission(3,rsp.getPathInverseWithoutFirstAndLastPose()));
 	
 		System.out.println("Added missions " + Missions.getMissions());
 

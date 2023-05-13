@@ -60,7 +60,7 @@ public class AutonomousVehicle extends AbstractVehicle {
             if (rsp.getPath() == null) throw new Error("No path found.");
             pathFwd = rsp.getPath();
             if (inversePath) {
-                pathInv = rsp.getPathInv();
+                pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
                 path = (PoseSteering[]) ArrayUtils.addAll(pathFwd, pathInv);
             } else {
                 path = pathFwd;
@@ -108,7 +108,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         if (rsp.getPath() == null) throw new Error("No path found.");
         pathFwd = rsp.getPath();
         if (inversePath) {
-            pathInv = rsp.getPathInv();
+            pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
             path = (PoseSteering[]) ArrayUtils.addAll(pathFwd, pathInv);
         }
         else {

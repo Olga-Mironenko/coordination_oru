@@ -2,7 +2,6 @@ package se.oru.coordination.coordination_oru.motionplanning;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.logging.Logger;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
@@ -110,17 +109,31 @@ public abstract class AbstractMotionPlanner {
 		return this.pathPS;
 	}
 	
-	public PoseSteering[] getPathInv() {
+	public PoseSteering[] getPathInverseWithoutFirstAndLastPose() {
 		if (this.pathPS == null) return null;
-		return inversePath(this.pathPS);
+		return inversePathWithoutFirstAndLastPose(this.pathPS);
 	}
 
-	public static PoseSteering[] inversePath(PoseSteering[] path) {
-		ArrayList<PoseSteering> inv = new ArrayList<>();
-		for (PoseSteering ps : path) inv.add(ps);
-		Collections.reverse(inv);
-		PoseSteering[] pathInversed = inv.toArray(new PoseSteering[inv.size()]);
-		return pathInversed;
+	public static PoseSteering[] inversePathWithoutFirstAndLastPose(PoseSteering[] path) {
+		PoseSteering[] pathInverse = new PoseSteering[path.length - 2];
+		for (int i = 1; i < path.length - 1; i++) {
+			PoseSteering ps = path[i];
+			PoseSteering psNew = new PoseSteering(
+					ps.getX(), ps.getY(), ps.getZ(),
+					ps.getRoll(), ps.getPitch(), inverseYaw(ps.getYaw()),
+					ps.getSteering()
+			);
+			pathInverse[pathInverse.length - i] = psNew;
+		}
+		return pathInverse;
+	}
+
+	protected static double inverseYaw(double yaw) {
+		yaw += Math.PI;
+		if (yaw >= Math.PI) {
+			yaw -= Math.PI * 2;
+		}
+		return yaw;
 	}
 	
 	public synchronized void addObstacles(Geometry geom, Pose ... poses) {

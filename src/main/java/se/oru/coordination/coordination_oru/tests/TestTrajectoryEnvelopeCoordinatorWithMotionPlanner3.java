@@ -1,8 +1,6 @@
 package se.oru.coordination.coordination_oru.tests;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Random;
 
@@ -128,7 +126,7 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner3 {
 		rsp.addObstacles(fpGeom, posesRobot2.get(0), posesRobot2.get(posesRobot2.size()-1));
 		if (!rsp.plan()) throw new Error ("No path along goals " + posesRobot1);			
 		PoseSteering[] robot1path = rsp.getPath();
-		PoseSteering[] robot1pathInv = rsp.getPathInv();
+		PoseSteering[] robot1pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
 
 		rsp.setStart(posesRobot2.get(0));
 		rsp.setGoals(posesRobot2.subList(1, posesRobot2.size()).toArray(new Pose[posesRobot2.size()-1]));
@@ -136,7 +134,7 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner3 {
 		rsp.addObstacles(fpGeom, posesRobot1.get(0), posesRobot1.get(posesRobot1.size()-1));
 		if (!rsp.plan()) throw new Error ("No path along goals " + posesRobot2);			
 		PoseSteering[] robot2path = rsp.getPath();
-		PoseSteering[] robot2pathInv = rsp.getPathInv();
+		PoseSteering[] robot2pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
 
 		Missions.enqueueMission(new Mission(1, robot1path));
 		Missions.enqueueMission(new Mission(1, robot1pathInv));
