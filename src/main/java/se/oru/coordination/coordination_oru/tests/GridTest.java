@@ -16,7 +16,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import static se.oru.coordination.coordination_oru.util.Printer.print;
 
 
-public class GridSimpleDiagonal {
+public class GridTest {
     public static void main(String[] args) {
         Printer.resetTime();
         print("started");
@@ -39,11 +39,10 @@ public class GridSimpleDiagonal {
     }
 
     protected static void runDemo() throws NoPathFound {
-        final boolean isLoading = false; // TODO: remove
-
         final int loopMinutes = 5;
         final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);
-        final String YAML_FILE = "maps/map-grid.yaml"; // TODO: create OccupancyMap now once (for efficiency)
+
+        final String YAML_FILE = "maps/map-grid.yaml";
 
         final Pose column1Top = new Pose(14.5,57.4, -Math.PI/2);
         final Pose column2Top = new Pose(30.0,57.4, -Math.PI/2);
@@ -59,13 +58,9 @@ public class GridSimpleDiagonal {
         final Pose row3Right = new Pose(57.0,15.5,-Math.PI/2);
         final Pose center = new Pose(30.0,30.0,-Math.PI/2);
 
-//        final Pose humStart = column2Top;
-//        final Pose humFinish = column2Bottom;  // null;
-
         final Pose humStart = column2Top;
-        final Pose humFinish = center;
+        final Pose humFinish = column2Bottom;
 
-        final boolean ishumReturn = true;
         final boolean ishumLoop = true;
 
         final Pose aut1Start = row1Left;
@@ -102,21 +97,15 @@ public class GridSimpleDiagonal {
         // TODO: `maxAcceleration` passed here is not used by `tec`.
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, maxAcceleration, xLength, yLength);
         aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
-        //aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
-        //aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
+        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
+        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
         //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
         //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
 
-        System.out.println(VehiclesHashMap.getInstance().getList());
-
         TrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
 
-        // Instantiate a trajectory envelope coordinator.
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, maxAcceleration, trackingPeriod);
-
-        // Need to set up infrastructure that maintains the representation
         tec.setupSolver(0, 100000000);
-        // Start the thread that checks and enforces dependencies at every clock tick
         tec.startInference();
 
         Coordinate[] innerFootprint = AbstractVehicle.makeFootprint(xLengthInner, yLengthInner);
@@ -141,9 +130,7 @@ public class GridSimpleDiagonal {
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);
-        //tec.setMotionPlanner(1, hum0.makePlanner()); // needed for re-planning
 
-        // Set up a simple GUI (null means empty map, otherwise provide yaml file)
         var viz = new BrowserVisualization();
         viz.setMap(YAML_FILE);
         viz.setInitialTransform(7.0, 45.0, 5.0);
@@ -153,43 +140,12 @@ public class GridSimpleDiagonal {
         Missions.startMissionDispatchers(tec, loopTime);
         Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
-        if (isLoading) {
-            Missions.loadScenario("GridSimpleDiagonal");
-        }
-
-        if (humFinish != null) {
-            MissionUtils.targetVelocityHuman = 10;
-            if (! isLoading) {
-                Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[]{humFinish}, YAML_FILE, ishumReturn)));
-            }
-        }
-
-        if (! isLoading) {
-            if (aut1 != null) Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, YAML_FILE, true)));
-            if (aut2 != null) Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, YAML_FILE, true)));
-            if (aut3 != null) Missions.enqueueMission(new Mission(aut3.getID(), aut3.getPlan(aut3Start, new Pose[] { aut3Finish }, YAML_FILE, true)));
-            if (aut4 != null) Missions.enqueueMission(new Mission(aut4.getID(), aut4.getPlan(aut4Start, new Pose[] { aut4Finish }, YAML_FILE, true)));
-            if (aut5 != null) Missions.enqueueMission(new Mission(aut5.getID(), aut5.getPlan(aut5Start, new Pose[] { aut5Finish }, YAML_FILE, true)));
-
-            Missions.saveScenario("GridSimpleDiagonal");
-        }
-
-        final boolean isChangeVelocity = false;
-        if (isChangeVelocity) {
-            new GatedThread("change velocity") {
-                @Override
-                public void runCore() {
-                    for (int i = 0; i < 10; i++) {
-                        try {
-                            GatedThread.sleep(i);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                    MissionUtils.changeTargetVelocityHuman(1);
-                }
-            }.start();
-        }
+        Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[]{humFinish}, YAML_FILE, true)));
+        if (aut1 != null) Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, YAML_FILE, true)));
+        if (aut2 != null) Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, YAML_FILE, true)));
+        if (aut3 != null) Missions.enqueueMission(new Mission(aut3.getID(), aut3.getPlan(aut3Start, new Pose[] { aut3Finish }, YAML_FILE, true)));
+        if (aut4 != null) Missions.enqueueMission(new Mission(aut4.getID(), aut4.getPlan(aut4Start, new Pose[] { aut4Finish }, YAML_FILE, true)));
+        if (aut5 != null) Missions.enqueueMission(new Mission(aut5.getID(), aut5.getPlan(aut5Start, new Pose[] { aut5Finish }, YAML_FILE, true)));
 
         final boolean isForcing = false;
         if (isForcing) {

@@ -268,7 +268,7 @@ public class BrowserVisualization implements FleetVisualization {
 	protected void setStatusText() {
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
 		String text = "";
-		if (idToVehicle.keySet().contains(MissionUtils.idHuman)) {
+		if (idToVehicle.keySet().contains(MissionUtils.idHuman) && MissionUtils.targetVelocityHuman != Double.POSITIVE_INFINITY) {
 			text += "targetVelocityHuman: " + round(MissionUtils.targetVelocityHuman) + "<br>";
 		}
 		text += TrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString() + "<br>";

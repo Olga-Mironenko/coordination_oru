@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class MissionUtils {
-    public static final double targetVelocityHumanInitial = 0.1;
+    public static final double targetVelocityHumanInitial = Double.POSITIVE_INFINITY; // essentially a limit
     public static double targetVelocityHuman = targetVelocityHumanInitial;
     public static int idHuman = 0;
     public static boolean isWorking = false;
