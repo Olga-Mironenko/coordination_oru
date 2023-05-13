@@ -140,12 +140,13 @@ public class GridTest {
         Missions.startMissionDispatchers(tec, loopTime);
         Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
-        Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[]{humFinish}, YAML_FILE, true)));
-        if (aut1 != null) Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, YAML_FILE, true)));
-        if (aut2 != null) Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, YAML_FILE, true)));
-        if (aut3 != null) Missions.enqueueMission(new Mission(aut3.getID(), aut3.getPlan(aut3Start, new Pose[] { aut3Finish }, YAML_FILE, true)));
-        if (aut4 != null) Missions.enqueueMission(new Mission(aut4.getID(), aut4.getPlan(aut4Start, new Pose[] { aut4Finish }, YAML_FILE, true)));
-        if (aut5 != null) Missions.enqueueMission(new Mission(aut5.getID(), aut5.getPlan(aut5Start, new Pose[] { aut5Finish }, YAML_FILE, true)));
+        final boolean isInverse = false;
+        Missions.enqueueMissions(hum0, humStart, humFinish, isInverse);
+        if (aut1 != null) Missions.enqueueMissions(aut1, aut1Start, aut1Finish, isInverse);
+        if (aut2 != null) Missions.enqueueMissions(aut2, aut2Start, aut2Finish, isInverse);
+        if (aut3 != null) Missions.enqueueMissions(aut3, aut3Start, aut3Finish, isInverse);
+        if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isInverse);
+        if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isInverse);
 
         final boolean isForcing = false;
         if (isForcing) {

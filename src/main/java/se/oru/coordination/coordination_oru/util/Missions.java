@@ -20,6 +20,7 @@ import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
@@ -38,6 +39,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
+import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
@@ -563,6 +565,18 @@ public class Missions {
 	public static void enqueueMission(Mission m) {
 		if (!missions.containsKey(m.getRobotID())) missions.put(m.getRobotID(), new ArrayList<Mission>());
 		missions.get(m.getRobotID()).add(m);
+	}
+
+	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose finish, boolean isInverse) {
+		PoseSteering[] pathForward = vehicle.getPlan(start, new Pose[] { finish }, Missions.mapYAMLFilename, false);
+		PoseSteering[] pathBackward = AbstractMotionPlanner.inversePath(pathForward);
+		if (isInverse) {
+			PoseSteering[] pathTotal = (PoseSteering[]) ArrayUtils.addAll(pathForward, pathBackward);
+			Missions.enqueueMission(new Mission(vehicle.getID(), pathTotal));
+		} else {
+			Missions.enqueueMission(new Mission(vehicle.getID(), pathForward));
+			Missions.enqueueMission(new Mission(vehicle.getID(), pathBackward));
+		}
 	}
 
 	/**

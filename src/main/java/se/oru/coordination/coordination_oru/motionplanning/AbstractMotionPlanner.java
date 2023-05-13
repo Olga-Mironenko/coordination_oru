@@ -111,11 +111,16 @@ public abstract class AbstractMotionPlanner {
 	}
 	
 	public PoseSteering[] getPathInv() {
-		if (this.pathPS == null) return this.pathPS;
-		ArrayList<PoseSteering> inv = new ArrayList<PoseSteering>();
-		for (PoseSteering ps : this.pathPS) inv.add(ps);
+		if (this.pathPS == null) return null;
+		return inversePath(this.pathPS);
+	}
+
+	public static PoseSteering[] inversePath(PoseSteering[] path) {
+		ArrayList<PoseSteering> inv = new ArrayList<>();
+		for (PoseSteering ps : path) inv.add(ps);
 		Collections.reverse(inv);
-		return inv.toArray(new PoseSteering[inv.size()]);
+		PoseSteering[] pathInversed = inv.toArray(new PoseSteering[inv.size()]);
+		return pathInversed;
 	}
 	
 	public synchronized void addObstacles(Geometry geom, Pose ... poses) {
