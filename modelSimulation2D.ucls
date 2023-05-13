@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <class-diagram version="1.2.2" icons="true" automaticImage="PNG" always-add-relationships="false" generalizations="true" 
   realizations="true" associations="true" dependencies="false" nesting-relationships="true" router="FAN">  
-  <class id="1" language="java" name="se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator" 
+  <class id="1" language="java" name="se.oru.coordination.coordination_oru.coordinator.TrajectoryEnvelopeCoordinator"
     project="coordination_oru" 
     file="/coordination_oru/src/main/java/se/oru/coordination/coordination_oru/TrajectoryEnvelopeCoordinator.java" 
     binary="false" corner="BOTTOM_RIGHT">    
@@ -12,9 +12,9 @@
       <operations public="true" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="2" language="java" name="se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker" 
+  <class id="2" language="java" name="se.oru.coordination.coordination_oru.tracker.AbstractTrajectoryEnvelopeTracker"
     project="coordination_oru" 
-    file="/coordination_oru/src/main/java/se/oru/coordination/coordination_oru/AbstractTrajectoryEnvelopeTracker.java" 
+    file="/coordination_oru/src/main/java/se/oru/coordination/coordination_oru/tracker/AbstractTrajectoryEnvelopeTracker.java"
     binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="842" y="-2"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -23,7 +23,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <interface id="3" language="java" name="se.oru.coordination.coordination_oru.ForwardModel" project="coordination_oru" 
+  <interface id="3" language="java" name="se.oru.coordination.coordination_oru.coordinator.ForwardModel" project="coordination_oru"
     file="/coordination_oru/src/main/java/se/oru/coordination/coordination_oru/ForwardModel.java" binary="false" 
     corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="579" y="326"/>    
@@ -33,7 +33,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </interface>  
-  <class id="4" language="java" name="se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel" 
+  <class id="4" language="java" name="se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel"
     project="coordination_oru" 
     file="/coordination_oru/src/main/java/se/oru/coordination/coordination_oru/ConstantAccelerationForwardModel.java" 
     binary="false" corner="BOTTOM_RIGHT">    
@@ -45,7 +45,7 @@
     </display>  
   </class>  
   <class id="5" language="java" 
-    name="se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation" 
+    name="se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation"
     project="coordination_oru" 
     file="/coordination_oru/src/main/java/se/oru/coordination/coordination_oru/simulation2D/TrajectoryEnvelopeCoordinatorSimulation.java" 
     binary="false" corner="BOTTOM_RIGHT">    
@@ -56,9 +56,9 @@
       <operations public="true" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="6" language="java" name="se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4" 
+  <class id="6" language="java" name="se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4"
     project="coordination_oru" 
-    file="/coordination_oru/src/main/java/se/oru/coordination/coordination_oru/simulation2D/TrajectoryEnvelopeTrackerRK4.java" 
+    file="/coordination_oru/src/main/java/se/oru/coordination/coordination_oru/tracker/TrajectoryEnvelopeTrackerRK4.java"
     binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1337" y="579"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 

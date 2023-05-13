@@ -1,16 +1,17 @@
 package se.oru.coordination.coordination_oru.tests;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
-import se.oru.coordination.coordination_oru.Mission;
-import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
-import se.oru.coordination.coordination_oru.code.Heuristics;
-import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
-import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
-import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
-import se.oru.coordination.coordination_oru.util.*;
-import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
+import se.oru.coordination.coordination_oru.utility.Mission;
+import se.oru.coordination.coordination_oru.vehicles.AutonomousVehicle;
+import se.oru.coordination.coordination_oru.utility.Heuristics;
+import se.oru.coordination.coordination_oru.vehicles.HumanDrivenVehicle;
+import se.oru.coordination.coordination_oru.vehicles.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.utility.EmergencyBreaker;
+import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4;
+import se.oru.coordination.coordination_oru.utility.*;
+import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
 
 import java.awt.*;
 

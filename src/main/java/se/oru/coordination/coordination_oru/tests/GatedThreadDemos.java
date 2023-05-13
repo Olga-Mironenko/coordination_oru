@@ -1,8 +1,8 @@
 package se.oru.coordination.coordination_oru.tests;
 
-import se.oru.coordination.coordination_oru.util.Printer;
-import se.oru.coordination.coordination_oru.util.gates.Gate;
-import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+import se.oru.coordination.coordination_oru.utility.Printer;
+import se.oru.coordination.coordination_oru.utility.gates.Gate;
+import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
 
 class Sleeper {
     public static void sleep(long millis) {

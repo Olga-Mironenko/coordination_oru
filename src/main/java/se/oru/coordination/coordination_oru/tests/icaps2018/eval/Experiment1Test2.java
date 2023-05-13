@@ -3,10 +3,10 @@ package se.oru.coordination.coordination_oru.tests.icaps2018.eval;
 import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
-import se.oru.coordination.coordination_oru.*;
+import se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.demo.DemoDescription;
-import se.oru.coordination.coordination_oru.util.Missions;
-import se.oru.coordination.coordination_oru.util.RVizVisualization;
+import se.oru.coordination.coordination_oru.simulator.RVizVisualization;
+import se.oru.coordination.coordination_oru.utility.*;
 
 import java.io.File;
 import java.time.LocalDateTime;

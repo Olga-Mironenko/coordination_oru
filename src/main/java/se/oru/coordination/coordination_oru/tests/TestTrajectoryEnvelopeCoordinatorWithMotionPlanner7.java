@@ -3,11 +3,12 @@ package se.oru.coordination.coordination_oru.tests;
 import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
-import se.oru.coordination.coordination_oru.*;
+import se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.demo.DemoDescription;
-import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.util.JTSDrawingPanelVisualization;
+import se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlanner;
+import se.oru.coordination.coordination_oru.simulator.JTSDrawingPanelVisualization;
+import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.utility.*;
 
 import java.util.ArrayList;
 import java.util.Comparator;

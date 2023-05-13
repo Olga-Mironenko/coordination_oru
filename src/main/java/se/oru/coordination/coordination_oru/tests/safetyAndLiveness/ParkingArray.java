@@ -2,13 +2,13 @@ package se.oru.coordination.coordination_oru.tests.safetyAndLiveness;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
-import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
-import se.oru.coordination.coordination_oru.Mission;
-import se.oru.coordination.coordination_oru.NetworkConfiguration;
-import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.util.Missions;
-import se.oru.coordination.coordination_oru.util.RVizVisualization;
+import se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel;
+import se.oru.coordination.coordination_oru.utility.Mission;
+import se.oru.coordination.coordination_oru.utility.NetworkConfiguration;
+import se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlanner;
+import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.utility.Missions;
+import se.oru.coordination.coordination_oru.simulator.RVizVisualization;
 
 import java.io.File;
 import java.io.FileOutputStream;

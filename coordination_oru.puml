@@ -1,0 +1,1635 @@
+@startuml
+class se.oru.coordination.coordination_oru.simulator.BrowserVisualizationServlet {
++ void configure(WebSocketServletFactory)
+}
+class se.oru.coordination.coordination_oru.utility.RobotReport {
+- Pose pose
+- int pathIndex
+- double velocity
+- double distanceTraveled
+- int criticalPoint
+- int robotID
++ int getRobotID()
++ Pose getPose()
++ int getPathIndex()
++ double getVelocity()
++ double getDistanceTraveled()
++ int getCriticalPoint()
++ String toString()
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.TwoRobotsOpposing {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.StringUtils {
++ {static} List<String> description(String,String,int)
++ {static} List<String> description(String,String,int,int)
++ {static} List<String> fitWidth(String,int,int)
++ {static} List<String> fullJustify(String,int,int)
+}
+interface se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlannerLib {
+~ boolean plan(String,double,double,double,double,double,double,double,double,double,double,PointerByReference,IntByReference,double,double,double)
+~ boolean plan_multiple_circles(byte[],int,int,double,double,double,double,double[],double[],int,double,double,double,double,double,double,PointerByReference,IntByReference,double,double,double,int)
+~ boolean plan_multiple_circles_nomap(double[],double[],int,double,double,double,double,double,double,PointerByReference,IntByReference,double,double,double,int)
+~ void cleanupPath(Pointer)
+}
+class se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlannerLib$PathPose {
++ double x
++ double y
++ double theta
+# List<String> getFieldOrder()
+}
+class se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlannerLib$PathPose$ByReference {
+}
+abstract class se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerDummy {
+- Thread th
+- boolean parkingFinished
+- int currentIndex
+- long DELTA_FUTURE
+# void onTrajectoryEnvelopeUpdate()
++ void startTracking()
++ void setCriticalPoint(int)
++ RobotReport getRobotReport()
++ void finishParking()
++ boolean isParkingFinished()
++ void run()
++ void onPositionUpdate()
+}
+class se.oru.coordination.coordination_oru.utility.splines.Spline3D {
+- Coordinate[] coords
+- Coordinate[] controlPoints
+- Type type
++ Type getType()
++ Coordinate[] getControlPoints()
++ Coordinate[] getCoords()
++ Pose[] asPoses()
++ PoseSteering[] asPoseSteerings()
++ String toString()
++ double[] computeDistances()
++ double[] computeMinMaxDistances()
+}
+enum se.oru.coordination.coordination_oru.utility.splines.Type {
++  SPLINE_BEZIER
++  SPLINE_CUBIC
++  SPLINE_CATMULL_ROM
+}
+abstract class se.oru.coordination.coordination_oru.tracker.AbstractTrajectoryEnvelopeTracker {
+# AbstractTrajectoryEnvelopeCoordinator tec
++ TrajectoryEnvelope te
+# Trajectory traj
+# double temporalResolution
+# Integer externalCPCounter
+# Integer reportCounter
+# int criticalPoint
+# HashSet<TrajectoryEnvelope> startedGroundEnvelopes
+# HashSet<TrajectoryEnvelope> finishedGroundEnvelopes
+# HashMap<TrajectoryEnvelope,AllenIntervalConstraint> deadlines
+# int trackingPeriodInMillis
+# TrackingCallback cb
+# Map mapMetaConstraint
+# boolean calledOnTrackingStart
+# boolean calledStartTracking
+# Callback extraStatusCallback
+# boolean canStartTracking
+# long startingTimeInMillis
+# Logger metaCSPLogger
+# {static} AllenIntervalConstraint[] getConstriants(AllenIntervalConstraint.Type,TrajectoryEnvelope,TrajectoryEnvelopeSolver)
++ int getTrackingPeriod()
++ long getStartingTimeInMillis()
++ void resetStartingTimeInMillis()
+# {abstract}void onTrajectoryEnvelopeUpdate()
++ void updateTrajectoryEnvelope(TrajectoryEnvelope)
++ void setMapMetaConstraint(Map)
++ void setCanStartTracking()
++ boolean canStartTracking()
++ boolean isStarted(TrajectoryEnvelope)
++ boolean tracksEnvelope(TrajectoryEnvelope)
++ boolean isFinished(TrajectoryEnvelope)
++ void setCriticalPoint(int,int)
++ int getReportCounter()
++ void setReportCounter(int)
++ int getCriticalPoint()
++ {abstract}void setCriticalPoint(int)
++ int getTrackingPeriodInMillis()
++ RobotReport getLastRobotReport()
++ {abstract}RobotReport getRobotReport()
+# void onPositionUpdate()
++ {abstract}long getCurrentTimeInMillis()
+# void updateDeadline(TrajectoryEnvelope,long)
+# void fixDeadline(TrajectoryEnvelope,long)
+# void setRelease(TrajectoryEnvelope)
+# TrajectoryEnvelope[] getAllSubEnvelopes()
++ {abstract}void startTracking()
++ boolean trackingStrated()
+# void startMonitoringThread()
+# void finishTracking()
++ TrajectoryEnvelope getTrajectoryEnvelope()
++ State getState()
+}
+class se.oru.coordination.coordination_oru.tests.clean.FourRobotsCircle {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.ThreeRobotsSimple {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.TwoRobotsTotalOverlap {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.TwoRobotsFollowing {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.Sleeper {
++ {static} void sleep(long)
+}
+class se.oru.coordination.coordination_oru.tests.DemoPushAwait {
++ {static} void run()
+}
+class se.oru.coordination.coordination_oru.tests.DemoChild {
++ {static} void run()
+}
+class se.oru.coordination.coordination_oru.tests.DemoGatekeeper {
++ {static} void run()
+}
+class se.oru.coordination.coordination_oru.tests.GatedThreadDemos {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.UPF.UPFAdapter {
++ {static} double MAX_ACCEL
++ {static} double MAX_VEL
++ {static} int CONTROL_PERIOD
++ {static} double TEMPORAL_RESOLUTION
++ {static} String yamlFile
++ {static} String roadMapFile
+- TrajectoryEnvelopeCoordinatorSimulation tec
+- HashMap<String,Integer> robotsToIDs
+- ReedsSheppCarPlanner motionPlanner
+- {static} String[] getArgs(String)
++ {static} void main(String[])
+- void setupCoordinator()
++ void startPlanExecution()
+}
+class se.oru.coordination.coordination_oru.tests.clean.MinimalExample {
+- {static} Random rand
+- {static} ArrayList<Pair<Integer>> placements
+- {static} Coordinate[] makeRandomFootprint(int,int,int,int,double,double)
+- {static} Pose[] makeRandomStartGoalPair(int,double,double,double)
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.Mission {
+# {static} int NUMMISSIONS
+# int robotID
+# PoseSteering[] path
+# int order
+# String fromLocation
+# String toLocation
+# Pose fromPose
+# Pose toPose
+# ArrayList<Pose> stoppingPoints
+# ArrayList<Integer> stoppingPointDurations
++ void setStoppingPoint(Pose,int)
++ void clearStoppingPoints()
++ HashMap<Pose,Integer> getStoppingPoints()
++ int compareTo(Mission)
++ int getRobotID()
++ PoseSteering[] getPath()
++ void setPath(PoseSteering[])
++ String getFromLocation()
++ void setFromLocation(String)
++ String getToLocation()
++ void setToLocation(String)
++ String toString()
++ Pose getFromPose()
++ void setFromPose(Pose)
++ Pose getToPose()
++ void setToPose(Pose)
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlannerReplan {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.CriticalSection {
+- TrajectoryEnvelope te1
+- TrajectoryEnvelope te2
+- int te1Start
+- int te2Start
+- int te1End
+- int te2End
+- int te1Break
+- int te2Break
++ boolean equals(Object)
++ int hashCode()
++ TrajectoryEnvelope getTe1()
++ TrajectoryEnvelope getTe2()
++ int getTe1Start()
++ int getTe2Start()
++ int getTe1End()
++ int getTe2End()
++ int getTe1Break()
++ void setTe1Break(int)
++ int getTe2Break()
++ void setTe2Break(int)
++ String toString()
+}
+class se.oru.coordination.coordination_oru.utility.Missions {
++ {static} HashMap<Integer,Boolean> loopMissions
+# {static} HashMap<String,Pose> locations
+# {static} HashMap<String,PoseSteering[]> paths
+# {static} HashMap<Integer,ArrayList<Mission>> missions
+# {static} HashMap<Integer,MissionDispatchingCallback> mdcs
+# {static} HashMap<Mission,ArrayList<Mission>> concatenatedMissions
+# {static} SimpleDirectedWeightedGraph<String,DefaultWeightedEdge> graph
+# {static} String mapYAMLFilename
+# {static} String mapYAML
+# {static} String mapImageFilename
+# {static} BufferedImage map
+# {static} double mapResolution
+# {static} Coordinate mapOrigin
+# {static} double minPathDistance
+# {static} Thread missionDispatchThread
+# {static} HashSet<Integer> dispatchableRobots
+- {static} Logger metaCSPLogger
++ {static} void setMinPathDistance(double)
++ {static} void resamplePathsInRoadMap()
++ {static} PoseSteering[] resamplePath(PoseSteering[])
++ {static} double getPathLength(PoseSteering[])
++ {static} double getPathLength(Pose[])
++ {static} String[] getNearLocations(String)
++ {static} String[] getNearLocations(Pose)
++ {static} BufferedImage getMap()
++ {static} void setMap(String)
++ {static} double getMapResolution()
++ {static} Coordinate getMapOrigin()
++ {static} String getMapYAMLFilename()
++ {static} String getMapYAML()
++ {static} void saveMap(String)
+- {static} String extractZipFile(String)
+- {static} void makeZipFile(String)
++ {static} void saveScenario(String)
++ {static} void loadScenario(String)
+- {static} String getJSONString(Object)
+- {static} Object parseJSONString(Type,String)
++ {static} HashMap<Integer,String> getInitialLocations()
++ {static} HashMap<Integer,Pose> getInitialPoses()
++ {static} int[] getIDsOfRobotsWithMissions()
+- {static} void buildGraph()
++ {static} PoseSteering[] getShortestPath(String)
++ {static} PoseSteering[] getPath(String,String)
++ {static} ArrayList<Mission> getMissions(int)
++ {static} boolean hasMissions(int)
++ {static} void removeMissions(Mission)
++ {static} void setLocation(String,Pose)
++ {static} HashMap<Integer,ArrayList<Mission>> getMissions()
++ {static} void putMission(Mission)
++ {static} void enqueueMission(Mission)
++ {static} void pushMission(Mission)
++ {static} Mission getMission(int,int)
++ {static} Mission dequeueMission(int)
++ {static} Mission popMission(int)
++ {static} Mission peekMission(int)
++ {static} double wrapAngle180b(double)
++ {static} double wrapAngle180a(double)
++ {static} double wrapAngle180(double)
++ {static} double wrapAngle360(double)
++ {static} Geometry getBackBlockingObstacle(TrajectoryEnvelope)
++ {static} HashMap<String,Pose> getLocations()
++ {static} HashMap<String,Pose> getLocationsAndPoses()
++ {static} void loadLocationAndPathData(String)
++ {static} void loadRoadMap(String)
++ {static} void saveLocationAndPathData(String)
++ {static} void saveRoadMap(String)
++ {static} void addKnownPath(String,String,PoseSteering[])
++ {static} void addPathToRoadMap(String,String,PoseSteering[])
++ {static} void removeLocation(String)
++ {static} void removeLocationFromRoadMap(String)
++ {static} void addLocationToRoadMap(String,Pose)
++ {static} Pose getLocation(String)
++ {static} Pose getLocationPose(String)
++ {static} Mission getNextMission(Mission)
++ {static} Mission getPreviousMission(Mission)
++ {static} String getPathFile(String,String)
++ {static} boolean isKnownPath(String,String)
++ {static} String getProperty(String,String)
++ {static} void stopMissionDispatchers(int)
++ {static} void writePath(String,ArrayList<PoseSteering>)
++ {static} void writePath(String,PoseSteering[])
++ {static} void concatenateMissions(Mission)
++ {static} void addMissionDispatchingCallback(int,MissionDispatchingCallback)
++ {static} void startMissionDispatchers(TrajectoryEnvelopeCoordinator,int)
++ {static} void startMissionDispatchers(TrajectoryEnvelopeCoordinator,boolean,int)
++ {static} void startMissionDispatchers(TrajectoryEnvelopeCoordinator,long)
++ {static} PoseSteering[] loadPathFromFile(String)
++ {static} Mission followMission(Mission,int,Pose,AbstractMotionPlanner,boolean)
++ {static} Set<String> getAllGraphVertices()
++ {static} Set<DefaultWeightedEdge> getAllGraphEdges()
+}
+class se.oru.coordination.coordination_oru.utility.Missions$ScenarioContainer {
+- String locationsJSON
+- String pathsJSON
+- String missionsJSON
+- String mapYAMLJSON
+- String mapImageFilenameJSON
+- String mapResolutionJSON
+- String mapOriginJSON
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.FourRobotsCircle {
++ {static} void main(String[])
+}
+interface se.oru.coordination.coordination_oru.simulator.FleetVisualization {
+~ void displayRobotState(TrajectoryEnvelope,RobotReport,String)
+~ void displayRobotState(Polygon,RobotReport,String)
+~ void displayDependency(RobotReport,RobotReport,String)
+~ void addEnvelope(TrajectoryEnvelope)
+~ void removeEnvelope(TrajectoryEnvelope)
+~ void updateVisualization()
+~ void setMap(String)
+~ int periodicEnvelopeRefreshInMillis()
+}
+class se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation {
+# {static} long START_TIME
++ {static} TrajectoryEnvelopeCoordinatorSimulation tec
++ {static} Coordinate[] DEFAULT_FOOTPRINT
++ {static} double MAX_DEFAULT_FOOTPRINT_DIMENSION
+# boolean useInternalCPs
+# boolean checkCollisions
+# ArrayList<CollisionEvent> collisionsList
+# Thread collisionThread
+# AtomicInteger totalMsgsLost
+# AtomicInteger totalPacketsLost
+# double DEFAULT_MAX_VELOCITY
+# double DEFAULT_MAX_ACCELERATION
++ void setCheckCollisions(boolean)
++ void incrementLostMsgsCounter()
++ void incrementLostPacketsCounter()
+- ArrayList<Integer> computeStoppingPoints(PoseSteering[])
++ boolean addMissions(Mission)
++ void setUseInternalCriticalPoints(boolean)
++ Double getRobotMaxVelocity(int)
++ Double getRobotMaxAcceleration(int)
+# Double getMaxFootprintDimension(int)
++ Coordinate[] getDefaultFootprint()
++ void setDefaultFootprint(Coordinate)
++ Coordinate[] getFootprint(int)
++ Geometry getDefaultFootprintPolygon()
++ AbstractTrajectoryEnvelopeTracker getNewTracker(TrajectoryEnvelope,TrackingCallback)
++ long getCurrentTimeInMillis()
++ String constraintsToGraphviz(Constraint[])
+# String[] getStatistics()
++ void onCriticalSectionUpdate()
+}
+class se.oru.coordination.coordination_oru.utility.PathEditor2 {
+- {static} int newLocationCounter
+- {static} String TEMP_MAP_DIR
+- String selectionsFile
+- String outputDir
+- double PP_max_turning_radius
+- double SP_spline_distance
+- double PP_SP_distance_between_path_points
+- double PP_radius
+- Coordinate[] PP_footprint
+- Geometry PP_footprintGeom
+- String locationsAndPathsFilename
+- String mapFilename
+- boolean selectionInputListen
+- ArrayList<String> selectionStringsNames
+- ArrayList<String> selectionStrings
+- ArrayList<ArrayList<Integer>> selectedLocationsInts
+- HashMap<Integer,ArrayList<Integer>> selectionGroupsToSelections
+- int selectedGroup
+- ReedsSheppCarPlanner mp
+- OccupancyMap om
+- String selectionString
+- ArrayList<Integer> selectedLocationsInt
+- ArrayList<String> locationIDs
+- HashMap<String,ArrayList<PoseSteering>> allPaths
+- HashMap<String,Boolean> isInversePath
+- JTSDrawingPanel panel
+- double deltaX
+- double deltaY
+- double deltaT
+- double deltaTR
+- double deltaSD
+- double deltaD
++ {static} void main(String[])
++ void setPanAcceleration(double)
++ void setZoomIntensity(double)
++ void setDeltaX(double)
++ void setDeltaY(double)
++ void setDeltaTheta(double)
++ void setSplineDistance(double)
++ void setDistanceBetweenPathPoints(double)
++ void setMaxTurningRadius(double)
++ void setPathPlanningFootprint(Coordinate)
++ void setPathPlanningRadius(double)
++ Geometry makeFootprint(double,double,double)
++ Geometry createEnvelope(ArrayList<PoseSteering>)
++ void updatePaths2()
++ void deleteForwardAndInversePaths(ArrayList<Integer>)
++ void computeForwardAndInversePathsWithSpline(ArrayList<Integer>)
++ void loadSelectionsFile()
++ void removeKnownLocation(String)
++ void removeAllKnownLocations()
++ void addAllKnownLocations()
++ boolean deleteDir(File)
+# void dumpLocationAndPathData(HashMap<String,Pose>,HashMap<String,ArrayList<PoseSteering>>)
+- String getHelp()
+- void highlightSelectedLocations()
+- void clearLocations()
++ void addAbstractAction(AbstractAction,int,int,String)
+- Point2D getMousePositionInMap()
+- void clearESCAPE()
+- void setupGUI()
+- PoseSteering[] computeSpline(Pose,Pose)
+- PoseSteering[] computePath(Pose,Pose)
+}
+class se.oru.coordination.coordination_oru.tests.clean.ScenarioLoading {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.Heuristics {
++ HashMap<Integer,Integer> robotIDToPrecedence
++ Comparator<RobotAtCriticalSection> closest()
++ Comparator<RobotAtCriticalSection> mostDistanceToTravel()
++ Comparator<RobotAtCriticalSection> lowestIDNumber()
++ Comparator<RobotAtCriticalSection> highestIDNumber()
++ Comparator<RobotAtCriticalSection> highestPrecedence()
+}
+class se.oru.coordination.coordination_oru.tests.safetyAndLiveness.Circle {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.vehicles.VehiclesHashMap {
+- {static} Object lock
+- {static} VehiclesHashMap instance
+- {static} HashMap<Integer,AbstractVehicle> list
++ {static} VehiclesHashMap getInstance()
++ {static} AbstractVehicle getVehicle(int)
++ {static} HashMap<Integer,AbstractVehicle> getList()
+}
+abstract class se.oru.coordination.coordination_oru.utility.gates.GatedThread {
+# {static} boolean isGated
+# {static} Gatekeeper gatekeeper
++ {static} void enable()
++ {static} void runGatekeeper()
++ {static} void sleep(long)
++ {static} void sleepWithoutException(long)
++ {static} void skipCycles(int)
++ {abstract}void runCore()
++ void run()
+}
+class se.oru.coordination.coordination_oru.tests.safetyAndLiveness.Basement {
+- {static} Random rand
+- {static} ArrayList<Pair<Integer>> placements
+- {static} Coordinate[] makeRandomFootprint(int,int,int,int,double,double)
+- {static} Pose[] makeRandomStartGoalPair(int,double,double,double)
++ {static} void main(String[])
+}
+abstract class se.oru.coordination.coordination_oru.motionplanner.AbstractMotionPlanner {
+# Logger metaCSPLogger
+# Pose start
+# Pose[] goal
+# String startLocationName
+# String[] goalLocationNames
+# Coordinate[] footprintCoords
+# boolean verifyPlanning
+# Pose collidingPose
+# OccupancyMap om
+# boolean noMap
+# boolean checkGoalPose
+# PoseSteering[] pathPS
++ {static} boolean deleteDir(File)
++ {abstract}AbstractMotionPlanner getCopy(boolean)
++ void setFootprint(Coordinate)
++ void setStart(Pose)
++ void setGoal(Pose)
++ void addGoals(Pose)
++ void setGoals(Pose)
++ void setStart(String)
++ void setGoals(String)
++ void setMap(String)
++ PoseSteering[] getPath()
++ PoseSteering[] getPathInv()
++ void addObstacles(Geometry,Pose)
++ void addObstacles(Geometry)
++ void writeDebugImage()
++ void clearObstacles()
++ OccupancyMap getOccupancyMap()
++ Geometry[] getObstacles()
++ {abstract}boolean doPlanning()
+- Geometry getFootprintAsGeometry()
+# Geometry getFootprintInPose(Pose)
++ boolean plan()
++ boolean isFree(Pose,boolean)
+}
+class se.oru.coordination.coordination_oru.motionplanner.tests.ompl.TestReedsSheppCarPlanner {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.scenarios.OneAutonomousOneLookAheadVehicles {
++ {static} void main(String[])
+}
+interface se.oru.coordination.coordination_oru.coordinator.ForwardModel {
+~ boolean canStop(TrajectoryEnvelope,RobotReport,int,boolean)
+~ int getEarliestStoppingPathIndex(TrajectoryEnvelope,RobotReport)
+}
+class se.oru.coordination.coordination_oru.utility.Pair {
+- T p1
+- T p2
++ T getFirst()
++ T getSecond()
++ boolean contains(Pair<T>)
++ boolean containsOrEquals(Pair<T>)
++ int hashCode()
++ boolean equals(Object)
++ String toString()
+}
+class se.oru.coordination.coordination_oru.tests.safetyAndLiveness.ParkingArrayNew {
+- {static} void writeStat(String,String)
+- {static} void initStat(String,String)
++ {static} void main(String[])
+}
+abstract class se.oru.coordination.coordination_oru.tracker.TrackingCallback {
++ TrajectoryEnvelope myTE
++ void updateTrajectoryEnvelope(TrajectoryEnvelope)
++ {abstract}void beforeTrackingStart()
++ {abstract}void onTrackingStart()
++ {abstract}String[] onPositionUpdate()
++ {abstract}void beforeTrackingFinished()
++ {abstract}void onTrackingFinished()
++ {abstract}void onNewGroundEnvelope()
+}
+class se.oru.coordination.coordination_oru.scenarios.SevenAutonomousOneLookAheadVehicles {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.safetyAndLiveness.TestJgraphLib {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner11 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.splines.SplineFactory {
++ {static} Spline3D createBezier(Coordinate[],double)
++ {static} Spline3D createBezier(Coordinate[],int)
++ {static} Spline3D createCubic(Coordinate[],double)
++ {static} Spline3D createCubic(Coordinate[],int)
++ {static} Spline3D createCatmullRom(Coordinate[],double)
++ {static} Spline3D createCatmullRom(Coordinate[],int)
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner22 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.ThreeRobotsAsynchronousGoalPosting {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.simulator.JTSDrawingPanelVisualization {
+- JTSDrawingPanel panel
++ JTSDrawingPanel getPanel()
++ void setSize(int,int)
++ void displayRobotState(TrajectoryEnvelope,RobotReport,String)
++ void displayRobotState(Polygon,RobotReport,String)
++ void displayDependency(RobotReport,RobotReport,String)
+- void setupGUI(String)
++ void dumpPDF(String)
++ void dumpSVG(String)
++ void dumpEPS(String)
++ void centerView()
++ void updateVisualization()
++ void addEnvelope(TrajectoryEnvelope)
++ void removeEnvelope(TrajectoryEnvelope)
++ void setMinimumVisibleFrame(double,double,double,double)
++ void setMap(String)
++ int periodicEnvelopeRefreshInMillis()
+}
+class se.oru.coordination.coordination_oru.tests.clean.ReplacePathExample {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.splines.BezierSplineFactory {
++ {static} Coordinate cubicBezier(Coordinate,Coordinate,Coordinate,Coordinate,double)
++ {static} Coordinate quadBezier(Coordinate,Coordinate,Coordinate,double)
+- {static} double cubicBezierPoint(double,double,double,double,double)
+- {static} double quadBezierPoint(double,double,double,double)
++ {static} Pose[] asPoses(Coordinate[])
++ {static} PoseSteering[] asPoseSteering(Coordinate[])
++ {static} Coordinate[] createBezierSpline(Coordinate,Coordinate,Coordinate,Coordinate,double)
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner12 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.simulator.RVizVisualization {
+- {static} String rvizEntry
+- String mapFrameID
+- ConnectedNode node
+- HashMap<String,Publisher<visualization_msgs.MarkerArray>> boxMarkerPublishers
+- HashMap<String,ArrayList<visualization_msgs.Marker>> boxMarkerMarkers
+- HashMap<Integer,Publisher<visualization_msgs.MarkerArray>> robotStatusPublishers
+- HashMap<Integer,Publisher<visualization_msgs.MarkerArray>> dependencyPublishers
+- HashMap<Integer,ArrayList<visualization_msgs.Marker>> robotStatusMarkers
+- HashMap<Integer,ArrayList<visualization_msgs.Marker>> dependencyMarkers
+- HashMap<Integer,visualization_msgs.Marker> envelopeMarkers
+- boolean ready
+- String mapFileName
+- boolean darkColors
+- boolean publishPartialEnvelope
++ {static} void writeRVizConfigFile(int)
++ {static} void main(String[])
++ void setPublishPartialEnvelope(boolean)
++ void setDarkColors(boolean)
+- BufferedImage toGrayScale(BufferedImage)
+- BufferedImage toBlackAndWhite(BufferedImage,int)
+- BufferedImage flipVertically(BufferedImage)
+- BufferedImage flipHorizontally(BufferedImage)
++ void setMap(String)
++ void setMapFileName(String,String,boolean,boolean)
++ void displayRobotState(TrajectoryEnvelope,RobotReport,String)
++ void displayRobotState(Polygon,RobotReport,String)
++ void displayBox(String,Coordinate[],int,double,double,double)
++ void displayDependency(RobotReport,RobotReport,String)
++ void updateVisualization()
++ void onError(Node,Throwable)
++ void onShutdown(Node)
++ void onShutdownComplete(Node)
++ void onStart(ConnectedNode)
++ GraphName getDefaultNodeName()
++ void addEnvelope(TrajectoryEnvelope)
+- void createPartialEnvelopeGeometryMarker(TrajectoryEnvelope,int,int)
++ void removeEnvelope(TrajectoryEnvelope)
++ int periodicEnvelopeRefreshInMillis()
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.TwoRobotsFollowing {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlannerReplanNew {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner18 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner3 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.RandomPathsInMap {
+- {static} boolean deleteDir(File)
+- {static} void writeStat(String,String)
+- {static} void initStat(String,String)
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner9 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.TwoRobotsFollowingVsOpposing {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlanner {
++ {static} ReedsSheppCarPlannerLib INSTANCE
+- double robotRadius
+- PointerByReference path
+- IntByReference pathLength
+- double distanceBetweenPathPoints
+- double turningRadius
+- double planningTimeInSecs
+- Coordinate[] collisionCircleCenters
+- PLANNING_ALGORITHM algo
++ AbstractMotionPlanner getCopy(boolean)
++ void setFootprint(Coordinate)
++ Coordinate[] getCollisionCircleCenters()
++ void setCirclePositions(Coordinate)
++ void setRadius(double)
++ void setDistanceBetweenPathPoints(double)
++ void setTurningRadius(double)
++ Pose getStart()
++ Pose[] getGoals()
++ double getPlanningTimeInSecs()
++ void setPlanningTimeInSecs(double)
++ boolean doPlanning()
+}
+enum se.oru.coordination.coordination_oru.motionplanner.ompl.PLANNING_ALGORITHM {
++  RRTConnect
++  RRTstar
++  TRRT
++  SST
++  LBTRRT
++  PRMstar
++  SPARS
++  pRRT
++  LazyRRT
+}
+class se.oru.coordination.coordination_oru.motionplanner.tests.ompl.TestReedsSheppCarPlannerMulitpleCircles {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.ThreeRobotsLinear {
++ {static} void main(String[])
+}
+abstract class se.oru.coordination.coordination_oru.vehicles.AbstractVehicle {
++ {static} int vehicleNumber
+- int ID
+- int priorityID
+- String type
+- double maxVelocity
+- double maxAcceleration
+- double xLength
+- double yLength
+- Coordinate[] footPrint
+- double startTime
+- Color color
+- Color colorInMotion
+- RobotReport currentRobotReport
+- RobotReport lastRobotReport
+- double cycleDistance
+- double totalDistance
+- long timeInterval
+- double averageSpeed
+- int cycles
+- int maxWaitingTime
+- int currentWaitingTime
+- long totalWaitingTime
+- int stops
+- PoseSteering[] path
++ String toString()
++ {abstract}void getPlan(Pose,Pose[],String,Boolean)
++ void updateStatistics()
++ void writeStatistics()
++ void blinkVehicle(Color,Color,long)
++ int getID()
++ Color getVehicleColor()
++ void setVehicleColor(Color)
++ String getColorCode()
++ Coordinate[] getFootPrint()
++ RobotReport getCurrentRobotReport()
++ void setCurrentRobotReport(RobotReport)
++ double getCycleDistance()
++ void setCycleDistance(PoseSteering[])
++ PoseSteering[] getPath()
+# void setPath(PoseSteering[])
++ RobotReport getLastRobotReport()
++ double getMaxVelocity()
++ double getMaxAcceleration()
++ String getType()
++ Color getColor()
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.ThreeRobotsGoalPosting {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner2 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.NetworkConfiguration {
++ {static} double PROBABILITY_OF_PACKET_LOSS
+# {static} int maximumTxDelay
+# {static} int minimumTxDelay
++ {static} void setDelays(int,int)
++ {static} int getMaximumTxDelay()
++ {static} int getMinimumTxDelay()
+}
+class se.oru.coordination.coordination_oru.verify.SevenAutonomousOneLookAheadVehicles {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.simulator.BrowserVisualizationSocket {
++ {static} HashSet<RemoteEndpoint> ENDPOINTS
++ {static} BufferedImage map
++ {static} double resolution
++ {static} Coordinate origin
++ {static} double initialScale
++ {static} double fontScale
++ {static} Coordinate initialTranslation
++ void onWebSocketConnect(Session)
++ void onWebSocketText(String)
++ void onWebSocketClose(int,String)
++ void onWebSocketError(Throwable)
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.OneRobotPlacement {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeThreeRobotsReplanOnRequest {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.GeometrySmoother {
+- GeometryFactory geomFactory
+- SmootherControl DEFAULT_CONTROL
+- SmootherControl control
+- Map<Integer,WeakReference<InterpPoint[]>> lookup
+~ LineString smooth(LineString,double)
++ Polygon smooth(Polygon,double)
++ void setControl(SmootherControl)
+- Coordinate[][] getLineControlPoints(Coordinate[],double)
+- Coordinate[][] getPolygonControlPoints(Coordinate[],int,double)
+- Coordinate[] cubicBezier(Coordinate,Coordinate,Coordinate,Coordinate,int)
+- InterpPoint[] getInterpPoints(int)
+}
+interface se.oru.coordination.coordination_oru.utility.GeometrySmoother$SmootherControl {
+~ double getMinLength()
+~ int getNumVertices(double)
+}
+class se.oru.coordination.coordination_oru.utility.GeometrySmoother$InterpPoint {
+~ double[] t
+~ double tsum
+}
+class se.oru.coordination.coordination_oru.tests.safetyAndLiveness.Diameter {
+- {static} void initStat(String,String)
++ {static} void writeStat(String,String)
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.verify.EightAutonomousVehicles {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlannerReplanMiddle {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.scenarios.RampScenario {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.ContinuePathExample {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.eval.Experiment1Test1 {
++ {static} int usedRobots
++ {static} boolean inUse(int)
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner21 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.PathEditor {
+- {static} String PREFIX
+- {static} int EMPTY_MAP_DIM
+- {static} double OBSTACLE_SIZE
+- {static} double MAX_TURNING_RADIUS
+- {static} double MIN_DISTANCE_BETWEEN_PATH_POINTS
+- {static} boolean USE_MP
+- {static} String TEMP_MAP_DIR
+- String pathFileName
+- String mapFileName
+- String mapImgFileName
+- double mapRes
+- String posesFileName
+- boolean selectionPathPointInputListen
+- String selectionString
+- ArrayList<Integer> selectedPathPointsInt
+- boolean selectionObsInputListen
+- ArrayList<Integer> selectedObsInt
+- ArrayList<Geometry> obstacles
+- ArrayList<PoseSteering> path
+- ArrayList<ArrayList<PoseSteering>> oldPaths
+- JTSDrawingPanel panel
+- double deltaX
+- double deltaY
+- double deltaT
+- double deltaTR
+- String newFileSuffix
+- Coordinate[] obstacleFootprint
+- ArrayList<Pose> obstacleCenters
+- ArrayList<String> obstacleNames
++ {static} void main(String[])
++ void setObstacleFootprint(Coordinate[])
++ void saveObstaclesToPoses(String)
++ void loadObstaclesFromPoses()
++ boolean deleteDir(File)
+- double[] getMinXYMaxXY()
+- String getHelp()
+- Geometry makeObstacle(Pose)
+- void highlightPathPoints()
+- void highlightObstacles()
+- void clearObstacleSelection()
+- void clearPathPointSelection()
+- void backupPath()
+- void restorePath()
++ void addAbstractAction(AbstractAction,int,int,String)
+- void setupGUI()
+- void writePath(String)
+- void readPath()
+- PoseSteering[] computePath(PoseSteering,PoseSteering)
+}
+class se.oru.coordination.coordination_oru.scenarios.ProductionCycleMine {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.ThreeRobotsDeadlock {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner15 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.verify.ThreeDifferentRobotsLinear {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.scenarios.EightAutonomousVehicles {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner6 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.MissionUtils {
++ {static} double targetVelocityHumanInitial
++ {static} double targetVelocityHuman
++ {static} int idHuman
++ {static} boolean isWorking
+# {static} Object pathLock
+# {static} void removeMissions(int)
++ {static} void moveRobot(int,Pose)
+# {static} void waitUntilScheduledMissionStarts(int)
+# {static} State getRobotState(int)
++ {static} void changeTargetVelocityHuman(double)
+# {static} PoseSteering[] getCurrentPath(int)
+# {static} int getReplacementIndex(int)
+# {static} void changePath(int,PoseSteering[],int)
++ {static} PoseSteering[] computeReplacementPath(PoseSteering[],int,PoseSteering[])
+}
+abstract class se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4 {
+# {static} long WAIT_AMOUNT_AT_END
+# {static} double EPSILON
++ {static} long constantDelayTime
++ {static} EmergencyBreaker emergencyBreaker
+# double MAX_VELOCITY
+# double MAX_ACCELERATION
+# double overallDistance
+# double totalDistance
+# double positionToSlowDown
+# double elapsedTrackingTime
+# State state
+# double[] curvatureDampening
+# ArrayList<RobotReport> reportsList
+# ArrayList<Long> reportTimeLists
+- Thread th
+- ArrayList<Integer> internalCriticalPoints
+- int numberOfReplicas
+- Random rand
+- TreeMap<Double,Double> slowDownProfile
+- boolean slowingDown
+- boolean useInternalCPs
+- HashMap<Integer,Integer> userCPReplacements
++ {static} double computeDistance(Trajectory,int,int)
++ {static} void integrateRK4(State,double,double,boolean,double,double,double,int)
+- {static} RobotReport getRobotReport(Trajectory,State)
++ {static} double[] computeDTs(Trajectory,double,double,int)
++ void setUseInternalCriticalPoints(boolean)
+- void computeInternalCriticalPoints()
++ void setCurvatureDampening(int,double)
++ void setCurvatureDampening(int,int,double)
++ void resetCurvatureDampening()
++ double[] getCurvatureDampening()
+- void computeCurvatureDampening()
++ double getCurvatureDampening(int,boolean)
+# void onTrajectoryEnvelopeUpdate()
++ void startTracking()
+- double computeDistance(int,int)
+- void enqueueOneReport()
++ RobotReport getLastRobotReport()
+- void startInternalCPThread()
+- TreeMap<Double,Double> getSlowdownProfile()
+- double computePositionToSlowDown()
++ void setCriticalPoint(int,int)
++ void setCriticalPoint(int)
++ RobotReport getRobotReport()
++ RobotReport getRobotReport(State)
++ void setNumberOfReplicas(int)
++ void setNumberOfReplicas(int,int)
++ void run()
++ State getState()
+}
+class se.oru.coordination.coordination_oru.utility.State {
+- double position
+- double velocity
++ double getPosition()
++ void setPosition(double)
++ double getVelocity()
++ void setVelocity(double)
+# State clone()
++ String toString()
+}
+class se.oru.coordination.coordination_oru.utility.gates.Gatekeeper {
+# BlockingQueue<Gate> gates
+# Gate gateSelf
++ void processNextGate()
++ void pauseCurrentThread(String,boolean)
++ void run()
+}
+class se.oru.coordination.coordination_oru.tests.TestClick {
++ {static} void main(String[])
+# {static} void runDemo()
+}
+class se.oru.coordination.coordination_oru.utility.MapInspector {
+- {static} long serialVersionUID
+- OccupancyMap om
+- boolean occ
+- Point p
++ {static} void main(String[])
+- void createFrame()
+# void paintComponent(Graphics)
++ void mouseDragged(MouseEvent)
++ void mouseMoved(MouseEvent)
++ void mouseClicked(MouseEvent)
++ void mouseEntered(MouseEvent)
++ void mouseExited(MouseEvent)
++ void mousePressed(MouseEvent)
++ void mouseReleased(MouseEvent)
++ void keyPressed(KeyEvent)
++ void keyReleased(KeyEvent)
++ void keyTyped(KeyEvent)
+}
+class se.oru.coordination.coordination_oru.utility.NoPathFound {
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.ThreeRobotsDeadlock {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.CollisionEvent {
+# long time
+# RobotReport[] reports
++ long getTime()
++ RobotReport[] getReports()
++ String toString()
+}
+class se.oru.coordination.coordination_oru.motionplanner.tests.ompl.TestReedsSheppCarPlannerSmoothGeometry {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.RobotAtCriticalSection {
+- RobotReport rr
+- CriticalSection cs
++ RobotReport getRobotReport()
++ CriticalSection getCriticalSection()
+}
+class se.oru.coordination.coordination_oru.tests.clean.TwoRobotsIdle {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.safetyAndLiveness.TestCreateEnvelope {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner5 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.eval.Experiment2 {
+- {static} boolean deleteDir(File)
+- {static} void writeStat(String,String)
+- {static} void initStat(String,String)
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.RandomPathsInMap {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.splines.BezierSpline {
++ double[] generate()
+- void p(int,double,double[],double[],int)
+- double blend(int,double)
+}
+class se.oru.coordination.coordination_oru.tests.MinimalExample {
+- {static} Random rand
+- {static} ArrayList<Pair<Integer>> placements
+- {static} Coordinate[] makeRandomFootprint(int,int,int,int,double,double)
+- {static} Pose[] makeRandomStartGoalPair(int,double,double,double)
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.ThreeDifferentRobotsLinear {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner8 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.BrowseLogs {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorThreeRobotsTruncateEnvelope {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.Derivative {
++ {static} double EPSILON
+- double velocity
+- double acceleration
++ {static} Derivative evaluate(State,double,double,Derivative,boolean,double,double,double)
++ {static} double computeAcceleration(State,double,boolean,double,double,double)
++ double getVelocity()
++ double getAcceleration()
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner14 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorThreeRobots {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.splines.CubicSpline {
+# void initialize(double[],int)
++ double[] generate()
+- void p(int,double,double[],double[],int)
+# double blend(int,double)
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.ThreeDifferentRobotsLinear {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.Waves {
+- {static} PoseSteering[] getSinePath(double,double,Pose,Pose)
+- {static} PoseSteering[] invertPath(PoseSteering[])
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.simulator.BrowserVisualization {
++ {static} boolean isStatusText
+- {static} int UPDATE_PERIOD
+- ArrayList<String> msgQueue
+- double robotFootprintArea
+- double robotFootprintXDim
+- String overlayText
+- {static} int getScreenDPI()
+- {static} double getScreenHeight()
+- {static} void setupVizServer(String)
+- {static} void setupVizMessageServer()
+# {static} double round(double)
+# {static} String stringifyMissions(ArrayList<Mission>)
+# {static} String stringifyCriticalSections(HashSet<CriticalSection>)
+# {static} String stringifyCriticalSection(CriticalSection)
+- void startOpenInBrowser(String)
+- void updateOverlayText()
++ void setOverlayText(String)
+- void updateRobotFootprintArea(Geometry)
++ void setInitialTransform(double,double,double)
++ void setFontScale(double)
++ void guessInitialTransform(double,Pose)
+- void enqueueMessage(String)
+- void sendMessages()
+- void sendMessage(String)
++ void displayRobotState(TrajectoryEnvelope,RobotReport,String)
+# void setStatusText()
++ void displayRobotState(Polygon,RobotReport,String)
++ void addPath(String,PoseSteering[],double,String)
++ void removePath(String,PoseSteering[])
++ void displayDependency(RobotReport,RobotReport,String)
+- String geometryToJSONString(String,Geometry,String,long,boolean,String)
++ void addEnvelope(TrajectoryEnvelope)
++ void removeEnvelope(TrajectoryEnvelope)
++ void updateVisualization()
++ void updateFontScale(double)
++ void sendUpdate()
+- Geometry createArrow(Pose,double,double)
+- Geometry createArrow(Pose,Pose)
++ void setMap(BufferedImage,double,Coordinate)
++ void setMap(String)
++ void setMapYAML(String,String)
++ int periodicEnvelopeRefreshInMillis()
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner17 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.Waves {
+- {static} boolean deleteDir(File)
+- {static} void writeStat(String,String)
+- {static} void initStat(String,String)
+- {static} PoseSteering[] getSinePath(double,double,Pose,Pose)
+- {static} PoseSteering[] invertPath(PoseSteering[])
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.utility.Printer {
+# {static} long initialMoment
++ {static} void resetTime()
++ {static} void print(String)
+}
+abstract class se.oru.coordination.coordination_oru.coordinator.TrajectoryEnvelopeCoordinator {
+# SimpleDirectedWeightedGraph<Integer,DefaultWeightedEdge> currentOrdersGraph
+# HashMap<Pair<Integer,Integer>,HashSet<ArrayList<Integer>>> currentCyclesList
+# HashMap<Integer,CoordinatorDependency> replanningStoppingPoints
+# boolean breakDeadlocksByReordering
+# boolean breakDeadlocksByReplanning
+# AtomicBoolean avoidDeadlockGlobally
+# AtomicInteger nonliveStatesDetected
+# AtomicInteger nonliveStatesAvoided
+# AtomicInteger currentOrdersHeurusticallyDecided
+# List<List<Integer>> nonliveCyclesOld
+# AtomicInteger replanningTrialsCounter
+# AtomicInteger successfulReplanningTrialsCounter
+# HashMap<Integer,Boolean> forceCriticalPointReTransmission
+# boolean staticReplan
+# boolean isBlocked
+# boolean isDeadlocked
+# Callback deadlockedCallback
+# boolean fake
++ boolean isBlocked()
++ void setBreakDeadlocks(boolean,boolean,boolean)
++ void setDeadlockedCallback(Callback)
++ void setStaticReplan(boolean)
++ void setFakeCoordination(boolean)
+# String[] getStatistics()
+# List<List<Integer>> findSimpleNonliveCycles(SimpleDirectedGraph<Integer,CoordinatorDependency>)
+# SimpleDirectedGraph<Integer,CoordinatorDependency> depsToGraph(HashMap<Integer,CoordinatorDependency>)
+# HashMap<Integer,CoordinatorDependency> computeClosestDependencies(HashMap<Integer,HashSet<CoordinatorDependency>>,HashMap<Integer,HashSet<CoordinatorDependency>>)
++ boolean isDeadlocked()
+# HashMap<Integer,HashSet<CoordinatorDependency>> findAndRepairNonliveCycles(HashMap<Integer,HashSet<CoordinatorDependency>>,HashMap<Integer,HashSet<CoordinatorDependency>>,HashSet<CoordinatorDependency>,HashMap<Integer,RobotReport>,Set<Integer>)
+# HashMap<Integer,HashSet<CoordinatorDependency>> callLocalReordering(List<List<Integer>>,HashMap<Integer,HashSet<CoordinatorDependency>>,SimpleDirectedGraph<Integer,CoordinatorDependency>,HashSet<CoordinatorDependency>,HashMap<Integer,HashSet<CoordinatorDependency>>,HashMap<Integer,RobotReport>)
++ boolean replanEnvelope(int)
+# boolean replanEnvelope(int,boolean)
+# boolean callOnePathReplan(List<Integer>,SimpleDirectedGraph<Integer,CoordinatorDependency>)
+# boolean getOrder(AbstractTrajectoryEnvelopeTracker,RobotReport,AbstractTrajectoryEnvelopeTracker,RobotReport,CriticalSection)
+# void updateDependencies()
+# void localCheckAndRevise()
+# boolean spawnReplanning(Set<Integer>,Set<Integer>)
+# boolean setMaxCPDependencies(Set<Integer>)
+# boolean nonlivePair(CoordinatorDependency,CoordinatorDependency)
+# boolean rePlanPath(Set<Integer>,Set<Integer>)
+- void updateParkedEnvelopeVisualizations()
+# void setupInferenceCallback()
+# void cleanUpRobotCS(int,int)
++ void replacePath(int,PoseSteering[],int,Set<Integer>)
++ void replacePath(int,PoseSteering[],int,boolean,Set<Integer>)
++ boolean truncateEnvelope(int)
++ boolean truncateEnvelopeAt(int,int)
++ boolean reverseEnvelope(int)
+# void deleteEdge(Pair<Integer,Integer>)
+# void deleteEdges(HashMap<Pair<Integer,Integer>,Integer>)
+# void addEdges(HashMap<Pair<Integer,Integer>,Integer>)
+# void updateGraph(HashMap<Pair<Integer,Integer>,Integer>,HashMap<Pair<Integer,Integer>,Integer>)
+# void globalCheckAndRevise()
+# void sendCriticalPoint(int,HashMap<Integer,RobotReport>)
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.eval.Experiment1Test2 {
++ {static} int usedRobots
++ {static} boolean inUse(int)
+- {static} PoseSteering[] getSinePath(double,double,Pose,Pose)
+- {static} PoseSteering[] invertPath(PoseSteering[])
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TrafficExample {
+- {static} void setupRobot(Pose,Pose,int,Coordinate[],double,double,TrajectoryEnvelopeCoordinatorSimulation)
++ {static} void main(String[])
+}
+interface se.oru.coordination.coordination_oru.utility.MissionDispatchingCallback {
+~ void beforeMissionDispatch(Mission)
+~ void afterMissionDispatch(Mission)
+}
+class se.oru.coordination.coordination_oru.tests.clean.TwoRobotsOpposing {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.motionplanner.roadmap.RoadMapPlanner {
++ {static} void main(String[])
++ AbstractMotionPlanner getCopy(boolean)
++ boolean doPlanning()
+- void addEscapePoseIfNeeded()
+}
+class se.oru.coordination.coordination_oru.simulator.BrowserVisualizationServer {
+- String serverHostNameOrIP
++ void handle(String,org.eclipse.jetty.server.Request,HttpServletRequest,HttpServletResponse)
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner20 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.scenarios.ProductionCycleAutonomousMine {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.ThreeRobotsFast {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.scenarios.ProductionCyclePathsAutonomousMine {
++ {static} void main(String[])
+}
+abstract class se.oru.coordination.coordination_oru.coordinator.AbstractTrajectoryEnvelopeCoordinator {
++ {static} int PARKING_DURATION
+# {static} int DEFAULT_STOPPING_TIME
++ {static} String TITLE
++ {static} String COPYRIGHT
++ {static} String[] CONTRIBUTORS
++ {static} String LICENSE
++ {static} String PUBLIC_LICENSE
++ {static} String PRIVATE_LICENSE
++ {static} int EFFECTIVE_CONTROL_PERIOD
++ {static} int MAX_TX_DELAY
+# {static} Logger metaCSPLogger
++ HashSet<CriticalSection> allCriticalSections
++ HashMap<Integer,Integer> numIntegrateCalls
+# int DEFAULT_ROBOT_TRACKING_PERIOD
+# int CONTROL_PERIOD
+# double TEMPORAL_RESOLUTION
+# boolean overlay
+# boolean quiet
+# AtomicInteger totalMsgsSent
+# AtomicInteger totalMsgsReTx
+# AtomicInteger criticalSectionCounter
+# TrajectoryEnvelopeSolver solver
+# Thread inference
+# Boolean stopInference
+# FleetVisualization viz
+# TreeSet<Pair<TrajectoryEnvelope,Long>> missionsPool
+# ArrayList<TrajectoryEnvelope> envelopesToTrack
+# ArrayList<TrajectoryEnvelope> currentParkingEnvelopes
+# HashMap<CriticalSection,Pair<Integer,Integer>> CSToDepsOrder
+# HashMap<CriticalSection,Pair<Integer,Integer>> escapingCSToWaitingRobotIDandCP
+# HashMap<Integer,ArrayList<Integer>> stoppingPoints
+# HashMap<Integer,ArrayList<Integer>> stoppingTimes
+# HashMap<Integer,Thread> stoppingPointTimers
++ HashMap<Integer,AbstractTrajectoryEnvelopeTracker> trackers
+# HashMap<Integer,CoordinatorDependency> currentDependencies
+# String logDirName
+# HashMap<AbstractTrajectoryEnvelopeTracker,Pair<Integer,Long>> communicatedCPs
+# HashMap<AbstractTrajectoryEnvelopeTracker,Integer> externalCPCounters
+# ComparatorChain comparators
+# HashMap<Integer,ForwardModel> forwardModels
+# HashMap<Integer,Coordinate[]> footprints
+# HashMap<Integer,Double> maxFootprintDimensions
+# HashMap<Integer,Integer> robotTrackingPeriodInMillis
+# HashMap<Integer,Double> robotMaxVelocity
+# HashMap<Integer,Double> robotMaxAcceleration
+# HashSet<Integer> muted
+# boolean yieldIfParking
+# boolean checkEscapePoses
+# HashMap<Integer,TrackingCallback> trackingCallbacks
+# Callback inferenceCallback
+# HashMap<Integer,AbstractMotionPlanner> motionPlanners
+# double packetLossProbability
+# double maxFaultsProbability
+# int numberOfReplicas
+# HashMap<Integer,Boolean> isDriving
+~ HashMap<CoordinatorDependency,CriticalSection> depsToCS
++ {static} String getResourceAsFileName(String)
++ {static} CriticalSection[] getCriticalSections(SpatialEnvelope,SpatialEnvelope,TrajectoryEnvelope,int,TrajectoryEnvelope,int,boolean,double)
++ {static} CriticalSection[] getCriticalSections(SpatialEnvelope,SpatialEnvelope,TrajectoryEnvelope,TrajectoryEnvelope,boolean,double)
++ {static} CriticalSection[] getCriticalSections(SpatialEnvelope,SpatialEnvelope,boolean,double)
++ {static} CriticalSection[] getCriticalSections(SpatialEnvelope,SpatialEnvelope,double)
+- {static} void printLicense()
++ ArrayList<SpatialEnvelope> getDrivingEnvelopes()
++ ArrayList<SpatialEnvelope> getDrivingEnvelope()
++ boolean isParked(int)
++ boolean isDriving(int)
++ ArrayList<Integer> getIdleRobots()
++ Set<Integer> getAllRobotIDs()
++ int getNumberOfReplicas()
++ double getTemporalResolution()
++ Integer getRobotTrackingPeriodInMillis(int)
++ void setQuiet(boolean)
++ void setNetworkParameters(double,int,double)
++ void setInferenceCallback(Callback)
++ int getControlPeriod()
++ void setYieldIfParking(boolean)
++ void setCheckEscapePoses(boolean)
++ void toggleMute(int)
++ void mute(int)
++ int[] getMuted()
++ void unMute(int)
+# Double getMaxFootprintDimension(int)
++ Coordinate[] getFootprint(int)
++ Geometry getFootprintPolygon(int)
++ void setForwardModel(int,ForwardModel)
++ ForwardModel getForwardModel(int)
++ void setRobotTrackingPeriodInMillis(int,int)
++ void setRobotMaxVelocity(int,double)
++ void setRobotMaxAcceleration(int,double)
++ Double getRobotMaxVelocity(int)
++ Double getRobotMaxAcceleration(int)
+# void setupLogging()
+# void writeStat(String,String)
+# void initStat(String,String)
++ TrajectoryEnvelopeSolver getSolver()
++ void setCriticalPoint(int,int,boolean)
++ RobotReport getRobotReport(int)
++ void setFootprint(int,Coordinate)
+# double computeMaxFootprintDimension(Coordinate[])
++ void setupSolver(long,long)
++ void startInference()
++ void stopInference()
++ boolean isStartedInference()
++ {abstract}long getCurrentTimeInMillis()
++ void placeRobot(int,Pose)
++ void placeRobot(int,TrajectoryEnvelope)
++ void placeRobot(int,Pose,TrajectoryEnvelope,String)
++ FleetVisualization getVisualization()
++ void setVisualization(FleetVisualization)
++ HashMap<Integer,CoordinatorDependency> getCurrentDependencies()
+# int getCriticalPoint(int,CriticalSection,int)
++ boolean atStoppingPoint(int)
+# void spawnWaitingThread(int,int,int)
+# boolean inParkingPose(int)
+# Geometry[] getObstaclesInCriticalPoints(int)
+# Geometry[] getObstaclesFromWaitingRobots(int)
+# PoseSteering[] doReplanning(AbstractMotionPlanner,Pose,Pose,Geometry)
++ Geometry[] makeObstacles(int,Pose)
+# {abstract}void updateDependencies()
+# boolean canExitCriticalSection(int,int,TrajectoryEnvelope,TrajectoryEnvelope,int)
++ void setMotionPlanner(int,AbstractMotionPlanner)
++ AbstractMotionPlanner getMotionPlanner(int)
++ void addComparator(Comparator<RobotAtCriticalSection>)
+# void computeCriticalSections()
+# Geometry getFootprintInPose(int,Pose)
+# void onCriticalSectionUpdate()
+# void filterCriticalSections()
+# void cleanUp(TrajectoryEnvelope)
+# void cleanUpRobotCS(int,int)
++ TrajectoryEnvelope getCurrentSuperEnvelope(int)
++ void addTrackingCallback(int,TrackingCallback)
+# void startTrackingAddedMissions()
++ boolean addMissions(Mission)
+# void setPriorityOfEDT(int)
++ TrajectoryEnvelope getCurrentTrajectoryEnvelope(int)
+# String[] getStatistics()
+# void overlayStatistics()
+# void printStatistics()
+# void onNewMissionDispatched(int)
+# void setupInferenceCallback()
+# int isAhead(CriticalSection,RobotReport,RobotReport)
++ {abstract}AbstractTrajectoryEnvelopeTracker getNewTracker(TrajectoryEnvelope,TrackingCallback)
++ boolean isFree(int)
++ boolean isMissionsPoolEmpty()
++ AbstractTrajectoryEnvelopeTracker getTracker(int)
+}
+class se.oru.coordination.coordination_oru.utility.EmergencyBreaker {
+# boolean useGlobal
+# boolean useLocal
+# boolean isGlobal
+# TreeSet<Integer> localIds
++ void addLocalid(int)
++ String toString()
+# String stringifyLocalIds()
++ boolean isStopped(int)
++ void stopRobots(int,int)
+# HashSet<Integer> findOpponentsInCriticalSections(int,int)
+}
+class se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel {
+- double maxAccel
+- double maxVel
+- double temporalResolution
+- int trackingPeriodInMillis
+- int controlPeriodInMillis
++ boolean canStop(TrajectoryEnvelope,RobotReport,int,boolean)
+- int getPathIndex(TrajectoryEnvelope,State)
++ int getEarliestStoppingPathIndex(TrajectoryEnvelope,RobotReport)
+}
+class se.oru.coordination.coordination_oru.utility.gates.Gate {
+# String name
+# CountDownLatch latch
+# boolean isPushed
+# boolean isAwaited
++ String toString()
++ void print(String)
++ void push()
++ void await()
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner19 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.coordinator.CoordinatorDependency {
+- int robotIDWaiting
+- int robotIDDriving
+- TrajectoryEnvelope teWaiting
+- TrajectoryEnvelope teDriving
+- int waitingPoint
+- int thresholdPoint
++ int hashCode()
++ boolean equals(Object)
++ int compareTo(CoordinatorDependency)
++ String toString()
++ Pose getWaitingPose()
++ Pose getReleasingPose()
++ TrajectoryEnvelope getWaitingTrajectoryEnvelope()
++ TrajectoryEnvelope getDrivingTrajectoryEnvelope()
++ int getWaitingPoint()
++ int getReleasingPoint()
++ int getWaitingRobotID()
++ int getDrivingRobotID()
+}
+class se.oru.coordination.coordination_oru.vehicles.LookAheadVehicle {
+- double predictableDistance
++ {static} void updateLookAheadVehiclesPath(TrajectoryEnvelopeCoordinator)
++ void getPlan(Pose,Pose[],String,Boolean)
++ void getPlan(Pose,Pose[],String,Boolean,ReedsSheppCarPlanner.PLANNING_ALGORITHM,double,double,double,double)
++ PoseSteering[] getLimitedPath(int,double,TrajectoryEnvelopeCoordinator)
++ double getPredictableDistance()
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner13 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.vehicles.HumanDrivenVehicle {
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.talk.ThreeRobotsFast {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner16 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.motionplanner.OccupancyMap {
+# {static} String TEMP_MAP_DIR
+# {static} int numCalls
+# Logger metaCSPLogger
+- int mapWidth
+- BitSet occupancyMapLinearBits
+- double threshold
+- double mapResolution
+- Coordinate mapOrigin
+- BufferedImage bimg
+- BufferedImage bimg_original
+- ArrayList<Geometry> obstacles
++ {static} boolean deleteDir(File)
+- {static} BufferedImage deepCopy(BufferedImage)
++ BufferedImage getMapImage()
++ void clearObstacles()
++ Geometry[] getObstacles()
++ void addObstacles(Geometry)
++ void saveDebugObstacleImage(Pose,Pose,Geometry,Pose)
++ ArrayList<Geometry> addObstacles(Geometry,Pose)
++ double getResolution()
++ Coordinate getMapOrigin()
++ double getThreshold()
++ byte[] asByteArray()
++ BufferedImage asBufferedImage()
++ BufferedImage asThresholdedBufferedImage()
++ int[] toPixels(Coordinate)
++ Coordinate toWorldCoordiantes(int,int)
++ int getPixelWidth()
++ int getPixelHeight()
++ double getWorldWidth()
++ double getWorldHeight()
++ double getOccupancyValue(int,int)
++ boolean isOccupied(int,int)
++ boolean isOccupied(Coordinate)
+- void createOccupancyMap()
+- void readMap(String)
+- void loadImage(String)
+}
+class se.oru.coordination.coordination_oru.utility.splines.CatmullRomSpline {
+# void initialize(double[],int)
+# double blend(int,double)
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner7 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.demo.DemoLauncher {
+- {static} String testsPackage
+- {static} String scenariosPackage
+- {static} void printUsage()
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorThreeRobotsReverseEnvelope {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.Diameter {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner4 {
++ {static} int MIN_DELAY
++ {static} int MAX_DELAY
++ {static} void main(String[])
+}
+abstract class se.oru.coordination.coordination_oru.utility.splines.Spline {
+# double[] controlPoints_
+# int nParts_
++ {abstract}double[] generate()
+}
+class se.oru.coordination.coordination_oru.tests.icaps2018.eval.TrajectoryEnvelopeCoordinatorSimulationICAPS {
+- ArrayList<Integer> robotsInUse
++ void writeEvaluationLog(FileWriter)
++ FileWriter writeSetupLog(String,String)
+}
+abstract class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlanner10 {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlannerFollowing {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.vehicles.AutonomousVehicle {
++ void getPlan(Pose,Pose[],String,Boolean)
++ void getPlan(Pose,Pose[],String,Boolean,ReedsSheppCarPlanner.PLANNING_ALGORITHM,double,double,double,double)
+}
+class se.oru.coordination.coordination_oru.tests.safetyAndLiveness.nRobotsDeadlock {
+# {static} int NUMBER_ROBOTS
+# {static} int NUMBER_MISSIONS
+- {static} void initStat(String,String)
++ {static} void writeStat(String,String)
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.clean.ThreeRobotsSimple {
++ {static} void main(String[])
+}
+class se.oru.coordination.coordination_oru.tests.safetyAndLiveness.ParkingArray {
+- {static} void writeStat(String,String)
+- {static} void initStat(String,String)
++ {static} void main(String[])
+}
+
+
+org.eclipse.jetty.websocket.servlet.WebSocketServlet <|-- se.oru.coordination.coordination_oru.simulator.BrowserVisualizationServlet
+com.sun.jna.Library <|-- se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlannerLib
+se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlannerLib +.. se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlannerLib$PathPose
+se.oru.coordination.coordination_oru.motionplanner.ompl.Structure <|-- se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlannerLib$PathPose
+se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlannerLib$PathPose +.. se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlannerLib$PathPose$ByReference
+se.oru.coordination.coordination_oru.motionplanner.ompl.ByReference <|.. se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlannerLib$PathPose$ByReference
+se.oru.coordination.coordination_oru.motionplanner.ompl.PathPose <|-- se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlannerLib$PathPose$ByReference
+se.oru.coordination.coordination_oru.tracker.Runnable <|.. se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerDummy
+se.oru.coordination.coordination_oru.tracker.AbstractTrajectoryEnvelopeTracker <|-- se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerDummy
+se.oru.coordination.coordination_oru.utility.Comparable <|.. se.oru.coordination.coordination_oru.utility.Mission
+se.oru.coordination.coordination_oru.utility.Missions +.. se.oru.coordination.coordination_oru.utility.Missions$ScenarioContainer
+se.oru.coordination.coordination_oru.coordinator.TrajectoryEnvelopeCoordinator <|-- se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation
+se.oru.coordination.coordination_oru.utility.gates.Thread <|-- se.oru.coordination.coordination_oru.utility.gates.GatedThread
+se.oru.coordination.coordination_oru.simulator.FleetVisualization <|.. se.oru.coordination.coordination_oru.simulator.JTSDrawingPanelVisualization
+se.oru.coordination.coordination_oru.simulator.FleetVisualization <|.. se.oru.coordination.coordination_oru.simulator.RVizVisualization
+se.oru.coordination.coordination_oru.simulator.NodeMain <|.. se.oru.coordination.coordination_oru.simulator.RVizVisualization
+se.oru.coordination.coordination_oru.motionplanner.AbstractMotionPlanner <|-- se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlanner
+org.eclipse.jetty.websocket.api.WebSocketAdapter <|-- se.oru.coordination.coordination_oru.simulator.BrowserVisualizationSocket
+se.oru.coordination.coordination_oru.utility.GeometrySmoother +.. se.oru.coordination.coordination_oru.utility.GeometrySmoother$SmootherControl
+se.oru.coordination.coordination_oru.utility.GeometrySmoother +.. se.oru.coordination.coordination_oru.utility.GeometrySmoother$InterpPoint
+se.oru.coordination.coordination_oru.tracker.Runnable <|.. se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4
+se.oru.coordination.coordination_oru.tracker.AbstractTrajectoryEnvelopeTracker <|-- se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4
+se.oru.coordination.coordination_oru.utility.MouseListener <|.. se.oru.coordination.coordination_oru.utility.MapInspector
+se.oru.coordination.coordination_oru.utility.MouseMotionListener <|.. se.oru.coordination.coordination_oru.utility.MapInspector
+se.oru.coordination.coordination_oru.utility.KeyListener <|.. se.oru.coordination.coordination_oru.utility.MapInspector
+se.oru.coordination.coordination_oru.utility.JPanel <|-- se.oru.coordination.coordination_oru.utility.MapInspector
+se.oru.coordination.coordination_oru.utility.Exception <|-- se.oru.coordination.coordination_oru.utility.NoPathFound
+se.oru.coordination.coordination_oru.utility.splines.Spline <|-- se.oru.coordination.coordination_oru.utility.splines.BezierSpline
+se.oru.coordination.coordination_oru.utility.splines.Spline <|-- se.oru.coordination.coordination_oru.utility.splines.CubicSpline
+se.oru.coordination.coordination_oru.simulator.FleetVisualization <|.. se.oru.coordination.coordination_oru.simulator.BrowserVisualization
+se.oru.coordination.coordination_oru.coordinator.AbstractTrajectoryEnvelopeCoordinator <|-- se.oru.coordination.coordination_oru.coordinator.TrajectoryEnvelopeCoordinator
+se.oru.coordination.coordination_oru.motionplanner.AbstractMotionPlanner <|-- se.oru.coordination.coordination_oru.motionplanner.roadmap.RoadMapPlanner
+org.eclipse.jetty.server.handler.AbstractHandler <|-- se.oru.coordination.coordination_oru.simulator.BrowserVisualizationServer
+se.oru.coordination.coordination_oru.coordinator.ForwardModel <|.. se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel
+se.oru.coordination.coordination_oru.coordinator.Comparable <|.. se.oru.coordination.coordination_oru.coordinator.CoordinatorDependency
+se.oru.coordination.coordination_oru.vehicles.AbstractVehicle <|-- se.oru.coordination.coordination_oru.vehicles.LookAheadVehicle
+se.oru.coordination.coordination_oru.vehicles.AutonomousVehicle <|-- se.oru.coordination.coordination_oru.vehicles.HumanDrivenVehicle
+se.oru.coordination.coordination_oru.utility.splines.CubicSpline <|-- se.oru.coordination.coordination_oru.utility.splines.CatmullRomSpline
+se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation <|-- se.oru.coordination.coordination_oru.tests.icaps2018.eval.TrajectoryEnvelopeCoordinatorSimulationICAPS
+se.oru.coordination.coordination_oru.vehicles.AbstractVehicle <|-- se.oru.coordination.coordination_oru.vehicles.AutonomousVehicle
+@enduml

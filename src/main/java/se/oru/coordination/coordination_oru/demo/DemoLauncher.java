@@ -6,7 +6,7 @@ import org.reflections.scanners.SubTypesScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
-import se.oru.coordination.coordination_oru.util.StringUtils;
+import se.oru.coordination.coordination_oru.utility.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -60,7 +60,7 @@ public class DemoLauncher {
     public static void main(String[] args) throws ClassNotFoundException {
 
         //Forces to loads the class so that license and (c) are printed even if no demo is invoked
-        Class.forName("se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator");
+        Class.forName("se.oru.coordination.coordination_oru.coordinator.TrajectoryEnvelopeCoordinator");
 
         if (args.length != 1) {
             printUsage();
