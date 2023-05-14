@@ -55,7 +55,7 @@ public class GridTest {
         final Pose row2Left = new Pose(4.0,30.0,-Math.PI/2);
         final Pose row3Left = new Pose(4.0,15.5,-Math.PI/2);
         final Pose row1Right = new Pose(57.0,44.0,-Math.PI/2);
-        final Pose row2Right = new Pose(57.0,30.0,-Math.PI/2);
+        final Pose row2Right = new Pose(52.0,30.0,-Math.PI/2);
         final Pose row3Right = new Pose(57.0,15.5,-Math.PI/2);
         final Pose center = new Pose(30.0,30.0,-Math.PI/2);
 
@@ -149,7 +149,7 @@ public class GridTest {
         if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isInverse);
         if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isInverse);
 
-        final boolean isForcing = true;
+        final boolean isForcing = false;
         if (isForcing) {
             AutonomousVehicle finalAut1 = aut1;
 

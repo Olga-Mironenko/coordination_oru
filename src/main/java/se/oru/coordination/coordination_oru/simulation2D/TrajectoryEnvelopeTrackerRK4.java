@@ -114,7 +114,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		this.overallDistance = totalDistance;
 		this.computeInternalCriticalPoints();
 		this.slowDownProfile = this.computeSlowdownProfile();
-		this.positionToSlowDown = this.computePositionToSlowDown(false);
+		this.positionToSlowDown = this.computePositionToSlowDown(totalDistance, false);
 		TrajectoryEnvelopeTrackerRK4 self = this;
 		this.th = new GatedThread("RK4 tracker " + te.getComponent()) {
 			@Override
@@ -133,7 +133,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			this.internalCriticalPoints.clear();
 			this.computeInternalCriticalPoints();
 			this.slowDownProfile = this.computeSlowdownProfile();
-			this.positionToSlowDown = this.computePositionToSlowDown(false);
+			this.positionToSlowDown = this.computePositionToSlowDown(totalDistance, false);
 			reportsList.clear();
 			reportTimeLists.clear(); //semplify to avoid discontinuities ... to be fixed.
 
@@ -324,8 +324,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		return ret; // map each speed to the stopping distance for it
 	}
 
-	private double computePositionToSlowDown(boolean isRealCriticalPoint) {
-		if (state.getPosition() >= this.totalDistance) {
+	private double computePositionToSlowDown(double targetDistance, boolean isRealCriticalPoint) {
+		if (state.getPosition() >= targetDistance) {
 			return state.getPosition(); // essentially force slowing down
 		}
 
@@ -335,7 +335,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		Double prevPosition = null;
 
 		//Compute where to slow down (can do forward here, we have the slowdown profile...)
-		while (stateToBe.getPosition() < this.totalDistance) {
+		while (stateToBe.getPosition() < targetDistance) {
 			var approximation = slowDownProfile.ceilingEntry(stateToBe.getVelocity());
 			assert approximation != null; // otherwise, `slowDownProfile` must contain entries for greater speeds
 
@@ -346,7 +346,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			// stoppingDistanceApproximate >= actual stopping distance
 
 			double landingPosition = stateToBe.getPosition() + stoppingDistanceApproximate;
-			if (landingPosition > totalDistance) {
+			if (landingPosition > targetDistance) {
 				if (prevPosition == null) {
 					return state.getPosition();
 				}
@@ -480,58 +480,60 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		RobotReport rr = getRobotReport();
 		int robotID = rr.getRobotID();
 
-		if (this.criticalPoint != criticalPointToSet) {
+		if (this.criticalPoint == criticalPointToSet) {
+			//Same critical point was already set
+			metaCSPLogger.warning("Critical point (" + te.getComponent() + ") " + criticalPointToSet + " was already set!");
+			return;
+		}
 
-			//A new intermediate index to stop at has been given
-			if (criticalPointToSet != -1) {
-				TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-				HashSet<CriticalSection> css = tec.allCriticalSections;
-				boolean isSlowingDown = true;
-				if (criticalPointToSet <= rr.getPathIndex()) {
-					for (CriticalSection cs : css) {
-						Integer start = cs.getStart(robotID);
-						if (start == null) {
-							continue;
-						}
-						Integer end = cs.getEnd(robotID);
-						assert end != null;
+		if (criticalPointToSet == -1) {
+			//The critical point has been reset, go to the end
+			this.criticalPoint = criticalPointToSet;
+			this.totalDistance = computeDistance(0, traj.getPose().length - 1);
+			this.positionToSlowDown = computePositionToSlowDown(totalDistance, false);
+			metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
+			return;
+		}
 
-						final int margin = 3; // TODO: can it be greater?
+		//A new intermediate index to stop at has been given
+		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+		HashSet<CriticalSection> css = tec.allCriticalSections;
+		if (criticalPointToSet > rr.getPathIndex()) {
+			//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
+			double targetDistance = computeDistance(0, criticalPointToSet);
+			double positionToSlowDownTemporary = computePositionToSlowDown(targetDistance, true);
 
-						if (start - margin <= criticalPointToSet && criticalPointToSet <= end + margin) {
-							cs.setHigher(robotID, true);
-							isSlowingDown = false;
-						}
-					}
-					assert ! isSlowingDown;
-				}
+			if (positionToSlowDownTemporary > state.getPosition()) {
+				this.criticalPoint = criticalPointToSet;
+				this.totalDistance = targetDistance;
+				this.positionToSlowDown = positionToSlowDownTemporary;
 
-				if (isSlowingDown) {
-					this.criticalPoint = criticalPointToSet;
-					//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
-					this.totalDistance = computeDistance(0, criticalPointToSet);
-					this.positionToSlowDown = computePositionToSlowDown(true);
+				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
+				return;
 
-					metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
-				}
-				// TODO: If not `isSlowingDown`, `this.criticalPoint` becomes outdated sometimes?
+				// TODO: If not `areCriticalSectionsFound`, `this.criticalPoint` becomes outdated sometimes?
 				// (Unless `setCriticalPoint` is always called for `-1` before getting called for real points.)
 			}
+		}
 
-			//The critical point has been reset, go to the end
-			else {
-				this.criticalPoint = criticalPointToSet;
-				this.totalDistance = computeDistance(0, traj.getPose().length-1);
-				this.positionToSlowDown = computePositionToSlowDown(false);
-				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
+		// So we would stop after the critical point.
+		boolean areCriticalSectionsFound = false;
+		for (CriticalSection cs : css) {
+			Integer start = cs.getStart(robotID);
+			if (start == null) {
+				continue;
+			}
+			Integer end = cs.getEnd(robotID);
+			assert end != null;
+
+			final int margin = 3; // TODO: can it be greater?
+
+			if (start - margin <= criticalPointToSet && criticalPointToSet <= end + margin) {
+				cs.setHigher(robotID, true);
+				areCriticalSectionsFound = true;
 			}
 		}
-
-		//Same critical point was already set
-		else {
-			metaCSPLogger.warning("Critical point (" + te.getComponent() + ") " + criticalPointToSet + " was already set!");
-		}
-
+		assert areCriticalSectionsFound;
 	}
 
 	@Override
