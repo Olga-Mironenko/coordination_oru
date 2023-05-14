@@ -134,25 +134,31 @@ public class CriticalSection {
 	}
 
 	public boolean isTe1(int robotID) {
-		boolean isTe1 = getTe1RobotID() == robotID;
-		boolean isTe2 = getTe2RobotID() == robotID;
-		assert isTe1 != isTe2;
-		return isTe1;
+		return getTe1RobotID() == robotID;
 	}
 
 	public boolean isTe2(int robotID) {
-		boolean isTe1 = getTe1RobotID() == robotID;
-		boolean isTe2 = getTe2RobotID() == robotID;
-		assert isTe1 != isTe2;
-		return isTe2;
+		return getTe2RobotID() == robotID;
 	}
 
 	public Integer getStart(int robotID) {
-		return isTe1(robotID) ? getTe1Start() : isTe2(robotID) ? getTe2Start() : null;
+		if (isTe1(robotID)) {
+			return getTe1Start();
+		}
+		if (isTe2(robotID)) {
+			return getTe2Start();
+		}
+		return null;
 	}
 
 	public Integer getEnd(int robotID) {
-		return isTe1(robotID) ? getTe1End() : isTe2(robotID) ? getTe2End() : null;
+		if (isTe1(robotID)) {
+			return getTe1End();
+		}
+		if (isTe2(robotID)) {
+			return getTe2End();
+		}
+		return null;
 	}
 
 	public void setHigher(int robotID, boolean isHigher) {

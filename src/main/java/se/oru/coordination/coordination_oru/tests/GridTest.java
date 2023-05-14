@@ -6,6 +6,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 
 import se.oru.coordination.coordination_oru.Mission;
+import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.*;
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
@@ -148,13 +149,20 @@ public class GridTest {
         if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isInverse);
         if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isInverse);
 
-        final boolean isForcing = false;
+        final boolean isForcing = true;
         if (isForcing) {
+            AutonomousVehicle finalAut1 = aut1;
+
             new GatedThread("new mission") {
                 @Override
                 public void runCore() {
+                    TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
                     // wait until `hum1` gives way to `aut1`
-                    while (Printer.getMillis() < 13000) {
+                    while (true) {
+                        RobotReport rr = tec.getRobotReport(finalAut1.getID());
+                        if (rr.getPathIndex() >= 225) {
+                            break;
+                        }
                         GatedThread.skipCycles(1);
                     }
 

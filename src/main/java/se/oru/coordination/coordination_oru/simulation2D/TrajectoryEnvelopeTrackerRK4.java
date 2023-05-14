@@ -12,8 +12,6 @@ import se.oru.coordination.coordination_oru.util.MissionUtils;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
-import static se.oru.coordination.coordination_oru.util.gates.GatedThread.sleep;
-
 public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
 	public static double coefDeltaTimeForSlowDown = 0.1;
 
@@ -476,7 +474,6 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	}
 
-
 	@Override
 	public void setCriticalPoint(int criticalPointToSet) {
 		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
@@ -490,7 +487,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 				HashSet<CriticalSection> css = tec.allCriticalSections;
 				boolean isSlowingDown = true;
-				if (robotID == MissionUtils.idHuman && criticalPointToSet <= rr.getPathIndex()) {
+				if (criticalPointToSet <= rr.getPathIndex()) {
 					for (CriticalSection cs : css) {
 						Integer start = cs.getStart(robotID);
 						if (start == null) {
