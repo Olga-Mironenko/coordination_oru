@@ -16,6 +16,8 @@ import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import com.vividsolutions.jts.geom.Coordinate;
 
 import se.oru.coordination.coordination_oru.RobotReport;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.MissionUtils;
 
 public abstract class AbstractVehicle {
     public static int vehicleNumber = 1;
@@ -137,22 +139,6 @@ public abstract class AbstractVehicle {
     public void writeStatistics() {
 
         try {
-            String line0 = "=================================" + "\n";
-//            String line1 = "Map: " + map + "\n";
-            String line2 = "Vehicle: V" + this.getID() + "  " + this.type + "\n";
-            String line3 = "---------------------------------" + "\n";
-            String line4 = "Cycle distance: " + this.cycleDistance + " m" + "\n";
-            String line5 = "No. of completed cycles: " + this.cycles + "\n";
-            String line6 = "Total distance travelled: " + totalDistance + " m" + "\n";
-            String line7 = "No. of stops: " + this.stops + "\n";
-            String line8 = "Total waiting time: " + totalWaitingTime + " s" + "\n";
-            String line9 = "Maximum waiting time: " + maxWaitingTime + " s" + "\n";
-            String line10 = "Maximum acceleration: " + maxAcceleration + " m/s^2" + "\n";
-            String line11 = "Maximum speed: " + maxVelocity + " m/s" + "\n";
-            String line12 = "Average speed: " + averageSpeed + " m/s" + "\n";
-            String line13 = "Total simulation time: " + timeInterval + " s" + "\n";
-            String line14 = "\n";
-
             if (! isStatisticsDirectoryCleaned) {
                 File dir = new File(statisticsDirectory);
                 dir.mkdirs();
@@ -168,24 +154,26 @@ public abstract class AbstractVehicle {
                 file.createNewFile();
             }
 
-            //FIXME Use a loop for ease
             FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
             BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(line0);
-//            bw.write(line1);
-            bw.write(line2);
-            bw.write(line3);
-            bw.write(line4);
-            bw.write(line5);
-            bw.write(line6);
-            bw.write(line7);
-            bw.write(line8);
-            bw.write(line9);
-            bw.write(line10);
-            bw.write(line11);
-            bw.write(line12);
-            bw.write(line13);
-            bw.write(line14);
+
+            bw.write("=================================" + "\n");
+            bw.write("Vehicle: V" + this.getID() + "  " + this.type + "\n");
+            bw.write("---------------------------------" + "\n");
+            bw.write("Cycle distance: " + this.cycleDistance + " m" + "\n");
+            bw.write("No. of completed cycles: " + this.cycles + "\n");
+            bw.write("Total distance travelled: " + totalDistance + " m" + "\n");
+            bw.write("No. of stops: " + this.stops + "\n");
+            bw.write("No. of forcing events: " + MissionUtils.robotIDToNumForcingEvents.getOrDefault(ID, 0) + "\n");
+            bw.write("No. of potential interactions: " + TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
+            bw.write("Total waiting time: " + totalWaitingTime + " s" + "\n");
+            bw.write("Maximum waiting time: " + maxWaitingTime + " s" + "\n");
+            bw.write("Maximum acceleration: " + maxAcceleration + " m/s^2" + "\n");
+            bw.write("Maximum speed: " + maxVelocity + " m/s" + "\n");
+            bw.write("Average speed: " + averageSpeed + " m/s" + "\n");
+            bw.write("Total simulation time: " + timeInterval + " s" + "\n");
+            bw.write("\n");
+
             bw.close();
 
         } catch (IOException e) {

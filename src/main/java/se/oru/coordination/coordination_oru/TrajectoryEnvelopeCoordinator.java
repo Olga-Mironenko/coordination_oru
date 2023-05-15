@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1154,7 +1153,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							}
 							numberNewCriticalSections = allCriticalSections.size();
 							elapsedTimeComputeCriticalSections = Calendar.getInstance().getTimeInMillis();
-							computeCriticalSections();
+							createCriticalSections();
 							elapsedTimeComputeCriticalSections = Calendar.getInstance().getTimeInMillis()-elapsedTimeComputeCriticalSections;
 							numberAllCriticalSections = allCriticalSections.size();
 							numberNewCriticalSections = numberAllCriticalSections-numberNewCriticalSections;
@@ -1346,7 +1345,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				envelopesToTrack.add(newTE);
 
 				//Recompute CSs involving this robot
-				computeCriticalSections();
+				createCriticalSections();
 
 				//------------------ (dynamic re-plan) --------------------
 				//Here we have to shift the start and end of the old critical section if the path is new

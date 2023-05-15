@@ -40,8 +40,8 @@ public class GridTest {
     }
 
     protected static void runDemo() throws NoPathFound {
-        final int loopMinutes = 5;
-        final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);
+        final double loopMinutes = 1;
+        final long loopTime = System.currentTimeMillis() + Math.round(loopMinutes * 60 * 1000);
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
@@ -149,7 +149,7 @@ public class GridTest {
         if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isInverse);
         if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isInverse);
 
-        final boolean isForcing = false;
+        final boolean isForcing = true;
         if (isForcing) {
             AutonomousVehicle finalAut1 = aut1;
 
@@ -160,7 +160,7 @@ public class GridTest {
                     // wait until `hum1` gives way to `aut1`
                     while (true) {
                         RobotReport rr = tec.getRobotReport(finalAut1.getID());
-                        if (rr.getPathIndex() >= 225) {
+                        if (rr.getPathIndex() >= 200) {
                             break;
                         }
                         GatedThread.skipCycles(1);

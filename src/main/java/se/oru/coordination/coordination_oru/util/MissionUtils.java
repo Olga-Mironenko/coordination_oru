@@ -13,6 +13,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.TreeMap;
 
 public class MissionUtils {
     public static final double targetVelocityHumanInitial = Double.POSITIVE_INFINITY; // essentially a limit
@@ -25,6 +26,8 @@ public class MissionUtils {
     // TODO: crashes on large initial velocity
 
     protected static Object pathLock = new Object(); // sentinel
+
+    public static TreeMap<Integer, Integer> robotIDToNumForcingEvents = new TreeMap<>();
 
     protected static void removeMissions(int robotID) {
         while (true) {
@@ -169,6 +172,8 @@ public class MissionUtils {
     }
 
     public static void forceDriving(int robotID) {
+        robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);
+
         TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
         final ArrayList<CriticalSection> criticalSectionsWithHighPriority =

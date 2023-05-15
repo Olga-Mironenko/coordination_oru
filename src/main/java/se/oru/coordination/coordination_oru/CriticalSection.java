@@ -222,10 +222,10 @@ public class CriticalSection {
 		ArrayList<CriticalSection> criticalSections = new ArrayList<>(criticalSectionsUnsorted);
 
 		Function<CriticalSection, Integer[]> csToInts = (CriticalSection cs) -> {
-			if (cs.getTe1() != null && cs.getTe1().getRobotID() == robotID) {
+			if (cs.getTe1RobotID() == robotID) {
 				return new Integer[] { cs.getTe1Start(), cs.getTe1End(), 1 };
 			}
-			if (cs.getTe2() != null && cs.getTe2().getRobotID() == robotID) {
+			if (cs.getTe2RobotID() == robotID) {
 				return new Integer[] { cs.getTe2Start(), cs.getTe2End(), 2 };
 			}
 			return new Integer[] { Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE };

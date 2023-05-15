@@ -94,6 +94,8 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected ArrayList<TrajectoryEnvelope> envelopesToTrack = new ArrayList<TrajectoryEnvelope>();
 	protected ArrayList<TrajectoryEnvelope> currentParkingEnvelopes = new ArrayList<TrajectoryEnvelope>();
 	public HashSet<CriticalSection> allCriticalSections = new HashSet<CriticalSection>();
+	public int numCriticalSectionsCreated = 0;
+	public HashMap<Integer, Integer> robotIDToNumPotentialInteractions = new HashMap<>();
 	protected HashMap<CriticalSection,Pair<Integer,Integer>> CSToDepsOrder = new HashMap<CriticalSection,Pair<Integer,Integer>>(); 
 	HashMap<Dependency,CriticalSection> depsToCS = new HashMap<Dependency, CriticalSection>();
 	protected HashMap<CriticalSection,Pair<Integer,Integer>> escapingCSToWaitingRobotIDandCP = new HashMap<CriticalSection, Pair<Integer,Integer>>(); 
@@ -1026,13 +1028,29 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		this.comparators = new ComparatorChain();
 	}
 
+	protected boolean createCriticalSection(CriticalSection cs) {
+		boolean isAdded = this.allCriticalSections.add(cs);
+		if (isAdded) {
+			Integer id1 = cs.getTe1RobotID();
+			Integer id2 = cs.getTe2RobotID();
+			if (id1 != null && id2 != null && ! id1.equals(id2)) {
+				for (int id : new int[] {id1, id2}) {
+					robotIDToNumPotentialInteractions.put(
+						id,
+						robotIDToNumPotentialInteractions.getOrDefault(id, 0) + 1
+					);
+				}
+			}
+		}
+		return isAdded;
+	}
+
 	/**
 	 * Update the set of current critical sections. This should be called every time
 	 * a new set of {@link Mission}s has been successfully added.
 	 */
-	protected void computeCriticalSections() {
-
-		int numberOfCriticalSections = 0;
+	protected void createCriticalSections() {
+		int numberOfCriticalSectionsInitially = this.allCriticalSections.size();
 
 		synchronized(allCriticalSections) {
 
@@ -1060,7 +1078,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 							int minStart2 = currentReports.containsKey(envelopesToTrack.get(j).getRobotID()) ? currentReports.get(envelopesToTrack.get(j).getRobotID()).getPathIndex() : -1;
 							double maxDimensionOfSmallestRobot = Math.min(getMaxFootprintDimension(drivingEnvelopes.get(i).getRobotID()), getMaxFootprintDimension(envelopesToTrack.get(j).getRobotID()));
 							for (CriticalSection cs : getCriticalSections(null, null, drivingEnvelopes.get(i), minStart1, envelopesToTrack.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot)) {
-								this.allCriticalSections.add(cs);
+								createCriticalSection(cs);
 								//metaCSPLogger.info("computeCriticalSections(): add (1) " + cs); 								
 							}
 						}
@@ -1075,7 +1093,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 							int minStart2 = currentReports.containsKey(envelopesToTrack.get(j).getRobotID()) ? currentReports.get(envelopesToTrack.get(j).getRobotID()).getPathIndex() : -1;
 							double maxDimensionOfSmallestRobot = Math.min(getMaxFootprintDimension(envelopesToTrack.get(i).getRobotID()), getMaxFootprintDimension(envelopesToTrack.get(j).getRobotID()));
 							for (CriticalSection cs : getCriticalSections(null, null, envelopesToTrack.get(i), minStart1, envelopesToTrack.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot)) {
-								this.allCriticalSections.add(cs);
+								createCriticalSection(cs);
 								//metaCSPLogger.info("computeCriticalSections(): add (2) " + cs);
 							}
 						}
@@ -1090,7 +1108,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 							int minStart2 = currentReports.containsKey(currentParkingEnvelopes.get(j).getRobotID()) ? currentReports.get(currentParkingEnvelopes.get(j).getRobotID()).getPathIndex() : -1;
 							double maxDimensionOfSmallestRobot = Math.min(getMaxFootprintDimension(drivingEnvelopes.get(i).getRobotID()), getMaxFootprintDimension(currentParkingEnvelopes.get(j).getRobotID()));
 							for (CriticalSection cs : getCriticalSections(null, null, drivingEnvelopes.get(i), minStart1, currentParkingEnvelopes.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot)) {
-								this.allCriticalSections.add(cs);	
+								createCriticalSection(cs);
 								//metaCSPLogger.info("computeCriticalSections(): add (3) " + cs);
 							}
 						}
@@ -1105,7 +1123,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 							int minStart2 = currentReports.containsKey(currentParkingEnvelopes.get(j).getRobotID()) ? currentReports.get(currentParkingEnvelopes.get(j).getRobotID()).getPathIndex() : -1;
 							double maxDimensionOfSmallestRobot = Math.min(getMaxFootprintDimension(envelopesToTrack.get(i).getRobotID()), getMaxFootprintDimension(currentParkingEnvelopes.get(j).getRobotID()));
 							for (CriticalSection cs : getCriticalSections(null, null, envelopesToTrack.get(i), minStart1, currentParkingEnvelopes.get(j), minStart2, this.checkEscapePoses, maxDimensionOfSmallestRobot)) {
-								this.allCriticalSections.add(cs);
+								createCriticalSection(cs);
 								//metaCSPLogger.info("computeCriticalSections(): add (4) " + cs);
 							}
 						}
@@ -1116,9 +1134,12 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 			//metaCSPLogger.info("Critical sections: " + allCriticalSections.toString());
 
-			numberOfCriticalSections = this.allCriticalSections.size();
+			int numberOfCriticalSections = this.allCriticalSections.size();
 			metaCSPLogger.info("There are now " + numberOfCriticalSections + " critical sections");
 
+			int delta = numberOfCriticalSections - numberOfCriticalSectionsInitially;
+			assert delta >= 0;
+			numCriticalSectionsCreated += delta;
 		}
 
 		onCriticalSectionUpdate();
@@ -1150,6 +1171,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				if (cs1.equals(cs2)) {
 					toRemove.add(cs1);
 					metaCSPLogger.finest("Removed one of " + cs1 + " and " + cs2);
+					throw new RuntimeException("should be impossible: allCriticalSections is a set");
 				}
 			}
 		}
@@ -1516,7 +1538,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 							//Make a new parking tracker for the found end parking (park the robot)
 							placeRobot(myTE.getRobotID(), null, myEndParking, null);
 
-							computeCriticalSections();
+							createCriticalSections();
 							updateDependencies();							
 						}
 
@@ -1781,7 +1803,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 								onNewMissionDispatched(te.getFirst().getRobotID());
 								numberNewAddedMissions++;
 							}
-							computeCriticalSections();
+							createCriticalSections();
 							startTrackingAddedMissions();
 						}
 						updateDependencies();
