@@ -20,7 +20,9 @@ import static se.oru.coordination.coordination_oru.util.Printer.print;
 public class GridTest {
     enum Scenario {
         BASELINE_IDEAL_DRIVER,
-        FORCING,
+        FORCING_CS1,
+        FORCING_CS1_CS2,
+        FORCING_CS1_CS2_CS3,
     }
 
     public static void main(String[] args) {
@@ -30,14 +32,12 @@ public class GridTest {
         BrowserVisualization.isStatusText = true;
         GatedThread.enable();
 
-        Scenario scenario = Scenario.BASELINE_IDEAL_DRIVER;
-        AbstractVehicle.scenarioId = String.valueOf(scenario);
 
         new GatedThread("runDemo") {
             @Override
             public void runCore() {
                 try {
-                    runDemo(scenario);
+                    runDemo();
                 } catch (NoPathFound e) {
                     throw new RuntimeException(e);
                 }
@@ -47,8 +47,12 @@ public class GridTest {
         GatedThread.runGatekeeper();
     }
 
-    protected static void runDemo(Scenario scenario) throws NoPathFound {
-        final double loopMinutes = 1;
+    protected static void runDemo() throws NoPathFound {
+        final Scenario scenario = Scenario.FORCING_CS1_CS2;
+
+        AbstractVehicle.scenarioId = String.valueOf(scenario);
+
+        final double loopMinutes = 10;
         final long loopTime = System.currentTimeMillis() + Math.round(loopMinutes * 60 * 1000);
 
         final String YAML_FILE = "maps/map-grid.yaml";
@@ -63,7 +67,7 @@ public class GridTest {
         final Pose row2Left = new Pose(4.0,30.0,-Math.PI/2);
         final Pose row3Left = new Pose(4.0,15.5,-Math.PI/2);
         final Pose row1Right = new Pose(57.0,44.0,-Math.PI/2);
-        final Pose row2Right = new Pose(52.0,30.0,-Math.PI/2);
+        final Pose row2Right = new Pose(57.0,30.0,-Math.PI/2);
         final Pose row3Right = new Pose(57.0,15.5,-Math.PI/2);
         final Pose center = new Pose(30.0,30.0,-Math.PI/2);
 
@@ -98,7 +102,7 @@ public class GridTest {
         AutonomousVehicle aut4 = null;
         AutonomousVehicle aut5 = null;
 
-        double xLength = 2.0;
+        double xLength = 2.5;
         double yLength = 1.5;
         double xLengthInner = 1.5;
         double yLengthInner = 1.0;
@@ -157,38 +161,41 @@ public class GridTest {
         if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isInverse);
         if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isInverse);
 
-        boolean isForcing;
-        switch (scenario) {
-            case BASELINE_IDEAL_DRIVER:
-                isForcing = false;
-                break;
-            case FORCING:
-                isForcing = true;
-                break;
-            default:
-                throw new RuntimeException(String.valueOf(scenario));
-        };
-
-        if (isForcing) {
-            AutonomousVehicle finalAut1 = aut1;
-
-            new GatedThread("new mission") {
-                @Override
-                public void runCore() {
-                    TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-                    // wait until `hum1` gives way to `aut1`
-                    while (true) {
-                        RobotReport rr = tec.getRobotReport(finalAut1.getID());
-                        if (rr.getPathIndex() >= 200) {
-                            break;
-                        }
-                        GatedThread.skipCycles(1);
-                    }
-
-                    Printer.print("calling forceDriving");
-                    MissionUtils.forceDriving(hum0.getID());
+        AutonomousVehicle finalAut1 = aut1;
+        new GatedThread("scenario creator") {
+            @Override
+            public void runCore() {
+                boolean isForcing;
+                Double forcingDistance = null;
+                switch (scenario) {
+                    case BASELINE_IDEAL_DRIVER:
+                        isForcing = false;
+                        break;
+                    case FORCING_CS1:
+                        isForcing = true;
+                        forcingDistance = 10.0;
+                        break;
+                    case FORCING_CS1_CS2:
+                        isForcing = true;
+                        forcingDistance = 20.0;
+                        break;
+                    default:
+                        throw new RuntimeException(String.valueOf(scenario));
                 }
-            }.start();
-        }
+
+                if (! isForcing) {
+                    return;
+                }
+
+                TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+                while (true) {
+                    // wait until `hum1` gives way to `aut1`
+                    if (hum0.lastRobotReport.getY() > 50 && hum0.currentRobotReport.getY() <= 50) {
+                        MissionUtils.forceDriving(hum0.getID(), forcingDistance);
+                    }
+                    GatedThread.skipCycles(1);
+                }
+            }
+        }.start();
     }
 }

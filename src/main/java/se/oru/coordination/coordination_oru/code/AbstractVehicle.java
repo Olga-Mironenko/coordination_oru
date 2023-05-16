@@ -37,8 +37,8 @@ public abstract class AbstractVehicle {
     private final double startTime = System.nanoTime();
     private Color color;
     private Color colorInMotion;
-    private RobotReport currentRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
-    private RobotReport lastRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
+    public RobotReport currentRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
+    public RobotReport lastRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
     private double cycleDistance;
     private double totalDistance;
     private long timeInterval;
@@ -52,7 +52,7 @@ public abstract class AbstractVehicle {
 
     private boolean isStatisticsDirectoryPrepared = false;
     private static final String statisticsRoot = "logs/statistics";
-    private static final String statisticsSubdir = new SimpleDateFormat("yyyyMMdd_hhmmss").format(new Date());
+    private static final String statisticsSubdir = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
     private static final String statisticsDirectoryCurrent = statisticsRoot + "/current";
     public static String scenarioId;
 

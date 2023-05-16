@@ -171,13 +171,13 @@ public class MissionUtils {
         return replacementPath;
     }
 
-    public static void forceDriving(int robotID) {
+    public static void forceDriving(int robotID, double forcingDistance) {
         robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
         final ArrayList<CriticalSection> criticalSectionsWithHighPriority =
-                selectCriticalSectionsWithHighPriority(robotID, tec.allCriticalSections, 20.0, Integer.MAX_VALUE);
+                selectCriticalSectionsWithHighPriority(robotID, tec.allCriticalSections, forcingDistance, Integer.MAX_VALUE);
         for (CriticalSection cs : criticalSectionsWithHighPriority) {
             cs.setHigher(robotID, true);
         }

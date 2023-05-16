@@ -53,6 +53,20 @@ public class RobotReport {
 		return pose;
 	}
 
+	public double getX() {
+		if (pose == null) {
+			return Double.NaN;
+		}
+		return pose.getX();
+	}
+
+	public double getY() {
+		if (pose == null) {
+			return Double.NaN;
+		}
+		return pose.getY();
+	}
+
 	/**
 	 * Get the index of the last pose passed by the robot. 
 	 * @return The index of the last pose passed by the robot.

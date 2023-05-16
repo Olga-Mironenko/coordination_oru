@@ -279,8 +279,10 @@ public class BrowserVisualization implements FleetVisualization {
 			if (rr == null) {
 				text += "no robot report";
 			} else {
+				text += "i=" + rr.getPathIndex() + "; p=" + rr.getPose() + "; ";
+
 				double velocity = rr.getVelocity();
-				text += "velocity: " + round(velocity);
+				text += "v=" + round(velocity) + " m/s";
 
 				int numCalls = 0;
 				var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
