@@ -18,6 +18,11 @@ import static se.oru.coordination.coordination_oru.util.Printer.print;
 
 
 public class GridTest {
+    enum Scenario {
+        BASELINE_IDEAL_DRIVER,
+        FORCING,
+    }
+
     public static void main(String[] args) {
         Printer.resetTime();
         print("started");
@@ -25,11 +30,14 @@ public class GridTest {
         BrowserVisualization.isStatusText = true;
         GatedThread.enable();
 
+        Scenario scenario = Scenario.BASELINE_IDEAL_DRIVER;
+        AbstractVehicle.scenarioId = String.valueOf(scenario);
+
         new GatedThread("runDemo") {
             @Override
             public void runCore() {
                 try {
-                    runDemo();
+                    runDemo(scenario);
                 } catch (NoPathFound e) {
                     throw new RuntimeException(e);
                 }
@@ -39,7 +47,7 @@ public class GridTest {
         GatedThread.runGatekeeper();
     }
 
-    protected static void runDemo() throws NoPathFound {
+    protected static void runDemo(Scenario scenario) throws NoPathFound {
         final double loopMinutes = 1;
         final long loopTime = System.currentTimeMillis() + Math.round(loopMinutes * 60 * 1000);
 
@@ -149,7 +157,18 @@ public class GridTest {
         if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isInverse);
         if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isInverse);
 
-        final boolean isForcing = true;
+        boolean isForcing;
+        switch (scenario) {
+            case BASELINE_IDEAL_DRIVER:
+                isForcing = false;
+                break;
+            case FORCING:
+                isForcing = true;
+                break;
+            default:
+                throw new RuntimeException(String.valueOf(scenario));
+        };
+
         if (isForcing) {
             AutonomousVehicle finalAut1 = aut1;
 

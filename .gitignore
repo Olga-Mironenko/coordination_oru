@@ -13,7 +13,6 @@
 
 # Data
 *.json
-results/
 paths/
 
 notes/

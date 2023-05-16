@@ -5,8 +5,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
@@ -46,8 +50,11 @@ public abstract class AbstractVehicle {
     private int stops;
     private PoseSteering[] path;
 
-    private final String statisticsDirectory = "results";
-    private boolean isStatisticsDirectoryCleaned = false;
+    private boolean isStatisticsDirectoryPrepared = false;
+    private static final String statisticsRoot = "logs/statistics";
+    private static final String statisticsSubdir = new SimpleDateFormat("yyyyMMdd_hhmmss").format(new Date());
+    private static final String statisticsDirectoryCurrent = statisticsRoot + "/current";
+    public static String scenarioId;
 
     public AbstractVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
         this.ID = id;
@@ -139,21 +146,20 @@ public abstract class AbstractVehicle {
     public void writeStatistics() {
 
         try {
-            if (! isStatisticsDirectoryCleaned) {
-                File dir = new File(statisticsDirectory);
+            String subdir = statisticsSubdir + (scenarioId == null ? "" : "_" + scenarioId);
+            File dir = new File(statisticsRoot + "/" + subdir);
+            if (!isStatisticsDirectoryPrepared) {
                 dir.mkdirs();
                 FileUtils.cleanDirectory(dir);
-                isStatisticsDirectoryCleaned = true;
+
+                Path current = Path.of(statisticsDirectoryCurrent);
+                Files.deleteIfExists(current);
+                Files.createSymbolicLink(current, Path.of(subdir));
+
+                isStatisticsDirectoryPrepared = true;
             }
 
-            String fileName = statisticsDirectory + "/" + this.ID + ".txt";
-            File file = new File(fileName);
-
-            // if file doesn't exist, then create it
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-
+            File file = new File(dir.toString() + "/" + this.ID + ".txt");
             FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
             BufferedWriter bw = new BufferedWriter(fw);
 
@@ -177,7 +183,7 @@ public abstract class AbstractVehicle {
             bw.close();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
         }
     }
 
