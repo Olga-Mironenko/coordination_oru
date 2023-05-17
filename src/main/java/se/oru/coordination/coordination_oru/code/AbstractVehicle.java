@@ -50,10 +50,10 @@ public abstract class AbstractVehicle {
     private int stops;
     private PoseSteering[] path;
 
-    private boolean isStatisticsDirectoryPrepared = false;
-    private static final String statisticsRoot = "logs/statistics";
-    private static final String statisticsSubdir = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-    private static final String statisticsDirectoryCurrent = statisticsRoot + "/current";
+    private boolean isRundirPrepared = false;
+    private static final String rundirsRoot = "logs/rundirs";
+    private static final String dateString = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+    private static final String rundirCurrent = rundirsRoot + "/current";
     public static String scenarioId;
 
     public AbstractVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
@@ -146,39 +146,39 @@ public abstract class AbstractVehicle {
     public void writeStatistics() {
 
         try {
-            String subdir = statisticsSubdir + (scenarioId == null ? "" : "_" + scenarioId);
-            File dir = new File(statisticsRoot + "/" + subdir);
-            if (!isStatisticsDirectoryPrepared) {
+            String subdir = dateString + (scenarioId == null ? "" : "_" + scenarioId);
+            File dir = new File(rundirsRoot + "/" + subdir);
+            if (!isRundirPrepared) {
                 dir.mkdirs();
                 FileUtils.cleanDirectory(dir);
 
-                Path current = Path.of(statisticsDirectoryCurrent);
+                Path current = Path.of(rundirCurrent);
                 Files.deleteIfExists(current);
                 Files.createSymbolicLink(current, Path.of(subdir));
 
-                isStatisticsDirectoryPrepared = true;
+                isRundirPrepared = true;
             }
 
-            File file = new File(dir.toString() + "/" + this.ID + ".txt");
+            File file = new File(dir.toString() + "/" + this.ID + ".csv");
             FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
             BufferedWriter bw = new BufferedWriter(fw);
 
-            bw.write("=================================" + "\n");
-            bw.write("Vehicle: V" + this.getID() + "  " + this.type + "\n");
-            bw.write("---------------------------------" + "\n");
-            bw.write("Cycle distance: " + this.cycleDistance + " m" + "\n");
-            bw.write("No. of completed cycles: " + this.cycles + "\n");
-            bw.write("Total distance travelled: " + totalDistance + " m" + "\n");
-            bw.write("No. of stops: " + this.stops + "\n");
-            bw.write("No. of forcing events: " + MissionUtils.robotIDToNumForcingEvents.getOrDefault(ID, 0) + "\n");
-            bw.write("No. of potential interactions: " + TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
-            bw.write("Total waiting time: " + totalWaitingTime + " s" + "\n");
-            bw.write("Maximum waiting time: " + maxWaitingTime + " s" + "\n");
-            bw.write("Maximum acceleration: " + maxAcceleration + " m/s^2" + "\n");
-            bw.write("Maximum speed: " + maxVelocity + " m/s" + "\n");
-            bw.write("Average speed: " + averageSpeed + " m/s" + "\n");
-            bw.write("Total simulation time: " + timeInterval + " s" + "\n");
-            bw.write("\n");
+            bw.write("Date," + dateString + "\n");
+            bw.write("Scenario ID," + scenarioId + "\n");
+            bw.write("Vehicle ID," + this.getID() + "\n");
+            bw.write("Vehicle type," + this.type + "\n");
+            bw.write("Cycle distance (m)," + this.cycleDistance + "\n");
+            bw.write("No. of completed cycles," + this.cycles + "\n");
+            bw.write("Total distance travelled (m)," + totalDistance + "\n");
+            bw.write("No. of stops," + this.stops + "\n");
+            bw.write("No. of forcing events," + MissionUtils.robotIDToNumForcingEvents.getOrDefault(ID, 0) + "\n");
+            bw.write("No. of potential interactions," + TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
+            bw.write("Total waiting time (s)," + totalWaitingTime + "\n");
+            bw.write("Maximum waiting time (s)," + maxWaitingTime + "\n");
+            bw.write("Maximum acceleration (m/s^2)," + maxAcceleration + "\n");
+            bw.write("Maximum speed (m/s)," + maxVelocity + "\n");
+            bw.write("Average speed (m/s)," + averageSpeed + "\n");
+            bw.write("Total simulation time (s)," + timeInterval + "\n");
 
             bw.close();
 

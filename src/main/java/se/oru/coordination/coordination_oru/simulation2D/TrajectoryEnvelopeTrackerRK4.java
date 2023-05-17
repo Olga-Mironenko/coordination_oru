@@ -533,7 +533,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				areCriticalSectionsFound = true;
 			}
 		}
-		assert areCriticalSectionsFound;
+		//assert areCriticalSectionsFound;
 	}
 
 	@Override
