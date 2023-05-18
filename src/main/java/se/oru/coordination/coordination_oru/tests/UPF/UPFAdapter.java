@@ -3,10 +3,10 @@ package se.oru.coordination.coordination_oru.tests.UPF;
 import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel;
-import se.oru.coordination.coordination_oru.utility.Mission;
 import se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlanner;
-import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
+import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.utility.Mission;
 import se.oru.coordination.coordination_oru.utility.Missions;
 
 import java.util.HashMap;
@@ -20,9 +20,8 @@ public class UPFAdapter {
     public static final double TEMPORAL_RESOLUTION = 1000;
     public static final String yamlFile = "maps/map-partial-2.yaml";
     public static String roadMapFile = "missions/icaps_locations_and_paths_4.txt";
-
-    private TrajectoryEnvelopeCoordinatorSimulation tec = null;
     private final HashMap<String, Integer> robotsToIDs = new HashMap<String, Integer>();
+    private TrajectoryEnvelopeCoordinatorSimulation tec = null;
     private ReedsSheppCarPlanner motionPlanner = null;
 
     /**

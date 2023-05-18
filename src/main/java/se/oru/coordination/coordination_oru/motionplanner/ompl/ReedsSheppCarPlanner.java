@@ -161,6 +161,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
         return true;
     }
 
-    public enum PLANNING_ALGORITHM {RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT}
-
+    public enum PLANNING_ALGORITHM {
+        RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT
+    }
 }

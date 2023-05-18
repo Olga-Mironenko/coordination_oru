@@ -1,17 +1,17 @@
 package se.oru.coordination.coordination_oru.scenarios;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
-import se.oru.coordination.coordination_oru.utility.Mission;
-import se.oru.coordination.coordination_oru.vehicles.AutonomousVehicle;
-import se.oru.coordination.coordination_oru.utility.Heuristics;
-import se.oru.coordination.coordination_oru.vehicles.LookAheadVehicle;
-import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
+import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.utility.Heuristics;
+import se.oru.coordination.coordination_oru.utility.Mission;
 import se.oru.coordination.coordination_oru.utility.Missions;
+import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
+import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 
 import java.awt.*;
 
-public class SevenAutonomousOneLookAheadVehicles {
+public class SevenAutonomousOneLookAheadRobot {
     public static void main(String[] args) {
 
         final int simulationTimeMinutes = 10;
@@ -32,14 +32,14 @@ public class SevenAutonomousOneLookAheadVehicles {
         final Pose[] autonomousVehicleGoal = {orePass};
         final Pose[] limitedLookAheadVehicleGoal = {mainTunnelRight};
 
-        var autonomousVehicle1 = new AutonomousVehicle();
-        var autonomousVehicle2 = new AutonomousVehicle();
-        var autonomousVehicle3 = new AutonomousVehicle();
-        var autonomousVehicle4 = new AutonomousVehicle();
-        var autonomousVehicle5 = new AutonomousVehicle();
-        var autonomousVehicle6 = new AutonomousVehicle();
-        var autonomousVehicle7 = new AutonomousVehicle();
-        var lookAheadVehicle = new LookAheadVehicle(1, predictableDistance, Color.CYAN, 5, 2, 0.5, 0.5);
+        var autonomousVehicle1 = new AutonomousRobot();
+        var autonomousVehicle2 = new AutonomousRobot();
+        var autonomousVehicle3 = new AutonomousRobot();
+        var autonomousVehicle4 = new AutonomousRobot();
+        var autonomousVehicle5 = new AutonomousRobot();
+        var autonomousVehicle6 = new AutonomousRobot();
+        var autonomousVehicle7 = new AutonomousRobot();
+        var lookAheadVehicle = new LookAheadRobot(1, predictableDistance, Color.CYAN, 5, 2, 0.5, 0.5);
         autonomousVehicle1.getPlan(drawPoint17, autonomousVehicleGoal, YAML_FILE, true);
         autonomousVehicle2.getPlan(drawPoint19, autonomousVehicleGoal, YAML_FILE, true);
         autonomousVehicle3.getPlan(drawPoint20, autonomousVehicleGoal, YAML_FILE, true);
@@ -95,7 +95,7 @@ public class SevenAutonomousOneLookAheadVehicles {
         Missions.enqueueMission(m7);
         Missions.enqueueMission(m8);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, simulationTime);
+        Missions.startMissionDispatchers(tec, true);
 
     }
 }

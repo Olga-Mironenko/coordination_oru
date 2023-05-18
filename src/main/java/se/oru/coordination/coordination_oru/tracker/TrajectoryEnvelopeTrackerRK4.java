@@ -19,6 +19,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
     public static EmergencyBreaker emergencyBreaker = new EmergencyBreaker(false, false);
     protected final double MAX_VELOCITY;
     protected final double MAX_ACCELERATION;
+    private final ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
+    private final Random rand = new Random(1); //Calendar.getInstance().getTimeInMillis());
     protected double overallDistance = 0.0;
     protected double totalDistance = 0.0;
     protected double positionToSlowDown = -1.0;
@@ -28,9 +30,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
     protected ArrayList<RobotReport> reportsList = new ArrayList<RobotReport>();
     protected ArrayList<Long> reportTimeLists = new ArrayList<Long>();
     private Thread th = null;
-    private final ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
     private int numberOfReplicas = 1;
-    private final Random rand = new Random(1); //Calendar.getInstance().getTimeInMillis());
     private TreeMap<Double, Double> slowDownProfile = null;
     private boolean slowingDown = false;
     private boolean useInternalCPs = true;

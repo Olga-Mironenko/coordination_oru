@@ -2,13 +2,13 @@ package se.oru.coordination.coordination_oru.scenarios;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel;
-import se.oru.coordination.coordination_oru.utility.Mission;
-import se.oru.coordination.coordination_oru.vehicles.AutonomousVehicle;
-import se.oru.coordination.coordination_oru.utility.Heuristics;
 import se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlanner;
-import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
+import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.utility.Heuristics;
+import se.oru.coordination.coordination_oru.utility.Mission;
 import se.oru.coordination.coordination_oru.utility.Missions;
+import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
 
 import java.awt.*;
 
@@ -40,12 +40,12 @@ public class ProductionCycleAutonomousMine {
 
         final Pose[] autonomousVehicleGoal = {orePass};
 
-        var drillVehicle = new AutonomousVehicle(1, Color.MAGENTA, 5, 2, 0.5, 0.5);
-        var chargingVehicle = new AutonomousVehicle(1, Color.PINK, 5, 2, 0.5, 0.5);
-        var waterVehicle = new AutonomousVehicle(1, Color.BLUE, 5, 2, 0.5, 0.5);
+        var drillVehicle = new AutonomousRobot(1, Color.MAGENTA, 5, 2, 0.5, 0.5);
+        var chargingVehicle = new AutonomousRobot(1, Color.PINK, 5, 2, 0.5, 0.5);
+        var waterVehicle = new AutonomousRobot(1, Color.BLUE, 5, 2, 0.5, 0.5);
 
-        var autonomousVehicle1 = new AutonomousVehicle();
-        var autonomousVehicle2 = new AutonomousVehicle();
+        var autonomousVehicle1 = new AutonomousRobot();
+        var autonomousVehicle2 = new AutonomousRobot();
         autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
         autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
 
@@ -84,7 +84,7 @@ public class ProductionCycleAutonomousMine {
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, loopTime);
+        Missions.startMissionDispatchers(tec, true);
 
         tec.setForwardModel(drillVehicle.getID(), new ConstantAccelerationForwardModel(drillVehicle.getMaxAcceleration(), drillVehicle.getMaxVelocity(), tec.getTemporalResolution(),
                 tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(drillVehicle.getID())));

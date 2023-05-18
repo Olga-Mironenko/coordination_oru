@@ -7,7 +7,10 @@ import se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForw
 import se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.utility.*;
+import se.oru.coordination.coordination_oru.utility.CriticalSection;
+import se.oru.coordination.coordination_oru.utility.Mission;
+import se.oru.coordination.coordination_oru.utility.RobotAtCriticalSection;
+import se.oru.coordination.coordination_oru.utility.RobotReport;
 
 import java.util.ArrayList;
 import java.util.Comparator;

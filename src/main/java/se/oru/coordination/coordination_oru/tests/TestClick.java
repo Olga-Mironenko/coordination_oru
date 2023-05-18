@@ -2,16 +2,13 @@ package se.oru.coordination.coordination_oru.tests;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
-import se.oru.coordination.coordination_oru.utility.Mission;
-import se.oru.coordination.coordination_oru.vehicles.AutonomousVehicle;
-import se.oru.coordination.coordination_oru.utility.Heuristics;
-import se.oru.coordination.coordination_oru.vehicles.HumanDrivenVehicle;
-import se.oru.coordination.coordination_oru.vehicles.VehiclesHashMap;
-import se.oru.coordination.coordination_oru.utility.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.utility.*;
 import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
+import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
+import se.oru.coordination.coordination_oru.robots.HumanOperatedRobot;
+import se.oru.coordination.coordination_oru.robots.RobotHashMap;
 
 import java.awt.*;
 
@@ -80,11 +77,11 @@ public class TestClick {
 
         final int maxVelocity = 8;
 
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, 2, 0.5, 0.5);
-        AutonomousVehicle aut1 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 0.5, 0.5);
-        AutonomousVehicle aut2 = new AutonomousVehicle(0, Color.RED, Color.RED, maxVelocity, 2, 0.5, 0.5);
+        AutonomousRobot hum0 = new HumanOperatedRobot(0, Color.GREEN, Color.BLUE, maxVelocity, 2, 0.5, 0.5);
+        AutonomousRobot aut1 = new AutonomousRobot(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 0.5, 0.5);
+        AutonomousRobot aut2 = new AutonomousRobot(0, Color.RED, Color.RED, maxVelocity, 2, 0.5, 0.5);
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
-        System.out.println(VehiclesHashMap.getInstance().getList());
+        System.out.println(RobotHashMap.getList());
 
         TrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, true);
 
@@ -115,7 +112,7 @@ public class TestClick {
         tec.setVisualization(viz);
 
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, loopTime);
+        Missions.startMissionDispatchers(tec, true);
         Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
         if (humFinish != null) {

@@ -75,16 +75,15 @@ public class GeometrySmoother {
             return 10;
         }
     };
-
-    /**
-     * The current SmootherControl instance.
-     */
-    private SmootherControl control;
     /**
      * Cache of previously calculated interpolation parameters
      */
     private final Map<Integer, WeakReference<InterpPoint[]>> lookup =
             new HashMap<Integer, WeakReference<InterpPoint[]>>();
+    /**
+     * The current SmootherControl instance.
+     */
+    private SmootherControl control;
 
     /**
      * Creates a new smoother that will use the given {@code GeometryFactory}.

@@ -3,13 +3,13 @@ package se.oru.coordination.coordination_oru.scenarios;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel;
-import se.oru.coordination.coordination_oru.utility.Mission;
-import se.oru.coordination.coordination_oru.vehicles.AutonomousVehicle;
-import se.oru.coordination.coordination_oru.utility.Heuristics;
-import se.oru.coordination.coordination_oru.vehicles.LookAheadVehicle;
-import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
+import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.utility.Heuristics;
+import se.oru.coordination.coordination_oru.utility.Mission;
 import se.oru.coordination.coordination_oru.utility.Missions;
+import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
+import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 
 import java.awt.*;
 
@@ -31,11 +31,11 @@ public class ProductionCycleMine {
 
         final Pose[] autonomousVehicleGoal = {orePass};
 
-        var drillVehicle = new LookAheadVehicle(1, predictableDistance, Color.CYAN, 5, 2, 0.5, 0.5);
-        var chargingVehicle = new LookAheadVehicle(1, 6 * predictableDistance, Color.WHITE, 5, 2, 0.5, 0.5);
+        var drillVehicle = new LookAheadRobot(1, predictableDistance, Color.CYAN, 5, 2, 0.5, 0.5);
+        var chargingVehicle = new LookAheadRobot(1, 6 * predictableDistance, Color.WHITE, 5, 2, 0.5, 0.5);
 
-        var autonomousVehicle1 = new AutonomousVehicle();
-        var autonomousVehicle2 = new AutonomousVehicle();
+        var autonomousVehicle1 = new AutonomousRobot();
+        var autonomousVehicle2 = new AutonomousRobot();
         autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
         autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
 
@@ -59,7 +59,7 @@ public class ProductionCycleMine {
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);
 
-        // Set up a simple GUI (null means empty map, otherwise provide yaml file)
+        // Set up a simple GUI (null means an empty map, otherwise provide yaml file)
         var viz = new BrowserVisualization(YAML_FILE);
         viz.setFontScale(4);
         viz.setInitialTransform(11, 45, -3.5);
@@ -72,7 +72,7 @@ public class ProductionCycleMine {
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, loopTime);
+        Missions.startMissionDispatchers(tec, true);
 
         long missionTime = 5000;
         tec.setForwardModel(drillVehicle.getID(), new ConstantAccelerationForwardModel(drillVehicle.getMaxAcceleration(), drillVehicle.getMaxVelocity(), tec.getTemporalResolution(),

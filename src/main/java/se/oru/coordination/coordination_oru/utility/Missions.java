@@ -15,17 +15,26 @@ import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import org.metacsp.utility.logging.MetaCSPLogging;
 import se.oru.coordination.coordination_oru.coordinator.TrajectoryEnvelopeCoordinator;
-import se.oru.coordination.coordination_oru.vehicles.LookAheadVehicle;
+import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
+import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 import se.oru.coordination.coordination_oru.motionplanner.AbstractMotionPlanner;
+import se.oru.coordination.coordination_oru.robots.RobotHashMap;
+import se.oru.coordination.coordination_oru.tracker.AbstractTrajectoryEnvelopeTracker;
+import se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
+import se.oru.coordination.coordination_oru.robots.RobotReportCollector;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -1069,6 +1078,21 @@ public class Missions {
     }
 
     /**
+     * Converts a Set of Integers to an int array.
+     *
+     * @param set The Set of Integers to be converted.
+     * @return The resulting int array.
+     */
+    public static int[] convertSetToIntArray(Set<Integer> set) {
+        int[] array = new int[set.size()]; // Create a new int array with the same size as the Set
+        int index = 0;
+        for (int num : set) {
+            array[index++] = num; // Store each element from the Set into the int array
+        }
+        return array; // Return the resulting int array
+    }
+
+    /**
      * Add a {@link MissionDispatchingCallback} which defines methods to be called before and after mission dispatching.
      *
      * @param robotID The callback functions will be invoked whenever a mission for this robot is dispatched.
@@ -1081,75 +1105,50 @@ public class Missions {
     /**
      * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
      * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
-     * This method will loop through all mission forever.
      *
      * @param tec      The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
+     * @param loop     Set to {@code false} if missions should be de-queued once dispatched.
      * @param robotIDs The robot IDs which should be considered dispatchable.
      */
-    public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, int... robotIDs) {
-        startMissionDispatchers(tec, true, robotIDs);
-    }
+    public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, int... robotIDs) {
 
-    /**
-     * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
-     * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
-     *
-     * @param tec      The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
-     * @param loop     Set to <code>false</code> if missions should be de-queued once dispatched.
-     * @param robotIDs The robot IDs which should be considered dispatchable.
-     */
-    // TODO: remove code duplication
-    public synchronized static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, int... robotIDs) {
-
-        for (int robotID : robotIDs) {
+           for (int robotID : robotIDs) {
             dispatchableRobots.add(robotID);
+               // TODO Only add autonomous robots missions to run in a loop
+//            if (Objects.equals(RobotHashMap.getRobot(robotID).getType(), "AutonomousRobot")) {
+//                loopMissions.put(robotID, loop);
+//            }
             loopMissions.put(robotID, loop);
         }
 
         if (missionDispatchThread == null) {
-            missionDispatchThread = new GatedThread("missionDispatchThread") {
+            missionDispatchThread = new Thread("missionDispatchThread") {
+                private final ExecutorService executor = Executors.newFixedThreadPool(robotIDs.length);
+
                 @Override
-                public void runCore() {
-                    while (true) {
+                public void run() {
+                    while (!Thread.currentThread().isInterrupted()) {
                         for (int robotID : dispatchableRobots) {
                             if (Missions.hasMissions(robotID)) {
                                 Mission m = Missions.peekMission(robotID);
                                 if (m != null) {
                                     synchronized (tec) {
                                         if (tec.isFree(m.getRobotID())) {
-                                            //cat with future missions if necessary
                                             if (concatenatedMissions.containsKey(m)) {
+                                                // Concatenate missions if necessary
                                                 ArrayList<Mission> catMissions = concatenatedMissions.get(m);
-                                                m = new Mission(m.getRobotID(), m.getFromLocation(), catMissions.get(catMissions.size() - 1).getToLocation(), m.getFromPose(), catMissions.get(catMissions.size() - 1).getToPose());
-                                                ArrayList<PoseSteering> path = new ArrayList<PoseSteering>();
-                                                for (int i = 0; i < catMissions.size(); i++) {
-                                                    Mission oneMission = catMissions.get(i);
-                                                    if (mdcs.containsKey(robotID))
-                                                        mdcs.get(robotID).beforeMissionDispatch(oneMission);
-                                                    if (i == 0) path.add(oneMission.getPath()[0]);
-                                                    for (int j = 1; j < oneMission.getPath().length - 1; j++) {
-                                                        path.add(oneMission.getPath()[j]);
-                                                    }
-                                                    if (i == catMissions.size() - 1)
-                                                        path.add(oneMission.getPath()[oneMission.getPath().length - 1]);
-                                                }
-                                                m.setPath(path.toArray(new PoseSteering[path.size()]));
-                                            } else if (mdcs.containsKey(robotID))
+                                                m = createConcatenatedMission(m, catMissions);
+                                            } else if (mdcs.containsKey(robotID)) {
                                                 mdcs.get(robotID).beforeMissionDispatch(m);
+                                            }
                                         }
 
-                                        //addMission returns true iff the robot was free to accept a new mission
                                         if (tec.addMissions(m)) {
-                                            //tec.computeCriticalSectionsAndStartTrackingAddedMission();
-                                            if (mdcs.containsKey(robotID)) mdcs.get(robotID).afterMissionDispatch(m);
+                                            if (mdcs.containsKey(robotID)) {
+                                                mdcs.get(robotID).afterMissionDispatch(m);
+                                            }
                                             if (!loopMissions.get(robotID)) {
-                                                Missions.removeMissions(m);
-                                                System.out.println("Removed mission " + m);
-                                                if (concatenatedMissions.get(m) != null) {
-                                                    for (Mission cm : concatenatedMissions.get(m)) {
-                                                        Missions.removeMissions(cm);
-                                                    }
-                                                }
+                                                removeMissionAndConcatenatedMissions(m);
                                             } else {
                                                 Missions.dequeueMission(m.getRobotID());
                                                 Missions.enqueueMission(m);
@@ -1159,13 +1158,23 @@ public class Missions {
                                 }
                             }
                         }
-                        //Sleep for a little (2 sec)
+
                         try {
-                            GatedThread.sleep(2000);
+                            Thread.sleep(500);
                         } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
                             e.printStackTrace();
                         }
+
+                        // Update the path for limited look-ahead robots
+                        LookAheadRobot.updateLookAheadRobotPath(tec);
                     }
+                }
+
+                @Override
+                public void interrupt() {
+                    super.interrupt();
+                    executor.shutdownNow();
                 }
             };
             missionDispatchThread.start();
@@ -1176,64 +1185,53 @@ public class Missions {
      * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
      * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
      *
-     * @param tec            The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
-     * @param simulationTime Set the time in nanoseconds for which the simulation will run.
+     * @param tec      The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
+     * @param loop     Set to {@code false} if missions should be de-queued once dispatched.
+     * @param robotIDs The robot IDs which should be considered dispatchable.
      */
-    public synchronized static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final long simulationTime) {
+    public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, double lookAheadDistance,
+                                               int intervalInSeconds, int terminationInMinutes) {
 
-        for (int robotID : tec.getAllRobotIDs()) {
+        // Write robot reports to ../results/ folder in .csv format
+        writeRobotReports(tec, lookAheadDistance, intervalInSeconds, terminationInMinutes);
+
+        for (int robotID : convertSetToIntArray(tec.getAllRobotIDs())) {
             dispatchableRobots.add(robotID);
             loopMissions.put(robotID, true);
-            // TODO Loop missions only for Autonomous vehicles. check line 1159 for dispatchable robots
-//			if (VehiclesHashMap.getVehicle(robotID).getType().equals("AutonomousVehicle")) {
-//				loopMissions.put(robotID, true);
-//			}
+            // TODO Only add autonomous robots missions to run in a loop
+//            if (Objects.equals(RobotHashMap.getRobot(robotID).getType(), "AutonomousRobot")) {
+//                loopMissions.put(robotID, loop);
+//            }
         }
 
         if (missionDispatchThread == null) {
-            missionDispatchThread = new GatedThread("missionDispatchThread") {
+            missionDispatchThread = new Thread("missionDispatchThread") {
+                private final ExecutorService executor = Executors.newFixedThreadPool(convertSetToIntArray(tec.getAllRobotIDs()).length);
+
                 @Override
-                public void runCore() {
-                    while (simulationTime > System.currentTimeMillis()) {
+                public void run() {
+                    while (!Thread.currentThread().isInterrupted()) {
                         for (int robotID : dispatchableRobots) {
                             if (Missions.hasMissions(robotID)) {
                                 Mission m = Missions.peekMission(robotID);
                                 if (m != null) {
                                     synchronized (tec) {
                                         if (tec.isFree(m.getRobotID())) {
-                                            //cat with future missions if necessary
                                             if (concatenatedMissions.containsKey(m)) {
+                                                // Concatenate missions if necessary
                                                 ArrayList<Mission> catMissions = concatenatedMissions.get(m);
-                                                m = new Mission(m.getRobotID(), m.getFromLocation(), catMissions.get(catMissions.size() - 1).getToLocation(), m.getFromPose(), catMissions.get(catMissions.size() - 1).getToPose());
-                                                ArrayList<PoseSteering> path = new ArrayList<PoseSteering>();
-                                                for (int i = 0; i < catMissions.size(); i++) {
-                                                    Mission oneMission = catMissions.get(i);
-                                                    if (mdcs.containsKey(robotID))
-                                                        mdcs.get(robotID).beforeMissionDispatch(oneMission);
-                                                    if (i == 0) path.add(oneMission.getPath()[0]);
-                                                    for (int j = 1; j < oneMission.getPath().length - 1; j++) {
-                                                        path.add(oneMission.getPath()[j]);
-                                                    }
-                                                    if (i == catMissions.size() - 1)
-                                                        path.add(oneMission.getPath()[oneMission.getPath().length - 1]);
-                                                }
-                                                m.setPath(path.toArray(new PoseSteering[path.size()]));
-                                            } else if (mdcs.containsKey(robotID))
+                                                m = createConcatenatedMission(m, catMissions);
+                                            } else if (mdcs.containsKey(robotID)) {
                                                 mdcs.get(robotID).beforeMissionDispatch(m);
+                                            }
                                         }
 
-                                        //addMission returns true iff the robot was free to accept a new mission
                                         if (tec.addMissions(m)) {
-                                            //tec.computeCriticalSectionsAndStartTrackingAddedMission();
-                                            if (mdcs.containsKey(robotID)) mdcs.get(robotID).afterMissionDispatch(m);
+                                            if (mdcs.containsKey(robotID)) {
+                                                mdcs.get(robotID).afterMissionDispatch(m);
+                                            }
                                             if (!loopMissions.get(robotID)) {
-                                                Missions.removeMissions(m);
-                                                System.out.println("Removed mission " + m);
-                                                if (concatenatedMissions.get(m) != null) {
-                                                    for (Mission cm : concatenatedMissions.get(m)) {
-                                                        Missions.removeMissions(cm);
-                                                    }
-                                                }
+                                                removeMissionAndConcatenatedMissions(m);
                                             } else {
                                                 Missions.dequeueMission(m.getRobotID());
                                                 Missions.enqueueMission(m);
@@ -1243,21 +1241,109 @@ public class Missions {
                                 }
                             }
                         }
-                        //Sleep for a little (0.5 sec)
+
                         try {
-                            GatedThread.sleep(500);
+                            Thread.sleep(500);
                         } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
                             e.printStackTrace();
                         }
-//						updateRobotReports(tec); // Call to update all the robot reports
-                        LookAheadVehicle.updateLookAheadVehiclesPath(tec); // Call to update limited predictable vehicles paths
+
+                        // Update the path for limited look-ahead robots
+                        LookAheadRobot.updateLookAheadRobotPath(tec);
                     }
-//					writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
                 }
 
+                @Override
+                public void interrupt() {
+                    super.interrupt();
+                    executor.shutdownNow();
+                }
             };
             missionDispatchThread.start();
         }
+    }
+
+    public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop) {
+        startMissionDispatchers(tec, loop, convertSetToIntArray(tec.getAllRobotIDs()));
+    }
+    public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, int... robotIDs) {
+        startMissionDispatchers(tec, false, robotIDs);
+    }
+    public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec) {
+        startMissionDispatchers(tec, false, convertSetToIntArray(tec.getAllRobotIDs()));
+    }
+
+    /**
+     * Creates a concatenated mission by combining the original mission with a list of concatenated missions.
+     *
+     * @param m            The original mission.
+     * @param catMissions  The concatenated missions to be added.
+     * @return The new concatenated mission.
+     */
+    private static Mission createConcatenatedMission(Mission m, List<Mission> catMissions) {
+        Mission lastMission = catMissions.get(catMissions.size() - 1);
+        return new Mission(m.getRobotID(), m.getFromLocation(), lastMission.getToLocation(),
+                m.getFromPose(), lastMission.getToPose());
+    }
+
+    /**
+     * Removes a mission and its concatenated missions from the Missions collection.
+     *
+     * @param m The mission to be removed.
+     */
+    private static void removeMissionAndConcatenatedMissions(Mission m) {
+        Missions.removeMissions(m);
+        System.out.println("Removed mission " + m);
+        List<Mission> concatenated = concatenatedMissions.get(m);
+        if (concatenated != null) {
+            for (Mission cm : concatenated) {
+                Missions.removeMissions(cm);
+            }
+        }
+    }
+
+    /**
+     * Writes robot reports periodically for the given TrajectoryEnvelopeCoordinator instance.
+     * The file will be written in the 'results' folder relative to the specified folder.
+     *
+     * @param tec                  the TrajectoryEnvelopeCoordinator instance to collect reports from.
+     * @param lookAheadDistance    the lookahead distance.
+     * @param intervalInSeconds    the time interval between data collection, in seconds.
+     * @param terminationInMinutes the duration of data collection, in minutes.
+     */
+    public static void writeRobotReports(TrajectoryEnvelopeCoordinator tec, double lookAheadDistance, int intervalInSeconds, int terminationInMinutes) {
+        var reportCollector = new RobotReportCollector();
+        String homeDir = System.getProperty("user.home");
+        String folder = homeDir + "/Devel/coordination_oru/src/main/java/se/oru/coordination/coordination_oru/results";
+        Path directoryPath = Paths.get(folder);
+
+        // Try creating the directory if it doesn't exist
+        try {
+            Files.createDirectories(directoryPath);
+            System.out.println("Directory created successfully.");
+        } catch (IOException e) {
+            System.err.println("Error while creating directory: " + e.getMessage());
+        }
+
+        // Get the number of autonomous and lookahead robots
+        int autonomousRobotCount = 0;
+        int lookAheadRobotCount = 0;
+
+        for (Object robot : RobotHashMap.getList().values()) {
+            if (robot instanceof AutonomousRobot) {
+                autonomousRobotCount++;
+            } else if (robot instanceof LookAheadRobot) {
+                lookAheadRobotCount++;
+            }
+        }
+
+        // TODO Fix heuristics C
+        // Generate the filename based on the number of autonomous and lookahead robots
+        String fileName = folder + "/" + "A" + autonomousRobotCount + "L" + lookAheadRobotCount +
+                "_" + "C" + "_" + (int) lookAheadDistance + "_";
+
+        reportCollector.handleRobotReports(tec, fileName, intervalInSeconds, terminationInMinutes);
     }
 
     /**
@@ -1303,18 +1389,6 @@ public class Missions {
         return resamplePath(retArray);
     }
 
-//	private static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
-//		for (int robotID : tec.getAllRobotIDs()) {
-//			VehiclesHashMap.getVehicle(robotID).writeStatistics();
-//		}
-//	}
-
-//	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
-//		for (int robotID : tec.getAllRobotIDs()) {
-//			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
-//		}
-//	}
-
     /**
      * Create a mission following a given mission. The mission will make the follower robot navigate from its
      * current pose to the start pose of the leader's mission, after which the follower robot will follow the
@@ -1327,7 +1401,6 @@ public class Missions {
      *                                current pose to goal pose of the leader's mission, passing through the start pose of the leader's mission.
      * @param computePathToLeaderGoal Set this to <code>true</code> iff the follower's path to the goal of the
      *                                leader's mission should be recomputed (otherwise the leader's path will be re-used).
-     * @return
      */
     public static Mission followMission(Mission leaderMission, int followerID, Pose followerStartingPose, AbstractMotionPlanner mp, boolean computePathToLeaderGoal) {
         mp.setStart(followerStartingPose);
@@ -1342,8 +1415,7 @@ public class Missions {
             for (int i = 1; i < leaderMission.getPath().length; i++) newPath[counter++] = leaderMission.getPath()[i];
             followerPath = newPath;
         }
-        Mission followerMission = new Mission(followerID, followerPath);
-        return followerMission;
+        return new Mission(followerID, followerPath);
     }
 
     public static Set<String> getAllGraphVertices() {

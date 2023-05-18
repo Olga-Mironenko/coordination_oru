@@ -15,11 +15,11 @@ import org.metacsp.multi.spatial.DE9IM.GeometricShapeDomain;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
-import se.oru.coordination.coordination_oru.utility.*;
-import se.oru.coordination.coordination_oru.vehicles.AbstractVehicle;
-import se.oru.coordination.coordination_oru.vehicles.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4;
+import se.oru.coordination.coordination_oru.utility.*;
 import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
+import se.oru.coordination.coordination_oru.robots.AbstractRobot;
+import se.oru.coordination.coordination_oru.robots.RobotHashMap;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -292,39 +292,52 @@ public class BrowserVisualization implements FleetVisualization {
         }
     }
 
-    // TODO: remove code duplication
+    /**
+     * Displays the state of the robot, including its position, path index, and additional status information.
+     *
+     * @param te              The TrajectoryEnvelope of the robot.
+     * @param rr              The RobotReport containing the robot's current report.
+     * @param extraStatusInfo Additional status information to be displayed.
+     */
     @Override
     public void displayRobotState(TrajectoryEnvelope te, RobotReport rr, String... extraStatusInfo) {
-        double x = rr.getPathIndex() != -1 ? rr.getPose().getX() : te.getTrajectory().getPose()[0].getX();
-        double y = rr.getPathIndex() != -1 ? rr.getPose().getY() : te.getTrajectory().getPose()[0].getY();
-        double theta = rr.getPathIndex() != -1 ? rr.getPose().getTheta() : te.getTrajectory().getPose()[0].getTheta();
+        double x, y, theta;
 
-        String name = "R" + te.getRobotID();
+        if (rr.getPathIndex() != -1) {
+            x = rr.getPose().getX();
+            y = rr.getPose().getY();
+            theta = rr.getPose().getTheta();
+        } else {
+            x = te.getTrajectory().getPose()[0].getX();
+            y = te.getTrajectory().getPose()[0].getY();
+            theta = te.getTrajectory().getPose()[0].getTheta();
+        }
 
-        // Show percentage of path completed
-//		String extraData = " : " + "0 %";
-//		if (rr.getPathIndex() >= 0) {
-//			extraData = " : " + Math.round((double) rr.getPathIndex() / (double) te.getPathLength() * 100) + " %";
-//		}
+        String name = "R" + (rr.getPathIndex() != -1 ? te.getRobotID() : rr.getRobotID());
 
-        // Show path Index
-        String extraData = " : " + rr.getPathIndex();
+        // TODO Implement percentage complete
+
+        // Show path index
+        StringBuilder extraData = new StringBuilder(" : " + rr.getPathIndex());
         if (extraStatusInfo != null) {
             for (String st : extraStatusInfo) {
-                extraData += (" | " + st);
+                extraData.append(" | ").append(st);
             }
         }
 
+        // Default robot color is red
         String color = "#ff0000";
-        int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
-        if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
+        int robotCount = RobotHashMap.getList().keySet().size();
+        if (robotCount != 0) {
+            color = RobotHashMap.getRobot(rr.getRobotID()).getColorCode();
+        }
 
         Geometry geom = TrajectoryEnvelope.getFootprint(te.getFootprint(), x, y, theta);
-        this.updateRobotFootprintArea(geom);
+        updateRobotFootprintArea(geom);
         double scale = Math.sqrt(robotFootprintArea) * 0.2;
         Geometry arrowGeom = createArrow(rr.getPose(), robotFootprintXDim / scale, scale);
-        String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, color, -1, true, extraData) + "}";
-        String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_" + name, arrowGeom, "#ffffff", -1, true, null) + "}";
+        String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + geometryToJSONString(name, geom, color, -1, true, extraData.toString()) + "}";
+        String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + geometryToJSONString("_" + name, arrowGeom, "#ffffff", -1, true, null) + "}";
         enqueueMessage(jsonString);
         enqueueMessage(jsonStringArrow);
 
@@ -333,39 +346,13 @@ public class BrowserVisualization implements FleetVisualization {
         }
     }
 
-    protected void setStatusText() {
-        HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
-        String text = "";
-        if (idToVehicle.containsKey(MissionUtils.idHuman)) {
-            text += "targetVelocityHuman: " + round(MissionUtils.targetVelocityHuman) + "<br>";
-        }
-        for (int id : idToVehicle.keySet()) {
-            text += "(Robot " + id + ") ";
-
-            RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
-            if (rr == null) {
-                text += "no robot report";
-            } else {
-                double velocity = rr.getVelocity();
-                text += "velocity: " + round(velocity);
-
-                int numCalls = 0;
-                var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
-                if (numIntegrateCalls.containsKey(id)) {
-                    numCalls = numIntegrateCalls.get(id);
-                }
-                text += "; numIntegrateCalls: " + numCalls;
-            }
-
-            text += "; " + stringifyMissions(Missions.getMissions(id));
-
-            text += "<br>";
-        }
-        text += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
-        text += TrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString() + "<br>";
-        setOverlayText(text);
-    }
-
+    /**
+     * Displays the state of the robot, including its position, path index, and additional status information.
+     *
+     * @param fp              The footprint of the robot.
+     * @param rr              The RobotReport containing the robot's current report.
+     * @param extraStatusInfo Additional status information to be displayed.
+     */
     @Override
     public void displayRobotState(Polygon fp, RobotReport rr, String... extraStatusInfo) {
         double x = rr.getPose().getX();
@@ -373,25 +360,63 @@ public class BrowserVisualization implements FleetVisualization {
         double theta = rr.getPose().getTheta();
 
         String name = "R" + rr.getRobotID();
-        String extraData = " : " + rr.getPathIndex();
+
+        // Show path index
+        StringBuilder extraData = new StringBuilder(" : " + rr.getPathIndex());
         if (extraStatusInfo != null) {
             for (String st : extraStatusInfo) {
-                extraData += (" | " + st);
+                extraData.append(" | ").append(st);
             }
         }
 
+        // Default robot color is red
         String color = "#ff0000";
-        int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
-        if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
+        int robotCount = RobotHashMap.getList().keySet().size();
+        if (robotCount != 0) {
+            color = RobotHashMap.getRobot(rr.getRobotID()).getColorCode();
+        }
 
         Geometry geom = TrajectoryEnvelope.getFootprint(fp, x, y, theta);
-        this.updateRobotFootprintArea(geom);
+        updateRobotFootprintArea(geom);
         double scale = Math.sqrt(robotFootprintArea) * 0.2;
         Geometry arrowGeom = createArrow(rr.getPose(), robotFootprintXDim / scale, scale);
-        String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, color, -1, true, extraData) + "}";
-        String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_" + name, arrowGeom, "#ffffff", -1, true, null) + "}";
+        String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + geometryToJSONString(name, geom, color, -1, true, extraData.toString()) + "}";
+        String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + geometryToJSONString("_" + name, arrowGeom, "#ffffff", -1, true, null) + "}";
         enqueueMessage(jsonString);
         enqueueMessage(jsonStringArrow);
+    }
+
+    protected void setStatusText() {
+        HashMap<Integer, AbstractRobot> idToRobot = RobotHashMap.getList();
+        StringBuilder text = new StringBuilder();
+        if (idToRobot.containsKey(MissionUtils.idHuman)) {
+            text.append("targetVelocityHuman: ").append(round(MissionUtils.targetVelocityHuman)).append("<br>");
+        }
+        for (int id : idToRobot.keySet()) {
+            text.append("(Robot ").append(id).append(") ");
+
+            RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
+            if (rr == null) {
+                text.append("no robot report");
+            } else {
+                double velocity = rr.getVelocity();
+                text.append("velocity: ").append(round(velocity));
+
+                int numCalls = 0;
+                var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
+                if (numIntegrateCalls.containsKey(id)) {
+                    numCalls = numIntegrateCalls.get(id);
+                }
+                text.append("; numIntegrateCalls: ").append(numCalls);
+            }
+
+            text.append("; ").append(stringifyMissions(Missions.getMissions(id)));
+
+            text.append("<br>");
+        }
+        text.append(stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections));
+        text.append(TrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString()).append("<br>");
+        setOverlayText(text.toString());
     }
 
     public void addPath(String pathName, PoseSteering[] ps, double arrowLength, String color) {
@@ -432,13 +457,14 @@ public class BrowserVisualization implements FleetVisualization {
     }
 
     // TODO Implement safety distances
+
     @Override
     public void addEnvelope(TrajectoryEnvelope te) {
 
         // Color the trajectory envelope with the same vehicle color
         String color = "#efe007";
-        if (!VehiclesHashMap.getList().isEmpty()) {
-            color = VehiclesHashMap.getVehicle(te.getRobotID()).getColorCode();
+        if (!RobotHashMap.getList().isEmpty()) {
+            color = RobotHashMap.getRobot(te.getRobotID()).getColorCode();
         }
 
         GeometricShapeDomain dom = (GeometricShapeDomain) te.getEnvelopeVariable().getDomain();
@@ -446,7 +472,6 @@ public class BrowserVisualization implements FleetVisualization {
         String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_" + te.getID(), geom, color, -1, false, null) + "}";
         enqueueMessage(jsonString);
     }
-
     @Override
     public void removeEnvelope(TrajectoryEnvelope te) {
         String jsonString = "{ \"operation\" : \"removeGeometry\","
@@ -459,7 +484,7 @@ public class BrowserVisualization implements FleetVisualization {
     public void updateVisualization() {
         // This method does nothing - reason:
         // Viz change events are buffered and sent by an internal thread
-        // in bursts every UPDATE_PERIOD ms to avoid blocking of RemoteEndpopints
+        // in bursts every UPDATE_PERIOD ms to avoid blocking of RemoteEndpoints
     }
 
     public void updateFontScale(double scale) {

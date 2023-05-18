@@ -4,8 +4,8 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4;
-import se.oru.coordination.coordination_oru.utility.State;
 import se.oru.coordination.coordination_oru.utility.RobotReport;
+import se.oru.coordination.coordination_oru.utility.State;
 
 public class ConstantAccelerationForwardModel implements ForwardModel {
 

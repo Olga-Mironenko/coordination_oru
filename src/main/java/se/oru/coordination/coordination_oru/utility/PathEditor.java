@@ -27,13 +27,20 @@ import java.util.TreeMap;
 
 public class PathEditor {
 
-    private static String PREFIX = null;
     private static final int EMPTY_MAP_DIM = 10000;
+    private static final boolean USE_MP = false;
+    private static final String TEMP_MAP_DIR = ".tempMapsPathEditor";
+    private static String PREFIX = null;
     private static double OBSTACLE_SIZE = 2.0;
     private static double MAX_TURNING_RADIUS = 5.0;
     private static double MIN_DISTANCE_BETWEEN_PATH_POINTS = 0.4;
-    private static final boolean USE_MP = false;
-    private static final String TEMP_MAP_DIR = ".tempMapsPathEditor";
+    private final ArrayList<Integer> selectedPathPointsInt = new ArrayList<Integer>();
+    private final ArrayList<Integer> selectedObsInt = new ArrayList<Integer>();
+    private final ArrayList<Geometry> obstacles = new ArrayList<Geometry>();
+    private final ArrayList<ArrayList<PoseSteering>> oldPaths = new ArrayList<ArrayList<PoseSteering>>();
+    private final double deltaTR = 0.1;
+    private final ArrayList<Pose> obstacleCenters = new ArrayList<Pose>();
+    private final ArrayList<String> obstacleNames = new ArrayList<String>();
     private String pathFileName = null;
     private String mapFileName = null;
     private String mapImgFileName = null;
@@ -41,21 +48,14 @@ public class PathEditor {
     private String posesFileName = null;
     private boolean selectionPathPointInputListen = false;
     private String selectionString = "";
-    private final ArrayList<Integer> selectedPathPointsInt = new ArrayList<Integer>();
     private boolean selectionObsInputListen = false;
-    private final ArrayList<Integer> selectedObsInt = new ArrayList<Integer>();
-    private final ArrayList<Geometry> obstacles = new ArrayList<Geometry>();
     private ArrayList<PoseSteering> path = null;
-    private final ArrayList<ArrayList<PoseSteering>> oldPaths = new ArrayList<ArrayList<PoseSteering>>();
     private JTSDrawingPanel panel = null;
     private double deltaX = 0.1;
     private double deltaY = 0.1;
     private double deltaT = 0.1;
-    private final double deltaTR = 0.1;
     private String newFileSuffix = ".new";
     private Coordinate[] obstacleFootprint = null;
-    private final ArrayList<Pose> obstacleCenters = new ArrayList<Pose>();
-    private final ArrayList<String> obstacleNames = new ArrayList<String>();
 
     public PathEditor(String pathFileName, String mapFileName, String posesFileName, double deltaX, double deltaY, double deltaTheta, String newFileSuffix) {
         this.pathFileName = pathFileName;
@@ -465,7 +465,8 @@ public class PathEditor {
                     clearPathPointSelection();
                     System.out.println("Input selection (poses): " + selectionString);
                 } else if (selectionPathPointInputListen) {
-                    for (int i = 0; i < path.size(); i++) panel.addArrow(String.valueOf(i), path.get(i).getPose(), Color.gray);
+                    for (int i = 0; i < path.size(); i++)
+                        panel.addArrow(String.valueOf(i), path.get(i).getPose(), Color.gray);
                     try {
                         if (selectionString.contains("-")) {
                             int first = Integer.parseInt(selectionString.substring(0, selectionString.indexOf("-")));

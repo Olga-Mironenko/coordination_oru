@@ -14,17 +14,16 @@ import java.util.HashMap;
  * @author fpa
  */
 public class Mission implements Comparable<Mission> {
-    protected static int NUMMISSIONS = 0;
+    protected static int noOfMissions = 0;
     protected int robotID;
     protected PoseSteering[] path;
-    protected int order = NUMMISSIONS++;
+    protected int order = noOfMissions++;
     protected String fromLocation = null;
     protected String toLocation = null;
     protected Pose fromPose = null;
     protected Pose toPose = null;
     protected ArrayList<Pose> stoppingPoints = new ArrayList<Pose>();
     protected ArrayList<Integer> stoppingPointDurations = new ArrayList<Integer>();
-    //protected HashMap<Pose,Integer> stoppingPoints = new HashMap<Pose, Integer>();
 
     /**
      * Instantiates a {@link Mission} for a given robot to navigate between two locations, but where the path
@@ -121,11 +120,11 @@ public class Mission implements Comparable<Mission> {
      *
      * @param pose     A pose to stop at.
      * @param duration Stopping time in milliseconds.
+     * FIXME It seems that it does not work
      */
     public void setStoppingPoint(Pose pose, int duration) {
         this.stoppingPoints.add(pose);
         this.stoppingPointDurations.add(duration);
-        //this.stoppingPoints.put(pose, duration);
     }
 
     /**

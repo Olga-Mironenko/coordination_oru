@@ -1,12 +1,15 @@
 package se.oru.coordination.coordination_oru.scenarios;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
-import se.oru.coordination.coordination_oru.utility.Mission;
-import se.oru.coordination.coordination_oru.vehicles.AutonomousVehicle;
-import se.oru.coordination.coordination_oru.utility.Heuristics;
-import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
+import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.utility.Heuristics;
+import se.oru.coordination.coordination_oru.utility.Mission;
 import se.oru.coordination.coordination_oru.utility.Missions;
+import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
+import se.oru.coordination.coordination_oru.utility.RobotAtCriticalSection;
+
+import java.util.Comparator;
 
 public class EightAutonomousVehicles {
     public static void main(String[] args) {
@@ -30,14 +33,14 @@ public class EightAutonomousVehicles {
         final Pose[] autonomousVehicle8Goal = {mainTunnelRight};
 
         //TODO I think controller kills everything up
-        var autonomousVehicle1 = new AutonomousVehicle();
-        var autonomousVehicle2 = new AutonomousVehicle();
-        var autonomousVehicle3 = new AutonomousVehicle();
-        var autonomousVehicle4 = new AutonomousVehicle();
-        var autonomousVehicle5 = new AutonomousVehicle();
-        var autonomousVehicle6 = new AutonomousVehicle();
-        var autonomousVehicle7 = new AutonomousVehicle();
-        var autonomousVehicle8 = new AutonomousVehicle();
+        var autonomousVehicle1 = new AutonomousRobot();
+        var autonomousVehicle2 = new AutonomousRobot();
+        var autonomousVehicle3 = new AutonomousRobot();
+        var autonomousVehicle4 = new AutonomousRobot();
+        var autonomousVehicle5 = new AutonomousRobot();
+        var autonomousVehicle6 = new AutonomousRobot();
+        var autonomousVehicle7 = new AutonomousRobot();
+        var autonomousVehicle8 = new AutonomousRobot();
         autonomousVehicle1.getPlan(drawPoint17, autonomousVehicleGoal, YAML_FILE, true);
         autonomousVehicle2.getPlan(drawPoint19, autonomousVehicleGoal, YAML_FILE, true);
         autonomousVehicle3.getPlan(drawPoint20, autonomousVehicleGoal, YAML_FILE, true);
@@ -63,12 +66,13 @@ public class EightAutonomousVehicles {
         tec.placeRobot(autonomousVehicle6.getID(), drawPoint23);
         tec.placeRobot(autonomousVehicle7.getID(), drawPoint24);
         tec.placeRobot(autonomousVehicle8.getID(), mainTunnelLeft);
+
         tec.addComparator(new Heuristics().closest());
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);
 
-        // Set up a simple GUI (null means empty map, otherwise provide yaml file)
+        // Set up a simple GUI (null means an empty map, otherwise provide yaml file)
         var viz = new BrowserVisualization();
         viz.setMap(YAML_FILE);
 //        viz.setFontScale(4);
@@ -93,7 +97,7 @@ public class EightAutonomousVehicles {
         Missions.enqueueMission(m7);
         Missions.enqueueMission(m8);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, simulationTime);
+        Missions.startMissionDispatchers(tec, true);
 
     }
 }

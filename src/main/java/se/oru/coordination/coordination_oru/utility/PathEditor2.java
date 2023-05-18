@@ -27,8 +27,11 @@ import java.util.Map.Entry;
 
 public class PathEditor2 {
 
-    private static int newLocationCounter = 0;
     private static final String TEMP_MAP_DIR = ".tempMapsPathEditor";
+    private static int newLocationCounter = 0;
+    private final double deltaTR = 0.1;
+    private final double deltaSD = 0.5;
+    private final double deltaD = 0.1;
     private String selectionsFile = null;
     private String outputDir = null;
     private double PP_max_turning_radius = 5.0;
@@ -56,9 +59,6 @@ public class PathEditor2 {
     private double deltaX = 0.1;
     private double deltaY = 0.1;
     private double deltaT = 0.01;
-    private final double deltaTR = 0.1;
-    private final double deltaSD = 0.5;
-    private final double deltaD = 0.1;
 
     @Deprecated
     public PathEditor2() {

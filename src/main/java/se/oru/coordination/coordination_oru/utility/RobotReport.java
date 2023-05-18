@@ -26,7 +26,7 @@ public class RobotReport {
      * @param pose             The current pose of the robot.
      * @param pathIndex        The index of the last pose passed by the robot.
      * @param velocity         The current speed of the robot.
-     * @param distanceTraveled The distance traveled so far along the current current path.
+     * @param distanceTraveled The distance traveled so far along the current path.
      * @param criticalPoint    The current active critical point of the robot (-1 if no critical point).
      */
     public RobotReport(int robotID, Pose pose, int pathIndex, double velocity, double distanceTraveled, int criticalPoint) {
@@ -75,9 +75,9 @@ public class RobotReport {
     }
 
     /**
-     * Get the distance traveled so far along the current current path.
+     * Get the distance traveled so far along the current path.
      *
-     * @return The distance traveled so far along the current current path.
+     * @return The distance traveled so far along the current path.
      */
     public double getDistanceTraveled() {
         return distanceTraveled;

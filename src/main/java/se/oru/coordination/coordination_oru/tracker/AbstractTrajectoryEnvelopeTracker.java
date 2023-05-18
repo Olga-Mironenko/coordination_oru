@@ -14,8 +14,8 @@ import org.metacsp.utility.logging.MetaCSPLogging;
 import se.oru.coordination.coordination_oru.coordinator.AbstractTrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.coordinator.CoordinatorDependency;
 import se.oru.coordination.coordination_oru.coordinator.TrajectoryEnvelopeCoordinator;
-import se.oru.coordination.coordination_oru.utility.State;
 import se.oru.coordination.coordination_oru.utility.RobotReport;
+import se.oru.coordination.coordination_oru.utility.State;
 import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
 
 import java.util.ArrayList;
@@ -33,8 +33,8 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractTrajectoryEnvelopeTracker {
 
-    protected AbstractTrajectoryEnvelopeCoordinator tec = null;
     public TrajectoryEnvelope te = null;
+    protected AbstractTrajectoryEnvelopeCoordinator tec = null;
     protected Trajectory traj = null;
     protected double temporalResolution = 0.0;
     protected Integer externalCPCounter = -1;
@@ -262,7 +262,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
     /**
      * This method should return a {@link RobotReport}, describing the last known state of the robot.
      *
-     * @return A {@link RobotReport}, describing the last known state state of the robot.
+     * @return A {@link RobotReport}, describing the last known state of the robot.
      */
     public RobotReport getLastRobotReport() {
         return getRobotReport();

@@ -14,10 +14,10 @@ import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
  */
 public abstract class TrajectoryEnvelopeTrackerDummy extends AbstractTrajectoryEnvelopeTracker implements Runnable {
 
+    private final long DELTA_FUTURE = 0;
     private Thread th = null;
     private boolean parkingFinished = false;
     private int currentIndex = -1;
-    private final long DELTA_FUTURE = 0;
 
     /**
      * Create a new {@link TrajectoryEnvelopeTrackerDummy} representing that a robot with a given ID is parked

@@ -3,10 +3,10 @@ package se.oru.coordination.coordination_oru.utility;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
-import se.oru.coordination.coordination_oru.tracker.AbstractTrajectoryEnvelopeTracker;
-import se.oru.coordination.coordination_oru.vehicles.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.tracker.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
+import se.oru.coordination.coordination_oru.robots.RobotHashMap;
 
 public class MissionUtils {
     public static final double targetVelocityHumanInitial = 0.1;
@@ -47,11 +47,11 @@ public class MissionUtils {
                 //synchronized (stateOrNothingAsLock) { // seems like a deadlock with the tracker
                 RobotReport rr = tec.getRobotReport(robotID);
                 Pose currentPose = rr.getPose();
-                var vehicle = VehiclesHashMap.getVehicle(robotID);
+                var robot = RobotHashMap.getRobot(robotID);
 
                 PoseSteering[] newPath = null;
                 try {
-                    vehicle.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
+                    robot.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
                 } catch (Error exc) { // TODO: check for NoPathFound only
                     System.out.println("moveRobot: no path found (or another error): " + exc);
                     return;

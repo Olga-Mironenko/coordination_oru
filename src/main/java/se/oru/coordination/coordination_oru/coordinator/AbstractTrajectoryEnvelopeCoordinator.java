@@ -68,8 +68,9 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
         printLicense();
     }
 
-    public HashSet<CriticalSection> allCriticalSections = new HashSet<CriticalSection>();
+    public final HashSet<CriticalSection> allCriticalSections = new HashSet<CriticalSection>();
     public HashMap<Integer, Integer> numIntegrateCalls = new HashMap<Integer, Integer>();
+    public final HashMap<Integer, AbstractTrajectoryEnvelopeTracker> trackers = new HashMap<Integer, AbstractTrajectoryEnvelopeTracker>();
     protected int DEFAULT_ROBOT_TRACKING_PERIOD = 30;
     protected int CONTROL_PERIOD;
     protected double TEMPORAL_RESOLUTION;
@@ -97,7 +98,6 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
     protected HashMap<Integer, ArrayList<Integer>> stoppingPoints = new HashMap<Integer, ArrayList<Integer>>();
     protected HashMap<Integer, ArrayList<Integer>> stoppingTimes = new HashMap<Integer, ArrayList<Integer>>();
     protected HashMap<Integer, Thread> stoppingPointTimers = new HashMap<Integer, Thread>();
-    public HashMap<Integer, AbstractTrajectoryEnvelopeTracker> trackers = new HashMap<Integer, AbstractTrajectoryEnvelopeTracker>();
     protected HashMap<Integer, CoordinatorDependency> currentDependencies = new HashMap<Integer, CoordinatorDependency>();
     protected String logDirName = null;
     protected HashMap<AbstractTrajectoryEnvelopeTracker, Pair<Integer, Long>> communicatedCPs = new HashMap<AbstractTrajectoryEnvelopeTracker, Pair<Integer, Long>>();
@@ -1571,7 +1571,6 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
                             computeCriticalSections();
                             updateDependencies();
                         }
-
                     }
 
                     @Override

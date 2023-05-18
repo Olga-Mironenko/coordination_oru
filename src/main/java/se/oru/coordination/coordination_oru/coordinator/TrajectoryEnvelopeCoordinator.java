@@ -18,11 +18,11 @@ import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import org.metacsp.utility.PermutationsWithRepetition;
 import org.metacsp.utility.UI.Callback;
-import se.oru.coordination.coordination_oru.utility.CriticalSection;
-import se.oru.coordination.coordination_oru.utility.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.motionplanner.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.tracker.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerDummy;
+import se.oru.coordination.coordination_oru.utility.CriticalSection;
+import se.oru.coordination.coordination_oru.utility.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.utility.RobotReport;
 import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
 
@@ -644,7 +644,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
                 synchronized (replanningStoppingPoints) {
                     if (replanningStoppingPoints.containsKey(robotID)) {
                         //We should enforce the last robot stopping point while it is involved in a re-plan.
-                        if (!currentDeps.containsKey(robotID)) currentDeps.put(robotID, new HashSet<CoordinatorDependency>());
+                        if (!currentDeps.containsKey(robotID))
+                            currentDeps.put(robotID, new HashSet<CoordinatorDependency>());
                         currentDeps.get(robotID).add(replanningStoppingPoints.get(robotID));
                     }
                 }
@@ -1323,7 +1324,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
                             TrajectoryEnvelope oldEndParking = (TrajectoryEnvelope) aic.getTo();
 
                             solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(te));
-//							solver.removeVariable(te);
+							solver.removeVariable(te);
                             solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(oldEndParking));
                             solver.removeVariable(oldEndParking);
 
@@ -1719,7 +1720,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
                     synchronized (replanningStoppingPoints) {
                         if (replanningStoppingPoints.containsKey(robotID)) {
                             //We should enforce the last robot stopping point while it is involved in a re-plan.
-                            if (!currentDeps.containsKey(robotID)) currentDeps.put(robotID, new HashSet<CoordinatorDependency>());
+                            if (!currentDeps.containsKey(robotID))
+                                currentDeps.put(robotID, new HashSet<CoordinatorDependency>());
                             currentDeps.get(robotID).add(replanningStoppingPoints.get(robotID));
                             metaCSPLogger.info("Add Locking dependency to Robot" + robotID + ". Dep: " + replanningStoppingPoints.get(robotID));
                         }
