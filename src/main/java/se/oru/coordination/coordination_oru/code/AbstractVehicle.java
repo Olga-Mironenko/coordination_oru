@@ -266,4 +266,12 @@ public abstract class AbstractVehicle {
     public Color getColor() {
         return color;
     }
+
+    public double getXLength() {
+        return xLength;
+    }
+
+    public double getYLength() {
+        return yLength;
+    }
 }

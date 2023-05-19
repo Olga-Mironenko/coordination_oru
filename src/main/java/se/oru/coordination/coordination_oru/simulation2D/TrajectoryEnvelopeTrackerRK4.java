@@ -8,6 +8,9 @@ import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 
 import se.oru.coordination.coordination_oru.*;
+import se.oru.coordination.coordination_oru.code.AbstractVehicle;
+import se.oru.coordination.coordination_oru.code.BarrierPhantomVehicle;
+import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.util.MissionUtils;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
@@ -476,15 +479,21 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	@Override
 	public void setCriticalPoint(int criticalPointToSet) {
+		setCriticalPoint(criticalPointToSet, false);
+	}
+
+	public void setCriticalPoint(int criticalPointToSet, boolean isUnconditionalStop) {
 		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
 		RobotReport rr = getRobotReport();
 		int robotID = rr.getRobotID();
 
+		/*
 		if (this.criticalPoint == criticalPointToSet) {
 			//Same critical point was already set
 			metaCSPLogger.warning("Critical point (" + te.getComponent() + ") " + criticalPointToSet + " was already set!");
 			return;
 		}
+		*/
 
 		if (criticalPointToSet == -1) {
 			//The critical point has been reset, go to the end
@@ -497,13 +506,61 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 		//A new intermediate index to stop at has been given
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-		HashSet<CriticalSection> css = tec.allCriticalSections;
-		if (criticalPointToSet > rr.getPathIndex()) {
+		HashSet<CriticalSection> criticalSections = new HashSet<>();
+		for (CriticalSection cs : tec.allCriticalSections) {
+			Integer start = cs.getStart(robotID);
+			if (start == null) {
+				continue;
+			}
+			Integer end = cs.getEnd(robotID);
+			assert end != null;
+
+			final int margin = 3; // TODO: can it be greater?
+
+			if (start - margin <= criticalPointToSet && criticalPointToSet <= end + margin) {
+				criticalSections.add(cs);
+			}
+		}
+
+		HashSet<CriticalSection> criticalSectionsReal = new HashSet<>();
+		for (CriticalSection cs : criticalSections) {
+			boolean is1Before2 = tec.getOrderOfCriticalSection(
+					cs,
+					tec.getRobotReport(cs.getTe1RobotID()),
+					tec.getRobotReport(cs.getTe2RobotID())
+			);
+			if (cs.isTe1(robotID) == is1Before2) { // we have priority
+				continue;
+			}
+
+			boolean isReal = true;
+			for (int id : new int[] { cs.getTe1RobotID(), cs.getTe2RobotID() }) {
+				AbstractVehicle vehicle = VehiclesHashMap.getVehicle(id);
+				if (vehicle instanceof BarrierPhantomVehicle) {
+					BarrierPhantomVehicle barrierPhantomVehicle = (BarrierPhantomVehicle) vehicle;
+					if (barrierPhantomVehicle.isActive) {
+						isUnconditionalStop = true;
+					} else {
+						isReal = false;
+					}
+				}
+			}
+
+			if (isReal) {
+				criticalSectionsReal.add(cs);
+			}
+		}
+
+		if (criticalSectionsReal.isEmpty()) {
+			return;
+		}
+
+		if (isUnconditionalStop || criticalPointToSet > rr.getPathIndex()) {
 			//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
 			double targetDistance = computeDistance(0, criticalPointToSet);
 			double positionToSlowDownTemporary = computePositionToSlowDown(targetDistance, true);
 
-			if (positionToSlowDownTemporary > state.getPosition()) {
+			if (isUnconditionalStop || positionToSlowDownTemporary > state.getPosition()) {
 				this.criticalPoint = criticalPointToSet;
 				this.totalDistance = targetDistance;
 				this.positionToSlowDown = positionToSlowDownTemporary;
@@ -517,23 +574,9 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		}
 
 		// So we would stop after the critical point.
-		boolean areCriticalSectionsFound = false;
-		for (CriticalSection cs : css) {
-			Integer start = cs.getStart(robotID);
-			if (start == null) {
-				continue;
-			}
-			Integer end = cs.getEnd(robotID);
-			assert end != null;
-
-			final int margin = 3; // TODO: can it be greater?
-
-			if (start - margin <= criticalPointToSet && criticalPointToSet <= end + margin) {
-				cs.setHigher(robotID, true);
-				areCriticalSectionsFound = true;
-			}
+		for (CriticalSection cs : criticalSectionsReal) {
+			cs.setHigher(robotID, true);
 		}
-		//assert areCriticalSectionsFound;
 	}
 
 	@Override
@@ -628,18 +671,29 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		double deltaTime = 0.0;
 		boolean atCP = false;
 		int myRobotID = te.getRobotID();
+		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(myRobotID);
 		int myTEID = te.getID();
-
 
 		while (true) {
 			if (emergencyBreaker.isStopped(myRobotID)) {
 				break;
 			}
 
-			//End condition: passed the middle AND velocity < 0 AND no criticalPoint
 			boolean skipIntegration = false;
+
+			if (vehicle instanceof BarrierPhantomVehicle) {
+				skipIntegration = true;
+			}
+
+			boolean isFreezing = MissionUtils.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) > 0;
+			if (isFreezing) {
+				state = new State(state.getPosition(), 0);
+				skipIntegration = true;
+			}
+
+			//End condition: passed the middle AND velocity < 0 AND no criticalPoint
 			//if (state.getPosition() >= totalDistance/2.0 && state.getVelocity() < 0.0) {
-			if (state.getPosition() >= this.positionToSlowDown && state.getVelocity() < 0.0) { // waiting for another robot
+			if (! skipIntegration && state.getPosition() >= this.positionToSlowDown && state.getVelocity() <= 0.0) { // waiting for another robot
 				if (criticalPoint == -1 && !atCP) {
 					//set state to final position, just in case it didn't quite get there (it's certainly close enough)
 					state = new State(totalDistance, 0.0);
@@ -676,7 +730,6 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				assert criticalPoint != -1 || atCP;
 
 				skipIntegration = true; // at current iteration
-
 			}
 
 			//Compute deltaTime

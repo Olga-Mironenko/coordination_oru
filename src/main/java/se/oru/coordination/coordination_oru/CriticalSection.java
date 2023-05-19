@@ -1,6 +1,7 @@
 package se.oru.coordination.coordination_oru;
 
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -159,6 +160,11 @@ public class CriticalSection {
 			return getTe2End();
 		}
 		return null;
+	}
+
+	public boolean isRobotOnCS(int robotID) {
+		int index = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(robotID).getPathIndex();
+		return getStart(robotID) <= index && index <= getEnd(robotID);
 	}
 
 	public void setHigher(int robotID, boolean isHigher) {

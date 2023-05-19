@@ -1207,7 +1207,7 @@ public class Missions {
 										if (tec.addMissions(m)) {
 											//tec.computeCriticalSectionsAndStartTrackingAddedMission();
 											if (mdcs.containsKey(robotID)) mdcs.get(robotID).afterMissionDispatch(m);
-											if (!loopMissions.get(robotID)) {
+											if (!loopMissions.getOrDefault(robotID, false)) {
 												Missions.removeMissions(m);
 												System.out.println("Removed mission " + m);
 												if (concatenatedMissions.get(m) != null) {

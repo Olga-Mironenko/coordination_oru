@@ -223,16 +223,20 @@ public class BrowserVisualization implements FleetVisualization {
 			}
 		}
 
-		String color = "#000000";
-		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
-		if (vehicleCount != 0) color = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
+		String colorOuter = "#bbbbbb";
 
-		drawRobotFootprint(x, y, theta, rr.getPose(), "#bbbbbb", name, extraData, false, te.getFootprint());
+		String colorInner = "#000000";
+		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
+		if (vehicleCount != 0) colorInner = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
+
+		drawRobotFootprint(x, y, theta, rr.getPose(), colorOuter, name, extraData, false, te.getFootprint());
 
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 		Coordinate[] innerFootprint = tec.getInnerFootprint(rr.getRobotID());
-		Polygon innerFootprintPolygon = TrajectoryEnvelope.createFootprintPolygon(innerFootprint);
-		drawRobotFootprint(x, y, theta, null, color, "_" + name + "-inner", "", true, innerFootprintPolygon);
+		if (innerFootprint != null) {
+			Polygon innerFootprintPolygon = TrajectoryEnvelope.createFootprintPolygon(innerFootprint);
+			drawRobotFootprint(x, y, theta, null, colorInner, "_" + name + "-inner", "", true, innerFootprintPolygon);
+		}
 
 		if (isStatusText) {
 			setStatusText();
@@ -319,7 +323,7 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 
 	protected static String stringifyCriticalSections(HashSet<CriticalSection> allCriticalSections) {
-		Integer robotID = MissionUtils.idHuman;
+		Integer robotID = null; // MissionUtils.idHuman;
 
 		ArrayList<CriticalSection> criticalSections =
 				robotID == null

@@ -99,6 +99,8 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
                 delta = -1.0;
             } else if (code.equals("Space")) {
                 MissionUtils.forceDriving(MissionUtils.idHuman, 20.0);
+            } else if (code.equals("KeyF")) {
+                MissionUtils.arePhantomsVisible = ! MissionUtils.arePhantomsVisible;
             } else {
                 System.out.println("Unknown keydown code: " + code);
             }

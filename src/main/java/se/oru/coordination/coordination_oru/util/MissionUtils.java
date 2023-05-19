@@ -1,25 +1,30 @@
 package se.oru.coordination.coordination_oru.util;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.*;
-import se.oru.coordination.coordination_oru.code.Heuristics;
+import se.oru.coordination.coordination_oru.code.AbstractVehicle;
+import se.oru.coordination.coordination_oru.code.BarrierPhantomVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.State;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.TreeMap;
+import java.util.*;
 
 public class MissionUtils {
     public static final double targetVelocityHumanInitial = Double.POSITIVE_INFINITY; // essentially a limit
     public static double targetVelocityHuman = targetVelocityHumanInitial;
     public static int idHuman = 0;
     public static boolean isWorking = false;
+    public static boolean arePhantomsVisible = false;
+    public static HashMap<Integer, Integer> robotIDToFreezingCounter = new HashMap<>();
+    // TODO: use semaphores
+
+    protected static HashMap<Integer, BarrierPhantomVehicle> robotIDToBarrier = new HashMap<>();
 
     // TODO: race condition (click/keypress)
     // TODO: crashes on click and then (immediately) keypress
@@ -176,10 +181,33 @@ public class MissionUtils {
 
         TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-        final ArrayList<CriticalSection> criticalSectionsWithHighPriority =
-                selectCriticalSectionsWithHighPriority(robotID, tec.allCriticalSections, forcingDistance, Integer.MAX_VALUE);
-        for (CriticalSection cs : criticalSectionsWithHighPriority) {
+        final ArrayList<CriticalSection> criticalSectionsForPriority =
+                selectCriticalSections(robotID, tec.allCriticalSections, forcingDistance, Integer.MAX_VALUE);
+        for (CriticalSection cs : criticalSectionsForPriority) {
             cs.setHigher(robotID, true);
+        }
+
+        final ArrayList<CriticalSection> criticalSectionsForStop =
+                selectCriticalSections(robotID, tec.allCriticalSections, forcingDistance, Integer.MAX_VALUE);
+
+        TreeSet<Integer> robotsToStop = new TreeSet<>();
+        for (CriticalSection cs : criticalSectionsForStop) {
+            int robotToStop;
+            if (cs.isTe1(robotID)) {
+                robotToStop = cs.getTe2RobotID();
+            } else if (cs.isTe2(robotID)) {
+                robotToStop = cs.getTe1RobotID();
+            } else {
+                throw new RuntimeException();
+            }
+            assert robotToStop != robotID;
+
+            if (! cs.isRobotOnCS(robotToStop)) {
+                robotsToStop.add(robotToStop);
+            }
+        }
+        for (int robot : robotsToStop) {
+            stopRobot(robot);
         }
 
         TrackingCallback cb = new TrackingCallback(null) {
@@ -191,14 +219,17 @@ public class MissionUtils {
 
             @Override
             public String[] onPositionUpdate() {
-                if (areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsWithHighPriority)) {
-                    for (CriticalSection cs : criticalSectionsWithHighPriority) {
+                if (areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsForPriority)) {
+                    for (CriticalSection cs : criticalSectionsForPriority) {
                         if (tec.allCriticalSections.contains(cs)) {
-                            cs.te1Higher = false;
-                            cs.te2Higher = false;
+                            cs.setHigher(robotID, false);
                         }
                     }
-                    criticalSectionsWithHighPriority.clear();
+                    criticalSectionsForPriority.clear();
+
+                    for (int robot : robotsToStop) {
+                        resumeRobot(robot);
+                    }
                 }
                 return null;
             }
@@ -216,7 +247,7 @@ public class MissionUtils {
         tec.addTrackingCallback(robotID, cb);
     }
 
-    protected static ArrayList<CriticalSection> selectCriticalSectionsWithHighPriority(
+    protected static ArrayList<CriticalSection> selectCriticalSections(
             int robotID,
             HashSet<CriticalSection> allCriticalSections,
             double maxDistance,
@@ -226,7 +257,7 @@ public class MissionUtils {
             return new ArrayList<>();
         }
 
-        assert maxDistance >= 0.0;
+        assert maxDistance >= 0.0 || maxDistance == -1.0;
 
         ArrayList<CriticalSection> criticalSectionsSorted =
                 CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, robotID);
@@ -293,5 +324,65 @@ public class MissionUtils {
             }
         }
         return false;
+    }
+
+    protected static void stopRobot(int robotID) {
+        System.out.println(robotID);
+
+        robotIDToFreezingCounter.put(robotID, robotIDToFreezingCounter.getOrDefault(robotID, 0) + 1);
+
+        /*
+        BarrierPhantomVehicle vehicleBarrier = robotIDToBarrier.get(robotID);
+        if (vehicleBarrier == null) {
+            AbstractVehicle vehicleToStop = VehiclesHashMap.getVehicle(robotID);
+            vehicleBarrier = new BarrierPhantomVehicle(vehicleToStop);
+            vehicleBarrier.isActive = true;
+            robotIDToBarrier.put(robotID, vehicleBarrier);
+            // TODO: narrow robot or (0, 0)?
+        }
+
+        TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+        RobotReport rr = tec.getRobotReport(robotID);
+
+        PoseSteering[] currentPath = getCurrentPath(robotID);
+        int numIndices = 10;
+        // 2:  1- 2+
+        // 3:  1- 2-
+        // 4:  1- 2+
+        // 5:  1- 2-
+        // 10: 1+ 2-
+        int currentIndex = rr.getPathIndex();
+        if (currentIndex == -1) {
+            return;
+        }
+        int lastIndex = currentIndex + numIndices - 1;
+        if (lastIndex >= currentPath.length) {
+            return;
+        }
+        PoseSteering[] path = new PoseSteering[numIndices];
+        for (int offset = 0; offset < numIndices; offset++) {
+            path[offset] = currentPath[currentIndex + offset];
+        }
+
+        tec.placeRobot(vehicleBarrier.getID(), path[0].getPose());
+        Missions.dispatchableRobots.add(vehicleBarrier.getID());
+        Missions.enqueueMission(new Mission(vehicleBarrier.getID(), path));
+         */
+    }
+
+    protected static void resumeRobot(int robotID) {
+        System.out.println(robotID);
+
+        robotIDToFreezingCounter.put(robotID, robotIDToFreezingCounter.getOrDefault(robotID, 0) - 1);
+
+        /*
+        BarrierPhantomVehicle vehicleBarrier = robotIDToBarrier.get(robotID);
+        vehicleBarrier.isActive = false;
+        TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+        //tec.placeRobot(vehicleBarrier.getID(), new Pose(0, 0, 0));
+        tec.truncateEnvelope(vehicleBarrier.getID());
+        //tec.placeRobot(vehicleBarrier.getID(), new Pose(0, 0, 0));
+
+         */
     }
 }

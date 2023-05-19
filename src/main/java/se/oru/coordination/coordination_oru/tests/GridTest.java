@@ -5,8 +5,6 @@ import java.awt.Color;
 import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 
-import se.oru.coordination.coordination_oru.Mission;
-import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.*;
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
@@ -19,6 +17,7 @@ import static se.oru.coordination.coordination_oru.util.Printer.print;
 
 public class GridTest {
     enum Scenario {
+        FIRST_COLUMN,
         BASELINE_IDEAL_DRIVER,
         FORCING_CS1,
         FORCING_CS1_CS2,
@@ -48,11 +47,13 @@ public class GridTest {
     }
 
     protected static void runDemo() throws NoPathFound {
-        final Scenario scenario = Scenario.FORCING_CS1_CS2;
+        final String scenarioString = System.getenv().get("SCENARIO");
+        final Scenario scenario = scenarioString == null ? Scenario.FORCING_CS1 :
+                Scenario.valueOf(scenarioString);
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
-        final double loopMinutes = 10;
+        final double loopMinutes = 30;
         final long loopTime = System.currentTimeMillis() + Math.round(loopMinutes * 60 * 1000);
 
         final String YAML_FILE = "maps/map-grid.yaml";
@@ -71,8 +72,8 @@ public class GridTest {
         final Pose row3Right = new Pose(57.0,15.5,-Math.PI/2);
         final Pose center = new Pose(30.0,30.0,-Math.PI/2);
 
-        final Pose humStart = column2Top;
-        final Pose humFinish = column2Bottom;
+        final Pose humStart = scenario == Scenario.FIRST_COLUMN ? column1Top : column2Top;
+        final Pose humFinish = scenario == Scenario.FIRST_COLUMN ? column2Bottom : column2Bottom;
 
         final boolean ishumLoop = true;
 
@@ -168,6 +169,7 @@ public class GridTest {
                 boolean isForcing;
                 Double forcingDistance = null;
                 switch (scenario) {
+                    case FIRST_COLUMN:
                     case BASELINE_IDEAL_DRIVER:
                         isForcing = false;
                         break;

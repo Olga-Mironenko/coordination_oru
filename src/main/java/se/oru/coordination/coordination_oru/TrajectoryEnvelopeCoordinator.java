@@ -560,6 +560,28 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 	//returns true if robot1 should go before robot2
 	//returns false if robot2 should go before robot1
+	public boolean getOrderOfCriticalSection(CriticalSection cs, RobotReport robotReport1, RobotReport robotReport2) {
+		RobotAtCriticalSection r1atcs = new RobotAtCriticalSection(robotReport1, cs);
+		RobotAtCriticalSection r2atcs = new RobotAtCriticalSection(robotReport2, cs);
+
+		boolean ret = false;
+
+		if (cs.te1Higher != cs.te2Higher)
+			ret = cs.te1Higher;
+		else if (this.comparators.size() > 0)
+			ret = (this.comparators.compare(r1atcs, r2atcs) < 0);
+			//No ordering function, decide an ordering based on distance (closest goes first)
+		else
+			ret = ((cs.getTe2Start()-robotReport2.getPathIndex()) > (cs.getTe1Start()-robotReport1.getPathIndex()));
+
+		if (ret && muted.contains(robotReport2.getRobotID())) return false;
+		if (!ret && muted.contains(robotReport1.getRobotID())) return true;
+
+		return ret;
+	}
+
+	//returns true if robot1 should go before robot2
+	//returns false if robot2 should go before robot1
 	protected boolean getOrder(AbstractTrajectoryEnvelopeTracker robotTracker1, RobotReport robotReport1, AbstractTrajectoryEnvelopeTracker robotTracker2, RobotReport robotReport2, CriticalSection cs) {
 
 		//If both can stop before entering, use ordering function (or closest if no ordering function)
@@ -580,23 +602,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				metaCSPLogger.finest("Both Robot" + cs.getTe1().getRobotID() + " and Robot" + cs.getTe2().getRobotID() + " will park in " + cs + ". Decide according to the heuristic.");
 		}
 
-		RobotAtCriticalSection r1atcs = new RobotAtCriticalSection(robotReport1, cs);
-		RobotAtCriticalSection r2atcs = new RobotAtCriticalSection(robotReport2, cs);
-
-		boolean ret = false;
-
-		if (cs.te1Higher != cs.te2Higher)
-			ret = cs.te1Higher;
-		else if (this.comparators.size() > 0)
-			ret = (this.comparators.compare(r1atcs,r2atcs) < 0);
-		//No ordering function, decide an ordering based on distance (closest goes first)
-		else
-			ret = ((cs.getTe2Start()-robotReport2.getPathIndex()) > (cs.getTe1Start()-robotReport1.getPathIndex()));
-
-		if (ret && muted.contains(robotReport2.getRobotID())) return false;
-		if (!ret && muted.contains(robotReport1.getRobotID())) return true;
-
-		return ret;
+		return getOrderOfCriticalSection(cs, robotReport1, robotReport2);
 	}
 
 	@Override

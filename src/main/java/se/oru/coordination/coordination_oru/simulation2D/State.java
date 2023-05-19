@@ -19,7 +19,7 @@ public class State {
 	}
 	
 	public double getVelocity() {
-		return velocity;
+		return velocity <= 0 ? 0.0 : velocity;
 	}
 	
 	public void setVelocity(double velocity) {
