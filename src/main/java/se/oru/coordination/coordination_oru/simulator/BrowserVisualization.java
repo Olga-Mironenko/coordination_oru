@@ -15,11 +15,11 @@ import org.metacsp.multi.spatial.DE9IM.GeometricShapeDomain;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
+import se.oru.coordination.coordination_oru.robots.AbstractRobot;
+import se.oru.coordination.coordination_oru.robots.RobotHashMap;
 import se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.utility.*;
 import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
-import se.oru.coordination.coordination_oru.robots.AbstractRobot;
-import se.oru.coordination.coordination_oru.robots.RobotHashMap;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -472,6 +472,7 @@ public class BrowserVisualization implements FleetVisualization {
         String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_" + te.getID(), geom, color, -1, false, null) + "}";
         enqueueMessage(jsonString);
     }
+
     @Override
     public void removeEnvelope(TrajectoryEnvelope te) {
         String jsonString = "{ \"operation\" : \"removeGeometry\","

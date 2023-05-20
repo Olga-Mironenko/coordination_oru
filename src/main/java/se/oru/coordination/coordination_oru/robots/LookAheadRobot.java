@@ -8,44 +8,43 @@ import se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlan
 
 import java.awt.*;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * LookAheadRobot is a subclass of AbstractRobot that represents robots capable of predicting
  * their path up to a certain distance. The class provides methods for updating the paths of LookAheadRobots
- * in the TrajectoryEnvelopeCoordinator and generating limited paths based on the predictable distance.
+ * in the TrajectoryEnvelopeCoordinator and generating limited paths based on the look ahead distance.
  *
  * @author anm
  */
 public class LookAheadRobot extends AbstractRobot {
 
-    private final double predictableDistance;
+    private final double lookAheadDistance;
 
     /**
      * Constructs a new LookAheadRobot with the specified parameters.
      *
-     * @param ID                  The robot ID.
-     * @param priorityID          The priority ID of the robot.
-     * @param predictableDistance The maximum distance ahead in the path to consider.
-     * @param color               The color of the robot when stationary.
-     * @param maxVelocity         The maximum velocity of the robot.
-     * @param maxAcceleration     The maximum acceleration of the robot.
-     * @param xLength             The length of the robot along the X-axis.
-     * @param yLength             The length of the robot along the Y-axis.
+     * @param ID                The robot ID.
+     * @param priorityID        The priority ID of the robot.
+     * @param lookAheadDistance The maximum distance ahead in the path to consider.
+     * @param color             The color of the robot when stationary.
+     * @param maxVelocity       The maximum velocity of the robot.
+     * @param maxAcceleration   The maximum acceleration of the robot.
+     * @param xLength           The length of the robot along the X-axis.
+     * @param yLength           The length of the robot along the Y-axis.
      */
-    public LookAheadRobot(int ID, int priorityID, double predictableDistance, Color color, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+    public LookAheadRobot(int ID, int priorityID, double lookAheadDistance, Color color, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
         super(ID, priorityID, color, maxVelocity, maxAcceleration, xLength, yLength);
-        this.predictableDistance = predictableDistance;
+        this.lookAheadDistance = lookAheadDistance;
     }
 
-    public LookAheadRobot(int priorityID, double predictableDistance, Color color, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+    public LookAheadRobot(int priorityID, double lookAheadDistance, Color color, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
         super(robotNumber.intValue(), priorityID, color, maxVelocity, maxAcceleration, xLength, yLength);
-        this.predictableDistance = predictableDistance;
+        this.lookAheadDistance = lookAheadDistance;
     }
 
-    public LookAheadRobot(double predictableDistance) {
+    public LookAheadRobot(double lookAheadDistance) {
         super(robotNumber.intValue(), 1, Color.RED, 5, 2, 0.5, 0.5);
-        this.predictableDistance = predictableDistance;
+        this.lookAheadDistance = lookAheadDistance;
     }
 
     /**
@@ -58,8 +57,10 @@ public class LookAheadRobot extends AbstractRobot {
             var robot = RobotHashMap.getRobot(robotID);
             if (robot.getType().equals("LookAheadRobot")) {
                 var lookAheadRobot = (LookAheadRobot) robot;
-                var newPath = lookAheadRobot.getLimitedPath(robotID, lookAheadRobot.getPredictableDistance(), tec);
-                tec.replacePath(robotID, newPath, 0, false, null);
+                if (!tec.isFree(lookAheadRobot.getID())) {
+                    var newPath = lookAheadRobot.getLimitedPath(robotID, lookAheadRobot.getLookAheadDistance(), tec);
+                    tec.replacePath(robotID, newPath, 0, false, null);
+                }
             }
         }
     }
@@ -143,14 +144,18 @@ public class LookAheadRobot extends AbstractRobot {
     }
 
     /**
-     * Retrieves a limited path for the LookAheadRobot up to a specified predictable distance.
+     * Retrieves a limited path for the LookAheadRobot up to a specified look ahead distance.
      *
-     * @param robotID             The ID of the robot for which the path is being generated.
-     * @param predictableDistance The maximum distance ahead in the path to consider.
-     * @param tec                 The TrajectoryEnvelopeCoordinator containing the robots.
+     * @param robotID           The ID of the robot for which the path is being generated.
+     * @param lookAheadDistance The maximum distance ahead in the path to consider.
+     * @param tec               The TrajectoryEnvelopeCoordinator containing the robots.
      * @return An array of PoseSteering objects representing the limited path.
      */
-    public PoseSteering[] getLimitedPath(int robotID, double predictableDistance, TrajectoryEnvelopeCoordinator tec) {
+    public PoseSteering[] getLimitedPath(int robotID, double lookAheadDistance, TrajectoryEnvelopeCoordinator tec) {
+        if (lookAheadDistance < 0) {
+            return getPath(); // Return the full path if lookAheadDistance is negative
+        }
+
         double distance = 0.0;
         var robotReport = tec.getRobotReport(robotID);
         var fullPath = getPath();
@@ -165,9 +170,9 @@ public class LookAheadRobot extends AbstractRobot {
         double totalDistance = getPlanLength();
         int pathIndex = Math.max(robotReport.getPathIndex(), 0); // Avoid null point exception for starting
 
-        for (; pathIndex < fullPath.length - 1 && distance <= predictableDistance; pathIndex++) {
-            if ((currentDistance + predictableDistance) >= totalDistance) {
-                return fullPath; // For last iteration less than predictable distance
+        for (; pathIndex < fullPath.length - 1 && distance <= lookAheadDistance; pathIndex++) {
+            if ((currentDistance + lookAheadDistance) >= totalDistance) {
+                return fullPath; // For last iteration less than look ahead distance
             } else {
                 distance += fullPath[pathIndex].getPose().distanceTo(fullPath[pathIndex + 1].getPose());
             }
@@ -177,8 +182,8 @@ public class LookAheadRobot extends AbstractRobot {
         return Arrays.copyOfRange(fullPath, 0, pathIndex);
     }
 
-    public double getPredictableDistance() {
-        return predictableDistance;
+    public double getLookAheadDistance() {
+        return lookAheadDistance;
     }
 
 }

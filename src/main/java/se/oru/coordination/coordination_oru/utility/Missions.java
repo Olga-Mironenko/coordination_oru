@@ -15,13 +15,10 @@ import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import org.metacsp.utility.logging.MetaCSPLogging;
 import se.oru.coordination.coordination_oru.coordinator.TrajectoryEnvelopeCoordinator;
+import se.oru.coordination.coordination_oru.motionplanner.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
 import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
-import se.oru.coordination.coordination_oru.motionplanner.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.robots.RobotHashMap;
-import se.oru.coordination.coordination_oru.tracker.AbstractTrajectoryEnvelopeTracker;
-import se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4;
-import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
 import se.oru.coordination.coordination_oru.robots.RobotReportCollector;
 
 import javax.imageio.ImageIO;
@@ -42,12 +39,13 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * This class collects utility methods for storing {@link Mission}s, regulating their dispatch, maintaining locations
- * and paths (i.e., a roadmap), finding shortest paths through the roadmap, and extracting information from YAML files.
+ * and paths (i.e., a roadmap), finding the shortest paths through the roadmap, and extracting information from YAML files.
  *
  * @author fpa
  */
 public class Missions {
 
+    private static final Logger metaCSPLogger = MetaCSPLogging.getLogger(Missions.class);
     public static HashMap<Integer, Boolean> loopMissions = new HashMap<Integer, Boolean>();
     protected static HashMap<String, Pose> locations = new HashMap<String, Pose>();
     protected static HashMap<String, PoseSteering[]> paths = new HashMap<String, PoseSteering[]>();
@@ -62,12 +60,9 @@ public class Missions {
     protected static BufferedImage map = null;
     protected static double mapResolution = -1;
     protected static Coordinate mapOrigin = null;
-
     protected static double minPathDistance = -1;
-
     protected static Thread missionDispatchThread = null;
     protected static HashSet<Integer> dispatchableRobots = new HashSet<Integer>();
-    private static final Logger metaCSPLogger = MetaCSPLogging.getLogger(Missions.class);
 
     /**
      * Set the minimum acceptable distance between path poses. This is used to re-sample paths
@@ -121,7 +116,6 @@ public class Missions {
         }
         return length;
     }
-
 
     /**
      * Get the length in meters of a path. This is the sum of distances between path poses.
@@ -1103,18 +1097,19 @@ public class Missions {
     }
 
     /**
-     * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
-     * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
+     * Starts a thread that periodically dispatches missions for given robots.
+     * The thread will cycle through known missions for each robot and dispatch as soon as the robot is free.
+     * If the thread is not already started, this method will start it.
      *
      * @param tec      The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
-     * @param loop     Set to {@code false} if missions should be de-queued once dispatched.
-     * @param robotIDs The robot IDs which should be considered dispatchable.
+     * @param loop     If {@code false}, missions will be de-queued once dispatched.
+     * @param robotIDs The IDs of the robots which should be considered dispatchable.
      */
-    public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, int... robotIDs) {
+    public static void startMissionDispatchers(TrajectoryEnvelopeCoordinator tec, boolean loop, int... robotIDs) {
 
-           for (int robotID : robotIDs) {
+        for (int robotID : robotIDs) {
             dispatchableRobots.add(robotID);
-               // TODO Only add autonomous robots missions to run in a loop
+            // TODO Only add autonomous robots missions to run in a loop
 //            if (Objects.equals(RobotHashMap.getRobot(robotID).getType(), "AutonomousRobot")) {
 //                loopMissions.put(robotID, loop);
 //            }
@@ -1182,26 +1177,53 @@ public class Missions {
     }
 
     /**
-     * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
-     * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
+     * Starts mission dispatchers for the TrajectoryEnvelopeCoordinator, with additional parameters for report writing.
+     * Writes robot reports to a specified directory.
+     * If lookAheadDistance is -1, it is updated to the full distance of LookAheadRobot.
      *
-     * @param tec      The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
-     * @param loop     Set to {@code false} if missions should be de-queued once dispatched.
-     * @param robotIDs The robot IDs which should be considered dispatchable.
+     * @param tec                  The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
+     * @param lookAheadDistance    The maximum distance ahead in the path to consider.
+     *                             If -1, the full distance of LookAheadRobot is used.
+     * @param writeReports         Whether to write reports or not.
+     * @param intervalInSeconds    The interval in seconds between consecutive reports.
+     * @param terminationInMinutes The termination time in minutes for writing reports.
+     * @param heuristicName        The name of the heuristic used in the current simulation run.
      */
-    public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, double lookAheadDistance,
-                                               int intervalInSeconds, int terminationInMinutes) {
+    public static void startMissionDispatchers(TrajectoryEnvelopeCoordinator tec, double lookAheadDistance,
+                                               boolean writeReports, int intervalInSeconds, int terminationInMinutes,
+                                               String heuristicName) {
+
+        double updatedLookAheadDistance = 0.0;
+
+        // For fully predictable path of the robot
+        for (int robotID : convertSetToIntArray(tec.getAllRobotIDs())) {
+            var robot = RobotHashMap.getRobot(robotID);
+            if (robot instanceof LookAheadRobot) {
+                var lookAheadRobot = (LookAheadRobot) robot;
+                if (lookAheadDistance < 0) {
+                    updatedLookAheadDistance = lookAheadRobot.getPlanLength();
+                }
+            }
+        }
 
         // Write robot reports to ../results/ folder in .csv format
-        writeRobotReports(tec, lookAheadDistance, intervalInSeconds, terminationInMinutes);
+        if (lookAheadDistance < 0 && writeReports) {
+            System.out.println("Writing robot reports.");
+            writeRobotReports(tec, updatedLookAheadDistance, intervalInSeconds, terminationInMinutes, heuristicName);
+        } else if (lookAheadDistance > 0 && writeReports) {
+            System.out.println("Writing robot reports.");
+            writeRobotReports(tec, lookAheadDistance, intervalInSeconds, terminationInMinutes, heuristicName);
+        } else {
+            System.out.println("Not writing robot reports.");
+        }
 
         for (int robotID : convertSetToIntArray(tec.getAllRobotIDs())) {
             dispatchableRobots.add(robotID);
             loopMissions.put(robotID, true);
             // TODO Only add autonomous robots missions to run in a loop
-//            if (Objects.equals(RobotHashMap.getRobot(robotID).getType(), "AutonomousRobot")) {
-//                loopMissions.put(robotID, loop);
-//            }
+             if (Objects.equals(RobotHashMap.getRobot(robotID).getType(), "AutonomousRobot")) {
+                 loopMissions.put(robotID, true);
+             }
         }
 
         if (missionDispatchThread == null) {
@@ -1249,8 +1271,9 @@ public class Missions {
                             e.printStackTrace();
                         }
 
-                        // Update the path for limited look-ahead robots
-                        LookAheadRobot.updateLookAheadRobotPath(tec);
+                        if (lookAheadDistance != -1) {
+                            LookAheadRobot.updateLookAheadRobotPath(tec);
+                        }
                     }
                 }
 
@@ -1264,12 +1287,33 @@ public class Missions {
         }
     }
 
+    /**
+     * Starts a mission dispatch thread for all robots known to the given TrajectoryEnvelopeCoordinator.
+     * Missions are not de-queued once dispatched.
+     *
+     * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
+     */
     public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop) {
         startMissionDispatchers(tec, loop, convertSetToIntArray(tec.getAllRobotIDs()));
     }
+
+    /**
+     * Starts a mission dispatch thread for specific robots known to the given TrajectoryEnvelopeCoordinator.
+     * Missions are not de-queued once dispatched.
+     *
+     * @param tec      The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
+     * @param robotIDs The IDs of the robots for which to start the dispatch thread.
+     */
     public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, int... robotIDs) {
         startMissionDispatchers(tec, false, robotIDs);
     }
+
+    /**
+     * Starts a mission dispatch thread for all robots known to the given TrajectoryEnvelopeCoordinator.
+     * Missions are not de-queued once dispatched.
+     *
+     * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
+     */
     public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec) {
         startMissionDispatchers(tec, false, convertSetToIntArray(tec.getAllRobotIDs()));
     }
@@ -1277,8 +1321,8 @@ public class Missions {
     /**
      * Creates a concatenated mission by combining the original mission with a list of concatenated missions.
      *
-     * @param m            The original mission.
-     * @param catMissions  The concatenated missions to be added.
+     * @param m           The original mission.
+     * @param catMissions The concatenated missions to be added.
      * @return The new concatenated mission.
      */
     private static Mission createConcatenatedMission(Mission m, List<Mission> catMissions) {
@@ -1312,7 +1356,7 @@ public class Missions {
      * @param intervalInSeconds    the time interval between data collection, in seconds.
      * @param terminationInMinutes the duration of data collection, in minutes.
      */
-    public static void writeRobotReports(TrajectoryEnvelopeCoordinator tec, double lookAheadDistance, int intervalInSeconds, int terminationInMinutes) {
+    public static void writeRobotReports(TrajectoryEnvelopeCoordinator tec, double lookAheadDistance, int intervalInSeconds, int terminationInMinutes, String heuristicName) {
         var reportCollector = new RobotReportCollector();
         String homeDir = System.getProperty("user.home");
         String folder = homeDir + "/Devel/coordination_oru/src/main/java/se/oru/coordination/coordination_oru/results";
@@ -1338,10 +1382,9 @@ public class Missions {
             }
         }
 
-        // TODO Fix heuristics C
         // Generate the filename based on the number of autonomous and lookahead robots
         String fileName = folder + "/" + "A" + autonomousRobotCount + "L" + lookAheadRobotCount +
-                "_" + "C" + "_" + (int) lookAheadDistance + "_";
+                "_" + heuristicName.charAt(0) + "_" + (int) lookAheadDistance + "_";
 
         reportCollector.handleRobotReports(tec, fileName, intervalInSeconds, terminationInMinutes);
     }

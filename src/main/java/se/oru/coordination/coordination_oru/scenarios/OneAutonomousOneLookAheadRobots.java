@@ -1,19 +1,18 @@
 package se.oru.coordination.coordination_oru.scenarios;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
+import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
+import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.utility.Heuristics;
 import se.oru.coordination.coordination_oru.utility.Mission;
 import se.oru.coordination.coordination_oru.utility.Missions;
-import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
-import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 
 public class OneAutonomousOneLookAheadRobots {
     public static void main(String[] args) {
 
         final String YAML_FILE = "maps/mine-map-test.yaml";
-        final int simulationTimeMinutes = 2;
         double predictableDistance = 25.0;
 
         final Pose mainTunnelLeft = new Pose(4.25, 15.35, -Math.PI + Math.PI);
@@ -36,6 +35,8 @@ public class OneAutonomousOneLookAheadRobots {
         // Start the thread that checks and enforces dependencies at every clock tick
         tec.startInference();
 
+        var heuristics = new Heuristics().closest();
+        tec.addComparator(heuristics);
         tec.setDefaultFootprint(autonomousRobot.getFootPrint());
         tec.placeRobot(autonomousRobot.getID(), drawPoint21);
         tec.placeRobot(lookAheadRobot.getID(), mainTunnelLeft);
@@ -58,6 +59,6 @@ public class OneAutonomousOneLookAheadRobots {
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, true);
+        Missions.startMissionDispatchers(tec, false);
     }
 }

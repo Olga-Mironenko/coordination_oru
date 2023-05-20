@@ -83,7 +83,7 @@ public abstract class AbstractRobot {
      * @param colorToggle      The color to toggle to during blinking.
      * @param blinkTimeSeconds The duration of the blink in seconds.
      * @throws InterruptedException if the sleep operation is interrupted.
-     * TODO: Implement color blinking and robot stoppage.
+     *                              TODO: Implement color blinking and robot stoppage.
      */
     public void blinkRobot(Color colorOriginal, Color colorToggle, long blinkTimeSeconds) throws InterruptedException {
         RobotHashMap.getRobot(ID).setRobotColor(colorToggle);

@@ -2,21 +2,26 @@ package se.oru.coordination.coordination_oru.scenarios;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel;
+import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
+import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.utility.Heuristics;
 import se.oru.coordination.coordination_oru.utility.Mission;
 import se.oru.coordination.coordination_oru.utility.Missions;
-import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
-import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 
 import java.awt.*;
+import java.io.FileNotFoundException;
 
-public class PaperScenario {
-    public static void main(String[] args) {
+public class PaperScenario_3A {
+    public static void main(String[] args) throws FileNotFoundException {
 
         final String YAML_FILE = "maps/mine-map-paper-2023.yaml";
-        double lookAheadDistance = 25.0;
+        double lookAheadDistance = 25;
+        int intervalInSeconds = 1;
+        int terminationInMinutes = 30;
+        boolean visualization = true;
+
         final Pose mainTunnelLeft = new Pose(14.25, 22.15, Math.PI);
         final Pose mainTunnelRight = new Pose(114.15, 40.05, Math.PI);
         final Pose entrance = new Pose(115.35, 3.75, Math.PI);
@@ -44,19 +49,13 @@ public class PaperScenario {
         final Pose[] limitedLookAheadRobotGoal = {mainTunnelLeft};
 
         var autonomousRobot1 = new AutonomousRobot();
-//        var autonomousRobot2 = new AutonomousRobot();
+        var autonomousRobot2 = new AutonomousRobot();
         var autonomousRobot3 = new AutonomousRobot();
-//        var autonomousRobot4 = new AutonomousRobot();
-        var autonomousRobot5 = new AutonomousRobot();
-//        var autonomousRobot6 = new AutonomousRobot();
         var lookAheadRobot = new LookAheadRobot(1, lookAheadDistance, Color.RED, 5, 2, 0.9, 0.5);
 
         autonomousRobot1.getPlan(drawPoint28, autonomousRobotGoal1, YAML_FILE, true);
-//        autonomousRobot2.getPlan(drawPoint30, autonomousRobotGoal1, YAML_FILE, true);
-        autonomousRobot3.getPlan(drawPoint32A, autonomousRobotGoal2, YAML_FILE, true);
-//        autonomousRobot4.getPlan(drawPoint34, autonomousRobotGoal2, YAML_FILE, true);
-        autonomousRobot5.getPlan(drawPoint35, autonomousRobotGoal3, YAML_FILE, true);
-//        autonomousRobot6.getPlan(drawPoint12, autonomousRobotGoal3, YAML_FILE, true);
+        autonomousRobot2.getPlan(drawPoint32A, autonomousRobotGoal2, YAML_FILE, true);
+        autonomousRobot3.getPlan(drawPoint35, autonomousRobotGoal3, YAML_FILE, true);
         lookAheadRobot.getPlan(entrance, limitedLookAheadRobotGoal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
@@ -67,63 +66,50 @@ public class PaperScenario {
         tec.setForwardModel(autonomousRobot1.getID(), new ConstantAccelerationForwardModel(autonomousRobot1.getMaxAcceleration(),
                 autonomousRobot1.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
                 tec.getRobotTrackingPeriodInMillis(autonomousRobot1.getID())));
-//        tec.setForwardModel(autonomousRobot2.getID(), new ConstantAccelerationForwardModel(autonomousRobot2.getMaxAcceleration(),
-//                autonomousRobot2.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
-//                tec.getRobotTrackingPeriodInMillis(autonomousRobot2.getID())));
+        tec.setForwardModel(autonomousRobot2.getID(), new ConstantAccelerationForwardModel(autonomousRobot2.getMaxAcceleration(),
+                autonomousRobot2.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
+                tec.getRobotTrackingPeriodInMillis(autonomousRobot2.getID())));
         tec.setForwardModel(autonomousRobot3.getID(), new ConstantAccelerationForwardModel(autonomousRobot3.getMaxAcceleration(),
                 autonomousRobot3.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
                 tec.getRobotTrackingPeriodInMillis(autonomousRobot3.getID())));
-//        tec.setForwardModel(autonomousRobot4.getID(), new ConstantAccelerationForwardModel(autonomousRobot4.getMaxAcceleration(),
-//                autonomousRobot4.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
-//                tec.getRobotTrackingPeriodInMillis(autonomousRobot4.getID())));
-        tec.setForwardModel(autonomousRobot5.getID(), new ConstantAccelerationForwardModel(autonomousRobot5.getMaxAcceleration(),
-                autonomousRobot5.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
-                tec.getRobotTrackingPeriodInMillis(autonomousRobot5.getID())));
-//        tec.setForwardModel(autonomousRobot6.getID(), new ConstantAccelerationForwardModel(autonomousRobot6.getMaxAcceleration(),
-//                autonomousRobot6.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
-//                tec.getRobotTrackingPeriodInMillis(autonomousRobot6.getID())));
         tec.setForwardModel(lookAheadRobot.getID(), new ConstantAccelerationForwardModel(lookAheadRobot.getMaxAcceleration(),
                 lookAheadRobot.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
                 tec.getRobotTrackingPeriodInMillis(lookAheadRobot.getID())));
 
         tec.setDefaultFootprint(lookAheadRobot.getFootPrint());
         tec.placeRobot(autonomousRobot1.getID(), drawPoint28);
-//        tec.placeRobot(autonomousRobot2.getID(), drawPoint30);
-        tec.placeRobot(autonomousRobot3.getID(), drawPoint32A);
-//        tec.placeRobot(autonomousRobot4.getID(), drawPoint34);
-        tec.placeRobot(autonomousRobot5.getID(), drawPoint35);
-//        tec.placeRobot(autonomousRobot6.getID(), drawPoint12);
+        tec.placeRobot(autonomousRobot2.getID(), drawPoint32A);
+        tec.placeRobot(autonomousRobot3.getID(), drawPoint35);
         tec.placeRobot(lookAheadRobot.getID(), entrance);
-        tec.addComparator(new Heuristics().closest());
-//        tec.setUseInternalCriticalPoints(true);
-//        tec.setYieldIfParking(true);
+
+        // Set Heuristics
+        var heuristic = new Heuristics();
+        tec.addComparator(heuristic.lookAheadRobotsFirst());
+        String heuristicName = heuristic.getHeuristicName();
+
         tec.setBreakDeadlocks(true, false, false);
 
         // Set up a simple GUI (null means an empty map, otherwise provide yaml file)
-        var viz = new BrowserVisualization();
-        viz.setMap(YAML_FILE);
-        viz.setFontScale(2.5);
-        viz.setInitialTransform(9.6, 30.2, -0.73);
-        tec.setVisualization(viz);
+        if (visualization) {
+            var viz = new BrowserVisualization();
+            viz.setMap(YAML_FILE);
+            viz.setFontScale(2.5);
+            viz.setInitialTransform(9.6, 30.2, -0.73);
+            tec.setVisualization(viz);
+        }
 
-        var lookAheadRobotInitialPlan = lookAheadRobot.getLimitedPath(lookAheadRobot.getID(), lookAheadDistance, tec);
         var m1 = new Mission(autonomousRobot1.getID(), autonomousRobot1.getPath());
-//        var m2 = new Mission(autonomousRobot2.getID(), autonomousRobot2.getPath());
+        var m2 = new Mission(autonomousRobot2.getID(), autonomousRobot2.getPath());
         var m3 = new Mission(autonomousRobot3.getID(), autonomousRobot3.getPath());
-//        var m4 = new Mission(autonomousRobot4.getID(), autonomousRobot4.getPath());
-        var m5 = new Mission(autonomousRobot5.getID(), autonomousRobot5.getPath());
-//        var m6 = new Mission(autonomousRobot6.getID(), autonomousRobot6.getPath());
-        var m7 = new Mission(lookAheadRobot.getID(), lookAheadRobotInitialPlan);
+        var m7 = new Mission(lookAheadRobot.getID(), lookAheadRobot.getLimitedPath(lookAheadRobot.getID(), lookAheadDistance, tec));
 //        m4.setStoppingPoint(orePass3, 10000); //FIXME I think it does not work.
 
         Missions.enqueueMission(m1);
-//        Missions.enqueueMission(m2);
+        Missions.enqueueMission(m2);
         Missions.enqueueMission(m3);
-//        Missions.enqueueMission(m4);
-        Missions.enqueueMission(m5);
-//        Missions.enqueueMission(m6);
         Missions.enqueueMission(m7);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, lookAheadDistance, 1, 30);
+        Missions.startMissionDispatchers(tec, lookAheadDistance,
+                true, intervalInSeconds, terminationInMinutes, heuristicName);
     }
 }

@@ -69,8 +69,8 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
     }
 
     public final HashSet<CriticalSection> allCriticalSections = new HashSet<CriticalSection>();
-    public HashMap<Integer, Integer> numIntegrateCalls = new HashMap<Integer, Integer>();
     public final HashMap<Integer, AbstractTrajectoryEnvelopeTracker> trackers = new HashMap<Integer, AbstractTrajectoryEnvelopeTracker>();
+    public HashMap<Integer, Integer> numIntegrateCalls = new HashMap<Integer, Integer>();
     protected int DEFAULT_ROBOT_TRACKING_PERIOD = 30;
     protected int CONTROL_PERIOD;
     protected double TEMPORAL_RESOLUTION;

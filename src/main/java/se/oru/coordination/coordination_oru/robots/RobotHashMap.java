@@ -11,8 +11,8 @@ import java.util.HashMap;
  */
 public class RobotHashMap {
     private static final Object lock = new Object();
-    private static volatile RobotHashMap instance;
     private static final HashMap<Integer, AbstractRobot> list = new HashMap<>();
+    private static volatile RobotHashMap instance;
 
     /**
      * Private constructor to prevent instantiation of the class.

@@ -1,14 +1,14 @@
 package se.oru.coordination.coordination_oru.tests;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
+import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
+import se.oru.coordination.coordination_oru.robots.HumanOperatedRobot;
+import se.oru.coordination.coordination_oru.robots.RobotHashMap;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.tracker.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.utility.*;
 import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
-import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
-import se.oru.coordination.coordination_oru.robots.HumanOperatedRobot;
-import se.oru.coordination.coordination_oru.robots.RobotHashMap;
 
 import java.awt.*;
 

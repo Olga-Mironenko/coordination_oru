@@ -1243,32 +1243,30 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
         }
     }
 
-
     /**
-     * Replace the path of a robot's {@link TrajectoryEnvelope} on the fly.
+     * Replace the path of a robot's TrajectoryEnvelope on the fly.
      *
-     * @param robotID           The ID of the robot whose {@link TrajectoryEnvelope} is to be recomputed.
-     * @param newPath           The path based on which the new {@link TrajectoryEnvelope} should be computed.
+     * @param robotID           The ID of the robot whose TrajectoryEnvelope is to be recomputed.
+     * @param newPath           The path based on which the new TrajectoryEnvelope should be computed.
      * @param breakingPathIndex Last point on the current path to preserve.
      * @param lockedRobotIDs    The set of robots which have been locked when the re-plan started.
-     * @param <code>true</code> whether the robot should be at the current critical point before starting a re-plan.
      */
     public void replacePath(int robotID, PoseSteering[] newPath, int breakingPathIndex, Set<Integer> lockedRobotIDs) {
         replacePath(robotID, newPath, breakingPathIndex, true, lockedRobotIDs);
     }
 
     /**
-     * Replace the path of a robot's {@link TrajectoryEnvelope} on the fly while discarding a piece of the old path.
+     * Replace the path of a robot's TrajectoryEnvelope on the fly while discarding a piece of the old path.
      *
-     * @param robotID           The ID of the robot whose {@link TrajectoryEnvelope} is to be recomputed.
-     * @param newPath           The path based on which the new {@link TrajectoryEnvelope} should be computed.
+     * @param robotID           The ID of the robot whose TrajectoryEnvelope is to be recomputed.
+     * @param newPath           The path based on which the new TrajectoryEnvelope should be computed.
      * @param breakingPathIndex Last point on the current path to preserve.
-     * @param concatenatePaths  <code>true</code> if the new path should be concatenated with the old one.
+     * @param concatenatePaths  true if the new path should be concatenated with the old one.
      * @param lockedRobotIDs    The set of robots which have been locked when the re-plan started.
-     * @param <code>true</code> whether the robot should be at the current critical point before starting a re-plan.
-     * @ATTENTION When the path is not concatenated, it is supposed the robot has already traversed the overall path.
+     * @attention When the path is not concatenated, it is supposed the robot has already traversed the overall path.
      */
-    public synchronized void replacePath(int robotID, PoseSteering[] newPath, int breakingPathIndex, boolean concatenatePaths, Set<Integer> lockedRobotIDs) {
+    public void replacePath(int robotID, PoseSteering[] newPath, int breakingPathIndex, boolean concatenatePaths,
+                            Set<Integer> lockedRobotIDs) {
 
         synchronized (solver) {
 
@@ -1324,7 +1322,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
                             TrajectoryEnvelope oldEndParking = (TrajectoryEnvelope) aic.getTo();
 
                             solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(te));
-							solver.removeVariable(te);
+                            solver.removeVariable(te);
                             solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(oldEndParking));
                             solver.removeVariable(oldEndParking);
 
@@ -1409,7 +1407,6 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
             }
         }
     }
-
 
     /**
      * Truncate the {@link TrajectoryEnvelope} of a given robot at the closest dynamically-feasible path point. This path point is computed via the robot's {@link ForwardModel}.
@@ -1730,7 +1727,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
             }
 
 
-            //Make deps from critical sections, and remove obsolete critical sections
+            // Make dependencies from critical sections, and remove obsolete critical sections
             synchronized (allCriticalSections) {
 
                 //FIXME Add a CriticalSectionManager class
@@ -1872,7 +1869,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
                             metaCSPLogger.finest("One-can-one-can't-stop (1) and Robot" + drivingTracker.getTrajectoryEnvelope().getRobotID() + " (can't) is ahead of Robot" + waitingTracker.getTrajectoryEnvelope().getRobotID() + " (can) and CS is: " + cs);
                         }
 
-                        //Robot 2 can stop before entering critical section, robot 1 can't --> robot 2 waits
+                        //Robot 2 can stop before entering a critical section, robot 1 can't --> robot 2 waits
                         else if (!canStopRobot1 && canStopRobot2) {
                             drivingCurrentIndex = robotReport1.getPathIndex();
                             drivingTracker = robotTracker1;
@@ -1883,39 +1880,41 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
                             int drivingRobotID = -1;
                             int waitingRobotID = -1;
 
-                            //Handle the particular case of starting from a critical section at the FIRST communication.
+                            // Handle the particular case of starting from a critical section at the FIRST communication.
                             wakeUpinCSRobot1 = !communicatedCPs.containsKey(robotTracker1) && Math.max(robotReport1.getPathIndex(), 0) >= cs.getTe1Start();
                             wakeUpinCSRobot2 = !communicatedCPs.containsKey(robotTracker2) && Math.max(robotReport2.getPathIndex(), 0) >= cs.getTe2Start();
                             if (wakeUpinCSRobot1 || wakeUpinCSRobot2) {
-                                //Check if the robot that is parked can exit from critical section.
+                                // Check if the robot that is parked can exit from a critical section.
                                 drivingRobotID = wakeUpinCSRobot1 ? robotReport1.getRobotID() : robotReport2.getRobotID();
                                 waitingRobotID = wakeUpinCSRobot1 ? robotReport2.getRobotID() : robotReport1.getRobotID();
                                 metaCSPLogger.finest("Robot" + robotReport1.getRobotID() + " wake up: " + wakeUpinCSRobot1 + ", Robot" + robotReport2.getRobotID() + " wake up: " + wakeUpinCSRobot2 + " in CS " + cs);
 
                             } else {
                                 if (this.CSToDepsOrder.containsKey(cs) && this.CSToDepsOrder.get(cs) != null) {
-                                    //The critical section is not new and no re-plan happens.
-                                    //Standard case: there is just one dependency in the previous set. Let's impose that.
+                                    // The critical section is not new and no re-plan happens.
+                                    // Standard case: there is just one dependency in the previous set. Let's impose that.
                                     waitingRobotID = this.CSToDepsOrder.get(cs).getFirst();
                                     drivingRobotID = waitingRobotID == robotReport1.getRobotID() ? robotReport2.getRobotID() : robotReport1.getRobotID();
 
-                                    //If one of the robot was parked previously in critical section and has just started driving again,
-                                    //then the set of previous constraints contains at least one dependency (due to parking).
+                                    // If one of the robots was parked previously in a critical section
+                                    // and has just started driving again,
+                                    // Sthen the set of previous constraints contains at least one dependency
+                                    // (due to parking).
                                 } else {
                                     metaCSPLogger.severe("Both cannot stop but lost critical section to dep. CS: " + cs + ", TE: " + cs.getTe1().getID() + ", " + cs.getTe2().getID() + ".");
 
-                                    //Try to recover the lost order.
+                                    // Try to recover the lost order.
                                     int ahead = 0;
-                                    //Only the leading robot may be already commanded to go beyond the critical section end.
+                                    // Only the leading robot may be already commanded to go beyond the critical section end.
                                     if (communicatedCPs.containsKey(robotTracker1) && (communicatedCPs.get(robotTracker1).getFirst() == -1 || communicatedCPs.get(robotTracker1).getFirst() > cs.getTe1End()))
                                         ahead = 1;
                                     else if (communicatedCPs.containsKey(robotTracker2) && (communicatedCPs.get(robotTracker2).getFirst() == -1 || communicatedCPs.get(robotTracker2).getFirst() > cs.getTe2End()))
                                         ahead = -1;
 
-                                    //Otherwise, if both the robots are inside the critical section check their poses.
+                                    // Otherwise, if both the robots are inside the critical section, check their poses.
                                     if (ahead == 0) ahead = isAhead(cs, robotReport1, robotReport2);
 
-                                    //Otherwise, the dependency is lost. Try an error. FIXME
+                                    // Otherwise, the dependency is lost. Try an error. FIXME
                                     if (ahead == 0) {
                                         if (!this.CSToDepsOrder.containsKey(cs))
                                             throw new Error("FIXME! Lost dependency and order cannot be restored! Key value not found. RobotReport1: " + robotReport1 + ", RobotReport2: " + robotReport2
@@ -2255,8 +2254,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
                 currentDependencies.clear();
                 currentDependencies.putAll(closestDeps);
 
-                //The global strategy builds upon the assumption that robots do not start from critical section.
-                //If this is not the case, them pre-loading may bring to nonlive cycles.
+                //The global strategy builds upon the assumption that robots do not start from a critical section.
+                //If this is not the case, them preloading may bring to non-live cycles.
                 //To handle this case, switch to a local strategy whenever a robot is starting from a critical section and cannot
                 //exit from it.
                 for (int robotID : askForReplan) replanEnvelope(robotID, true);

@@ -1,15 +1,12 @@
 package se.oru.coordination.coordination_oru.scenarios;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
+import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.utility.Heuristics;
 import se.oru.coordination.coordination_oru.utility.Mission;
 import se.oru.coordination.coordination_oru.utility.Missions;
-import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
-import se.oru.coordination.coordination_oru.utility.RobotAtCriticalSection;
-
-import java.util.Comparator;
 
 public class EightAutonomousVehicles {
     public static void main(String[] args) {

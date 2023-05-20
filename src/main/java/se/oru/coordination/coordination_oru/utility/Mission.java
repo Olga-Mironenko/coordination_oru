@@ -120,7 +120,6 @@ public class Mission implements Comparable<Mission> {
      *
      * @param pose     A pose to stop at.
      * @param duration Stopping time in milliseconds.
-     * FIXME It seems that it does not work
      */
     public void setStoppingPoint(Pose pose, int duration) {
         this.stoppingPoints.add(pose);

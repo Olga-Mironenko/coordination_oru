@@ -31,9 +31,9 @@ public class RobotReportCollector {
      * The method will terminate automatically after the specified termination time.
      * The timestamps in the output file will be rounded to seconds, and the 'T' character will be replaced with '-'.
      *
-     * @param tec                 The TrajectoryEnvelopeCoordinator instance that contains the trackers.
-     * @param baseFileName        The base name of the .csv file to store the robot data.
-     * @param intervalInSeconds   The time interval (in seconds) between collecting and writing robot data.
+     * @param tec                  The TrajectoryEnvelopeCoordinator instance that contains the trackers.
+     * @param baseFileName         The base name of the .csv file to store the robot data.
+     * @param intervalInSeconds    The time interval (in seconds) between collecting and writing robot data.
      * @param terminationInMinutes The termination time (in minutes) for stopping the data collection.
      */
     public void handleRobotReports(TrajectoryEnvelopeCoordinator tec, String baseFileName, long intervalInSeconds, long terminationInMinutes) {

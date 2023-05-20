@@ -3,10 +3,10 @@ package se.oru.coordination.coordination_oru.utility;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
+import se.oru.coordination.coordination_oru.robots.RobotHashMap;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.tracker.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.utility.gates.GatedThread;
-import se.oru.coordination.coordination_oru.robots.RobotHashMap;
 
 public class MissionUtils {
     public static final double targetVelocityHumanInitial = 0.1;

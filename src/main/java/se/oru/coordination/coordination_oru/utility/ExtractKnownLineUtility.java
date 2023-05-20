@@ -15,7 +15,7 @@ public class ExtractKnownLineUtility {
     /**
      * Constructs a new DualOutputUtility instance with the specified output file name and known text.
      *
-     * @param fileName The name of the output file.
+     * @param fileName  The name of the output file.
      * @param knownText The specific text to check for in the output.
      * @throws FileNotFoundException if the specified file cannot be opened or created.
      */

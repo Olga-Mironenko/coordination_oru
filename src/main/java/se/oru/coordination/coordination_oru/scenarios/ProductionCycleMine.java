@@ -3,13 +3,13 @@ package se.oru.coordination.coordination_oru.scenarios;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel;
+import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
+import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.utility.Heuristics;
 import se.oru.coordination.coordination_oru.utility.Mission;
 import se.oru.coordination.coordination_oru.utility.Missions;
-import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
-import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 
 import java.awt.*;
 
@@ -87,14 +87,14 @@ public class ProductionCycleMine {
         chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE, false);
         Thread.sleep(5000);
         tec.placeRobot(drillVehicle.getID(), mainTunnelLeft);
-        PoseSteering[] drillInitialPath = drillVehicle.getLimitedPath(drillVehicle.getID(), drillVehicle.getPredictableDistance(), tec);
+        PoseSteering[] drillInitialPath = drillVehicle.getLimitedPath(drillVehicle.getID(), drillVehicle.getLookAheadDistance(), tec);
         var m3 = new Mission(drillVehicle.getID(), drillInitialPath);
 //        Missions.enqueueMission(m3);
         tec.addMissions(m3);
         m3.setStoppingPoint(drawPoint38, 5000);
         Thread.sleep(10000);
         tec.placeRobot(chargingVehicle.getID(), mainTunnelRight);
-        PoseSteering[] chargingInitialPath = chargingVehicle.getLimitedPath(chargingVehicle.getID(), chargingVehicle.getPredictableDistance(), tec);
+        PoseSteering[] chargingInitialPath = chargingVehicle.getLimitedPath(chargingVehicle.getID(), chargingVehicle.getLookAheadDistance(), tec);
         var m4 = new Mission(chargingVehicle.getID(), chargingInitialPath);
         tec.addMissions(m4);
 
