@@ -6,9 +6,7 @@ import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
 import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.utility.Heuristics;
-import se.oru.coordination.coordination_oru.utility.Mission;
-import se.oru.coordination.coordination_oru.utility.Missions;
+import se.oru.coordination.coordination_oru.utility.*;
 
 import java.awt.*;
 import java.io.FileNotFoundException;
@@ -16,11 +14,14 @@ import java.io.FileNotFoundException;
 public class PaperScenario_3A {
     public static void main(String[] args) throws FileNotFoundException {
 
+        String absolutePath = System.getProperty("user.dir");
+        String resultsDirectory = absolutePath + "/src/main/java/se/oru/coordination/coordination_oru/results/lookAheadPaper_2023";
         final String YAML_FILE = "maps/mine-map-paper-2023.yaml";
-        double lookAheadDistance = 25;
+        double lookAheadDistance = 15;
         int intervalInSeconds = 1;
         int terminationInMinutes = 30;
-        boolean visualization = true;
+        int numOfCallsForLookAheadRobot = 10;
+        boolean visualization = false;
 
         final Pose mainTunnelLeft = new Pose(14.25, 22.15, Math.PI);
         final Pose mainTunnelRight = new Pose(114.15, 40.05, Math.PI);
@@ -84,7 +85,7 @@ public class PaperScenario_3A {
 
         // Set Heuristics
         var heuristic = new Heuristics();
-        tec.addComparator(heuristic.lookAheadRobotsFirst());
+        tec.addComparator(heuristic.closest());
         String heuristicName = heuristic.getHeuristicName();
 
         tec.setBreakDeadlocks(true, false, false);
@@ -98,18 +99,27 @@ public class PaperScenario_3A {
             tec.setVisualization(viz);
         }
 
+
         var m1 = new Mission(autonomousRobot1.getID(), autonomousRobot1.getPath());
         var m2 = new Mission(autonomousRobot2.getID(), autonomousRobot2.getPath());
         var m3 = new Mission(autonomousRobot3.getID(), autonomousRobot3.getPath());
-        var m7 = new Mission(lookAheadRobot.getID(), lookAheadRobot.getLimitedPath(lookAheadRobot.getID(), lookAheadDistance, tec));
+        var m4 = new Mission(lookAheadRobot.getID(), lookAheadRobot.getLimitedPath(lookAheadRobot.getID(), lookAheadDistance, tec));
 //        m4.setStoppingPoint(orePass3, 10000); //FIXME I think it does not work.
+
+        var randomRobotCaller = new RandomRobotCaller(numOfCallsForLookAheadRobot, terminationInMinutes);
+        randomRobotCaller.scheduleRandomCalls(m4);
 
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);
         Missions.enqueueMission(m3);
-        Missions.enqueueMission(m7);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, lookAheadDistance,
-                true, intervalInSeconds, terminationInMinutes, heuristicName);
+
+        try {
+            Missions.startMissionDispatchers(tec, lookAheadDistance,
+                    true, intervalInSeconds, terminationInMinutes, heuristicName, resultsDirectory);
+        } catch (Throwable throwable) {
+            ErrorHandling.handleThrowable(resultsDirectory, throwable);
+        }
     }
 }
+

@@ -3,28 +3,25 @@ package se.oru.coordination.coordination_oru.utility;
 import java.io.*;
 
 /**
- * A utility class that writes output to both the console and a text file and checks for a specific known text.
- * The output file and known text are specified during the creation of the utility instance.
+ * A utility class that writes output to both the console and a text file.
+ * The output file is specified during the creation of the utility instance.
+ *
+ * @author amn
  */
-public class ExtractKnownLineUtility {
+public class DualOutput {
 
     private final PrintStream originalSystemOut;
     private final PrintStream dualPrintStream;
-    private final String knownText;
 
     /**
-     * Constructs a new DualOutputUtility instance with the specified output file name and known text.
+     * Constructs a new DualOutputUtility instance with the specified output file name.
      *
-     * @param fileName  The name of the output file.
-     * @param knownText The specific text to check for in the output.
+     * @param fileName The name of the output file.
      * @throws FileNotFoundException if the specified file cannot be opened or created.
      */
-    public ExtractKnownLineUtility(String fileName, String knownText) throws FileNotFoundException {
+    public DualOutput(String fileName) throws FileNotFoundException {
         // Store the original System.out
         originalSystemOut = System.out;
-
-        // Set the known text
-        this.knownText = knownText;
 
         // Create a file output stream for the text file
         FileOutputStream fileOutputStream = new FileOutputStream(fileName);
@@ -33,7 +30,7 @@ public class ExtractKnownLineUtility {
         PrintStream filePrintStream = new PrintStream(fileOutputStream);
 
         // Create a custom print stream that writes to both the console and the file
-        dualPrintStream = new PrintStream(new DualOutputUtility.DualOutputStream(System.out, filePrintStream));
+        dualPrintStream = new PrintStream(new DualOutputStream(System.out, filePrintStream));
 
         // Set the custom print stream as the new System.out
         System.setOut(dualPrintStream);
@@ -41,16 +38,11 @@ public class ExtractKnownLineUtility {
 
     /**
      * Prints the specified message to both the console and the output file.
-     * If the message matches the known text, it prints "Match found" along with the message.
      *
      * @param message The message to print.
      */
     public void println(String message) {
-        if (message.trim().equals(knownText)) {
-            System.out.println("Match found: " + message);
-        } else {
-            System.out.println(message);
-        }
+        System.out.println(message);
     }
 
     /**

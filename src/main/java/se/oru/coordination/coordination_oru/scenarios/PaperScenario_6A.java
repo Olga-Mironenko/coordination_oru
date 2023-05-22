@@ -6,20 +6,22 @@ import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
 import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.utility.Heuristics;
-import se.oru.coordination.coordination_oru.utility.Mission;
-import se.oru.coordination.coordination_oru.utility.Missions;
+import se.oru.coordination.coordination_oru.utility.*;
 
 import java.awt.*;
+import java.io.FileNotFoundException;
 
 public class PaperScenario_6A {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
 
+        String absolutePath = System.getProperty("user.dir");
+        String resultsDirectory = absolutePath + "/src/main/java/se/oru/coordination/coordination_oru/results/lookAheadPaper_2023";
         final String YAML_FILE = "maps/mine-map-paper-2023.yaml";
-        double lookAheadDistance = 25;
+        double lookAheadDistance = -1;
         int intervalInSeconds = 1;
         int terminationInMinutes = 30;
-        boolean visualization = false;
+        int numOfCallsForLookAheadRobot = 10;
+        boolean visualization = true;
 
         final Pose mainTunnelLeft = new Pose(14.25, 22.15, Math.PI);
         final Pose mainTunnelRight = new Pose(114.15, 40.05, Math.PI);
@@ -125,6 +127,9 @@ public class PaperScenario_6A {
         var m7 = new Mission(lookAheadRobot.getID(), lookAheadRobotInitialPlan);
 //        m4.setStoppingPoint(orePass3, 10000); //FIXME I think it does not work.
 
+        var randomRobotCaller = new RandomRobotCaller(numOfCallsForLookAheadRobot, terminationInMinutes);
+        randomRobotCaller.scheduleRandomCalls(m7);
+
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);
         Missions.enqueueMission(m3);
@@ -133,7 +138,12 @@ public class PaperScenario_6A {
         Missions.enqueueMission(m6);
         Missions.enqueueMission(m7);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, lookAheadDistance,
-                false, intervalInSeconds, terminationInMinutes, heuristicName);
+
+        try {
+            Missions.startMissionDispatchers(tec, lookAheadDistance,
+                    true, intervalInSeconds, terminationInMinutes, heuristicName, resultsDirectory);
+        } catch (Throwable throwable) {
+            ErrorHandling.handleThrowable(resultsDirectory, throwable);
+        }
     }
 }

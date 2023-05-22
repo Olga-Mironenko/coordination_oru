@@ -1,4 +1,4 @@
-package se.oru.coordination.coordination_oru.robots;
+package se.oru.coordination.coordination_oru.utility;
 
 import se.oru.coordination.coordination_oru.coordinator.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.tracker.AbstractTrajectoryEnvelopeTracker;
@@ -20,23 +20,24 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * RobotReportCollector is a class that periodically collects robot reports
- * and writes the data into a .csv file.
+ * for all robots and writes the data into separate .csv files.
  *
  * @author anm
  */
 public class RobotReportCollector {
 
     /**
-     * Handles the periodic collection of robot reports and writes the data into a .csv file.
+     * Handles the periodic collection of robot reports and writes the data into individual .csv files per robot.
      * The method will terminate automatically after the specified termination time.
      * The timestamps in the output file will be rounded to seconds, and the 'T' character will be replaced with '-'.
+     * Files will be stored in a directory specified by 'folderName', appended with the current date and time, and each file will be named by the RobotID.
      *
      * @param tec                  The TrajectoryEnvelopeCoordinator instance that contains the trackers.
-     * @param baseFileName         The base name of the .csv file to store the robot data.
+     * @param folderName           The base name of the directory where to store the robot data files.
      * @param intervalInSeconds    The time interval (in seconds) between collecting and writing robot data.
      * @param terminationInMinutes The termination time (in minutes) for stopping the data collection.
      */
-    public void handleRobotReports(TrajectoryEnvelopeCoordinator tec, String baseFileName, long intervalInSeconds, long terminationInMinutes) {
+    public void handleRobotReports(TrajectoryEnvelopeCoordinator tec, String folderName, long intervalInSeconds, long terminationInMinutes) {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
 
@@ -44,10 +45,19 @@ public class RobotReportCollector {
         long intervalInMillis = TimeUnit.SECONDS.toMillis(intervalInSeconds);
         long terminationInMillis = TimeUnit.MINUTES.toMillis(terminationInMinutes);
 
-        // Generate the filename with date and timestamp
+        // Generate the folder name with date and timestamp
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
-        String fileName = baseFileName + timestamp + ".csv";
-        Path filePath = Path.of(fileName);
+        String directoryName = folderName + timestamp;
+
+        // Create the directory if it doesn't exist
+        Path directoryPath = Path.of(directoryName);
+        try {
+            if (!Files.exists(directoryPath)) {
+                Files.createDirectories(directoryPath);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         Runnable task = () -> {
             try {
@@ -61,28 +71,34 @@ public class RobotReportCollector {
                     return;
                 }
 
-                // Create and/or open the file in appended mode
-                try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
-                    // Write the header if it's a new file
-                    if (Files.size(filePath) == 0) {
-                        writer.write("Timestamp,RobotID,Pose,PathIndex,Velocity,DistanceTraveled,CriticalPoint\n");
-                    }
+                // Get the current timestamp rounded to seconds and replace 'T' with '/'
+                String currentTimestamp = LocalDateTime.now()
+                        .truncatedTo(ChronoUnit.SECONDS)
+                        .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                        .replace('T', '/');
 
-                    // Get the current timestamp rounded to seconds and replace 'T' with '/'
-                    String currentTimestamp = LocalDateTime.now()
-                            .truncatedTo(ChronoUnit.SECONDS)
-                            .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                            .replace('T', '/');
+                // Iterate through the trackers and get the robot reports
+                for (AbstractTrajectoryEnvelopeTracker tracker : trackers) {
+                    var report = tracker.getRobotReport();
+                    var pose = report.getPose();
 
-                    // Iterate through the trackers and get the robot reports
-                    for (AbstractTrajectoryEnvelopeTracker tracker : trackers) {
-                        var report = tracker.getRobotReport();
-                        var pose = report.getPose();
-                        String poseString = String.format("\"(%.2f, %.2f, %.2f)\"", pose.getX(), pose.getY(), pose.getTheta());
-                        String rowData = String.format("%s,%d,%s,%d,%.2f,%.2f,%d%n",
+                    // Generate the filename with RobotID
+                    String fileName = "Robot_" + report.getRobotID() + ".csv";
+                    Path filePath = directoryPath.resolve(fileName);
+
+                    // Create and/or open the file in appended mode
+                    try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
+                        // Write the header if it's a new file
+                        if (Files.size(filePath) == 0) {
+                            writer.write("Timestamp;RobotID;Pose_X;Pose_Y;Pose_Theta;PathIndex;Velocity;DistanceTraveled;CriticalPoint\n");
+                        }
+
+                        String rowData = String.format("%s;%d;%.2f;%.2f;%.2f;%d;%.2f;%.2f;%d%n",
                                 currentTimestamp,
                                 report.getRobotID(),
-                                poseString,
+                                pose.getX(),
+                                pose.getY(),
+                                pose.getTheta(),
                                 report.getPathIndex(),
                                 report.getVelocity(),
                                 report.getDistanceTraveled(),

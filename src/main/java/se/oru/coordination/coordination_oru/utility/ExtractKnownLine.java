@@ -3,25 +3,28 @@ package se.oru.coordination.coordination_oru.utility;
 import java.io.*;
 
 /**
- * A utility class that writes output to both the console and a text file.
- * The output file is specified during the creation of the utility instance.
- *
- * @author amn
+ * A utility class that writes output to both the console and a text file and checks for a specific known text.
+ * The output file and known text are specified during the creation of the utility instance.
  */
-public class DualOutputUtility {
+public class ExtractKnownLine {
 
     private final PrintStream originalSystemOut;
     private final PrintStream dualPrintStream;
+    private final String knownText;
 
     /**
-     * Constructs a new DualOutputUtility instance with the specified output file name.
+     * Constructs a new DualOutputUtility instance with the specified output file name and known text.
      *
-     * @param fileName The name of the output file.
+     * @param fileName  The name of the output file.
+     * @param knownText The specific text to check for in the output.
      * @throws FileNotFoundException if the specified file cannot be opened or created.
      */
-    public DualOutputUtility(String fileName) throws FileNotFoundException {
+    public ExtractKnownLine(String fileName, String knownText) throws FileNotFoundException {
         // Store the original System.out
         originalSystemOut = System.out;
+
+        // Set the known text
+        this.knownText = knownText;
 
         // Create a file output stream for the text file
         FileOutputStream fileOutputStream = new FileOutputStream(fileName);
@@ -30,7 +33,7 @@ public class DualOutputUtility {
         PrintStream filePrintStream = new PrintStream(fileOutputStream);
 
         // Create a custom print stream that writes to both the console and the file
-        dualPrintStream = new PrintStream(new DualOutputStream(System.out, filePrintStream));
+        dualPrintStream = new PrintStream(new DualOutput.DualOutputStream(System.out, filePrintStream));
 
         // Set the custom print stream as the new System.out
         System.setOut(dualPrintStream);
@@ -38,11 +41,16 @@ public class DualOutputUtility {
 
     /**
      * Prints the specified message to both the console and the output file.
+     * If the message matches the known text, it prints "Match found" along with the message.
      *
      * @param message The message to print.
      */
     public void println(String message) {
-        System.out.println(message);
+        if (message.trim().equals(knownText)) {
+            System.out.println("Match found: " + message);
+        } else {
+            System.out.println(message);
+        }
     }
 
     /**

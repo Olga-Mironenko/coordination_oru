@@ -9,11 +9,39 @@ import se.oru.coordination.coordination_oru.utility.Heuristics;
 import se.oru.coordination.coordination_oru.utility.Mission;
 import se.oru.coordination.coordination_oru.utility.Missions;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class OneAutonomousOneLookAheadRobots {
+    public static void handleException(Exception e) {
+        String errorMessage = e.getMessage();
+        String absolutePath = System.getProperty("user.dir");
+        String resultsDir = absolutePath + "/src/main/java/se/oru/coordination/coordination_oru/results";
+        Path directoryPath = Paths.get(resultsDir);
+        String fileName = directoryPath+ "/" +"Error.txt";
+        Path filePath = Paths.get(fileName);
+
+        try {
+            Files.writeString(filePath, errorMessage);
+            System.out.println("The error message was written to " + fileName);
+        } catch (IOException ioException) {
+            System.out.println("An error occurred while writing the error message to " + fileName);
+            ioException.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
 
         final String YAML_FILE = "maps/mine-map-test.yaml";
-        double predictableDistance = 25.0;
+        double lookAheadDistance = 25;
+        int intervalInSeconds = 1;
+        int terminationInMinutes = 30;
 
         final Pose mainTunnelLeft = new Pose(4.25, 15.35, -Math.PI + Math.PI);
         final Pose mainTunnelRight = new Pose(80.05, 24.75, Math.PI);
@@ -24,7 +52,7 @@ public class OneAutonomousOneLookAheadRobots {
         final Pose[] limitedLookAheadRobotGoal = {mainTunnelRight};
 
         var autonomousRobot = new AutonomousRobot();
-        var lookAheadRobot = new LookAheadRobot(predictableDistance);
+        var lookAheadRobot = new LookAheadRobot(lookAheadDistance);
         autonomousRobot.getPlan(drawPoint21, autonomousRobotGoal, YAML_FILE, true);
         lookAheadRobot.getPlan(mainTunnelLeft, limitedLookAheadRobotGoal, YAML_FILE, true);
 
@@ -45,6 +73,11 @@ public class OneAutonomousOneLookAheadRobots {
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);
 
+        // Set Heuristics
+        var heuristic = new Heuristics();
+        tec.addComparator(heuristic.closest());
+        String heuristicName = heuristic.getHeuristicName();
+
         // Set up a simple GUI (null means an empty map, otherwise provide yaml file)
         var viz = new BrowserVisualization();
         viz.setMap(YAML_FILE);
@@ -52,13 +85,18 @@ public class OneAutonomousOneLookAheadRobots {
         viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
 
-        var lookAheadRobotInitialPlan = lookAheadRobot.getLimitedPath(lookAheadRobot.getID(), predictableDistance, tec);
+        var lookAheadRobotInitialPlan = lookAheadRobot.getLimitedPath(lookAheadRobot.getID(), lookAheadDistance, tec);
         var m1 = new Mission(autonomousRobot.getID(), autonomousRobot.getPath());
         var m2 = new Mission(lookAheadRobot.getID(), lookAheadRobotInitialPlan);
 
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, false);
+
+        try {
+            Missions.startMissionDispatchers(tec);
+        } catch (Exception e) {
+            handleException(e);
+        }
     }
 }

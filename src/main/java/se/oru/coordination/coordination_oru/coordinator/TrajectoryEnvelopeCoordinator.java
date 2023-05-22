@@ -1359,8 +1359,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
                                 //We should restore all the dependency order which cannot be safely reverted.
                                 //Each new critical section (cs1 = [start11,end11], [start12,end12]) containing the breaking point
                                 //can be matched to its related old one (one cs2 = [start21,end21], [start22,end22]) by reasoning about the spatial overlaps between TEs' intervals.
-                                //Note that start and end of each critical sections are both included (i.e., still overlapping configurations)
-                                //-- see {@link CriticalSection}, {@link AbstractTrajectoryEnvelopeCoordinaror}, function: getCriticalSections).
+                                //Note that the start and end of each critical section are both included (i.e., still overlapping configurations)
+                                //-- see {@link CriticalSection}, {@link AbstractTrajectoryEnvelopeCoordinator}, function: getCriticalSections).
 
                                 int start11 = cs1.getTe1().getRobotID() == robotID ? cs1.getTe1Start() : cs1.getTe2Start();
                                 int start12 = cs1.getTe1().getRobotID() == robotID ? cs1.getTe2Start() : cs1.getTe1Start();

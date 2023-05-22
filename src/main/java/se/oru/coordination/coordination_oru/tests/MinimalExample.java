@@ -62,7 +62,7 @@ public class MinimalExample {
         //in the built-in 2D simulator
         final TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(MAX_VEL, MAX_ACCEL);
 
-        //Provide a heuristic (here, closest to critical section goes first)
+        //Provide a heuristic (here, the closest to critical section goes first)
         tec.addComparator(new Comparator<RobotAtCriticalSection>() {
             @Override
             public int compare(RobotAtCriticalSection o1, RobotAtCriticalSection o2) {

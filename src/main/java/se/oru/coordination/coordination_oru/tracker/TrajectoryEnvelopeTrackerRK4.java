@@ -548,7 +548,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
             }
         }
 
-        //Same critical point was already set
+        // The Same critical point was already set
         else {
             metaCSPLogger.warning("Critical point (" + te.getComponent() + ") " + criticalPointToSet + " was already set!");
         }
@@ -578,7 +578,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
                 currentPathIndex = poses.length - 1;
                 pose = poses[currentPathIndex];
             }
-            return new RobotReport(te.getRobotID(), pose, currentPathIndex, state.getVelocity(), state.getPosition(), this.criticalPoint);
+            return new RobotReport(te.getRobotID(), pose, currentPathIndex, Math.max(0, state.getVelocity()), state.getPosition(), this.criticalPoint);
         }
     }
 

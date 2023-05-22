@@ -19,7 +19,6 @@ import se.oru.coordination.coordination_oru.motionplanner.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.robots.AutonomousRobot;
 import se.oru.coordination.coordination_oru.robots.LookAheadRobot;
 import se.oru.coordination.coordination_oru.robots.RobotHashMap;
-import se.oru.coordination.coordination_oru.robots.RobotReportCollector;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -1107,13 +1106,15 @@ public class Missions {
      */
     public static void startMissionDispatchers(TrajectoryEnvelopeCoordinator tec, boolean loop, int... robotIDs) {
 
+        // Only add autonomous robots missions to run in a loop
         for (int robotID : robotIDs) {
             dispatchableRobots.add(robotID);
-            // TODO Only add autonomous robots missions to run in a loop
-//            if (Objects.equals(RobotHashMap.getRobot(robotID).getType(), "AutonomousRobot")) {
-//                loopMissions.put(robotID, loop);
-//            }
-            loopMissions.put(robotID, loop);
+            if (Objects.equals(RobotHashMap.getRobot(robotID).getType(), "AutonomousRobot")) {
+                loopMissions.put(robotID, true);
+            }
+            else {
+                loopMissions.put(robotID, false);
+            }
         }
 
         if (missionDispatchThread == null) {
@@ -1177,21 +1178,28 @@ public class Missions {
     }
 
     /**
-     * Starts mission dispatchers for the TrajectoryEnvelopeCoordinator, with additional parameters for report writing.
-     * Writes robot reports to a specified directory.
-     * If lookAheadDistance is -1, it is updated to the full distance of LookAheadRobot.
+     * Starts the {@link TrajectoryEnvelopeCoordinator} mission dispatchers with additional parameters for report writing.
+     * Writes robot reports to a specified directory if required.
+     * If {@code lookAheadDistance} is -1, it updates to the full distance of {@link LookAheadRobot}.
      *
-     * @param tec                  The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
-     * @param lookAheadDistance    The maximum distance ahead in the path to consider.
-     *                             If -1, the full distance of LookAheadRobot is used.
-     * @param writeReports         Whether to write reports or not.
-     * @param intervalInSeconds    The interval in seconds between consecutive reports.
+     * <p>This method may also write robot reports, if requested. The reports are written to
+     * {@code resultDirectory}, at an interval defined by {@code intervalInSeconds} and for a
+     * duration defined by {@code terminationInMinutes}. The name of the heuristic used in the
+     * current simulation run, defined by {@code heuristicName}, is also recorded.
+     *
+     * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
+     * @param lookAheadDistance The maximum distance ahead in the path to consider.
+     *                          If -1, the full distance of {@link LookAheadRobot} is used.
+     * @param writeReports {@code true} to write reports; {@code false} otherwise.
+     * @param intervalInSeconds The interval in seconds between consecutive reports.
      * @param terminationInMinutes The termination time in minutes for writing reports.
-     * @param heuristicName        The name of the heuristic used in the current simulation run.
+     * @param heuristicName The name of the heuristic used in the current simulation run.
+     * @param resultDirectory The directory where to write the robot reports.
      */
+
     public static void startMissionDispatchers(TrajectoryEnvelopeCoordinator tec, double lookAheadDistance,
                                                boolean writeReports, int intervalInSeconds, int terminationInMinutes,
-                                               String heuristicName) {
+                                               String heuristicName, String resultDirectory) {
 
         double updatedLookAheadDistance = 0.0;
 
@@ -1206,23 +1214,25 @@ public class Missions {
             }
         }
 
-        // Write robot reports to ../results/ folder in .csv format
+        // Write robot reports to ../results/... folder in .csv format
         if (lookAheadDistance < 0 && writeReports) {
             System.out.println("Writing robot reports.");
-            writeRobotReports(tec, updatedLookAheadDistance, intervalInSeconds, terminationInMinutes, heuristicName);
+            writeRobotReports(tec, updatedLookAheadDistance, intervalInSeconds, terminationInMinutes, heuristicName, resultDirectory);
         } else if (lookAheadDistance > 0 && writeReports) {
             System.out.println("Writing robot reports.");
-            writeRobotReports(tec, lookAheadDistance, intervalInSeconds, terminationInMinutes, heuristicName);
+            writeRobotReports(tec, lookAheadDistance, intervalInSeconds, terminationInMinutes, heuristicName, resultDirectory);
         } else {
             System.out.println("Not writing robot reports.");
         }
 
+        // Only add autonomous robots missions to run in a loop
         for (int robotID : convertSetToIntArray(tec.getAllRobotIDs())) {
             dispatchableRobots.add(robotID);
-            loopMissions.put(robotID, true);
-            // TODO Only add autonomous robots missions to run in a loop
              if (Objects.equals(RobotHashMap.getRobot(robotID).getType(), "AutonomousRobot")) {
                  loopMissions.put(robotID, true);
+             }
+             else {
+                 loopMissions.put(robotID, false);
              }
         }
 
@@ -1309,6 +1319,50 @@ public class Missions {
     }
 
     /**
+     * Creates the directory for storing report files and prepares the complete file path.
+     * The file name is determined based on the number of autonomous and lookahead robots,
+     * heuristics used, and the lookahead distance. If the specified directory does not exist,
+     * this method attempts to create it.
+     *
+     * @param lookAheadDistance The lookahead distance. It should be a positive number.
+     * @param heuristicName The name of the heuristic used. It should not be {@code null}.
+     * @param resultDirectory The path to the directory where the file will be created.
+     *                        This should be an existing path, or a path that can be created.
+     * @return The complete file path as a string, comprising the resultDirectory and the generated filename.
+     */
+
+    public static String createFile(double lookAheadDistance, String heuristicName, String resultDirectory) {
+
+        Path directoryPath = Paths.get(resultDirectory);
+
+        // Try creating the directory if it doesn't exist
+        try {
+            Files.createDirectories(directoryPath);
+            System.out.println("Directory created successfully.");
+        } catch (IOException e) {
+            System.err.println("Error while creating directory: " + e.getMessage());
+        }
+
+        // Get the number of autonomous and lookahead robots
+        int autonomousRobotCount = 0;
+        int lookAheadRobotCount = 0;
+
+        for (Object robot : RobotHashMap.getList().values()) {
+            if (robot instanceof AutonomousRobot) {
+                autonomousRobotCount++;
+            } else if (robot instanceof LookAheadRobot) {
+                lookAheadRobotCount++;
+            }
+        }
+
+        // Generate the filename based on the number of autonomous and lookahead robots
+        String fileName = "A" + autonomousRobotCount + "L" + lookAheadRobotCount +
+                "_" + heuristicName.charAt(0) + "_" + (int) lookAheadDistance + "_";
+
+        return resultDirectory + "/" + fileName;
+    }
+
+    /**
      * Starts a mission dispatch thread for all robots known to the given TrajectoryEnvelopeCoordinator.
      * Missions are not de-queued once dispatched.
      *
@@ -1348,45 +1402,25 @@ public class Missions {
     }
 
     /**
-     * Writes robot reports periodically for the given TrajectoryEnvelopeCoordinator instance.
-     * The file will be written in the 'results' folder relative to the specified folder.
+     * Writes robot reports to a specified location. This function makes use of a RobotReportCollector
+     * to gather and store the reports. It will create the necessary directory and file for these reports.
+     * In case the specified directory does not exist, it tries to create it.
      *
-     * @param tec                  the TrajectoryEnvelopeCoordinator instance to collect reports from.
-     * @param lookAheadDistance    the lookahead distance.
-     * @param intervalInSeconds    the time interval between data collection, in seconds.
-     * @param terminationInMinutes the duration of data collection, in minutes.
+     * @param tec The {@link TrajectoryEnvelopeCoordinator} to generate reports from. Should not be {@code null}.
+     * @param lookAheadDistance The lookahead distance. It should be a positive number.
+     * @param intervalInSeconds The time interval between consecutive data collections, in seconds. Should be a positive integer.
+     * @param terminationInMinutes The total duration of data collection, in minutes. Should be a positive integer.
+     * @param heuristicName The name of the heuristic used. Should not be {@code null}.
+     * @param resultDirectory The path to the directory where the report will be created. This should be an existing path, or a path that can be created.
      */
-    public static void writeRobotReports(TrajectoryEnvelopeCoordinator tec, double lookAheadDistance, int intervalInSeconds, int terminationInMinutes, String heuristicName) {
+
+    public static void writeRobotReports(TrajectoryEnvelopeCoordinator tec, double lookAheadDistance,
+                                         int intervalInSeconds, int terminationInMinutes, String heuristicName,
+                                         String resultDirectory) {
+
+        String filePath = createFile(lookAheadDistance, heuristicName, resultDirectory);
         var reportCollector = new RobotReportCollector();
-        String homeDir = System.getProperty("user.home");
-        String folder = homeDir + "/Devel/coordination_oru/src/main/java/se/oru/coordination/coordination_oru/results";
-        Path directoryPath = Paths.get(folder);
-
-        // Try creating the directory if it doesn't exist
-        try {
-            Files.createDirectories(directoryPath);
-            System.out.println("Directory created successfully.");
-        } catch (IOException e) {
-            System.err.println("Error while creating directory: " + e.getMessage());
-        }
-
-        // Get the number of autonomous and lookahead robots
-        int autonomousRobotCount = 0;
-        int lookAheadRobotCount = 0;
-
-        for (Object robot : RobotHashMap.getList().values()) {
-            if (robot instanceof AutonomousRobot) {
-                autonomousRobotCount++;
-            } else if (robot instanceof LookAheadRobot) {
-                lookAheadRobotCount++;
-            }
-        }
-
-        // Generate the filename based on the number of autonomous and lookahead robots
-        String fileName = folder + "/" + "A" + autonomousRobotCount + "L" + lookAheadRobotCount +
-                "_" + heuristicName.charAt(0) + "_" + (int) lookAheadDistance + "_";
-
-        reportCollector.handleRobotReports(tec, fileName, intervalInSeconds, terminationInMinutes);
+        reportCollector.handleRobotReports(tec, filePath, intervalInSeconds, terminationInMinutes);
     }
 
     /**
@@ -1405,19 +1439,19 @@ public class Missions {
                 if (!line.equals(prevLine)) {
                     prevLine = line;
                     if (line.length() != 0) {
-                        String[] oneline = line.split(" |\t");
+                        String[] oneLine = line.split(" |\t");
                         PoseSteering ps = null;
-                        if (oneline.length == 4) {
+                        if (oneLine.length == 4) {
                             ps = new PoseSteering(
-                                    Double.parseDouble(oneline[0]),
-                                    Double.parseDouble(oneline[1]),
-                                    Double.parseDouble(oneline[2]),
-                                    Double.parseDouble(oneline[3]));
+                                    Double.parseDouble(oneLine[0]),
+                                    Double.parseDouble(oneLine[1]),
+                                    Double.parseDouble(oneLine[2]),
+                                    Double.parseDouble(oneLine[3]));
                         } else {
                             ps = new PoseSteering(
-                                    Double.parseDouble(oneline[0]),
-                                    Double.parseDouble(oneline[1]),
-                                    Double.parseDouble(oneline[2]),
+                                    Double.parseDouble(oneLine[0]),
+                                    Double.parseDouble(oneLine[1]),
+                                    Double.parseDouble(oneLine[2]),
                                     0.0);
                         }
                         ret.add(ps);
