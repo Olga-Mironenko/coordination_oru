@@ -71,6 +71,9 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected double TEMPORAL_RESOLUTION;
 	public static int EFFECTIVE_CONTROL_PERIOD = 0;
 
+	//Number of additional path points robot 2 should stay behind robot 1
+	public static int TRAILING_PATH_POINTS = 0;
+
 	protected boolean overlay = false;
 	protected boolean quiet = false;
 
@@ -767,10 +770,6 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 * @return The path index beyond which a robot should not navigate, given the {@link TrajectoryEnvelope} of another robot.
 	 */
 	protected int getCriticalPoint(int yieldingRobotID, CriticalSection cs, int leadingRobotCurrentPathIndex) {
-
-		//Number of additional path points robot 2 should stay behind robot 1
-		int TRAILING_PATH_POINTS = 3;
-
 		int leadingRobotStart = -1;
 		int yieldingRobotStart = -1;
 		int leadingRobotEnd = -1;

@@ -515,12 +515,13 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			Integer end = cs.getEnd(robotID);
 			assert end != null;
 
-			final int margin = 3; // TODO: can it be greater?
+			final int margin = AbstractTrajectoryEnvelopeCoordinator.TRAILING_PATH_POINTS;
 
 			if (start - margin <= criticalPointToSet && criticalPointToSet <= end + margin) {
 				criticalSections.add(cs);
 			}
 		}
+		assert ! criticalSections.isEmpty();
 
 		HashSet<CriticalSection> criticalSectionsReal = new HashSet<>();
 		for (CriticalSection cs : criticalSections) {
