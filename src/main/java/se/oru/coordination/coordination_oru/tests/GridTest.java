@@ -21,10 +21,15 @@ public class GridTest {
         BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST,
         BASELINE_IDEAL_DRIVER_HUMAN_FIRST,
         BASELINE_IDEAL_DRIVER_FIRST_COME,
+
         FORCING_CS1_PRIORITIES_CHANGE,
         FORCING_CS1_WITH_STOPS,
+
         FORCING_CS1_CS2_PRIORITIES_CHANGE,
         FORCING_CS1_CS2_WITH_STOPS,
+
+        FORCING_GLOBAL_PRIORITIES_CHANGE,
+        FORCING_GLOBAL_WITH_STOPS,
     }
 
     public static void main(String[] args) {
@@ -51,7 +56,7 @@ public class GridTest {
 
     protected static void runDemo() throws NoPathFound {
         final String scenarioString = System.getenv().get("SCENARIO");
-        final Scenario scenario = scenarioString == null ? Scenario.BASELINE_IDEAL_DRIVER_FIRST_COME :
+        final Scenario scenario = scenarioString == null ? Scenario.FORCING_GLOBAL_WITH_STOPS :
                 Scenario.valueOf(scenarioString);
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -192,6 +197,7 @@ public class GridTest {
                     case BASELINE_IDEAL_DRIVER_FIRST_COME:
                         isForcing = false;
                         break;
+
                     case FORCING_CS1_PRIORITIES_CHANGE:
                         MissionUtils.priorityDistance = 10.0;
                         break;
@@ -199,6 +205,7 @@ public class GridTest {
                         MissionUtils.priorityDistance = 10.0;
                         MissionUtils.stopDistance = 10.0;
                         break;
+
                     case FORCING_CS1_CS2_PRIORITIES_CHANGE:
                         MissionUtils.priorityDistance = 20.0;
                         break;
@@ -206,6 +213,15 @@ public class GridTest {
                         MissionUtils.priorityDistance = 20.0;
                         MissionUtils.stopDistance = 20.0;
                         break;
+
+                    case FORCING_GLOBAL_PRIORITIES_CHANGE:
+                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
+                        break;
+                    case FORCING_GLOBAL_WITH_STOPS:
+                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
+                        MissionUtils.stopDistance = Double.POSITIVE_INFINITY;
+                        break;
+
                     default:
                         throw new RuntimeException(String.valueOf(scenario));
                 }
