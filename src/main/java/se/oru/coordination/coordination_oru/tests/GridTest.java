@@ -56,7 +56,7 @@ public class GridTest {
 
     protected static void runDemo() throws NoPathFound {
         final String scenarioString = System.getenv().get("SCENARIO");
-        final Scenario scenario = scenarioString == null ? Scenario.FORCING_GLOBAL_WITH_STOPS :
+        final Scenario scenario = scenarioString == null ? Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
                 Scenario.valueOf(scenarioString);
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -105,16 +105,19 @@ public class GridTest {
         final double maxAcceleration = 2.0 * precisionCoefficient;
         final int trackingPeriod = (int) Math.round(100 / precisionCoefficient);
 
+        double xLength = 2.5;
+        double yLength = 1.5;
+        double xLengthInner = 1.5;
+        double yLengthInner = 1.0;
+
+        MissionUtils.targetVelocityHumanInitial = maxVelocity;
+        MissionUtils.targetVelocityHuman = maxVelocity;
+
         AutonomousVehicle aut1 = null;
         AutonomousVehicle aut2 = null;
         AutonomousVehicle aut3 = null;
         AutonomousVehicle aut4 = null;
         AutonomousVehicle aut5 = null;
-
-        double xLength = 2.5;
-        double yLength = 1.5;
-        double xLengthInner = 1.5;
-        double yLengthInner = 1.0;
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, maxAcceleration, xLength, yLength);
@@ -196,6 +199,9 @@ public class GridTest {
                     case BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
                     case BASELINE_IDEAL_DRIVER_FIRST_COME:
                         isForcing = false;
+                        // For manual use:
+                        MissionUtils.priorityDistance = 10.0;
+                        MissionUtils.stopDistance = 10.0;
                         break;
 
                     case FORCING_CS1_PRIORITIES_CHANGE:
