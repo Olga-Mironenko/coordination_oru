@@ -41,12 +41,11 @@ public abstract class AbstractVehicle {
     public RobotReport lastRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
     private double cycleDistance;
     private double totalDistance;
-    private long timeInterval;
-    private double averageSpeed;
+    private double totalTime;
     private int cycles;
-    private int maxWaitingTime;
-    private int currentWaitingTime;
-    private long totalWaitingTime;
+    private double maxWaitingTime;
+    private double currentWaitingTime;
+    private double totalWaitingTime;
     private int stops;
     private PoseSteering[] path;
 
@@ -122,20 +121,23 @@ public abstract class AbstractVehicle {
         if ((this.currentRobotReport.getPathIndex() == -1) && (this.lastRobotReport.getPathIndex() != -1))
             this.cycles++;
 
-        if (isStopped(this.currentRobotReport)) {
-            if (! isStopped(this.lastRobotReport))
+        double totalTimeNew = Math.round(System.nanoTime() - startTime) / 1_000_000_000;
+        double delta = totalTimeNew - totalTime;
+        this.totalTime = totalTimeNew;
+
+        this.totalDistance = (cycleDistance * cycles + currentRobotReport.getDistanceTraveled());
+
+        if (! isStopped(this.currentRobotReport)) {
+            this.currentWaitingTime = 0;
+        } else {
+            if (! isStopped(this.lastRobotReport)) {
                 this.stops++;
+            }
 
-            this.currentWaitingTime += 2;
-            this.totalWaitingTime += 2;
-            this.maxWaitingTime = Math.max(currentWaitingTime, maxWaitingTime);
+            this.currentWaitingTime += delta;
+            this.totalWaitingTime += delta;
         }
-
-        this.totalDistance = Math.round(
-                (cycleDistance * cycles + currentRobotReport.getDistanceTraveled()) * 10.0
-        ) / 10.0;
-        this.timeInterval = Math.round(System.nanoTime() - startTime) / 1000_000_000;
-        this.averageSpeed = Math.round((totalDistance / timeInterval) * 10.0) / 10.0;
+        this.maxWaitingTime = Math.max(currentWaitingTime, maxWaitingTime);
     }
 
 
@@ -167,18 +169,21 @@ public abstract class AbstractVehicle {
             bw.write("Scenario ID," + scenarioId + "\n");
             bw.write("Vehicle ID," + this.getID() + "\n");
             bw.write("Vehicle type," + this.type + "\n");
+
             bw.write("Cycle distance (m)," + this.cycleDistance + "\n");
             bw.write("No. of completed cycles," + this.cycles + "\n");
-            bw.write("Total distance travelled (m)," + totalDistance + "\n");
+            bw.write("Total distance travelled (m)," + round(totalDistance) + "\n");
+
             bw.write("No. of stops," + this.stops + "\n");
             bw.write("No. of forcing events," + MissionUtils.robotIDToNumForcingEvents.getOrDefault(ID, 0) + "\n");
             bw.write("No. of potential interactions," + TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
-            bw.write("Total waiting time (s)," + totalWaitingTime + "\n");
-            bw.write("Maximum waiting time (s)," + maxWaitingTime + "\n");
-            bw.write("Maximum acceleration (m/s^2)," + maxAcceleration + "\n");
-            bw.write("Maximum speed (m/s)," + maxVelocity + "\n");
-            bw.write("Average speed (m/s)," + averageSpeed + "\n");
-            bw.write("Total simulation time (s)," + timeInterval + "\n");
+            bw.write("Total waiting time (s)," + round(totalWaitingTime) + "\n");
+            bw.write("Maximum waiting time (s)," + round(maxWaitingTime) + "\n");
+            bw.write("Total simulation time (s)," + round(totalTime) + "\n");
+
+            bw.write("Maximum acceleration (m/s^2)," + round(maxAcceleration) + "\n");
+            bw.write("Maximum speed (m/s)," + round(maxVelocity) + "\n");
+            bw.write("Average speed (m/s)," + round(totalDistance / totalTime) + "\n");
 
             bw.close();
 
@@ -234,8 +239,12 @@ public abstract class AbstractVehicle {
             double deltaS = path[i].getPose().distanceTo(path[i + 1].getPose());
             cycleDistance += deltaS;
         }
-        cycleDistance = Math.round(cycleDistance * 10.0) / 10.0;
+        cycleDistance = round(cycleDistance);
         VehiclesHashMap.getVehicle(this.getID()).cycleDistance = cycleDistance;
+    }
+
+    protected static double round(double value) {
+        return Math.round(value * 10.0) / 10.0;
     }
 
     public PoseSteering[] getPath() {
