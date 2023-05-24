@@ -20,11 +20,12 @@ public class MissionUtils {
     public static double targetVelocityHuman = targetVelocityHumanInitial;
     public static int idHuman = 0;
     public static boolean isWorking = false;
-    public static boolean arePhantomsVisible = false;
-    public static HashMap<Integer, Integer> robotIDToFreezingCounter = new HashMap<>();
-    // TODO: use semaphores
+    public static boolean arePhantomsVisible = false; // TODO: remove
+    public static HashMap<Integer, Integer> robotIDToFreezingCounter = new HashMap<>(); // TODO: use semaphores
+    public static double stopDistance = Double.NEGATIVE_INFINITY;
+    public static double priorityDistance = Double.NEGATIVE_INFINITY;
 
-    protected static HashMap<Integer, BarrierPhantomVehicle> robotIDToBarrier = new HashMap<>();
+    protected static HashMap<Integer, BarrierPhantomVehicle> robotIDToBarrier = new HashMap<>(); // TODO: remove
 
     // TODO: race condition (click/keypress)
     // TODO: crashes on click and then (immediately) keypress
@@ -176,19 +177,19 @@ public class MissionUtils {
         return replacementPath;
     }
 
-    public static void forceDriving(int robotID, double forcingDistance) {
+    public static void forceDriving(int robotID) {
         robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
         final ArrayList<CriticalSection> criticalSectionsForPriority =
-                selectCriticalSections(robotID, tec.allCriticalSections, forcingDistance, Integer.MAX_VALUE);
+                selectCriticalSections(robotID, tec.allCriticalSections, priorityDistance, Integer.MAX_VALUE);
         for (CriticalSection cs : criticalSectionsForPriority) {
             cs.setHigher(robotID, true);
         }
 
         final ArrayList<CriticalSection> criticalSectionsForStop =
-                selectCriticalSections(robotID, tec.allCriticalSections, forcingDistance, Integer.MAX_VALUE);
+                selectCriticalSections(robotID, tec.allCriticalSections, stopDistance, Integer.MAX_VALUE);
 
         TreeSet<Integer> robotsToStop = new TreeSet<>();
         for (CriticalSection cs : criticalSectionsForStop) {
@@ -257,11 +258,14 @@ public class MissionUtils {
             return new ArrayList<>();
         }
 
-        assert maxDistance >= 0.0 || maxDistance == -1.0;
-
         ArrayList<CriticalSection> criticalSectionsSorted =
                 CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, robotID);
         ArrayList<CriticalSection> criticalSectionsSelected = new ArrayList<>();
+
+        if (maxDistance == Double.NEGATIVE_INFINITY) {
+            return criticalSectionsSelected;
+        }
+        assert maxDistance >= 0.0;
 
         PoseSteering[] currentPath = getCurrentPath(robotID);
         int indexCurrent = getPathIndex(robotID);
@@ -283,6 +287,7 @@ public class MissionUtils {
                 PoseSteering poseCurrent = currentPath[indexCurrent];
                 PoseSteering poseNext = currentPath[indexCurrent + 1];
                 double step = BrowserVisualization.computeDistanceBetweenPoses(poseCurrent.getPose(), poseNext.getPose());
+                assert step >= 0.0;
                 distance += step;
                 indexCurrent += 1;
 

@@ -17,11 +17,14 @@ import static se.oru.coordination.coordination_oru.util.Printer.print;
 
 public class GridTest {
     enum Scenario {
-        FIRST_COLUMN,
-        BASELINE_IDEAL_DRIVER,
-        FORCING_CS1,
-        FORCING_CS1_CS2,
-        FORCING_CS1_CS2_CS3,
+        BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1,
+        BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST,
+        BASELINE_IDEAL_DRIVER_HUMAN_FIRST,
+        BASELINE_IDEAL_DRIVER_FIRST_COME,
+        FORCING_CS1_PRIORITIES_CHANGE,
+        FORCING_CS1_WITH_STOPS,
+        FORCING_CS1_CS2_PRIORITIES_CHANGE,
+        FORCING_CS1_CS2_WITH_STOPS,
     }
 
     public static void main(String[] args) {
@@ -48,7 +51,7 @@ public class GridTest {
 
     protected static void runDemo() throws NoPathFound {
         final String scenarioString = System.getenv().get("SCENARIO");
-        final Scenario scenario = scenarioString == null ? Scenario.FORCING_CS1 :
+        final Scenario scenario = scenarioString == null ? Scenario.BASELINE_IDEAL_DRIVER_FIRST_COME :
                 Scenario.valueOf(scenarioString);
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -72,8 +75,8 @@ public class GridTest {
         final Pose row3Right = new Pose(57.0,15.5,-Math.PI/2);
         final Pose center = new Pose(30.0,30.0,-Math.PI/2);
 
-        final Pose humStart = scenario == Scenario.FIRST_COLUMN ? column1Top : column2Top;
-        final Pose humFinish = scenario == Scenario.FIRST_COLUMN ? column2Bottom : column2Bottom;
+        final Pose humStart = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? column1Top : column2Top;
+        final Pose humFinish = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? column2Bottom : column2Bottom;
 
         final boolean ishumLoop = true;
 
@@ -139,7 +142,19 @@ public class GridTest {
         if (aut5 != null) tec.placeRobot(aut5.getID(), aut5Start);
 
         Heuristics heuristics = new Heuristics();
-        tec.addComparator(heuristics.highestIDNumber());
+        switch (scenario) {
+            case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1:
+            case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
+            default:
+                tec.addComparator(heuristics.highestIDNumber());
+                break;
+            case BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
+                tec.addComparator(heuristics.lowestIDNumber());
+                break;
+            case BASELINE_IDEAL_DRIVER_FIRST_COME:
+                tec.addComparator(heuristics.closest());
+                break;
+        }
 
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
@@ -166,20 +181,30 @@ public class GridTest {
         new GatedThread("scenario creator") {
             @Override
             public void runCore() {
-                boolean isForcing;
-                Double forcingDistance = null;
+                boolean isForcing = true;
+                assert(MissionUtils.priorityDistance == Double.NEGATIVE_INFINITY);
+                assert(MissionUtils.stopDistance == Double.NEGATIVE_INFINITY);
+
                 switch (scenario) {
-                    case FIRST_COLUMN:
-                    case BASELINE_IDEAL_DRIVER:
+                    case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1:
+                    case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
+                    case BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
+                    case BASELINE_IDEAL_DRIVER_FIRST_COME:
                         isForcing = false;
                         break;
-                    case FORCING_CS1:
-                        isForcing = true;
-                        forcingDistance = 10.0;
+                    case FORCING_CS1_PRIORITIES_CHANGE:
+                        MissionUtils.priorityDistance = 10.0;
                         break;
-                    case FORCING_CS1_CS2:
-                        isForcing = true;
-                        forcingDistance = 20.0;
+                    case FORCING_CS1_WITH_STOPS:
+                        MissionUtils.priorityDistance = 10.0;
+                        MissionUtils.stopDistance = 10.0;
+                        break;
+                    case FORCING_CS1_CS2_PRIORITIES_CHANGE:
+                        MissionUtils.priorityDistance = 20.0;
+                        break;
+                    case FORCING_CS1_CS2_WITH_STOPS:
+                        MissionUtils.priorityDistance = 20.0;
+                        MissionUtils.stopDistance = 20.0;
                         break;
                     default:
                         throw new RuntimeException(String.valueOf(scenario));
@@ -193,7 +218,7 @@ public class GridTest {
                 while (true) {
                     // wait until `hum1` gives way to `aut1`
                     if (hum0.lastRobotReport.getY() > 50 && hum0.currentRobotReport.getY() <= 50) {
-                        MissionUtils.forceDriving(hum0.getID(), forcingDistance);
+                        MissionUtils.forceDriving(hum0.getID());
                     }
                     GatedThread.skipCycles(1);
                 }

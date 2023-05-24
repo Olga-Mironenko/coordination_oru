@@ -98,7 +98,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
             } else if (code.equals("ArrowLeft")) {
                 delta = -1.0;
             } else if (code.equals("Space")) {
-                MissionUtils.forceDriving(MissionUtils.idHuman, 20.0);
+                MissionUtils.forceDriving(MissionUtils.idHuman);
             } else if (code.equals("KeyF")) {
                 MissionUtils.arePhantomsVisible = ! MissionUtils.arePhantomsVisible;
             } else {

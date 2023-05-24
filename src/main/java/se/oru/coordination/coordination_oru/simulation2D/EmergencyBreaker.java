@@ -40,7 +40,7 @@ public class EmergencyBreaker {
             }
             texts.add(text);
         }
-        return "EmergencyBreaker: " + (texts.isEmpty() ? "none" : String.join(" ", texts));
+        return texts.isEmpty() ? null : String.join(" ", texts);
     }
 
     protected String stringifyLocalIds() {

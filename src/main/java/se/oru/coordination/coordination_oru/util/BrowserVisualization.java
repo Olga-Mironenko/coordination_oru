@@ -272,10 +272,26 @@ public class BrowserVisualization implements FleetVisualization {
 	protected void setStatusText() {
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
 		String text = "";
+
+		if (AbstractVehicle.scenarioId != null) {
+			text += "Scenario: " + AbstractVehicle.scenarioId + "<br>";
+		}
+		if (MissionUtils.priorityDistance != Double.NEGATIVE_INFINITY) {
+			text += "Priority distance: " + MissionUtils.priorityDistance + "<br>";
+		}
+		if (MissionUtils.stopDistance != Double.NEGATIVE_INFINITY) {
+			text += "Stop distance: " + MissionUtils.stopDistance + "<br>";
+		}
+
 		if (idToVehicle.keySet().contains(MissionUtils.idHuman) && MissionUtils.targetVelocityHuman != Double.POSITIVE_INFINITY) {
 			text += "targetVelocityHuman: " + round(MissionUtils.targetVelocityHuman) + "<br>";
 		}
-		text += TrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString() + "<br>";
+
+		String textEmergencyBreaker = TrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
+		if (textEmergencyBreaker != null) {
+			text += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
+		}
+
 		for (int id : idToVehicle.keySet()) {
 			text += "(Robot " + id + ") ";
 
