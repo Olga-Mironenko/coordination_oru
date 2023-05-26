@@ -1,12 +1,10 @@
 package se.oru.coordination.coordination_oru.util;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.*;
-import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.BarrierPhantomVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.State;
@@ -24,6 +22,7 @@ public class MissionUtils {
     public static HashMap<Integer, Integer> robotIDToFreezingCounter = new HashMap<>(); // TODO: use semaphores
     public static double stopDistance = Double.NEGATIVE_INFINITY;
     public static double priorityDistance = Double.NEGATIVE_INFINITY;
+    public static boolean isGlobalTemporaryStop = false;
 
     protected static HashMap<Integer, BarrierPhantomVehicle> robotIDToBarrier = new HashMap<>(); // TODO: remove
 
@@ -188,23 +187,28 @@ public class MissionUtils {
             cs.setHigher(robotID, true);
         }
 
-        final ArrayList<CriticalSection> criticalSectionsForStop =
-                selectCriticalSections(robotID, tec.allCriticalSections, stopDistance, Integer.MAX_VALUE);
-
         TreeSet<Integer> robotsToStop = new TreeSet<>();
-        for (CriticalSection cs : criticalSectionsForStop) {
-            int robotToStop;
-            if (cs.isTe1(robotID)) {
-                robotToStop = cs.getTe2RobotID();
-            } else if (cs.isTe2(robotID)) {
-                robotToStop = cs.getTe1RobotID();
-            } else {
-                throw new RuntimeException();
-            }
-            assert robotToStop != robotID;
+        if (isGlobalTemporaryStop) {
+            robotsToStop.addAll(VehiclesHashMap.getList().keySet());
+            robotsToStop.remove(robotID);
+        } else {
+            final ArrayList<CriticalSection> criticalSectionsForStop =
+                    selectCriticalSections(robotID, tec.allCriticalSections, stopDistance, Integer.MAX_VALUE);
 
-            if (! cs.isRobotOnCS(robotToStop)) {
-                robotsToStop.add(robotToStop);
+            for (CriticalSection cs : criticalSectionsForStop) {
+                int robotToStop;
+                if (cs.isTe1(robotID)) {
+                    robotToStop = cs.getTe2RobotID();
+                } else if (cs.isTe2(robotID)) {
+                    robotToStop = cs.getTe1RobotID();
+                } else {
+                    throw new RuntimeException();
+                }
+                assert robotToStop != robotID;
+
+                if (!cs.isRobotOnCS(robotToStop)) {
+                    robotsToStop.add(robotToStop);
+                }
             }
         }
         for (int robot : robotsToStop) {

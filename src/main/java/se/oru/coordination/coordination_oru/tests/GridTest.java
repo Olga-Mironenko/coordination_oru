@@ -29,8 +29,10 @@ public class GridTest {
         FORCING_CS1_CS2_PRIORITIES_CHANGE,
         FORCING_CS1_CS2_WITH_STOPS,
 
-        FORCING_GLOBAL_PRIORITIES_CHANGE,
-        FORCING_GLOBAL_WITH_STOPS,
+        FORCING_UPCOMING_PRIORITIES_CHANGE,
+        FORCING_UPCOMING_WITH_STOPS,
+
+        FORCING_GLOBAL_STOP,
     }
 
     public static void main(String[] args) {
@@ -57,7 +59,7 @@ public class GridTest {
 
     protected static void runDemo() throws NoPathFound {
         final String scenarioString = System.getenv().get("SCENARIO");
-        final Scenario scenario = scenarioString == null ? Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
+        final Scenario scenario = scenarioString == null ? Scenario.FORCING_GLOBAL_STOP :
                 Scenario.valueOf(scenarioString);
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -218,6 +220,7 @@ public class GridTest {
                 boolean isForcing = true;
                 assert(MissionUtils.priorityDistance == Double.NEGATIVE_INFINITY);
                 assert(MissionUtils.stopDistance == Double.NEGATIVE_INFINITY);
+                assert(! MissionUtils.isGlobalTemporaryStop);
 
                 switch (scenario) {
                     case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1:
@@ -246,12 +249,16 @@ public class GridTest {
                         MissionUtils.stopDistance = 20.0;
                         break;
 
-                    case FORCING_GLOBAL_PRIORITIES_CHANGE:
+                    case FORCING_UPCOMING_PRIORITIES_CHANGE:
                         MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
                         break;
-                    case FORCING_GLOBAL_WITH_STOPS:
+                    case FORCING_UPCOMING_WITH_STOPS:
                         MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
                         MissionUtils.stopDistance = Double.POSITIVE_INFINITY;
+                        break;
+                    case FORCING_GLOBAL_STOP:
+                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
+                        MissionUtils.isGlobalTemporaryStop = true;
                         break;
 
                     default:
