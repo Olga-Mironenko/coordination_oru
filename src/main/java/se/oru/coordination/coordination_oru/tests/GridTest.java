@@ -6,6 +6,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 
 import se.oru.coordination.coordination_oru.code.*;
+import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
@@ -66,19 +67,40 @@ public class GridTest {
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
-        final Pose column1Top = new Pose(14.5,57.4, -Math.PI/2);
-        final Pose column2Top = new Pose(30.0,57.4, -Math.PI/2);
-        final Pose column3Top = new Pose(45.7,57.4,-Math.PI/2);
-        final Pose column1Bottom = new Pose(14.5,3.0, -Math.PI);
-        final Pose column2Bottom = new Pose(30.0,3.0, Math.PI);
-        final Pose column3Bottom = new Pose(45.7,3.0,-Math.PI/2);
-        final Pose row1Left = new Pose(4.0,44.0,-Math.PI/2);
-        final Pose row2Left = new Pose(4.0,30.0,-Math.PI/2);
-        final Pose row3Left = new Pose(4.0,15.5,-Math.PI/2);
-        final Pose row1Right = new Pose(57.0,44.0,-Math.PI/2);
-        final Pose row2Right = new Pose(57.0,30.0,-Math.PI/2);
-        final Pose row3Right = new Pose(57.0,15.5,-Math.PI/2);
-        final Pose center = new Pose(30.0,30.0,-Math.PI/2);
+        final double xLeft = 4.0;
+        final double xRight = 57.0;
+        final double yTop = 57.4;
+        final double yBottom = 3.0;
+
+        final double xColumn1 = 14.5;
+        final double xColumn2 = 30.0;
+        final double xColumn3 = 45.7;
+        final double yRow1 = 44.0;
+        final double yRow2 = 30.0;
+        final double yRow3 = 15.5;
+
+        final double thetaDown = -Math.PI/2;
+        final double thetaUp = Math.PI/2;
+        final double thetaRight = 0;
+        final double thetaLeft = Math.PI;
+
+        final Pose column1Top = new Pose(xColumn1, yTop, thetaDown);
+        final Pose column2Top = new Pose(xColumn2, yTop, thetaDown);
+        final Pose column3Top = new Pose(xColumn3, yTop, thetaDown);
+
+        final Pose column1Bottom = new Pose(xColumn1, yBottom, thetaUp);
+        final Pose column2Bottom = new Pose(xColumn2, yBottom, thetaLeft); // left is for the robot 0 to look down
+        final Pose column3Bottom = new Pose(xColumn3, yBottom, thetaUp);
+
+        final Pose row1Left = new Pose(xLeft, yRow1, thetaRight);
+        final Pose row2Left = new Pose(xLeft, yRow2, thetaRight);
+        final Pose row3Left = new Pose(xLeft, yRow3, thetaRight);
+
+        final Pose row1Right = new Pose(xRight, yRow1, thetaLeft);
+        final Pose row2Right = new Pose(xRight, yRow2, thetaLeft);
+        final Pose row3Right = new Pose(xRight, yRow3, thetaLeft);
+
+        final Pose centerDownward = new Pose(xColumn2, yRow2, thetaDown);
 
         final Pose humStart = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? column1Top : column2Top;
         final Pose humFinish = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? column2Bottom : column2Bottom;
@@ -112,6 +134,10 @@ public class GridTest {
 
         MissionUtils.targetVelocityHumanInitial = maxVelocity;
         MissionUtils.targetVelocityHuman = maxVelocity;
+
+        AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
+        //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow
+        //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.SPARS; // too slow
 
         AutonomousVehicle aut1 = null;
         AutonomousVehicle aut2 = null;

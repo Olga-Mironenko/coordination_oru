@@ -31,7 +31,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	private double turningRadius = 1.0;
 	private double planningTimeInSecs = 30.0;
 	private Coordinate[] collisionCircleCenters = null;
-	private PLANNING_ALGORITHM algo = PLANNING_ALGORITHM.RRTConnect;
+	private PLANNING_ALGORITHM algo;
 	
 	public static ReedsSheppCarPlannerLib INSTANCE = null;
 	static {

@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class AutonomousVehicle extends AbstractVehicle {
+    public static ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect;
 
     public AutonomousVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
         super(id, priorityID, color, colorInMotion, maxVelocity, maxAcceleration, xLength, yLength);
@@ -35,7 +36,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         PoseSteering[] path = null;
         if (goals.length == 1) {
             Pose goal = goals[0];
-            String base = poseToString(initial) + "_" + poseToString(goal) + (inversePath ? "_inv" : "");
+            String base = poseToString(initial) + "_" + poseToString(goal) + "_" + planningAlgorithm + (inversePath ? "_inv" : "");
 
             filenameCache = "paths/" + FilenameUtils.getBaseName(map) + "/" + base + ".path";
             if (new File(filenameCache).isFile()) {
@@ -44,7 +45,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         }
 
         if (path == null) {
-            var rsp = new ReedsSheppCarPlanner();
+            var rsp = new ReedsSheppCarPlanner(planningAlgorithm);
             rsp.setMap(map);
             rsp.setRadius(0.01);
             rsp.setPlanningTimeInSecs(60);
@@ -81,10 +82,10 @@ public class AutonomousVehicle extends AbstractVehicle {
     }
 
     private static String poseToString(Pose pose) {
-        return roundPoseCoordinate(pose.getX()) + "-" + roundPoseCoordinate(pose.getY());
+        return round3(pose.getX()) + "," + round3(pose.getY()) + "," + round3(pose.getTheta());
     }
 
-    private static double roundPoseCoordinate(double x) {
+    private static double round3(double x) {
         return Math.round(x * 1000) / 1000.0;
     }
 
