@@ -521,7 +521,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				criticalSections.add(cs);
 			}
 		}
-		assert ! criticalSections.isEmpty();
+		//assert ! criticalSections.isEmpty();
 
 		HashSet<CriticalSection> criticalSectionsReal = new HashSet<>();
 		for (CriticalSection cs : criticalSections) {

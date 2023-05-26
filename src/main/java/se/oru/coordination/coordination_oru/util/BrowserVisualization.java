@@ -246,20 +246,24 @@ public class BrowserVisualization implements FleetVisualization {
 	protected void drawRobotFootprint(double x, double y, double theta, Pose poseArrow, String color, String name, String extraData, boolean filled, Polygon footprint) {
 		Geometry geom = TrajectoryEnvelope.getFootprint(footprint, x, y, theta);
 		double robotFootprintArea = geom.getArea();
-		double minX = Double.MAX_VALUE;
-		double maxX = Double.MIN_VALUE;
+		double minX = Double.POSITIVE_INFINITY;
+		double maxX = Double.NEGATIVE_INFINITY;
+		double minY = Double.POSITIVE_INFINITY;
+		double maxY = Double.NEGATIVE_INFINITY;
 		for (Coordinate coord : geom.getCoordinates()) {
-			if (coord.x < minX) minX = coord.x;
-			if (coord.x > maxX) maxX = coord.x;
+			minX = Math.min(minX, coord.x);
+			maxX = Math.max(maxX, coord.x);
+			minY = Math.min(minY, coord.y);
+			maxY = Math.max(maxY, coord.y);
 		}
-		double robotFootprintXDim = maxX - minX;
+		double robotLength = Math.max(maxX - minX, maxY - minY); // as approximation
 
 		double scale = Math.sqrt(robotFootprintArea) * 0.2;
 		String jsonString = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString(name, geom, color, -1, filled, extraData) + "}";
 		enqueueMessage(jsonString);
 
-		if (poseArrow != null) {
-			Geometry arrowGeom = createArrow(poseArrow, robotFootprintXDim / scale, scale);
+		if (poseArrow != null) { // theta
+			Geometry arrowGeom = createArrow(poseArrow, robotLength / (1.5 * scale), scale);
 			String jsonStringArrow = "{ \"operation\" : \"addGeometry\", \"data\" : " + this.geometryToJSONString("_" + name, arrowGeom, "#ffffff", -1, true, null) + "}";
 			enqueueMessage(jsonStringArrow);
 		}

@@ -68,8 +68,8 @@ public class GridTest {
         final String YAML_FILE = "maps/map-grid.yaml";
 
         final double xLeft = 4.0;
-        final double xRight = 57.0;
-        final double yTop = 57.4;
+        final double xRight = 56.0;
+        final double yTop = 56.5;
         final double yBottom = 3.0;
 
         final double xColumn1 = 14.5;
