@@ -17,11 +17,12 @@ public class PaperScenario_6A {
         String absolutePath = System.getProperty("user.dir");
         String resultsDirectory = absolutePath + "/src/main/java/se/oru/coordination/coordination_oru/results/lookAheadPaper_2023";
         final String YAML_FILE = "maps/mine-map-paper-2023.yaml";
-        double lookAheadDistance = -1;
+        double lookAheadDistance = 50;
         int intervalInSeconds = 1;
         int terminationInMinutes = 30;
         int numOfCallsForLookAheadRobot = 10;
         boolean visualization = true;
+        boolean writeRobotReports = false;
 
         final Pose mainTunnelLeft = new Pose(14.25, 22.15, Math.PI);
         final Pose mainTunnelRight = new Pose(114.15, 40.05, Math.PI);
@@ -55,7 +56,7 @@ public class PaperScenario_6A {
         var autonomousRobot4 = new AutonomousRobot();
         var autonomousRobot5 = new AutonomousRobot();
         var autonomousRobot6 = new AutonomousRobot();
-        var lookAheadRobot = new LookAheadRobot(1, lookAheadDistance, Color.RED, 5, 2, 0.9, 0.5);
+        var lookAheadRobot = new LookAheadRobot(1, lookAheadDistance, Color.GREEN, 5, 2, 0.9, 0.5);
 
         autonomousRobot1.getPlan(drawPoint28, autonomousRobotGoal1, YAML_FILE, true);
         autonomousRobot2.getPlan(drawPoint30, autonomousRobotGoal1, YAML_FILE, true);
@@ -106,7 +107,8 @@ public class PaperScenario_6A {
         tec.addComparator(heuristic.closest());
         String heuristicName = heuristic.getHeuristicName();
 
-        tec.setBreakDeadlocks(true, false, false);
+        // Set Local Re-ordering and Local Re-Planning to break Deadlocks
+        tec.setBreakDeadlocks(false, true, true);
 
         // Set up a simple GUI (null means an empty map, otherwise provide yaml file)
         if (visualization) {
@@ -139,11 +141,7 @@ public class PaperScenario_6A {
         Missions.enqueueMission(m7);
         Missions.setMap(YAML_FILE);
 
-        try {
-            Missions.startMissionDispatchers(tec, lookAheadDistance,
-                    true, intervalInSeconds, terminationInMinutes, heuristicName, resultsDirectory);
-        } catch (Throwable throwable) {
-            ErrorHandling.handleThrowable(resultsDirectory, throwable);
-        }
+        Missions.startMissionDispatchers(tec, lookAheadDistance, writeRobotReports,
+                intervalInSeconds, terminationInMinutes, heuristicName, resultsDirectory);
     }
 }

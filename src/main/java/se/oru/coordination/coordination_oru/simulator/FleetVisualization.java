@@ -8,9 +8,6 @@ public interface FleetVisualization {
 
     void displayRobotState(TrajectoryEnvelope te, RobotReport rr, String... extraStatusInfo);
 
-    @Deprecated
-    void displayRobotState(Polygon fp, RobotReport rr, String... extraStatusInfo);
-
     void displayDependency(RobotReport rrWaiting, RobotReport rrDriving, String dependencyDescriptor);
 
     void addEnvelope(TrajectoryEnvelope te);

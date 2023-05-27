@@ -54,20 +54,6 @@ public class JTSDrawingPanelVisualization implements FleetVisualization {
     }
 
     @Override
-    public void displayRobotState(Polygon fp, RobotReport rr, String... extraStatusInfo) {
-        double x = rr.getPose().getX();
-        double y = rr.getPose().getY();
-        double theta = rr.getPose().getTheta();
-        String name = "R" + rr.getRobotID();
-        if (extraStatusInfo != null) {
-            for (String st : extraStatusInfo) {
-                name += ("\\" + st);
-            }
-        }
-        panel.addGeometry(name, TrajectoryEnvelope.getFootprint(fp, x, y, theta), false, true, false, "#FF0000");
-    }
-
-    @Override
     public void displayDependency(RobotReport rrWaiting, RobotReport rrDriving, String dependencyDescriptor) {
         panel.addArrow(dependencyDescriptor, rrWaiting.getPose(), rrDriving.getPose());
     }

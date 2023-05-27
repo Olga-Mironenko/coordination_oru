@@ -51,7 +51,7 @@ public class MissionUtils {
 
                 PoseSteering[] newPath = null;
                 try {
-                    robot.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
+                    robot.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAML(), false);
                 } catch (Error exc) { // TODO: check for NoPathFound only
                     System.out.println("moveRobot: no path found (or another error): " + exc);
                     return;

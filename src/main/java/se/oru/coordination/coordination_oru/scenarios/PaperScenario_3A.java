@@ -17,11 +17,12 @@ public class PaperScenario_3A {
         String absolutePath = System.getProperty("user.dir");
         String resultsDirectory = absolutePath + "/src/main/java/se/oru/coordination/coordination_oru/results/lookAheadPaper_2023";
         final String YAML_FILE = "maps/mine-map-paper-2023.yaml";
-        double lookAheadDistance = 15;
+        double lookAheadDistance = 30;
         int intervalInSeconds = 1;
         int terminationInMinutes = 30;
         int numOfCallsForLookAheadRobot = 10;
-        boolean visualization = false;
+        boolean visualization = true;
+        boolean writeRobotReports = false;
 
         final Pose mainTunnelLeft = new Pose(14.25, 22.15, Math.PI);
         final Pose mainTunnelRight = new Pose(114.15, 40.05, Math.PI);
@@ -52,7 +53,7 @@ public class PaperScenario_3A {
         var autonomousRobot1 = new AutonomousRobot();
         var autonomousRobot2 = new AutonomousRobot();
         var autonomousRobot3 = new AutonomousRobot();
-        var lookAheadRobot = new LookAheadRobot(1, lookAheadDistance, Color.RED, 5, 2, 0.9, 0.5);
+        var lookAheadRobot = new LookAheadRobot(1, lookAheadDistance, Color.GREEN, 5, 2, 0.9, 0.5);
 
         autonomousRobot1.getPlan(drawPoint28, autonomousRobotGoal1, YAML_FILE, true);
         autonomousRobot2.getPlan(drawPoint32A, autonomousRobotGoal2, YAML_FILE, true);
@@ -88,7 +89,8 @@ public class PaperScenario_3A {
         tec.addComparator(heuristic.closest());
         String heuristicName = heuristic.getHeuristicName();
 
-        tec.setBreakDeadlocks(true, false, false);
+        // Set Local Re-ordering and Local Re-Planning to break Deadlocks
+        tec.setBreakDeadlocks(false, true, true);
 
         // Set up a simple GUI (null means an empty map, otherwise provide yaml file)
         if (visualization) {
@@ -98,7 +100,6 @@ public class PaperScenario_3A {
             viz.setInitialTransform(9.6, 30.2, -0.73);
             tec.setVisualization(viz);
         }
-
 
         var m1 = new Mission(autonomousRobot1.getID(), autonomousRobot1.getPath());
         var m2 = new Mission(autonomousRobot2.getID(), autonomousRobot2.getPath());
@@ -114,12 +115,8 @@ public class PaperScenario_3A {
         Missions.enqueueMission(m3);
         Missions.setMap(YAML_FILE);
 
-        try {
-            Missions.startMissionDispatchers(tec, lookAheadDistance,
-                    true, intervalInSeconds, terminationInMinutes, heuristicName, resultsDirectory);
-        } catch (Throwable throwable) {
-            ErrorHandling.handleThrowable(resultsDirectory, throwable);
-        }
+        Missions.startMissionDispatchers(tec, lookAheadDistance, writeRobotReports,
+                intervalInSeconds, terminationInMinutes, heuristicName, resultsDirectory);
     }
 }
 

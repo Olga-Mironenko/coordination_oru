@@ -3,7 +3,6 @@ package se.oru.coordination.coordination_oru.verify;
 import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel;
-import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
@@ -12,7 +11,6 @@ import se.oru.coordination.coordination_oru.utility.*;
 import java.util.Comparator;
 import java.util.HashMap;
 
-@DemoDescription(desc = "One-shot navigation of 3 robots with different footprints coordinating on paths obtained with the ReedsSheppCarPlanner.")
 public class ThreeDifferentRobotsLinear {
 
     public static void main(String[] args) throws InterruptedException {

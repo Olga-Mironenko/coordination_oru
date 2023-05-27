@@ -3,7 +3,6 @@ package se.oru.coordination.coordination_oru.tests.safetyAndLiveness;
 import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.coordinator.ConstantAccelerationForwardModel;
-import se.oru.coordination.coordination_oru.demo.DemoDescription;
 import se.oru.coordination.coordination_oru.motionplanner.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulator.BrowserVisualization;
 import se.oru.coordination.coordination_oru.simulator.TrajectoryEnvelopeCoordinatorSimulation;
@@ -18,7 +17,6 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashMap;
 
-@DemoDescription(desc = "Coordination with deadlock-inducing ordering heuristic (paths obtained with the ReedsSheppCarPlanner).")
 public class nRobotsDeadlock {
 
     protected static final int NUMBER_ROBOTS = 40;

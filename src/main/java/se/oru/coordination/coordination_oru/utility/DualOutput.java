@@ -1,10 +1,17 @@
 package se.oru.coordination.coordination_oru.utility;
 
-import java.io.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * A utility class that writes output to both the console and a text file.
  * The output file is specified during the creation of the utility instance.
+ * If the file or its parent directory does not exist, they will be created.
  *
  * @author amn
  */
@@ -15,13 +22,26 @@ public class DualOutput {
 
     /**
      * Constructs a new DualOutputUtility instance with the specified output file name.
+     * If the file or its parent directory does not exist, they will be created.
      *
      * @param fileName The name of the output file.
-     * @throws FileNotFoundException if the specified file cannot be opened or created.
+     * @throws IOException if the specified file cannot be opened, created, or if the parent directory cannot be created.
      */
-    public DualOutput(String fileName) throws FileNotFoundException {
+    public DualOutput(String fileName) throws IOException {
         // Store the original System.out
         originalSystemOut = System.out;
+
+        Path filePath = Paths.get(fileName);
+
+        // If directory doesn't exist, create it
+        if (!Files.exists(filePath.getParent())) {
+            Files.createDirectories(filePath.getParent());
+        }
+
+        // If file doesn't exist, create it
+        if (!Files.exists(filePath)) {
+            Files.createFile(filePath);
+        }
 
         // Create a file output stream for the text file
         FileOutputStream fileOutputStream = new FileOutputStream(fileName);
