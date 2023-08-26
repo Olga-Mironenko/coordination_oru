@@ -368,9 +368,13 @@ class Visualization {
 			//if (key.startsWith("R")) {
 			//	//textSize = Math.sqrt(area)/2;
 			//	textSize = 1.3*Math.sqrt(area);
-			//}	
+			//}
+			//var coef = Math.sqrt(maxArea);
+			var coef = 5;
+			var textSize = viz.fontScale * coef;
 			//console.log("scale is " + viz.fontScale);
-			var textSize = viz.fontScale*Math.sqrt(maxArea);
+			//console.log("coef is " + coef);
+			//console.log("textSize is " + textSize);
 			if (!key.startsWith("_")) {
 				var text = key;
 				if (viz.geometryExtraData[key] != null) {

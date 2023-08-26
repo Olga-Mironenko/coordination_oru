@@ -145,8 +145,8 @@ public class ProductionLine {
 
         double xLengthSmallOuter = 4.0;
         double yLengthSmallOuter = 3.5;
-        double xLengthSmallInner = 3;
-        double yLengthSmallInner = 3;
+        double xLengthSmallInner = 3.0;
+        double yLengthSmallInner = 3.0;
 
         MissionUtils.targetVelocityHumanInitial = maxVelocity;
         MissionUtils.targetVelocityHuman = maxVelocity;

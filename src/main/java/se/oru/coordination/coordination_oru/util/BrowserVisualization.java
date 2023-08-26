@@ -210,16 +210,14 @@ public class BrowserVisualization implements FleetVisualization {
 		String name = "R" + te.getRobotID();
 
 		// Show percentage of path completed
-		String extraData = " : " + "0 %";
-		if (rr.getPathIndex() >= 0) {
-			extraData = " : " + Math.round((double) rr.getPathIndex() / (double) te.getPathLength() * 100) + " %";
-		}
+		int percent = rr.getPathIndex() < 0 ? 0 : (int) Math.round((double) rr.getPathIndex() / (double) te.getPathLength() * 100);
+		String extraData = ":" + (extraStatusInfo == null || extraStatusInfo.length == 0 ? "" : " ") + percent + "%";
 
 		// Show path Index
 //		String extraData = " : " + rr.getPathIndex();
 		if (extraStatusInfo != null) {
 			for (String st : extraStatusInfo) {
-				extraData += (" | " + st);
+				extraData += " | " + st;
 			}
 		}
 
