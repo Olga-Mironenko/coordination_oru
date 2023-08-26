@@ -22,8 +22,6 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	protected static final long WAIT_AMOUNT_AT_END = 3000;
 	protected static final double EPSILON = 0.01;
-	protected final double MAX_VELOCITY;
-	protected final double MAX_ACCELERATION;
 	protected double overallDistance = 0.0;
 	protected double totalDistance = 0.0;
 	protected double positionToSlowDown = -1.0;
@@ -46,11 +44,6 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
-	}
-
-	public TrajectoryEnvelopeTrackerRK4(TrajectoryEnvelope te, int timeStep, double temporalResolution, TrajectoryEnvelopeCoordinatorSimulation tec, TrackingCallback cb) {
-		this(te, timeStep, temporalResolution, 1.0, 0.1, tec, cb);
-		setNumberOfReplicas(tec.getNumberOfReplicas(), tec.getControlPeriod());
 	}
 
 	private void computeInternalCriticalPoints() {
@@ -108,10 +101,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		return curvatureDampening[this.traj.getPose().length-1-index];
 	}
 
-	public TrajectoryEnvelopeTrackerRK4(TrajectoryEnvelope te, int timeStep, double temporalResolution, double maxVelocity, double maxAcceleration, TrajectoryEnvelopeCoordinator tec, TrackingCallback cb) {
+	public TrajectoryEnvelopeTrackerRK4(TrajectoryEnvelope te, int timeStep, double temporalResolution, TrajectoryEnvelopeCoordinator tec, TrackingCallback cb) {
 		super(te, temporalResolution, tec, timeStep, cb);
-		this.MAX_VELOCITY = maxVelocity;
-		this.MAX_ACCELERATION = maxAcceleration;
 		this.state = new State(0.0, 0.0);
 		this.totalDistance = this.computeDistance(0, traj.getPose().length-1);
 		this.overallDistance = totalDistance;
@@ -300,8 +291,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	private TreeMap<Double,Double> computeSlowdownProfile() {
 		final double coef = 1.1; // slightly more than 1.0 to model speed which is greater than any actual speed
 
+		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
+
 		TreeMap<Double,Double> ret = new TreeMap<Double, Double>();
-		State tempStateBW = new State(0.0, MAX_VELOCITY*coef);
+		State tempStateBW = new State(0.0, vehicle.getMaxVelocity()*coef);
 		ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
 		double time = 0.0;
@@ -313,7 +306,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			//Use slightly conservative max deceleration (which is positive acceleration since we simulate FW dynamics).
 			// (This is regarding dampeningBW < 1?)
 
-			integrateRK4(tempStateBW, time, deltaTime, true, MAX_VELOCITY*coef, dampeningBW, MAX_ACCELERATION, -1);
+			integrateRK4(tempStateBW, time, deltaTime, true, vehicle.getMaxVelocity()*coef, dampeningBW, vehicle.getMaxAcceleration(), -1);
 			ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
 			time += deltaTime;
@@ -331,6 +324,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		if (state.getPosition() >= targetDistance) {
 			return state.getPosition(); // essentially force slowing down
 		}
+
+		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
 
 		State stateToBe = new State(state.getPosition(), Math.max(0, state.getVelocity()));
 		double time = 0.0;
@@ -359,7 +354,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			prevPosition = stateToBe.getPosition();
 
 			double dampeningFW = getCurvatureDampening(getRobotReport(stateToBe).getPathIndex(), true);
-			integrateRK4(stateToBe, time, deltaTime, false, MAX_VELOCITY, dampeningFW, MAX_ACCELERATION, te.getRobotID());
+			integrateRK4(stateToBe, time, deltaTime, false, vehicle.getMaxVelocity(), dampeningFW, vehicle.getMaxAcceleration(), te.getRobotID());
 			assert stateToBe.getPosition() > prevPosition;
 
 			time += deltaTime;
@@ -747,10 +742,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 				// Prefer to stop earlier than to cross over.
 				State stateTemp = new State(state.getPosition(), state.getVelocity());
-				integrateRK4(stateTemp, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION, te.getRobotID());
+				integrateRK4(stateTemp, elapsedTrackingTime, deltaTime, slowingDown, vehicle.getMaxVelocity(), dampening, vehicle.getMaxAcceleration(), te.getRobotID());
 				if (! slowingDown && stateTemp.getPosition() >= positionToSlowDown) {
 					slowingDown = true;
-					integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION, te.getRobotID());
+					integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, vehicle.getMaxVelocity(), dampening, vehicle.getMaxAcceleration(), te.getRobotID());
 				} else {
 					state = stateTemp;
 				}

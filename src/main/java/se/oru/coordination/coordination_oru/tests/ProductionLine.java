@@ -1,6 +1,5 @@
 package se.oru.coordination.coordination_oru.tests;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
@@ -169,9 +168,8 @@ public class ProductionLine {
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
-        // TODO: `maxAcceleration` passed here is not used by `tec`.
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.RED, Color.RED, maxVelocityHuman, maxAccelerationHuman, xLengthBigOuter, yLengthBigOuter);
-        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
+        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity * 2, maxAcceleration * 2, xLengthSmallOuter, yLengthSmallOuter);
         aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
         aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
         aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
