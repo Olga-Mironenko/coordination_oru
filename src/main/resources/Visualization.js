@@ -370,8 +370,8 @@ class Visualization {
 			//	textSize = 1.3*Math.sqrt(area);
 			//}
 			//var coef = Math.sqrt(maxArea);
-			var coef = 5;
-			var textSize = viz.fontScale * coef;
+			var textSizeCoefficient = 1;
+			var textSize = viz.fontScale * textSizeCoefficient;
 			//console.log("scale is " + viz.fontScale);
 			//console.log("coef is " + coef);
 			//console.log("textSize is " + textSize);

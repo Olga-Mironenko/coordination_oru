@@ -212,6 +212,7 @@ public class ProductionLine {
 
         var viz = new BrowserVisualization();
         viz.setMap(YAML_FILE);
+        viz.setFontScale(4);
         viz.setInitialTransform(4.0, 5.0, 5.0);
         tec.setVisualization(viz);
 
