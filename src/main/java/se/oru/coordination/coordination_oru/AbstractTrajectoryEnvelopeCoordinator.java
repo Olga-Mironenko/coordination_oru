@@ -374,7 +374,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 	public Coordinate[] getInnerFootprint(int robotID) {
 		if (this.innerFootprints.containsKey(robotID)) return this.innerFootprints.get(robotID);
-		return null;
+		return getFootprint(robotID);
 	}
 
 	/**
