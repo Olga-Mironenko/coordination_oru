@@ -110,6 +110,13 @@ public abstract class AbstractVehicle {
                 '}';
     }
 
+    public void registerInTec(TrajectoryEnvelopeCoordinatorSimulation tec, double xLengthInner, double yLengthInner) {
+        Coordinate[] innerFootprint = AbstractVehicle.makeFootprint(xLengthInner, yLengthInner);
+        this.innerFootprint = innerFootprint;
+        tec.setFootprint(getID(), getFootprint());
+        tec.setInnerFootprint(getID(), innerFootprint);
+    }
+
     public abstract PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath);
 
     private static boolean isStopped(RobotReport rr) {

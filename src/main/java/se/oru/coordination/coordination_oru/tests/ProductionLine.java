@@ -161,29 +161,24 @@ public class ProductionLine {
         AutonomousVehicle aut4 = null;
         AutonomousVehicle aut5 = null;
 
-        // TODO: `maxAcceleration` passed here is not used by `tec`.
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.RED, Color.RED, maxVelocity, maxAcceleration, xLengthBigOuter, yLengthBigOuter);
-        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
-        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
-        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
-        aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
-    //    aut5 = new AutonomousVehicle(5, 0, Color.GREEN, Color.GREEN, maxVelocity, maxAcceleration, 2, 2);
-
         TrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, maxAcceleration, trackingPeriod);
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
-        for (AbstractVehicle vehicle : new AbstractVehicle[] { hum0, aut1, aut2, aut3, aut4, aut5 }) {
-            Coordinate[] innerFootprint =
-                    vehicle == hum0
-                            ? AbstractVehicle.makeFootprint(xLengthBigInner, yLengthBigInner)
-                            : AbstractVehicle.makeFootprint(xLengthSmallInner, yLengthSmallInner);
+        // TODO: `maxAcceleration` passed here is not used by `tec`.
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.RED, Color.RED, maxVelocity, maxAcceleration, xLengthBigOuter, yLengthBigOuter);
+        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
+        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
+        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
+        aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
+        //    aut5 = new AutonomousVehicle(5, 0, Color.GREEN, Color.GREEN, maxVelocity, maxAcceleration, 2, 2);
+
+        hum0.registerInTec(tec, xLengthBigInner, yLengthBigInner);
+        for (AbstractVehicle vehicle : new AbstractVehicle[] { aut1, aut2, aut3, aut4, aut5 }) {
             if (vehicle != null) {
-                vehicle.innerFootprint = innerFootprint;
-                tec.setFootprint(vehicle.getID(), vehicle.getFootprint());
-                tec.setInnerFootprint(vehicle.getID(), vehicle.innerFootprint);
+                vehicle.registerInTec(tec, xLengthSmallInner, yLengthSmallInner);
             }
         }
 
