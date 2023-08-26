@@ -134,8 +134,10 @@ public class ProductionLine {
         final Pose aut5Finish = column5Bottom;
 
         final double precisionCoefficient = 1;
-        final double maxVelocity = 5.0 * precisionCoefficient;
-        final double maxAcceleration = 2.0 * precisionCoefficient;
+        final double maxVelocity = 15.0 * precisionCoefficient;
+        final double maxAcceleration = 6.0 * precisionCoefficient;
+        final double maxVelocityHuman = maxVelocity / 3;
+        final double maxAccelerationHuman = maxAcceleration / 3;
         final int trackingPeriod = (int) Math.round(100 / precisionCoefficient);
 
         double xLengthBigOuter = 8.0;
@@ -148,8 +150,8 @@ public class ProductionLine {
         double xLengthSmallInner = 3.0;
         double yLengthSmallInner = 3.0;
 
-        MissionUtils.targetVelocityHumanInitial = maxVelocity;
-        MissionUtils.targetVelocityHuman = maxVelocity;
+        MissionUtils.targetVelocityHumanInitial = maxVelocityHuman;
+        MissionUtils.targetVelocityHuman = maxVelocityHuman;
 
         AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow
@@ -168,11 +170,11 @@ public class ProductionLine {
         tec.startInference();
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.RED, Color.RED, maxVelocity, maxAcceleration, xLengthBigOuter, yLengthBigOuter);
-        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
-        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
-        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
-        aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.RED, Color.RED, maxVelocityHuman, maxAccelerationHuman, xLengthBigOuter, yLengthBigOuter);
+        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
+        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
+        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
+        aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
         //    aut5 = new AutonomousVehicle(5, 0, Color.GREEN, Color.GREEN, maxVelocity, maxAcceleration, 2, 2);
 
         hum0.registerInTec(tec, xLengthBigInner, yLengthBigInner);
