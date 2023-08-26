@@ -59,12 +59,12 @@ public class GridTest {
 
     protected static void runDemo() throws NoPathFound {
         final String scenarioString = System.getenv().get("SCENARIO");
-        final Scenario scenario = scenarioString == null ? Scenario.FORCING_GLOBAL_STOP :
+        final Scenario scenario = scenarioString == null ? Scenario.FORCING_CS1_PRIORITIES_CHANGE:
                 Scenario.valueOf(scenarioString);
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
-        final double loopMinutes = 30;
+        final double loopMinutes = 60;
         final long loopTime = System.currentTimeMillis() + Math.round(loopMinutes * 60 * 1000);
 
         final String YAML_FILE = "maps/map-grid.yaml";
