@@ -138,10 +138,15 @@ public class ProductionLine {
         final double maxAcceleration = 2.0 * precisionCoefficient;
         final int trackingPeriod = (int) Math.round(100 / precisionCoefficient);
 
-        double xLength = 4.0;
-        double yLength = 3.5;
-        double xLengthInner = 3;
-        double yLengthInner = 3;
+        double xLengthBigOuter = 8.0;
+        double yLengthBigOuter = 8.0;
+        double xLengthBigInner = 7.0;
+        double yLengthBigInner = 7.0;
+
+        double xLengthSmallOuter = 4.0;
+        double yLengthSmallOuter = 3.5;
+        double xLengthSmallInner = 3;
+        double yLengthSmallInner = 3;
 
         MissionUtils.targetVelocityHumanInitial = maxVelocity;
         MissionUtils.targetVelocityHuman = maxVelocity;
@@ -157,11 +162,11 @@ public class ProductionLine {
         AutonomousVehicle aut5 = null;
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.RED, Color.RED, maxVelocity, maxAcceleration, 8, 8);
-        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLength, yLength);
-        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLength, yLength);
-        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLength, yLength);
-        aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLength, yLength);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.RED, Color.RED, maxVelocity, maxAcceleration, xLengthBigOuter, yLengthBigOuter);
+        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
+        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
+        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
+        aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, 15, 3, xLengthSmallOuter, yLengthSmallOuter);
     //    aut5 = new AutonomousVehicle(5, 0, Color.GREEN, Color.GREEN, maxVelocity, maxAcceleration, 2, 2);
 
         TrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
@@ -170,8 +175,11 @@ public class ProductionLine {
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
-        Coordinate[] innerFootprint = AbstractVehicle.makeFootprint(xLengthInner, yLengthInner);
         for (AbstractVehicle vehicle : new AbstractVehicle[] { hum0, aut1, aut2, aut3, aut4, aut5 }) {
+            Coordinate[] innerFootprint =
+                    vehicle == hum0
+                            ? AbstractVehicle.makeFootprint(xLengthBigInner, yLengthBigInner)
+                            : AbstractVehicle.makeFootprint(xLengthSmallInner, yLengthSmallInner);
             if (vehicle != null) {
                 vehicle.innerFootprint = innerFootprint;
                 tec.setFootprint(vehicle.getID(), vehicle.getFootprint());
