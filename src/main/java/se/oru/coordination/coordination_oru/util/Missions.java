@@ -1245,8 +1245,10 @@ public class Missions {
 	}
 
 	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
-		for (int robotID : tec.getAllRobotIDs()) {
-			VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
+		synchronized (tec.trackers) {
+			for (int robotID : tec.getAllRobotIDs()) {
+				VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
+			}
 		}
 	}
 
