@@ -19,21 +19,7 @@ import static se.oru.coordination.coordination_oru.util.Printer.print;
 
 public class ProductionLine {
     enum Scenario {
-        BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1,
-        BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST,
-        BASELINE_IDEAL_DRIVER_HUMAN_FIRST,
-        BASELINE_IDEAL_DRIVER_FIRST_COME,
-
-        FORCING_CS1_PRIORITIES_CHANGE,
-        FORCING_CS1_WITH_STOPS,
-
-        FORCING_CS1_CS2_PRIORITIES_CHANGE,
-        FORCING_CS1_CS2_WITH_STOPS,
-
-        FORCING_UPCOMING_PRIORITIES_CHANGE,
-        FORCING_UPCOMING_WITH_STOPS,
-
-        FORCING_GLOBAL_STOP,
+        MAIN,
     }
 
     public static void main(String[] args) {
@@ -59,8 +45,9 @@ public class ProductionLine {
     }
 
     protected static void runDemo() throws NoPathFound {
-        final String scenarioString = System.getenv().get("SCENARIO");
-        final Scenario scenario = scenarioString == null ? Scenario.BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
+//        final String scenarioString = System.getenv().get("SCENARIO");
+        final String scenarioString = null;
+        final Scenario scenario = scenarioString == null ? Scenario.MAIN :
                 Scenario.valueOf(scenarioString);
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -87,17 +74,22 @@ public class ProductionLine {
         final double thetaRight = 0;
         final double thetaLeft = Math.PI;
 
+        final Pose column0Top = new Pose(35,135.00, thetaDown);
+        final Pose column01Middle = new Pose(46.5,102, thetaDown);
         final Pose column1Top = new Pose(57.50,135.00, thetaDown);
         final Pose column2Top = new Pose(79.5, 135, thetaDown);
         final Pose column3Top = new Pose(99, 135, thetaDown);
         final Pose column4Top = new Pose(119.5, 135, thetaDown);
-        final Pose column5Top = new Pose(176, 135, thetaDown);
+        final Pose column45Middle = new Pose(130, 102, thetaDown);
+        final Pose column5Top = new Pose(141, 135, thetaDown);
+        final Pose column6Top = new Pose(176, 136, thetaDown);
 
         final Pose column1Bottom = new Pose(57.5, 35, thetaUp);
         final Pose column2Bottom = new Pose(79.5, 87, thetaUp); // left is for the robot 0 to look down
         final Pose column3Bottom = new Pose(99, 35, thetaUp);
         final Pose column4Bottom = new Pose(119.5, 87, thetaUp);
-        final Pose column5Bottom = new Pose(176, 15, thetaUp);
+        final Pose column5Middle = new Pose(141.0, 95, thetaUp);
+        final Pose bottomTunnel = new Pose(90, 15, thetaUp);
 
         final Pose row1Left = new Pose(xLeft, yRow1, thetaRight);
         final Pose row2Left = new Pose(xLeft, yRow2, thetaRight);
@@ -112,8 +104,21 @@ public class ProductionLine {
         final Pose mainTunnelLeft = new Pose(23.00,74.50, -Math.PI);
         final Pose mainTunnelRight = new Pose(200.05,74.50, Math.PI);
 
-        final Pose humStart = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? column1Top : mainTunnelRight;
-        final Pose humFinish = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? column2Bottom : mainTunnelLeft;
+//        final Pose humStart = mainTunnelRight;
+//        final Pose humFinish = mainTunnelLeft;
+        final Pose humStart = column5Top;
+//        final Pose humFinish = bottomTunnel;
+//        final Pose humFinish = null;
+        final Pose humFinish = column5Middle;
+
+//        final Pose aut5Start = column5Top;
+//        final Pose aut5Start = column45Middle;
+//        final Pose aut5Start = aut4Start;
+//        final Pose aut5Finish = bottomTunnel;
+//        final Pose aut5Finish = column01Middle;
+//        final Pose aut5Finish = aut4Finish;
+        final Pose aut5Start = mainTunnelRight;
+        final Pose aut5Finish = mainTunnelLeft;
 
         final boolean ishumLoop = true;
 
@@ -129,14 +134,12 @@ public class ProductionLine {
         final Pose aut4Start = column4Top;
         final Pose aut4Finish = column4Bottom;
 
-        final Pose aut5Start = column5Top;
-        final Pose aut5Finish = column5Bottom;
 
         final double precisionCoefficient = 1;
         final double maxVelocity = 15.0 * precisionCoefficient;
         final double maxAcceleration = 6.0 * precisionCoefficient;
-        final double maxVelocityHuman = maxVelocity / 3;
-        final double maxAccelerationHuman = maxAcceleration / 3;
+        final double maxVelocityBig = maxVelocity / 3;
+        final double maxAccelerationBig = maxAcceleration / 3;
         final int trackingPeriod = (int) Math.round(100 / precisionCoefficient);
 
         double xLengthBigOuter = 8.0;
@@ -149,13 +152,19 @@ public class ProductionLine {
         double xLengthSmallInner = 3.0;
         double yLengthSmallInner = 3.0;
 
-        MissionUtils.targetVelocityHumanInitial = maxVelocityHuman;
-        MissionUtils.targetVelocityHuman = maxVelocityHuman;
+        double xLengthHumanOuter = 3.0;
+        double yLengthHumanOuter = 2.5;
+        double xLengthHumanInner = 2.0;
+        double yLengthHumanInner = 2.0;
+
+        MissionUtils.targetVelocityHumanInitial = maxVelocity;
+        MissionUtils.targetVelocityHuman = maxVelocity;
 
         AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.SPARS; // too slow
 
+        AutonomousVehicle hum0 = null;
         AutonomousVehicle aut1 = null;
         AutonomousVehicle aut2 = null;
         AutonomousVehicle aut3 = null;
@@ -168,21 +177,22 @@ public class ProductionLine {
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.RED, Color.RED, maxVelocityHuman, maxAccelerationHuman, xLengthBigOuter, yLengthBigOuter);
+        hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.GREEN, maxVelocity, maxAcceleration, xLengthHumanOuter, yLengthHumanOuter);
         aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity * 2, maxAcceleration * 2, xLengthSmallOuter, yLengthSmallOuter);
         aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
         aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
-        aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
-        //    aut5 = new AutonomousVehicle(5, 0, Color.GREEN, Color.GREEN, maxVelocity, maxAcceleration, 2, 2);
+        aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity * 2, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
+        aut5 = new AutonomousVehicle(5, 0, Color.RED, Color.RED, maxVelocityBig, maxAccelerationBig, xLengthBigOuter, yLengthBigOuter);
 
-        hum0.registerInTec(tec, xLengthBigInner, yLengthBigInner);
-        for (AbstractVehicle vehicle : new AbstractVehicle[] { aut1, aut2, aut3, aut4, aut5 }) {
+        if (hum0 != null) hum0.registerInTec(tec, xLengthHumanInner, yLengthHumanInner);
+        if (aut5 != null) aut5.registerInTec(tec, xLengthBigInner, yLengthBigInner);
+        for (AbstractVehicle vehicle : new AbstractVehicle[] { aut1, aut2, aut3, aut4 }) {
             if (vehicle != null) {
                 vehicle.registerInTec(tec, xLengthSmallInner, yLengthSmallInner);
             }
         }
 
-        tec.placeRobot(hum0.getID(), humStart);
+        if (hum0 != null) tec.placeRobot(hum0.getID(), humStart);
         if (aut1 != null) tec.placeRobot(aut1.getID(), aut1Start);
         if (aut2 != null) tec.placeRobot(aut2.getID(), aut2Start);
         if (aut3 != null) tec.placeRobot(aut3.getID(), aut3Start);
@@ -191,16 +201,8 @@ public class ProductionLine {
 
         Heuristics heuristics = new Heuristics();
         switch (scenario) {
-            case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1:
-            case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
-            default:
+            case MAIN:
                 tec.addComparator(heuristics.highestIDNumber());
-                break;
-            case BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
-                tec.addComparator(heuristics.lowestIDNumber());
-                break;
-            case BASELINE_IDEAL_DRIVER_FIRST_COME:
-                tec.addComparator(heuristics.closest());
                 break;
         }
 
@@ -216,16 +218,17 @@ public class ProductionLine {
 
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatchers(tec, loopTime);
-        Missions.loopMissions.put(hum0.getID(), ishumLoop);
+        if (hum0 != null) Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
+        if (hum0 != null) Missions.enqueueMissions(hum0, humStart, humFinish, false);
         final boolean isInverse = false;
-        Missions.enqueueMissions(hum0, humStart, humFinish, isInverse);
         if (aut1 != null) Missions.enqueueMissions(aut1, aut1Start, aut1Finish, isInverse);
         if (aut2 != null) Missions.enqueueMissions(aut2, aut2Start, aut2Finish, isInverse);
         if (aut3 != null) Missions.enqueueMissions(aut3, aut3Start, aut3Finish, isInverse);
         if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isInverse);
         if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isInverse);
 
+        /*
         AutonomousVehicle finalAut1 = aut1;
         new GatedThread("scenario creator") {
             @Override
@@ -292,5 +295,6 @@ public class ProductionLine {
                 }
             }
         }.start();
+         */
     }
 }
