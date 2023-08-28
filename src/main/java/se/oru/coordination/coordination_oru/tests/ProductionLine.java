@@ -29,7 +29,6 @@ public class ProductionLine {
 //        BrowserVisualization.isStatusText = true;
         GatedThread.enable();
 
-
         new GatedThread("runDemo") {
             @Override
             public void runCore() {
@@ -227,74 +226,5 @@ public class ProductionLine {
         if (aut3 != null) Missions.enqueueMissions(aut3, aut3Start, aut3Finish, isInverse);
         if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isInverse);
         if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isInverse);
-
-        /*
-        AutonomousVehicle finalAut1 = aut1;
-        new GatedThread("scenario creator") {
-            @Override
-            public void runCore() {
-                boolean isForcing = true;
-                assert(MissionUtils.priorityDistance == Double.NEGATIVE_INFINITY);
-                assert(MissionUtils.stopDistance == Double.NEGATIVE_INFINITY);
-                assert(! MissionUtils.isGlobalTemporaryStop);
-
-                switch (scenario) {
-                    case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1:
-                    case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
-                    case BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
-                    case BASELINE_IDEAL_DRIVER_FIRST_COME:
-                        isForcing = false;
-                        // For manual use:
-                        MissionUtils.priorityDistance = 10.0;
-                        MissionUtils.stopDistance = 10.0;
-                        break;
-
-                    case FORCING_CS1_PRIORITIES_CHANGE:
-                        MissionUtils.priorityDistance = 10.0;
-                        break;
-                    case FORCING_CS1_WITH_STOPS:
-                        MissionUtils.priorityDistance = 10.0;
-                        MissionUtils.stopDistance = 10.0;
-                        break;
-
-                    case FORCING_CS1_CS2_PRIORITIES_CHANGE:
-                        MissionUtils.priorityDistance = 20.0;
-                        break;
-                    case FORCING_CS1_CS2_WITH_STOPS:
-                        MissionUtils.priorityDistance = 20.0;
-                        MissionUtils.stopDistance = 20.0;
-                        break;
-
-                    case FORCING_UPCOMING_PRIORITIES_CHANGE:
-                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
-                        break;
-                    case FORCING_UPCOMING_WITH_STOPS:
-                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
-                        MissionUtils.stopDistance = Double.POSITIVE_INFINITY;
-                        break;
-                    case FORCING_GLOBAL_STOP:
-                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
-                        MissionUtils.isGlobalTemporaryStop = true;
-                        break;
-
-                    default:
-                        throw new RuntimeException(String.valueOf(scenario));
-                }
-
-                if (! isForcing) {
-                    return;
-                }
-
-                TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-                while (true) {
-                    // wait until `hum1` gives way to `aut1`
-                    if (hum0.lastRobotReport.getY() > 50 && hum0.currentRobotReport.getY() <= 50) {
-                        MissionUtils.forceDriving(hum0.getID());
-                    }
-                    GatedThread.skipCycles(1);
-                }
-            }
-        }.start();
-         */
     }
 }
