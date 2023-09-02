@@ -33,6 +33,11 @@ public class GridTest {
         FORCING_UPCOMING_WITH_STOPS,
 
         FORCING_GLOBAL_STOP,
+        // The same as FORCING_UPCOMING_WITH_STOPS, but other robots stop even they have already passed,
+        // the intersection (so there are no critical sections for them to stop before).
+
+        FORCING_GLOBAL_STOP_11,
+        FORCING_GLOBAL_STOP_12,
     }
 
     public static void main(String[] args) {
@@ -59,7 +64,7 @@ public class GridTest {
 
     protected static void runDemo() throws NoPathFound {
         final String scenarioString = System.getenv().get("SCENARIO");
-        final Scenario scenario = scenarioString == null ? Scenario.FORCING_CS1_PRIORITIES_CHANGE:
+        final Scenario scenario = scenarioString == null ? Scenario.FORCING_GLOBAL_STOP :
                 Scenario.valueOf(scenarioString);
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -221,6 +226,15 @@ public class GridTest {
                 assert(MissionUtils.priorityDistance == Double.NEGATIVE_INFINITY);
                 assert(MissionUtils.stopDistance == Double.NEGATIVE_INFINITY);
                 assert(! MissionUtils.isGlobalTemporaryStop);
+                assert(MissionUtils.isRestorePrioritiesAfterTheNearestIntersection);
+
+                double[] ysDownwardsStopRobots = new double[] { 50.0 };
+                double[] ysDownwardsResumeRobots = new double[] { 40.0 };
+                double[] ysDownwardsRestorePriorities = new double[] {};
+
+                double[] ysUpwardsStopRobots = new double[] {};
+                double[] ysUpwardsResumeRobots = new double[] {};
+                double[] ysUpwardsRestorePriorities = new double[] {};
 
                 switch (scenario) {
                     case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1:
@@ -261,6 +275,22 @@ public class GridTest {
                         MissionUtils.isGlobalTemporaryStop = true;
                         break;
 
+                    case FORCING_GLOBAL_STOP_11:
+                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
+                        MissionUtils.isGlobalTemporaryStop = true;
+                        MissionUtils.isRestorePrioritiesAfterTheNearestIntersection = false;
+                        ysDownwardsResumeRobots = ysDownwardsRestorePriorities = new double[] { humFinish.getY() };
+                        break;
+
+                    case FORCING_GLOBAL_STOP_12:
+                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
+                        MissionUtils.isGlobalTemporaryStop = true;
+                        MissionUtils.isRestorePrioritiesAfterTheNearestIntersection = false;
+                        ysDownwardsResumeRobots = ysDownwardsRestorePriorities = new double[] { humFinish.getY() };
+                        ysUpwardsStopRobots = new double[] { 5.0 };
+                        ysUpwardsResumeRobots = ysUpwardsRestorePriorities = new double[] { humStart.getY() };
+                        break;
+
                     default:
                         throw new RuntimeException(String.valueOf(scenario));
                 }
@@ -269,12 +299,60 @@ public class GridTest {
                     return;
                 }
 
-                TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+                KnobsAfterForcing knobsAfterForcing = null;
                 while (true) {
-                    // wait until `hum1` gives way to `aut1`
-                    if (hum0.lastRobotReport.getY() > 50 && hum0.currentRobotReport.getY() <= 50) {
-                        MissionUtils.forceDriving(hum0.getID());
+                    boolean isStop = false;
+                    boolean isResume = false;
+                    boolean isRestore = false;
+
+                    for (double y : ysDownwardsStopRobots) {
+                        if (hum0.isYPassedDownwards(y)) {
+                            isStop = true;
+                        }
                     }
+                    for (double y : ysUpwardsStopRobots) {
+                        if (hum0.isYPassedUpwards(y)) {
+                            isStop = true;
+                        }
+                    }
+
+                    for (double y : ysDownwardsResumeRobots) {
+                        if (hum0.isYPassedDownwards(y)) {
+                            isResume = true;
+                        }
+                    }
+                    for (double y : ysUpwardsResumeRobots) {
+                        if (hum0.isYPassedUpwards(y)) {
+                            isResume = true;
+                        }
+                    }
+
+                    for (double y : ysDownwardsRestorePriorities) {
+                        if (hum0.isYPassedDownwards(y)) {
+                            isRestore = true;
+                        }
+                    }
+                    for (double y : ysUpwardsRestorePriorities) {
+                        if (hum0.isYPassedUpwards(y)) {
+                            isRestore = true;
+                        }
+                    }
+
+                    if (isStop) {
+                        assert ! isResume;
+                        assert ! isRestore;
+                    }
+
+                    if (isStop) {
+                        knobsAfterForcing = MissionUtils.forceDriving(hum0.getID());
+                    }
+                    if (isResume) {
+                        knobsAfterForcing.resumeRobots();
+                    }
+                    if (isRestore) {
+                        knobsAfterForcing.restorePriorities();
+                    }
+
                     GatedThread.skipCycles(1);
                 }
             }

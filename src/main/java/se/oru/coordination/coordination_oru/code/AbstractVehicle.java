@@ -206,6 +206,7 @@ public abstract class AbstractVehicle {
         TimeUnit.SECONDS.sleep(blinkTimeSeconds);
         VehiclesHashMap.getVehicle(this.ID).setVehicleColor(colorOriginal);
     }
+
     public int getID() {
         return ID;
     }
@@ -289,5 +290,13 @@ public abstract class AbstractVehicle {
 
     public double getYLength() {
         return yLength;
+    }
+
+    public boolean isYPassedDownwards(double y) {
+        return lastRobotReport.getY() > y && currentRobotReport.getY() <= y;
+    }
+
+    public boolean isYPassedUpwards(double y) {
+        return lastRobotReport.getY() < y && currentRobotReport.getY() >= y;
     }
 }

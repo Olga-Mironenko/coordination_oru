@@ -20,9 +20,13 @@ public class MissionUtils {
     public static boolean isWorking = false;
     public static boolean arePhantomsVisible = false; // TODO: remove
     public static HashMap<Integer, Integer> robotIDToFreezingCounter = new HashMap<>(); // TODO: use semaphores
-    public static double stopDistance = Double.NEGATIVE_INFINITY;
-    public static double priorityDistance = Double.NEGATIVE_INFINITY;
+
+    // Distances between the current robot and intersections to check:
+    public static double priorityDistance = Double.NEGATIVE_INFINITY; // change the priority of that intersection?
+    public static double stopDistance = Double.NEGATIVE_INFINITY; // stop the other robot of that intersection?
+
     public static boolean isGlobalTemporaryStop = false;
+    public static boolean isRestorePrioritiesAfterTheNearestIntersection = true;
 
     protected static HashMap<Integer, BarrierPhantomVehicle> robotIDToBarrier = new HashMap<>(); // TODO: remove
 
@@ -176,7 +180,7 @@ public class MissionUtils {
         return replacementPath;
     }
 
-    public static void forceDriving(int robotID) {
+    public static KnobsAfterForcing forceDriving(int robotID) {
         robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
@@ -215,6 +219,26 @@ public class MissionUtils {
             stopRobot(robot);
         }
 
+        KnobsAfterForcing knobsAfterForcing = new KnobsAfterForcing() {
+            @Override
+            public void resumeRobots() {
+                for (int robot : robotsToStop) {
+                    MissionUtils.resumeRobot(robot);
+                }
+                robotsToStop.clear();
+            }
+
+            @Override
+            public void restorePriorities() {
+                for (CriticalSection cs : criticalSectionsForPriority) {
+                    if (tec.allCriticalSections.contains(cs)) {
+                        cs.setHigher(robotID, false);
+                    }
+                }
+                criticalSectionsForPriority.clear();
+            }
+        };
+
         TrackingCallback cb = new TrackingCallback(null) {
             @Override
             public void onTrackingStart() { }
@@ -225,16 +249,7 @@ public class MissionUtils {
             @Override
             public String[] onPositionUpdate() {
                 if (areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsForPriority)) {
-                    for (CriticalSection cs : criticalSectionsForPriority) {
-                        if (tec.allCriticalSections.contains(cs)) {
-                            cs.setHigher(robotID, false);
-                        }
-                    }
-                    criticalSectionsForPriority.clear();
-
-                    for (int robot : robotsToStop) {
-                        resumeRobot(robot);
-                    }
+                    knobsAfterForcing.restorePriorities();
                 }
                 return null;
             }
@@ -249,7 +264,11 @@ public class MissionUtils {
             public void beforeTrackingFinished() { }
         };
 
-        tec.addTrackingCallback(robotID, cb);
+        if (isRestorePrioritiesAfterTheNearestIntersection && ! criticalSectionsForPriority.isEmpty()) {
+            tec.addTrackingCallback(robotID, cb);
+        }
+
+        return knobsAfterForcing;
     }
 
     protected static ArrayList<CriticalSection> selectCriticalSections(
@@ -379,7 +398,7 @@ public class MissionUtils {
          */
     }
 
-    protected static void resumeRobot(int robotID) {
+    public static void resumeRobot(int robotID) {
         System.out.println(robotID);
 
         robotIDToFreezingCounter.put(robotID, robotIDToFreezingCounter.getOrDefault(robotID, 0) - 1);

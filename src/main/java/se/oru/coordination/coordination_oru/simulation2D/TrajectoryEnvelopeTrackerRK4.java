@@ -540,6 +540,11 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 						isReal = false;
 					}
 				}
+
+				// TODO: When `robotIDToFreezingCounter` changes, call `setCriticalPoint` for other robots.
+				if (id != robotID && MissionUtils.robotIDToFreezingCounter.getOrDefault(id, 0) > 0) {
+					isReal = false;
+				}
 			}
 
 			if (isReal) {
