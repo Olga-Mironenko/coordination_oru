@@ -115,7 +115,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected HashMap<AbstractTrajectoryEnvelopeTracker,Pair<Integer,Long>> communicatedCPs = new HashMap<AbstractTrajectoryEnvelopeTracker, Pair<Integer,Long>>();
 	protected HashMap<AbstractTrajectoryEnvelopeTracker,Integer> externalCPCounters = new HashMap<AbstractTrajectoryEnvelopeTracker, Integer>();
 
-	protected ComparatorChain comparators = new ComparatorChain();
+	public ComparatorChain comparators = new ComparatorChain();
 	protected HashMap<Integer,ForwardModel> forwardModels = new HashMap<Integer, ForwardModel>();
 
 	protected HashMap<Integer,Coordinate[]> footprints = new HashMap<Integer, Coordinate[]>();

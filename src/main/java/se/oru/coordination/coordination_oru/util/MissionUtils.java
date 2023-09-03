@@ -1,11 +1,13 @@
 package se.oru.coordination.coordination_oru.util;
 
+import org.apache.commons.collections.comparators.ComparatorChain;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.code.BarrierPhantomVehicle;
+import se.oru.coordination.coordination_oru.code.Heuristics;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.State;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
@@ -219,6 +221,12 @@ public class MissionUtils {
             stopRobot(robot);
         }
 
+        ComparatorChain comparatorsOrig = tec.comparators;
+        if (robotID == 0) {
+            tec.comparators = new ComparatorChain();
+            tec.comparators.addComparator(new Heuristics().lowestIDNumber());
+        }
+
         KnobsAfterForcing knobsAfterForcing = new KnobsAfterForcing() {
             @Override
             public void resumeRobots() {
@@ -236,6 +244,9 @@ public class MissionUtils {
                     }
                 }
                 criticalSectionsForPriority.clear();
+                if (robotID == 0) {
+                    tec.comparators = comparatorsOrig;
+                }
             }
         };
 
