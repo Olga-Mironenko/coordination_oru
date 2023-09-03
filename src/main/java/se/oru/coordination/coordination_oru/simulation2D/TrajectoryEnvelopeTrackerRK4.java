@@ -575,8 +575,19 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		}
 
 		// So we would stop after the critical point.
+		if (MissionUtils.robotIDToFreezingCounter.getOrDefault(robotID, 0) > 0) {
+			Integer positionToStop = null;
+			for (CriticalSection cs : criticalSectionsReal) {
+				Integer end = cs.getEnd(robotID);
+				if (positionToStop == null || end > positionToStop) {
+					positionToStop = end;
+				}
+			}
+			MissionUtils.robotIDToPathIndexToStop.put(robotID, positionToStop);
+			MissionUtils.robotIDToFreezingCounter.put(robotID, 0);
+		}
 		for (CriticalSection cs : criticalSectionsReal) {
-			cs.setHigher(robotID, true);
+			cs.setHigher(robotID, 2);
 		}
 	}
 
@@ -684,6 +695,12 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 			if (vehicle instanceof BarrierPhantomVehicle) {
 				skipIntegration = true;
+			}
+
+			Integer pathIndexToStop = MissionUtils.robotIDToPathIndexToStop.getOrDefault(myRobotID, null);
+			if (pathIndexToStop != null && getRobotReport().getPathIndex() >= pathIndexToStop) {
+				MissionUtils.robotIDToPathIndexToStop.remove(myRobotID);
+				MissionUtils.robotIDToFreezingCounter.put(myRobotID, MissionUtils.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) + 1);
 			}
 
 			boolean isFreezing = MissionUtils.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) > 0;

@@ -27,8 +27,8 @@ public class CriticalSection {
 	private int te2End = -1;
 	private int te1Break = -1;
 	private int te2Break = -1;
-	public boolean te1Higher = false;
-	public boolean te2Higher = false;
+	public int te1HigherWeight = 0;
+	public int te2HigherWeight = 0;
 
 	public CriticalSection(TrajectoryEnvelope te1, TrajectoryEnvelope te2, int te1Start, int te2Start, int te1End, int te2End) {
 		this.te1 = te1;
@@ -167,11 +167,11 @@ public class CriticalSection {
 		return getStart(robotID) <= index && index <= getEnd(robotID);
 	}
 
-	public void setHigher(int robotID, boolean isHigher) {
+	public void setHigher(int robotID, int weight) {
 		if (isTe1(robotID)) {
-			te1Higher = isHigher;
+			te1HigherWeight = weight;
 		} else if (isTe2(robotID)) {
-			te2Higher = isHigher;
+			te2HigherWeight = weight;
 		} else {
 			throw new RuntimeException();
 		}
@@ -190,8 +190,8 @@ public class CriticalSection {
 		String ret = "";
 		String robot1 = getTe1() == null ? "null" : String.valueOf(getTe1().getRobotID());
 		String robot2 = getTe2() == null ? "null" : String.valueOf(getTe2().getRobotID());
-		ret += robot1 + (te1Higher ? "*" : "") + " [" + getTe1Start() + ";" + getTe1End() + "], ";
-		ret += robot2 + (te2Higher ? "*" : "") + " [" + getTe2Start() + ";" + getTe2End() + "]";
+		ret += robot1 + (te1HigherWeight > 0 ? "{" + te1HigherWeight + "}" : "") + " [" + getTe1Start() + ";" + getTe1End() + "], ";
+		ret += robot2 + (te2HigherWeight > 0 ? "{" + te2HigherWeight + "}" : "") + " [" + getTe2Start() + ";" + getTe2End() + "]";
 		return ret;
 	}
 

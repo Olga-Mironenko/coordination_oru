@@ -22,6 +22,7 @@ public class MissionUtils {
     public static boolean isWorking = false;
     public static boolean arePhantomsVisible = false; // TODO: remove
     public static HashMap<Integer, Integer> robotIDToFreezingCounter = new HashMap<>(); // TODO: use semaphores
+    public static HashMap<Integer, Integer> robotIDToPathIndexToStop = new HashMap<>();
 
     // Distances between the current robot and intersections to check:
     public static double priorityDistance = Double.NEGATIVE_INFINITY; // change the priority of that intersection?
@@ -190,7 +191,7 @@ public class MissionUtils {
         final ArrayList<CriticalSection> criticalSectionsForPriority =
                 selectCriticalSections(robotID, tec.allCriticalSections, priorityDistance, Integer.MAX_VALUE);
         for (CriticalSection cs : criticalSectionsForPriority) {
-            cs.setHigher(robotID, true);
+            cs.setHigher(robotID, 1);
         }
 
         TreeSet<Integer> robotsToStop = new TreeSet<>();
@@ -240,7 +241,7 @@ public class MissionUtils {
             public void restorePriorities() {
                 for (CriticalSection cs : criticalSectionsForPriority) {
                     if (tec.allCriticalSections.contains(cs)) {
-                        cs.setHigher(robotID, false);
+                        cs.setHigher(robotID, 0);
                     }
                 }
                 criticalSectionsForPriority.clear();
@@ -412,7 +413,7 @@ public class MissionUtils {
     public static void resumeRobot(int robotID) {
         System.out.println(robotID);
 
-        robotIDToFreezingCounter.put(robotID, robotIDToFreezingCounter.getOrDefault(robotID, 0) - 1);
+        robotIDToFreezingCounter.put(robotID, Math.max(0, robotIDToFreezingCounter.getOrDefault(robotID, 0) - 1));
 
         /*
         BarrierPhantomVehicle vehicleBarrier = robotIDToBarrier.get(robotID);

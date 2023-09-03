@@ -230,8 +230,8 @@ public class GridTest {
                 assert(! MissionUtils.isGlobalTemporaryStop);
                 assert(MissionUtils.isRestorePrioritiesAfterTheNearestIntersection);
 
-                double[] ysDownwardsForcing = new double[] { 50.0 };
-                double[] ysDownwardsResumingRobots = new double[] { 40.0 };
+                double[] ysDownwardsForcing = new double[] { humStart.getY() - 6.5 };
+                double[] ysDownwardsResumingRobots = new double[] { humStart.getY() - 16.5 };
                 double[] ysDownwardsRestoringPriorities = new double[] {};
 
                 double[] ysUpwardsForcing = new double[] {};
@@ -282,6 +282,8 @@ public class GridTest {
                         MissionUtils.isGlobalTemporaryStop = true;
                         MissionUtils.isRestorePrioritiesAfterTheNearestIntersection = false;
                         ysDownwardsResumingRobots = ysDownwardsRestoringPriorities = new double[] { humFinish.getY() };
+
+                        ysDownwardsForcing = new double[] { humStart.getY() - 4.0 }; // TODO: temporary
                         break;
 
                     case FORCING_GLOBAL_STOP_12:
@@ -289,8 +291,10 @@ public class GridTest {
                         MissionUtils.isGlobalTemporaryStop = true;
                         MissionUtils.isRestorePrioritiesAfterTheNearestIntersection = false;
                         ysDownwardsResumingRobots = ysDownwardsRestoringPriorities = new double[] { humFinish.getY() };
-                        ysUpwardsForcing = new double[] { 5.0 };
+                        ysUpwardsForcing = new double[] { humFinish.getY() + 4.0 };
                         ysUpwardsResumingRobots = ysUpwardsRestoringPriorities = new double[] { humStart.getY() };
+
+                        ysDownwardsForcing = new double[] { humStart.getY() - 4.0 }; // TODO: temporary
                         break;
 
                     case FORCING_UPCOMING_PRIORITIES_CHANGE_21:
@@ -298,6 +302,8 @@ public class GridTest {
                         MissionUtils.isRestorePrioritiesAfterTheNearestIntersection = false;
                         ysDownwardsResumingRobots = new double[] {};
                         ysDownwardsRestoringPriorities = new double[] { humFinish.getY() };
+
+                        ysDownwardsForcing = new double[] { humStart.getY() - 4.0 }; // TODO: temporary
                         break;
                         
                     default:
