@@ -39,7 +39,7 @@ public class GridTest {
         FORCING_GLOBAL_STOP_11,
         FORCING_GLOBAL_STOP_12,
         FORCING_UPCOMING_PRIORITIES_CHANGE_21,
-        // FORCING_UPCOMING_PRIORITIES_CHANGE_22, // would be the same as BASELINE_IDEAL_DRIVER_HUMAN_FIRST
+        FORCING_UPCOMING_PRIORITIES_CHANGE_22, // would be the same as BASELINE_IDEAL_DRIVER_HUMAN_FIRST ?
     }
 
     public static void main(String[] args) {
@@ -278,32 +278,28 @@ public class GridTest {
                         break;
 
                     case FORCING_GLOBAL_STOP_11:
-                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
-                        MissionUtils.isGlobalTemporaryStop = true;
-                        MissionUtils.isRestorePrioritiesAfterTheNearestIntersection = false;
-                        ysDownwardsResumingRobots = ysDownwardsRestoringPriorities = new double[] { humFinish.getY() };
-
-                        ysDownwardsForcing = new double[] { humStart.getY() - 4.0 }; // TODO: temporary
-                        break;
-
                     case FORCING_GLOBAL_STOP_12:
-                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
-                        MissionUtils.isGlobalTemporaryStop = true;
-                        MissionUtils.isRestorePrioritiesAfterTheNearestIntersection = false;
-                        ysDownwardsResumingRobots = ysDownwardsRestoringPriorities = new double[] { humFinish.getY() };
-                        ysUpwardsForcing = new double[] { humFinish.getY() + 4.0 };
-                        ysUpwardsResumingRobots = ysUpwardsRestoringPriorities = new double[] { humStart.getY() };
-
-                        ysDownwardsForcing = new double[] { humStart.getY() - 4.0 }; // TODO: temporary
-                        break;
-
                     case FORCING_UPCOMING_PRIORITIES_CHANGE_21:
+                    case FORCING_UPCOMING_PRIORITIES_CHANGE_22:
+                        boolean isStop = scenario == Scenario.FORCING_GLOBAL_STOP_11 || scenario == Scenario.FORCING_GLOBAL_STOP_12;
+                        boolean isUpwards = scenario == Scenario.FORCING_GLOBAL_STOP_12 || scenario == Scenario.FORCING_UPCOMING_PRIORITIES_CHANGE_22;
+
                         MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
                         MissionUtils.isRestorePrioritiesAfterTheNearestIntersection = false;
-                        ysDownwardsResumingRobots = new double[] {};
-                        ysDownwardsRestoringPriorities = new double[] { humFinish.getY() };
+
+                        if (isStop) {
+                            MissionUtils.isGlobalTemporaryStop = true;
+                        }
 
                         ysDownwardsForcing = new double[] { humStart.getY() - 4.0 }; // TODO: temporary
+                        ysDownwardsRestoringPriorities = new double[] { humFinish.getY() };
+                        ysDownwardsResumingRobots = isStop ? ysDownwardsRestoringPriorities : new double[] {};
+
+                        if (isUpwards) {
+                            ysUpwardsForcing = new double[]{ humFinish.getY() + 4.0 };
+                            ysUpwardsRestoringPriorities = new double[]{ humStart.getY() };
+                            ysUpwardsResumingRobots = isStop ? ysUpwardsRestoringPriorities : new double[] {};
+                        }
                         break;
                         
                     default:
