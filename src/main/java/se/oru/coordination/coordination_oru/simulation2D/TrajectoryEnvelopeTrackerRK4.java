@@ -579,8 +579,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			Integer positionToStop = null;
 			for (CriticalSection cs : criticalSectionsReal) {
 				Integer end = cs.getEnd(robotID);
-				if (positionToStop == null || end > positionToStop) {
-					positionToStop = end;
+				assert end != null;
+				int stop = end + 1;
+				if (positionToStop == null || end > stop) {
+					positionToStop = stop;
 				}
 			}
 			MissionUtils.robotIDToPathIndexToStop.put(robotID, positionToStop);

@@ -66,7 +66,7 @@ public class GridTest {
 
     protected static void runDemo() throws NoPathFound {
         final String scenarioString = System.getenv().get("SCENARIO");
-        final Scenario scenario = scenarioString == null ? Scenario.FORCING_UPCOMING_PRIORITIES_CHANGE_21 :
+        final Scenario scenario = scenarioString == null ? Scenario.FORCING_GLOBAL_STOP_12 :
                 Scenario.valueOf(scenarioString);
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);
