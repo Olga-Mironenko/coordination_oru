@@ -49,12 +49,11 @@ public class GridTest {
         BrowserVisualization.isStatusText = true;
         GatedThread.enable();
 
-
-        new GatedThread("runDemo") {
+        new GatedThread("startScenario") {
             @Override
             public void runCore() {
                 try {
-                    runDemo();
+                    startScenario();
                 } catch (NoPathFound e) {
                     throw new RuntimeException(e);
                 }
@@ -64,7 +63,7 @@ public class GridTest {
         GatedThread.runGatekeeper();
     }
 
-    protected static void runDemo() throws NoPathFound {
+    protected static void startScenario() throws NoPathFound {
         final String scenarioString = System.getenv().get("SCENARIO");
         final Scenario scenario = scenarioString == null ? Scenario.FORCING_GLOBAL_STOP_12 :
                 Scenario.valueOf(scenarioString);
@@ -220,8 +219,7 @@ public class GridTest {
         if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isInverse);
         if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isInverse);
 
-        AutonomousVehicle finalAut1 = aut1;
-        new GatedThread("scenario creator") {
+        new GatedThread("forcing thread") {
             @Override
             public void runCore() {
                 boolean isForcing = true;
@@ -301,7 +299,7 @@ public class GridTest {
                             ysUpwardsResumingRobots = isStop ? ysUpwardsRestoringPriorities : new double[] {};
                         }
                         break;
-                        
+
                     default:
                         throw new RuntimeException(String.valueOf(scenario));
                 }
@@ -364,7 +362,7 @@ public class GridTest {
                         knobsAfterForcing.restorePriorities();
                     }
 
-                    GatedThread.skipCycles(1);
+                    GatedThread.sleepWithoutException(100);
                 }
             }
         }.start();

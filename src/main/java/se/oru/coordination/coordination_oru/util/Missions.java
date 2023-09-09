@@ -567,16 +567,48 @@ public class Missions {
 		missions.get(m.getRobotID()).add(m);
 	}
 
-	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose finish, boolean isInverse) {
+	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose finish, boolean isInverse, boolean isOneWay) {
 		PoseSteering[] pathForward = vehicle.getPlan(start, new Pose[] { finish }, Missions.mapYAMLFilename, false);
-		PoseSteering[] pathBackward = AbstractMotionPlanner.inversePathWithoutFirstAndLastPose(pathForward);
+		PoseSteering[] pathBackward = isOneWay ? null : AbstractMotionPlanner.inversePathWithoutFirstAndLastPose(pathForward);
 		if (isInverse) {
+			assert ! isOneWay;
 			PoseSteering[] pathTotal = (PoseSteering[]) ArrayUtils.addAll(pathForward, pathBackward);
 			Missions.enqueueMission(new Mission(vehicle.getID(), pathTotal));
 		} else {
 			Missions.enqueueMission(new Mission(vehicle.getID(), pathForward));
-			Missions.enqueueMission(new Mission(vehicle.getID(), pathBackward));
+			if (! isOneWay) {
+				Missions.enqueueMission(new Mission(vehicle.getID(), pathBackward));
+			}
 		}
+
+		/*
+		by default (isOneWay=false):
+		 - isInverse=false (whether to include the inverse path into the same mission):
+		    - loop=false:
+  			  - A -> B, B -> A
+			- loop=true:
+			  - A -> B, B -> A
+			  - A -> B, B -> A
+			  - ...
+		  - isInverse=true:
+			- loop=false:
+  			  - A -> B -> A
+			- loop=true:
+			  - A -> B -> A
+			  - A -> B -> A
+			  - ...
+
+		isOneWay=true:
+		 - isInverse=false:
+		   - loop=false:
+		     - A -> B
+		   - loop=true: makes no sense
+		 - isInverse=true: makes no sense
+		 */
+	}
+
+	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose finish, boolean isInverse) {
+		enqueueMissions(vehicle, start, finish, isInverse, false);
 	}
 
 	/**

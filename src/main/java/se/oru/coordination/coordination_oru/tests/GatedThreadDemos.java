@@ -74,6 +74,26 @@ class DemoGatekeeper {
             }.start();
         }
 
+        /*
+            GK  C1  C2
+            (now is t=0)
+            ~1
+                50
+            ~1
+                    50
+            (now is t=102)
+            ~1
+                50
+            ~1
+                    50
+            (now is t=204)
+            ~1
+                50
+            ~1
+                    50
+            (now is t=306)
+         */
+
         GatedThread.runGatekeeper();
     }
 }
