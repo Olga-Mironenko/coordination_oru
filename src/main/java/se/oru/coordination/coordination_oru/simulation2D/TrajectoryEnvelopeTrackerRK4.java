@@ -9,7 +9,6 @@ import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 
 import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
-import se.oru.coordination.coordination_oru.code.BarrierPhantomVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.util.MissionUtils;
 import se.oru.coordination.coordination_oru.util.Missions;
@@ -531,16 +530,6 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 			boolean isReal = true;
 			for (int id : new int[] { cs.getTe1RobotID(), cs.getTe2RobotID() }) {
-				AbstractVehicle vehicle = VehiclesHashMap.getVehicle(id);
-				if (vehicle instanceof BarrierPhantomVehicle) {
-					BarrierPhantomVehicle barrierPhantomVehicle = (BarrierPhantomVehicle) vehicle;
-					if (barrierPhantomVehicle.isActive) {
-						isUnconditionalStop = true;
-					} else {
-						isReal = false;
-					}
-				}
-
 				// TODO: When `robotIDToFreezingCounter` changes, call `setCriticalPoint` for other robots.
 				if (id != robotID && MissionUtils.robotIDToFreezingCounter.getOrDefault(id, 0) > 0) {
 					isReal = false;
@@ -694,10 +683,6 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			}
 
 			boolean skipIntegration = false;
-
-			if (vehicle instanceof BarrierPhantomVehicle) {
-				skipIntegration = true;
-			}
 
 			Integer pathIndexToStop = MissionUtils.robotIDToPathIndexToStop.getOrDefault(myRobotID, null);
 			if (pathIndexToStop != null && getRobotReport().getPathIndex() >= pathIndexToStop) {

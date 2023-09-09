@@ -6,7 +6,6 @@ import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.*;
-import se.oru.coordination.coordination_oru.code.BarrierPhantomVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.State;
@@ -20,7 +19,6 @@ public class MissionUtils {
     public static double targetVelocityHuman = targetVelocityHumanInitial;
     public static int idHuman = 0;
     public static boolean isWorking = false;
-    public static boolean arePhantomsVisible = false; // TODO: remove
     public static HashMap<Integer, Integer> robotIDToFreezingCounter = new HashMap<>(); // TODO: use semaphores
     public static HashMap<Integer, Integer> robotIDToPathIndexToStop = new HashMap<>();
 
@@ -30,8 +28,6 @@ public class MissionUtils {
 
     public static boolean isGlobalTemporaryStop = false;
     public static boolean isRestorePrioritiesAfterTheNearestIntersection = true;
-
-    protected static HashMap<Integer, BarrierPhantomVehicle> robotIDToBarrier = new HashMap<>(); // TODO: remove
 
     // TODO: race condition (click/keypress)
     // TODO: crashes on click and then (immediately) keypress
@@ -370,59 +366,11 @@ public class MissionUtils {
         System.out.println(robotID);
 
         robotIDToFreezingCounter.put(robotID, robotIDToFreezingCounter.getOrDefault(robotID, 0) + 1);
-
-        /*
-        BarrierPhantomVehicle vehicleBarrier = robotIDToBarrier.get(robotID);
-        if (vehicleBarrier == null) {
-            AbstractVehicle vehicleToStop = VehiclesHashMap.getVehicle(robotID);
-            vehicleBarrier = new BarrierPhantomVehicle(vehicleToStop);
-            vehicleBarrier.isActive = true;
-            robotIDToBarrier.put(robotID, vehicleBarrier);
-            // TODO: narrow robot or (0, 0)?
-        }
-
-        TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-        RobotReport rr = tec.getRobotReport(robotID);
-
-        PoseSteering[] currentPath = getCurrentPath(robotID);
-        int numIndices = 10;
-        // 2:  1- 2+
-        // 3:  1- 2-
-        // 4:  1- 2+
-        // 5:  1- 2-
-        // 10: 1+ 2-
-        int currentIndex = rr.getPathIndex();
-        if (currentIndex == -1) {
-            return;
-        }
-        int lastIndex = currentIndex + numIndices - 1;
-        if (lastIndex >= currentPath.length) {
-            return;
-        }
-        PoseSteering[] path = new PoseSteering[numIndices];
-        for (int offset = 0; offset < numIndices; offset++) {
-            path[offset] = currentPath[currentIndex + offset];
-        }
-
-        tec.placeRobot(vehicleBarrier.getID(), path[0].getPose());
-        Missions.dispatchableRobots.add(vehicleBarrier.getID());
-        Missions.enqueueMission(new Mission(vehicleBarrier.getID(), path));
-         */
     }
 
     public static void resumeRobot(int robotID) {
         System.out.println(robotID);
 
         robotIDToFreezingCounter.put(robotID, Math.max(0, robotIDToFreezingCounter.getOrDefault(robotID, 0) - 1));
-
-        /*
-        BarrierPhantomVehicle vehicleBarrier = robotIDToBarrier.get(robotID);
-        vehicleBarrier.isActive = false;
-        TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-        //tec.placeRobot(vehicleBarrier.getID(), new Pose(0, 0, 0));
-        tec.truncateEnvelope(vehicleBarrier.getID());
-        //tec.placeRobot(vehicleBarrier.getID(), new Pose(0, 0, 0));
-
-         */
     }
 }
