@@ -21,7 +21,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.util.MissionUtils;
+import se.oru.coordination.coordination_oru.util.Forcing;
 
 public abstract class AbstractVehicle {
     public static int vehicleNumber = 1;
@@ -182,7 +182,7 @@ public abstract class AbstractVehicle {
             bw.write("Total distance travelled (m)," + round(totalDistance) + "\n");
 
             bw.write("No. of stops," + this.stops + "\n");
-            bw.write("No. of forcing events," + MissionUtils.robotIDToNumForcingEvents.getOrDefault(ID, 0) + "\n");
+            bw.write("No. of forcing events," + Forcing.robotIDToNumForcingEvents.getOrDefault(ID, 0) + "\n");
             bw.write("No. of potential interactions," + TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
             bw.write("Total waiting time (s)," + round(totalWaitingTime) + "\n");
             bw.write("Maximum waiting time (s)," + round(maxWaitingTime) + "\n");

@@ -118,7 +118,7 @@ public class TestClick {
         Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
         if (humFinish != null) {
-            MissionUtils.targetVelocityHuman = 10;
+            HumanControl.targetVelocityHuman = 10;
             Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[] { humFinish }, YAML_FILE, ishumReturn)));
         }
 
@@ -137,7 +137,7 @@ public class TestClick {
                             throw new RuntimeException(e);
                         }
                     }
-                    MissionUtils.changeTargetVelocityHuman(1);
+                    HumanControl.changeTargetVelocityHuman(1);
                 }
             }.start();
         }
@@ -148,9 +148,9 @@ public class TestClick {
                 @Override
                 public void runCore() {
                     GatedThread.skipCycles(100);
-                    MissionUtils.moveRobot(hum0.getID(), drawPoint20_bottom);
+                    HumanControl.moveRobot(hum0.getID(), drawPoint20_bottom);
                     GatedThread.skipCycles(10);
-                    MissionUtils.changeTargetVelocityHuman(1); // requires emergency break
+                    HumanControl.changeTargetVelocityHuman(1); // requires emergency break
                 }
             }.start();
         }

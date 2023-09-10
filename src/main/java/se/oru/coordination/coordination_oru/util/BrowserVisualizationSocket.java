@@ -88,7 +88,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         if (event.equals("click")) {
             Pose poseOrig = gson.fromJson(array.get(1), Pose.class);
             Pose pose = new Pose(poseOrig.getX(), poseOrig.getY(), poseOrig.getTheta());
-            MissionUtils.moveRobot(MissionUtils.idHuman, pose);
+            HumanControl.moveRobot(HumanControl.idHuman, pose);
         } else if (event.equals("keydown")) {
             String code = gson.fromJson(array.get(1), String.class);
             System.out.println("keydown: code=" + code);
@@ -98,12 +98,12 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
             } else if (code.equals("ArrowLeft")) {
                 delta = -1.0;
             } else if (code.equals("Space")) {
-                MissionUtils.forceDriving(MissionUtils.idHuman);
+                Forcing.forceDriving(HumanControl.idHuman);
             } else {
                 System.out.println("Unknown keydown code: " + code);
             }
             if (delta != null) {
-                MissionUtils.changeTargetVelocityHuman(delta);
+                HumanControl.changeTargetVelocityHuman(delta);
             }
 	} else {
             System.out.println("Unknown event: " + event);

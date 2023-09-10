@@ -278,15 +278,15 @@ public class BrowserVisualization implements FleetVisualization {
 		if (AbstractVehicle.scenarioId != null) {
 			text += "Scenario: " + AbstractVehicle.scenarioId + "<br>";
 		}
-		if (MissionUtils.priorityDistance != Double.NEGATIVE_INFINITY) {
-			text += "Priority distance: " + MissionUtils.priorityDistance + "<br>";
+		if (Forcing.priorityDistance != Double.NEGATIVE_INFINITY) {
+			text += "Priority distance: " + Forcing.priorityDistance + "<br>";
 		}
-		if (MissionUtils.stopDistance != Double.NEGATIVE_INFINITY) {
-			text += "Stop distance: " + MissionUtils.stopDistance + "<br>";
+		if (Forcing.stopDistance != Double.NEGATIVE_INFINITY) {
+			text += "Stop distance: " + Forcing.stopDistance + "<br>";
 		}
 
-		if (idToVehicle.keySet().contains(MissionUtils.idHuman) && MissionUtils.targetVelocityHuman != Double.POSITIVE_INFINITY) {
-			text += "targetVelocityHuman: " + round(MissionUtils.targetVelocityHuman) + "<br>";
+		if (idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
+			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + "<br>";
 		}
 
 		String textEmergencyBreaker = TrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
@@ -346,7 +346,7 @@ public class BrowserVisualization implements FleetVisualization {
 		ArrayList<CriticalSection> criticalSections =
 				robotID == null
 				? CriticalSection.sortCriticalSections(allCriticalSections)
-				: CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, MissionUtils.idHuman);
+				: CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, HumanControl.idHuman);
 
 		String text = "Critical sections" + (robotID == null ? "" : " for " + robotID) + ":";
 		if (criticalSections.isEmpty()) {

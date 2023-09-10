@@ -10,7 +10,8 @@ import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
-import se.oru.coordination.coordination_oru.util.MissionUtils;
+import se.oru.coordination.coordination_oru.util.Forcing;
+import se.oru.coordination.coordination_oru.util.HumanControl;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
@@ -372,10 +373,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		double MAX_DECELERATION = MAX_ACCELERATION * coefAccelerationToDeceleration;
 
 		// Use `targetVelocity`:
-		if (robotID == MissionUtils.idHuman) {
-			MAX_VELOCITY = Math.min(MAX_VELOCITY, MissionUtils.targetVelocityHuman); // MAX_ACCELERATION or 0
+		if (robotID == HumanControl.idHuman) {
+			MAX_VELOCITY = Math.min(MAX_VELOCITY, HumanControl.targetVelocityHuman); // MAX_ACCELERATION or 0
 			if (! slowDown) {
-				slowDown = state.getVelocity() > MissionUtils.targetVelocityHuman; // -MAX_ACCELERATION
+				slowDown = state.getVelocity() > HumanControl.targetVelocityHuman; // -MAX_ACCELERATION
 			}
 		}
 
@@ -531,7 +532,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			boolean isReal = true;
 			for (int id : new int[] { cs.getTe1RobotID(), cs.getTe2RobotID() }) {
 				// TODO: When `robotIDToFreezingCounter` changes, call `setCriticalPoint` for other robots.
-				if (id != robotID && MissionUtils.robotIDToFreezingCounter.getOrDefault(id, 0) > 0) {
+				if (id != robotID && Forcing.robotIDToFreezingCounter.getOrDefault(id, 0) > 0) {
 					isReal = false;
 				}
 			}
@@ -564,7 +565,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		}
 
 		// So we would stop after the critical point.
-		if (MissionUtils.robotIDToFreezingCounter.getOrDefault(robotID, 0) > 0) {
+		if (Forcing.robotIDToFreezingCounter.getOrDefault(robotID, 0) > 0) {
 			Integer positionToStop = null;
 			for (CriticalSection cs : criticalSectionsReal) {
 				Integer end = cs.getEnd(robotID);
@@ -574,8 +575,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 					positionToStop = stop;
 				}
 			}
-			MissionUtils.robotIDToPathIndexToStop.put(robotID, positionToStop);
-			MissionUtils.robotIDToFreezingCounter.put(robotID, 0);
+			Forcing.robotIDToPathIndexToStop.put(robotID, positionToStop);
+			Forcing.robotIDToFreezingCounter.put(robotID, 0);
 		}
 		for (CriticalSection cs : criticalSectionsReal) {
 			cs.setHigher(robotID, 2);
@@ -684,13 +685,13 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 			boolean skipIntegration = false;
 
-			Integer pathIndexToStop = MissionUtils.robotIDToPathIndexToStop.getOrDefault(myRobotID, null);
+			Integer pathIndexToStop = Forcing.robotIDToPathIndexToStop.getOrDefault(myRobotID, null);
 			if (pathIndexToStop != null && getRobotReport().getPathIndex() >= pathIndexToStop) {
-				MissionUtils.robotIDToPathIndexToStop.remove(myRobotID);
-				MissionUtils.robotIDToFreezingCounter.put(myRobotID, MissionUtils.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) + 1);
+				Forcing.robotIDToPathIndexToStop.remove(myRobotID);
+				Forcing.robotIDToFreezingCounter.put(myRobotID, Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) + 1);
 			}
 
-			boolean isFreezing = MissionUtils.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) > 0;
+			boolean isFreezing = Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) > 0;
 			if (isFreezing) {
 				state = new State(state.getPosition(), 0);
 				skipIntegration = true;

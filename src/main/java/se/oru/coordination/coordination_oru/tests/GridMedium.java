@@ -122,7 +122,7 @@ public class GridMedium {
         Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
         if (humFinish != null) {
-            MissionUtils.targetVelocityHuman = 10;
+            HumanControl.targetVelocityHuman = 10;
             Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[] { humFinish }, YAML_FILE, ishumReturn)));
         }
 
@@ -144,7 +144,7 @@ public class GridMedium {
                             throw new RuntimeException(e);
                         }
                     }
-                    MissionUtils.changeTargetVelocityHuman(1);
+                    HumanControl.changeTargetVelocityHuman(1);
                 }
             }.start();
         }
@@ -155,9 +155,9 @@ public class GridMedium {
                 @Override
                 public void runCore() {
                     GatedThread.skipCycles(100);
-                    MissionUtils.moveRobot(hum0.getID(), column2Bottom);
+                    HumanControl.moveRobot(hum0.getID(), column2Bottom);
                     GatedThread.skipCycles(10);
-                    MissionUtils.changeTargetVelocityHuman(1); // requires emergency break
+                    HumanControl.changeTargetVelocityHuman(1); // requires emergency break
                 }
             }.start();
         }

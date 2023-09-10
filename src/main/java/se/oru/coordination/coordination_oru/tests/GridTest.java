@@ -140,8 +140,8 @@ public class GridTest {
         double xLengthInner = 1.5;
         double yLengthInner = 1.0;
 
-        MissionUtils.targetVelocityHumanInitial = maxVelocity;
-        MissionUtils.targetVelocityHuman = maxVelocity;
+        HumanControl.targetVelocityHumanInitial = maxVelocity;
+        HumanControl.targetVelocityHuman = maxVelocity;
 
         AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow
@@ -223,10 +223,10 @@ public class GridTest {
             @Override
             public void runCore() {
                 boolean isForcing = true;
-                assert(MissionUtils.priorityDistance == Double.NEGATIVE_INFINITY);
-                assert(MissionUtils.stopDistance == Double.NEGATIVE_INFINITY);
-                assert(! MissionUtils.isGlobalTemporaryStop);
-                assert(MissionUtils.isRestorePrioritiesAfterTheNearestIntersection);
+                assert(Forcing.priorityDistance == Double.NEGATIVE_INFINITY);
+                assert(Forcing.stopDistance == Double.NEGATIVE_INFINITY);
+                assert(! Forcing.isGlobalTemporaryStop);
+                assert(Forcing.isRestorePrioritiesAfterTheNearestIntersection);
 
                 double[] ysDownwardsForcing = new double[] { humStart.getY() - 6.5 };
                 double[] ysDownwardsResumingRobots = new double[] { humStart.getY() - 16.5 };
@@ -243,36 +243,36 @@ public class GridTest {
                     case BASELINE_IDEAL_DRIVER_FIRST_COME:
                         isForcing = false;
                         // For manual use:
-                        MissionUtils.priorityDistance = 10.0;
-                        MissionUtils.stopDistance = 10.0;
+                        Forcing.priorityDistance = 10.0;
+                        Forcing.stopDistance = 10.0;
                         break;
 
                     case FORCING_CS1_PRIORITIES_CHANGE:
-                        MissionUtils.priorityDistance = 10.0;
+                        Forcing.priorityDistance = 10.0;
                         break;
                     case FORCING_CS1_WITH_STOPS:
-                        MissionUtils.priorityDistance = 10.0;
-                        MissionUtils.stopDistance = 10.0;
+                        Forcing.priorityDistance = 10.0;
+                        Forcing.stopDistance = 10.0;
                         break;
 
                     case FORCING_CS1_CS2_PRIORITIES_CHANGE:
-                        MissionUtils.priorityDistance = 20.0;
+                        Forcing.priorityDistance = 20.0;
                         break;
                     case FORCING_CS1_CS2_WITH_STOPS:
-                        MissionUtils.priorityDistance = 20.0;
-                        MissionUtils.stopDistance = 20.0;
+                        Forcing.priorityDistance = 20.0;
+                        Forcing.stopDistance = 20.0;
                         break;
 
                     case FORCING_UPCOMING_PRIORITIES_CHANGE:
-                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
+                        Forcing.priorityDistance = Double.POSITIVE_INFINITY;
                         break;
                     case FORCING_UPCOMING_WITH_STOPS:
-                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
-                        MissionUtils.stopDistance = Double.POSITIVE_INFINITY;
+                        Forcing.priorityDistance = Double.POSITIVE_INFINITY;
+                        Forcing.stopDistance = Double.POSITIVE_INFINITY;
                         break;
                     case FORCING_GLOBAL_STOP:
-                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
-                        MissionUtils.isGlobalTemporaryStop = true;
+                        Forcing.priorityDistance = Double.POSITIVE_INFINITY;
+                        Forcing.isGlobalTemporaryStop = true;
                         break;
 
                     case FORCING_GLOBAL_STOP_11:
@@ -282,11 +282,11 @@ public class GridTest {
                         boolean isStop = scenario == Scenario.FORCING_GLOBAL_STOP_11 || scenario == Scenario.FORCING_GLOBAL_STOP_12;
                         boolean isUpwards = scenario == Scenario.FORCING_GLOBAL_STOP_12 || scenario == Scenario.FORCING_UPCOMING_PRIORITIES_CHANGE_22;
 
-                        MissionUtils.priorityDistance = Double.POSITIVE_INFINITY;
-                        MissionUtils.isRestorePrioritiesAfterTheNearestIntersection = false;
+                        Forcing.priorityDistance = Double.POSITIVE_INFINITY;
+                        Forcing.isRestorePrioritiesAfterTheNearestIntersection = false;
 
                         if (isStop) {
-                            MissionUtils.isGlobalTemporaryStop = true;
+                            Forcing.isGlobalTemporaryStop = true;
                         }
 
                         ysDownwardsForcing = new double[] { humStart.getY() - 4.0 }; // TODO: temporary
@@ -353,7 +353,7 @@ public class GridTest {
                     }
 
                     if (isForcingNow) {
-                        knobsAfterForcing = MissionUtils.forceDriving(hum0.getID());
+                        knobsAfterForcing = Forcing.forceDriving(hum0.getID());
                     }
                     if (isResumingNow) {
                         knobsAfterForcing.resumeRobots();
