@@ -6,9 +6,7 @@ import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
-import se.oru.coordination.coordination_oru.simulation2D.State;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class HumanControl {
     public static double targetVelocityHumanInitial = Double.POSITIVE_INFINITY; // essentially a limit
@@ -20,80 +18,32 @@ public class HumanControl {
     // TODO: crashes on click and then (immediately) keypress
     // TODO: crashes on large initial velocity
 
-    protected static Object pathLock = new Object(); // sentinel
-
-    protected static void removeMissions(int robotID) {
-        while (true) {
-            var mission = Missions.dequeueMission(robotID);
-            if (mission == null) {
-                break;
-            }
-        }
-    }
-
     public static void moveRobot(int robotID, Pose goal) {
         if (isWorking) {
             return;
         }
         isWorking = true;
         try {
-            synchronized (pathLock) {
-                //waitUntilScheduledMissionStarts(robotID);
+            TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-                TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-                Object stateOrNothingAsLock = getRobotState(robotID);
-                if (stateOrNothingAsLock == null) {
-                    stateOrNothingAsLock = new Object();
-                }
+            RobotReport rr = tec.getRobotReport(robotID);
+            var vehicle = VehiclesHashMap.getVehicle(robotID);
 
-                //synchronized (stateOrNothingAsLock) { // seems like a deadlock with the tracker
-                RobotReport rr = tec.getRobotReport(robotID);
-                Pose currentPose = rr.getPose();
-                var vehicle = VehiclesHashMap.getVehicle(robotID);
+            Pose currentPose = rr.getPose();
+            PoseSteering[] newPath = vehicle.getPlan(currentPose, new Pose[]{ goal }, Missions.getMapYAMLFilename(), false);
 
-                PoseSteering[] newPath = null;
-                try {
-                    newPath = vehicle.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
-                } catch (Error exc) { // TODO: check for NoPathFound only
-                    System.out.println("moveRobot: no path found (or another error): " + exc);
-                    return;
-                }
-
-                PoseSteering[] currentPath = getCurrentPath(robotID);
-                if (currentPath == null || rr.getPathIndex() == -1) {
-                    targetVelocityHuman = targetVelocityHumanInitial;
-                    Missions.enqueueMission(new Mission(robotID, newPath));
-                } else {
-                    int replacementIndex = getReplacementIndex(robotID);
-                    PoseSteering[] replacementPath = computeReplacementPath(currentPath, replacementIndex, newPath);
-                    HumanControl.changePath(robotID, replacementPath, replacementIndex);
-                }
+            PoseSteering[] currentPath = getCurrentPath(robotID);
+            if (currentPath == null || rr.getPathIndex() == -1) { // TODO: check for a dummy tracker too
+                targetVelocityHuman = targetVelocityHumanInitial; // TODO: move the code to the dummy tracker or somewhere
+                Missions.enqueueMission(new Mission(robotID, newPath));
+            } else {
+                int replacementIndex = getReplacementIndex(robotID);
+                PoseSteering[] replacementPath = computeReplacementPath(currentPath, replacementIndex, newPath);
+                HumanControl.changePath(robotID, replacementPath, replacementIndex);
             }
         } finally {
             isWorking = false;
         }
-    }
-
-    protected static void waitUntilScheduledMissionStarts(int robotID) {
-        TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-
-        // If there is a scheduled mission, wait until it starts.
-        try {
-            while (! tec.isMissionsPoolEmpty() || Missions.hasMissions(robotID))
-                GatedThread.sleep(50);
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    protected static State getRobotState(int robotID) {
-        TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-        AbstractTrajectoryEnvelopeTracker tracker = tec.getTracker(robotID);
-        if (tracker == null) {
-            return null;
-        }
-        return tracker.getState();
     }
 
     // 0.1->1.1: OK
@@ -113,11 +63,9 @@ public class HumanControl {
             if (targetVelocityNew > 0) {
                 targetVelocityHuman = targetVelocityNew;
 
-                synchronized (pathLock) {
-                    PoseSteering[] currentPath = getCurrentPath(robotID);
-                    if (currentPath != null) {
-                        changePath(robotID, currentPath, getReplacementIndex(robotID));
-                    }
+                PoseSteering[] currentPath = getCurrentPath(robotID);
+                if (currentPath != null) {
+                    changePath(robotID, currentPath, getReplacementIndex(robotID));
                 }
             }
         }
