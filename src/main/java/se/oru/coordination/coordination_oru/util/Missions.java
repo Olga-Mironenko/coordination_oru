@@ -4,15 +4,8 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -1101,22 +1094,10 @@ public class Missions {
 	/**
 	 * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
 	 * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
-	 * This method will loop through all mission forever.
-	 * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
-	 * @param robotIDs The robot IDs which should be considered dispatchable.
-	 */
-	public static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, int ... robotIDs) {
-		startMissionDispatchers(tec, true, robotIDs);
-	}
-
-	/**
-	 * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
-	 * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
 	 * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
 	 * @param loop Set to <code>false</code> if missions should be de-queued once dispatched.
 	 * @param robotIDs The robot IDs which should be considered dispatchable.
 	 */
-	// TODO: remove code duplication
 	public synchronized static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, int ... robotIDs) {
 
 		for (int robotID : robotIDs) {
@@ -1176,7 +1157,7 @@ public class Missions {
 								}
 							}
 						}
-						//Sleep for a little (2 sec)
+						//Sleep for a little (sec 2)
 						try { GatedThread.sleep(2000); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
@@ -1184,6 +1165,28 @@ public class Missions {
 			};
 			missionDispatchThread.start();
 		}
+	}
+
+	/**
+	 * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
+	 * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
+	 * This method will loop through all missions forever.
+	 * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
+	 * @param robotIDs The robot IDs which should be considered dispatchable.
+	 */
+	public synchronized static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, int ... robotIDs) {
+		startMissionDispatchers(tec, true, robotIDs);
+	}
+
+	/**
+	 * Include the given robots in the periodic mission dispatching thread (and start the thread if it is not started).
+	 * The thread cycles through the known missions for each robot and dispatches as soon as the robot is free.
+	 * This method will loop through all missions forever.
+	 * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
+	 */
+	public synchronized static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec) {
+		var robotIDs = addRobotsForLooping(tec);
+		startMissionDispatchers(tec, true, convertSetToIntArray(robotIDs.keySet()));
 	}
 
 	/**
@@ -1270,6 +1273,24 @@ public class Missions {
 		}
 	}
 
+	/**
+	 * Adds robots for mission looping, i.e., assigns the looping status of the missions for each robot.
+	 * Robots of type {@code "AutonomousRobot"} have their missions set to loop.
+	 *
+	 * @param tec The {@link TrajectoryEnvelopeCoordinator} that coordinates the missions.
+	 */
+	private static HashMap<Integer, Boolean> addRobotsForLooping(TrajectoryEnvelopeCoordinator tec) {
+		for (int robotID : convertSetToIntArray(tec.getAllRobotIDs())) {
+			if (Objects.equals(VehiclesHashMap.getVehicle(robotID).getType(), "AutonomousRobot")) {
+				loopMissions.put(robotID, true);
+			}
+			else {
+				loopMissions.put(robotID, false);
+			}
+		}
+		return loopMissions;
+	}
+
 	private static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
 		for (int robotID : tec.getAllRobotIDs()) {
 			VehiclesHashMap.getVehicle(robotID).writeStatistics();
@@ -1293,6 +1314,21 @@ public class Missions {
 				writer.newLine();
 			}
 		}
+	}
+
+	/**
+	 * Converts a Set of Integers to an int array.
+	 *
+	 * @param set The Set of Integers to be converted.
+	 * @return The resulting int array.
+	 */
+	public static int[] convertSetToIntArray(Set<Integer> set) {
+		int[] array = new int[set.size()]; // Create a new int array with the same size as the Set
+		int index = 0;
+		for (int num : set) {
+			array[index++] = num; // Store each element from the Set into the int array
+		}
+		return array; // Return the resulting int array
 	}
 
 	/**

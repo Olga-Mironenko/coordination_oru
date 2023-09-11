@@ -32,12 +32,12 @@ public class ProductionCycleMine {
         final Pose[] autonomousVehicleGoal = {orePass};
 
         var drillVehicle = new LookAheadVehicle(1, predictableDistance, Color.CYAN, 5, 2, 0.5, 0.5);
-        var chargingVehicle = new LookAheadVehicle(1, 6*predictableDistance, Color.WHITE, 5, 2, 0.5, 0.5);
+        var chargingVehicle = new LookAheadVehicle(1, 6 * predictableDistance, Color.WHITE, 5, 2, 0.5, 0.5);
 
         var autonomousVehicle1 = new AutonomousVehicle();
         var autonomousVehicle2 = new AutonomousVehicle();
-        PoseSteering[] autonomousVehicle1Path = autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
-        PoseSteering[] autonomousVehicle2Path = autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle1.getPlan(drawPoint16, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle2.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -59,24 +59,23 @@ public class ProductionCycleMine {
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);
 
-        // Set up a simple GUI (null means empty map, otherwise provide yaml file)
-        var viz = new BrowserVisualization();
-        viz.setMap(YAML_FILE);
+        // Set up a simple GUI (null means an empty map, otherwise provide yaml file)
+        var viz = new BrowserVisualization(YAML_FILE);
         viz.setFontScale(4);
         viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
 
-        var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehicle1Path);
-        var m2 = new Mission(autonomousVehicle2.getID(), autonomousVehicle2Path);
+        var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehicle1.getPath());
+        var m2 = new Mission(autonomousVehicle2.getID(), autonomousVehicle2.getPath());
         m2.setStoppingPoint(orePass, 5000);
 
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, loopTime);
+        Missions.startMissionDispatchers(tec, true);
 
         long missionTime = 5000;
-          tec.setForwardModel(drillVehicle.getID(), new ConstantAccelerationForwardModel(drillVehicle.getMaxAcceleration(), drillVehicle.getMaxVelocity(), tec.getTemporalResolution(),
+        tec.setForwardModel(drillVehicle.getID(), new ConstantAccelerationForwardModel(drillVehicle.getMaxAcceleration(), drillVehicle.getMaxVelocity(), tec.getTemporalResolution(),
                 tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(drillVehicle.getID())));
         tec.setForwardModel(chargingVehicle.getID(), new ConstantAccelerationForwardModel(chargingVehicle.getMaxAcceleration(), chargingVehicle.getMaxVelocity(), tec.getTemporalResolution(),
                 tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(chargingVehicle.getID())));
@@ -84,8 +83,8 @@ public class ProductionCycleMine {
         final Pose[] drillRigGoal = {drawPoint38, drawPoint18, drawPoint24, mainTunnelRight};
         final Pose[] chargingVehicleGoal = {drawPoint24, drawPoint23, drawPoint18, drawPoint16, drawPoint38, mainTunnelLeft};
 
-        PoseSteering[] drillRigPath = drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
-        PoseSteering[] chargingVehiclePath = chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE,  false);
+        drillVehicle.getPlan(mainTunnelLeft, drillRigGoal, YAML_FILE, false);
+        chargingVehicle.getPlan(mainTunnelRight, chargingVehicleGoal, YAML_FILE, false);
         Thread.sleep(5000);
         tec.placeRobot(drillVehicle.getID(), mainTunnelLeft);
         PoseSteering[] drillInitialPath = drillVehicle.getLimitedPath(drillVehicle.getID(), drillVehicle.getPredictableDistance(), tec);
@@ -123,5 +122,5 @@ public class ProductionCycleMine {
 //        tec.addMissions(m3);
 
         // TODO How does a robot move? Which gives the command for robot to move?
-        }
     }
+}
