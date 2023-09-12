@@ -134,7 +134,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			if (this.criticalPoint != -1) {
 				int criticalPoint = this.criticalPoint;
 				this.criticalPoint = -1;
-				this.criticalSection = null;
+				this.criticalSections = null;
 				setCriticalPoint(criticalPoint);
 			}
 		}
@@ -494,7 +494,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		if (criticalPointToSet == -1) {
 			//The critical point has been reset, go to the end
 			this.criticalPoint = criticalPointToSet;
-			this.criticalSection = null;
+			this.criticalSections = null;
 			this.totalDistance = computeDistance(0, traj.getPose().length - 1);
 			this.positionToSlowDown = computePositionToSlowDown(totalDistance, false);
 			metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
@@ -558,8 +558,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 				//assert criticalSectionsReal.size() == 1; // doesn't work when the other robot returns through the same intersection
 				//this.criticalSection = criticalSectionsReal.iterator().next();
-				ArrayList<CriticalSection> criticalSectionsSorted = CriticalSection.sortCriticalSections(criticalSectionsReal);
-				this.criticalSection = criticalSectionsSorted.get(0);
+				this.criticalSections = CriticalSection.sortCriticalSections(criticalSectionsReal);
 				// If there are several CSes that are close to each other
 				// (contained in `criticalSectionsReal` or related to different calls of `setCriticalPoint`),
 				// then they can be combined into a single artificial `this.criticalSection`.
@@ -683,6 +682,20 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		this.numberOfReplicas = Math.max(1, (int)Math.ceil(coordinationNumberOfReplicas*(double)trackingPeriodInMillis/coordinationPeriodInMillis));
 	}
 
+	private CriticalSection getFirstOfCurrentCriticalSections() {
+		if (criticalSections == null) {
+			return null;
+		}
+
+		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+		for (CriticalSection cs : criticalSections) {
+			if (tec.allCriticalSections.contains(cs)) {
+				return cs;
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public void run() {
 		this.elapsedTrackingTime = 0.0;
@@ -712,6 +725,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				skipIntegration = true;
 			}
 
+			CriticalSection criticalSection = getFirstOfCurrentCriticalSections();
 			if (! skipIntegration && criticalSection != null) {
 				assert criticalSection.robotIDInferior == myRobotID;
 				if (criticalSection.canPassFirst(myRobotID)) {

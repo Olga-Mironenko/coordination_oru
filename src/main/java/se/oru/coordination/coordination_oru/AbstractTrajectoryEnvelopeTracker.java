@@ -39,7 +39,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 	protected Integer externalCPCounter = -1;
 	protected Integer reportCounter = -1;
 	protected int criticalPoint = -1;
-	protected CriticalSection criticalSection = null;
+	protected ArrayList<CriticalSection> criticalSections = null;
 	protected HashSet<TrajectoryEnvelope> startedGroundEnvelopes = new HashSet<TrajectoryEnvelope>();
 	protected HashSet<TrajectoryEnvelope> finishedGroundEnvelopes = new HashSet<TrajectoryEnvelope>();
 	protected HashMap<TrajectoryEnvelope,AllenIntervalConstraint> deadlines = new HashMap<TrajectoryEnvelope, AllenIntervalConstraint>();
