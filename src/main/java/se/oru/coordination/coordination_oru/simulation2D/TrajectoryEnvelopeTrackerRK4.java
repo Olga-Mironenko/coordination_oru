@@ -556,6 +556,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				this.totalDistance = targetDistance;
 				this.positionToSlowDown = positionToSlowDownTemporary;
 
+				for (CriticalSection cs : criticalSectionsReal) {
+					cs.robotIDInferior = robotID;
+				}
+
 				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
 				return;
 

@@ -30,6 +30,9 @@ public class CriticalSection {
 	public int te1HigherWeight = 0;
 	public int te2HigherWeight = 0;
 
+	// Transient information (not used in `equal`, `hashCode`):
+	public int robotIDInferior = -1;
+
 	public CriticalSection(TrajectoryEnvelope te1, TrajectoryEnvelope te2, int te1Start, int te2Start, int te1End, int te2End) {
 		this.te1 = te1;
 		this.te2 = te2;
@@ -142,6 +145,10 @@ public class CriticalSection {
 		return getTe2RobotID() == robotID;
 	}
 
+	public int getOtherRobotID(int robotID) {
+		return isTe1(robotID) ? getTe2RobotID() : getTe1RobotID();
+	}
+
 	public Integer getStart(int robotID) {
 		if (isTe1(robotID)) {
 			return getTe1Start();
@@ -179,20 +186,34 @@ public class CriticalSection {
 
 	@Override
 	public String toString() {
-		String ret = "";
-		String robot1 = (te1 == null ? "null" : "Robot"+te1.getRobotID());
-		String robot2 = (te2 == null ? "null" : "Robot"+te2.getRobotID());
-		ret += "CriticalSection (" + robot1 + " [" + te1Start + ";" + te1End + "], " + robot2 + " [" + te2Start + ";" + te2End + "])";
-		return ret;
+		return toStringForVisualization();
 	}
 
 	public String toStringForVisualization() {
 		String ret = "";
 		String robot1 = getTe1() == null ? "null" : String.valueOf(getTe1().getRobotID());
 		String robot2 = getTe2() == null ? "null" : String.valueOf(getTe2().getRobotID());
-		ret += robot1 + (te1HigherWeight > 0 ? "{" + te1HigherWeight + "}" : "") + " [" + getTe1Start() + ";" + getTe1End() + "], ";
-		ret += robot2 + (te2HigherWeight > 0 ? "{" + te2HigherWeight + "}" : "") + " [" + getTe2Start() + ";" + getTe2End() + "]";
+		ret += robot1 + makeStars(te1HigherWeight) + " [" + getTe1Start() + ";" + getTe1End() + "], ";
+		ret += robot2 + makeStars(te2HigherWeight) + " [" + getTe2Start() + ";" + getTe2End() + "]";
+		if (robotIDInferior != -1) {
+			int robotIDSuperior = getOtherRobotID(robotIDInferior);
+
+			TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+			int currentInferior = tec.getRobotReport(robotIDInferior).getPathIndex();
+			int currentSuperior = tec.getRobotReport(robotIDSuperior).getPathIndex();
+
+			if (currentInferior != -1 && currentSuperior != -1) {
+				int pointsInferior = Math.max(0, getEnd(robotIDInferior) - currentInferior);
+				int pointsSuperior = Math.max(0, getStart(robotIDSuperior) - currentSuperior);
+				ret += " (inferior: " + robotIDInferior + ", needs to make " + pointsInferior +
+						" before the superior makes " + pointsSuperior + ")";
+			}
+		}
 		return ret;
+	}
+
+	private String makeStars(int count) {
+		return new String(new char[count]).replace("\0", "*");
 	}
 
 	public static ArrayList<CriticalSection> sortCriticalSections(Collection<CriticalSection> criticalSectionsUnsorted) {
