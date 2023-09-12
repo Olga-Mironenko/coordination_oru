@@ -1098,6 +1098,7 @@ public class Missions {
 	 * @param loop Set to <code>false</code> if missions should be de-queued once dispatched.
 	 * @param robotIDs The robot IDs which should be considered dispatchable.
 	 */
+	// TODO: remove code duplication
 	public synchronized static void startMissionDispatchers(final TrajectoryEnvelopeCoordinator tec, final boolean loop, int ... robotIDs) {
 
 		for (int robotID : robotIDs) {

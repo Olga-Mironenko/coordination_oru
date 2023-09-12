@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru;
 
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -189,27 +190,86 @@ public class CriticalSection {
 		return toStringForVisualization();
 	}
 
+	class DistanceEstimation {
+		int currentIndex;
+		int goalIndex;
+		int deltaIndexes;
+		double distance;
+		double velocity;
+		double time;
+
+		public DistanceEstimation(int robotID, boolean isInferior) {
+			TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+			RobotReport rr = tec.getRobotReport(robotID);
+
+			currentIndex = rr.getPathIndex();
+			goalIndex = currentIndex == -1 ? -1 : isInferior ? getEnd(robotID) : getStart(robotID);
+			deltaIndexes = Math.max(0, goalIndex - currentIndex);
+
+			distance = deltaIndexes == 0 ? 0.0 :
+					TrajectoryEnvelopeTrackerRK4.computeDistance(tec.trackers.get(robotID).traj, currentIndex, goalIndex);
+			velocity = estimateVelocity(robotID, isInferior);
+			time = distance / velocity;
+		}
+
+		protected double estimateVelocity(int robotID, boolean isInferior) {
+			TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+			double maxVelocity = tec.getRobotMaxVelocity(robotID);
+
+			if (! isInferior) {
+				return maxVelocity;
+			}
+
+			RobotReport rr = tec.getRobotReport(robotID);
+			double currentVelocity = rr.getVelocity();
+			double delta = Math.abs(maxVelocity - currentVelocity);
+
+			return Math.min(currentVelocity, maxVelocity) + 0.4 * delta;
+		}
+
+		@Override
+		public String toString() {
+			return String.format(
+					"%d pt = %.1f m ≈ %.1f s at %.1f m/s",
+					deltaIndexes, distance, time, velocity
+			);
+		}
+	}
+
 	public String toStringForVisualization() {
 		String ret = "";
 		String robot1 = getTe1() == null ? "null" : String.valueOf(getTe1().getRobotID());
 		String robot2 = getTe2() == null ? "null" : String.valueOf(getTe2().getRobotID());
 		ret += robot1 + makeStars(te1HigherWeight) + " [" + getTe1Start() + ";" + getTe1End() + "], ";
 		ret += robot2 + makeStars(te2HigherWeight) + " [" + getTe2Start() + ";" + getTe2End() + "]";
-		if (robotIDInferior != -1) {
-			int robotIDSuperior = getOtherRobotID(robotIDInferior);
 
-			TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-			int currentInferior = tec.getRobotReport(robotIDInferior).getPathIndex();
-			int currentSuperior = tec.getRobotReport(robotIDSuperior).getPathIndex();
-
-			if (currentInferior != -1 && currentSuperior != -1) {
-				int pointsInferior = Math.max(0, getEnd(robotIDInferior) - currentInferior);
-				int pointsSuperior = Math.max(0, getStart(robotIDSuperior) - currentSuperior);
-				ret += " (inferior: " + robotIDInferior + ", needs to make " + pointsInferior +
-						" before the superior makes " + pointsSuperior + ")";
-			}
+		if (robotIDInferior == -1) {
+			return ret;
 		}
+		int robotIDSuperior = getOtherRobotID(robotIDInferior);
+
+		DistanceEstimation estimationInferior = new DistanceEstimation(robotIDInferior, true);
+		DistanceEstimation estimationSuperior = new DistanceEstimation(robotIDSuperior, false);
+		ret += String.format(
+				" (inferior %d %s make %s before superior %d makes %s)",
+				robotIDInferior, canPassFirst(robotIDInferior) ? "will" : "will NOT", estimationInferior,
+				robotIDSuperior, estimationSuperior
+		);
 		return ret;
+	}
+
+	public boolean canPassFirst(int myID) {
+		int otherID = getOtherRobotID(myID);
+
+		boolean isInferior = myID == robotIDInferior;
+		if (! isInferior) {
+			assert otherID == robotIDInferior;
+		}
+
+		DistanceEstimation myEstimation = new DistanceEstimation(myID, isInferior);
+		DistanceEstimation otherEstimation = new DistanceEstimation(otherID, ! isInferior);
+
+		return myEstimation.time < otherEstimation.time;
 	}
 
 	private String makeStars(int count) {

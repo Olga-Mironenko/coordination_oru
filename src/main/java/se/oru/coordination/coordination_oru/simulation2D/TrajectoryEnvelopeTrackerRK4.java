@@ -24,7 +24,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	protected static final double EPSILON = 0.01;
 	protected double overallDistance = 0.0;
 	protected double totalDistance = 0.0;
-	protected double positionToSlowDown = -1.0;
+	protected double positionToSlowDown = Double.POSITIVE_INFINITY;
 	protected double elapsedTrackingTime = 0.0;
 	private Thread th = null;
 	protected State state = null;
@@ -134,6 +134,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			if (this.criticalPoint != -1) {
 				int criticalPoint = this.criticalPoint;
 				this.criticalPoint = -1;
+				this.criticalSection = null;
 				setCriticalPoint(criticalPoint);
 			}
 		}
@@ -493,6 +494,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		if (criticalPointToSet == -1) {
 			//The critical point has been reset, go to the end
 			this.criticalPoint = criticalPointToSet;
+			this.criticalSection = null;
 			this.totalDistance = computeDistance(0, traj.getPose().length - 1);
 			this.positionToSlowDown = computePositionToSlowDown(totalDistance, false);
 			metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
@@ -553,6 +555,15 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 			if (isUnconditionalStop || positionToSlowDownTemporary > state.getPosition()) {
 				this.criticalPoint = criticalPointToSet;
+
+				//assert criticalSectionsReal.size() == 1; // doesn't work when the other robot returns through the same intersection
+				//this.criticalSection = criticalSectionsReal.iterator().next();
+				ArrayList<CriticalSection> criticalSectionsSorted = CriticalSection.sortCriticalSections(criticalSectionsReal);
+				this.criticalSection = criticalSectionsSorted.get(0);
+				// If there are several CSes that are close to each other
+				// (contained in `criticalSectionsReal` or related to different calls of `setCriticalPoint`),
+				// then they can be combined into a single artificial `this.criticalSection`.
+
 				this.totalDistance = targetDistance;
 				this.positionToSlowDown = positionToSlowDownTemporary;
 
@@ -699,6 +710,14 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			if (isFreezing) {
 				state = new State(state.getPosition(), 0);
 				skipIntegration = true;
+			}
+
+			if (! skipIntegration && criticalSection != null) {
+				assert criticalSection.robotIDInferior == myRobotID;
+				if (criticalSection.canPassFirst(myRobotID)) {
+					criticalPoint = -1;
+					onTrajectoryEnvelopeUpdate(); // reset `positionToSlowDown`, etc.
+				}
 			}
 
 			//End condition: passed the middle AND velocity < 0 AND no criticalPoint
