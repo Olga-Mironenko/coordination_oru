@@ -98,7 +98,7 @@ public class SevenAutonomousOneLookAheadVehicles {
         Missions.enqueueMission(m7);
         Missions.enqueueMission(m8);
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, simulationTime);
+        Missions.startMissionDispatchers(tec);
 
     }
 }
