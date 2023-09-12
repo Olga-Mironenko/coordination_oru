@@ -46,7 +46,7 @@ SimpleReedsSheppCarPlanner/install_manifest.txt
 SimpleReedsSheppCarPlanner/libsimplereedssheppcarplanner.so
 
 # Result .txt files
-src/main/java/se/oru/coordination/coordination_oru/scenarios/*.txt
+src/main/java/se/oru/coordination/coordination_oru/results/*
 
 # Test Files
 src/main/java/se/oru/coordination/coordination_oru/scenarios/Test.java

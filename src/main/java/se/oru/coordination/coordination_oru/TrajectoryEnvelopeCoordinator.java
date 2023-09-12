@@ -32,8 +32,12 @@ import org.metacsp.utility.UI.Callback;
 import com.vividsolutions.jts.geom.Geometry;
 
 import aima.core.util.datastructure.Pair;
+import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
+import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+
+import static se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation.tec;
 
 
 /**
@@ -1147,6 +1151,14 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					synchronized (solver) {	
 						for (Integer robotID : trackers.keySet()) 
 							if (!(trackers.get(robotID) instanceof TrajectoryEnvelopeTrackerDummy)) numberDrivingRobots++;
+
+						// Update look-ahead paths
+						for (Integer robotID : trackers.keySet()) {
+							if (VehiclesHashMap.getVehicle(robotID).getType().equals("LookAheadVehicle")) {
+								var lookAheadVehicle = (LookAheadVehicle) VehiclesHashMap.getVehicle(robotID);
+								lookAheadVehicle.updateLookAheadRobotPath(tec, lookAheadVehicle);
+							}
+						}
 
 						if (!missionsPool.isEmpty()) {
 

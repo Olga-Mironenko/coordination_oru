@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru.motionplanning;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.logging.Logger;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
@@ -107,6 +108,14 @@ public abstract class AbstractMotionPlanner {
 		
 	public PoseSteering[] getPath() {
 		return this.pathPS;
+	}
+
+	public PoseSteering[] getPathInv() {
+		if (this.pathPS == null) return this.pathPS;
+		ArrayList<PoseSteering> inv = new ArrayList<PoseSteering>();
+		Collections.addAll(inv, this.pathPS);
+		Collections.reverse(inv);
+		return inv.toArray(new PoseSteering[inv.size()]);
 	}
 	
 	public PoseSteering[] getPathInverseWithoutFirstAndLastPose() {

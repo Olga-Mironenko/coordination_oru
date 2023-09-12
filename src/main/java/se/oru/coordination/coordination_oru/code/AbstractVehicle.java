@@ -1,6 +1,14 @@
 package se.oru.coordination.coordination_oru.code;
 
-import java.awt.Color;
+import com.vividsolutions.jts.geom.Coordinate;
+import org.apache.commons.io.FileUtils;
+import org.metacsp.multi.spatioTemporal.paths.Pose;
+import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
+import se.oru.coordination.coordination_oru.RobotReport;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.Forcing;
+
+import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -9,20 +17,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.FileUtils;
-import org.metacsp.multi.spatioTemporal.paths.Pose;
-import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
-
-import com.vividsolutions.jts.geom.Coordinate;
-
-import se.oru.coordination.coordination_oru.RobotReport;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.util.Forcing;
-
+/**
+ * AbstractRobot is an abstract class representing a generic robot with common attributes and methods.
+ * It should be extended by concrete robot classes with specific implementations.
+ * The class keeps track of the robot's ID, priorityID, color,
+ * maxVelocity, maxAcceleration, and footprint of the robot.
+ *
+ * @author anm
+ */
 public abstract class AbstractVehicle {
     public static int vehicleNumber = 1;
     private final int ID;
@@ -39,7 +44,6 @@ public abstract class AbstractVehicle {
     private Color colorInMotion;
     public RobotReport currentRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
     public RobotReport lastRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
-    private double cycleDistance;
     private double totalDistance;
     private double totalTime;
     private int cycles;
@@ -48,15 +52,29 @@ public abstract class AbstractVehicle {
     private double totalWaitingTime;
     private int stops;
     private PoseSteering[] path;
-
+    private double pathLength;
     private boolean isRundirPrepared = false;
     private static final String rundirsRoot = "logs/rundirs";
     private static final String dateString = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
     private static final String rundirCurrent = rundirsRoot + "/current";
     public static String scenarioId;
 
-    public AbstractVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
-        this.ID = id;
+    /**
+     * Constructs an AbstractRobot object with the specified parameters.
+     * It initializes the robot's ID, priorityID, color, maxVelocity, maxAcceleration, and footprint.
+     * If a robot with the same ID already exists, an IllegalStateException is thrown.
+     *
+     * @param ID              The unique identifier of the robot.
+     * @param priorityID      The priority identifier of the robot.
+     * @param color           The color of the robot when stationary.
+     * @param maxVelocity     The maximum velocity of the robot.
+     * @param maxAcceleration The maximum acceleration of the robot.
+     * @param xLength         The length of the robot along the x-axis.
+     * @param yLength         The length of the robot along the y-axis.
+     * @throws IllegalStateException if a robot with the same ID already exists.
+     */
+    public AbstractVehicle(int ID, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+        this.ID = ID;
         this.priorityID = priorityID;
         this.color = color;
         this.colorInMotion = colorInMotion;
@@ -66,11 +84,21 @@ public abstract class AbstractVehicle {
         this.yLength = yLength;
         this.footprint = makeFootprint(xLength, yLength);
 
-        if (VehiclesHashMap.getList().containsKey(id)) {
-            throw new Error("ID " + id + " already exists.");
+        AbstractVehicle existingVehicle = VehiclesHashMap.getVehicle(ID);
+        if (existingVehicle != null) {
+            throw new IllegalStateException("ID " + ID + " already exists.");
         }
-        VehiclesHashMap.getList().put(id, this);
+
+        VehiclesHashMap.getList().put(this.ID, this);
         vehicleNumber++;
+    }
+
+    public AbstractVehicle(int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+        this(vehicleNumber + 1, priorityID, color, colorInMotion, maxVelocity, maxAcceleration, xLength, yLength);
+    }
+
+    public AbstractVehicle(int priorityID, Color color, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+        this(vehicleNumber, priorityID, color, null, maxVelocity, maxAcceleration, xLength, yLength);
     }
 
     public static Coordinate[] makeFootprint(double xLength, double yLength) {
@@ -80,18 +108,6 @@ public abstract class AbstractVehicle {
                 new Coordinate(xLength, -yLength),        //front right
                 new Coordinate(-xLength, -yLength)        //front left
         };
-    }
-
-    public AbstractVehicle(int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
-        this(
-                VehiclesHashMap.getList().isEmpty() ? 1 : Collections.max(VehiclesHashMap.getList().keySet()) + 1,
-                priorityID, color, colorInMotion, maxVelocity, maxAcceleration, xLength, yLength
-        );
-    }
-
-
-    public AbstractVehicle(int priorityID, Color color, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
-        this(vehicleNumber, priorityID, color, null, maxVelocity, maxAcceleration, xLength, yLength);
     }
 
     @Override
@@ -117,7 +133,16 @@ public abstract class AbstractVehicle {
         tec.setInnerFootprint(getID(), innerFootprint);
     }
 
-    public abstract PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath);
+    /**
+     * Generates the plan for the robot given the initial pose, goal poses, map, and whether the path should be reversed.
+     * The subclasses should provide the concrete implementation for this method.
+     *
+     * @param initial     The initial pose of the robot.
+     * @param goals       An array of goal poses.
+     * @param map         The map used for planning.
+     * @param inversePath A flag indicating if the path should be reversed.
+     */
+    public abstract void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath);
 
     private static boolean isStopped(RobotReport rr) {
         return rr.getVelocity() < 1e-3;
@@ -128,11 +153,11 @@ public abstract class AbstractVehicle {
         if ((this.currentRobotReport.getPathIndex() == -1) && (this.lastRobotReport.getPathIndex() != -1))
             this.cycles++;
 
-        double totalTimeNew = Math.round(System.nanoTime() - startTime) / 1_000_000_000;
+        double totalTimeNew = round(System.nanoTime() - startTime) / 1_000_000_000;
         double delta = totalTimeNew - totalTime;
         this.totalTime = totalTimeNew;
 
-        this.totalDistance = (cycleDistance * cycles + currentRobotReport.getDistanceTraveled());
+        this.totalDistance = (pathLength * cycles + currentRobotReport.getDistanceTraveled());
 
         if (! isStopped(this.currentRobotReport)) {
             this.currentWaitingTime = 0;
@@ -147,11 +172,6 @@ public abstract class AbstractVehicle {
         this.maxWaitingTime = Math.max(currentWaitingTime, maxWaitingTime);
     }
 
-
-    // TODO Write the data in a csv file with each cycle results
-    // TODO Separate Scenario general settings and robot settings
-    // TODO Date, Day, Timing settings. Fix file name
-    // FIXME Check statistics
     public void writeStatistics() {
 
         try {
@@ -177,7 +197,7 @@ public abstract class AbstractVehicle {
             bw.write("Vehicle ID," + this.getID() + "\n");
             bw.write("Vehicle type," + this.type + "\n");
 
-            bw.write("Cycle distance (m)," + this.cycleDistance + "\n");
+            bw.write("Cycle distance (m)," + this.pathLength + "\n");
             bw.write("No. of completed cycles," + this.cycles + "\n");
             bw.write("Total distance travelled (m)," + round(totalDistance) + "\n");
 
@@ -199,29 +219,22 @@ public abstract class AbstractVehicle {
         }
     }
 
-    //TODO Do color blinking and vehicle stoppage
-
-    public void blinkVehicle(Color colorOriginal, Color colorToggle, long blinkTimeSeconds) throws InterruptedException {
-        VehiclesHashMap.getVehicle(this.ID).setVehicleColor(colorToggle);
+    /**
+     * Blinks the robot's color between the original color and a specified toggle color for a given duration.
+     *
+     * @param colorOriginal    The original color of the robot.
+     * @param colorToggle      The color to toggle to during blinking.
+     * @param blinkTimeSeconds The duration of the blink in seconds.
+     * @throws InterruptedException if the sleep operation is interrupted.
+     */
+    public void blinkRobot(Color colorOriginal, Color colorToggle, long blinkTimeSeconds) throws InterruptedException {
+        VehiclesHashMap.getVehicle(ID).setVehicleColor(colorToggle);
         TimeUnit.SECONDS.sleep(blinkTimeSeconds);
-        VehiclesHashMap.getVehicle(this.ID).setVehicleColor(colorOriginal);
-    }
-
-    public int getID() {
-        return ID;
+        VehiclesHashMap.getVehicle(ID).setVehicleColor(colorOriginal);
     }
 
     public Color getVehicleColor() {
         return currentRobotReport.getVelocity() > 0.1 ? color : colorInMotion;
-    }
-
-    public void setVehicleColor(Color color) {
-        this.color = color;
-        this.colorInMotion = color;
-    }
-
-    public String getColorCode() {
-        return "#" + String.format("%06x", 0xFFFFFF & getColor().getRGB());
     }
 
     public Coordinate[] getFootprint() {
@@ -238,50 +251,12 @@ public abstract class AbstractVehicle {
         updateStatistics();
     }
 
-    public double getCycleDistance() {
-        return cycleDistance;
-    }
-
-    public void setCycleDistance(PoseSteering[] path) {
-        for (int i = 0; i < path.length - 1; i++) {
-            double deltaS = path[i].getPose().distanceTo(path[i + 1].getPose());
-            cycleDistance += deltaS;
-        }
-        cycleDistance = round(cycleDistance);
-        VehiclesHashMap.getVehicle(this.getID()).cycleDistance = cycleDistance;
-    }
-
     protected static double round(double value) {
         return Math.round(value * 10.0) / 10.0;
     }
 
-    public PoseSteering[] getPath() {
-        return path;
-    }
-
-    protected void setPath(PoseSteering[] path) {
-        this.path = path;
-        setCycleDistance(path);
-    }
-
     public RobotReport getLastRobotReport() {
         return lastRobotReport;
-    }
-
-    public double getMaxVelocity() {
-        return maxVelocity;
-    }
-
-    public double getMaxAcceleration() {
-        return maxAcceleration;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public Color getColor() {
-        return color;
     }
 
     public double getXLength() {
@@ -298,5 +273,59 @@ public abstract class AbstractVehicle {
 
     public boolean isYPassedUpwards(double y) {
         return lastRobotReport.getY() < y && currentRobotReport.getY() >= y;
+    }
+
+    public int getID() {
+        return ID;
+    }
+
+    public void setVehicleColor(Color color) {
+        this.color = color;
+    }
+
+    public String getColorCode() {
+        return "#" + String.format("%06x", 0xFFFFFF & getColor().getRGB());
+    }
+
+    public Coordinate[] getFootPrint() {
+        return footprint;
+    }
+
+    public double getPlanLength() {
+        return pathLength;
+    }
+
+    public void setPlanLength(PoseSteering[] path) {
+        for (int i = 0; i < path.length - 1; i++) {
+            double deltaS = path[i].getPose().distanceTo(path[i + 1].getPose());
+            pathLength += deltaS;
+        }
+        pathLength = round(pathLength * 10.0) / 10.0;
+        VehiclesHashMap.getVehicle(this.getID()).pathLength = pathLength;
+    }
+
+    public PoseSteering[] getPath() {
+        return path;
+    }
+
+    public void setPath(PoseSteering[] path) {
+        this.path = path;
+        setPlanLength(path);
+    }
+
+    public double getMaxVelocity() {
+        return maxVelocity;
+    }
+
+    public double getMaxAcceleration() {
+        return maxAcceleration;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public Color getColor() {
+        return color;
     }
 }

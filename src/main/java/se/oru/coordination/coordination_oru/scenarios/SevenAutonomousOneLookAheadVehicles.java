@@ -42,14 +42,14 @@ public class SevenAutonomousOneLookAheadVehicles {
         var autonomousVehicle5 = new AutonomousVehicle();
         var autonomousVehicle6 = new AutonomousVehicle();
         var autonomousVehicle7 = new AutonomousVehicle();
-        var lookAheadVehiclePlan = lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath1 = autonomousVehicle1.getPlan(drawPoint17, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath2 = autonomousVehicle2.getPlan(drawPoint19, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath3 = autonomousVehicle3.getPlan(drawPoint20, autonomousVehicleGoal, YAML_FILE,true);
-        var autonomousVehiclePath4 = autonomousVehicle4.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath5 = autonomousVehicle5.getPlan(drawPoint22, autonomousVehicleGoal, YAML_FILE,true);
-        var autonomousVehiclePath6 = autonomousVehicle6.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
-        var autonomousVehiclePath7 = autonomousVehicle7.getPlan(drawPoint24, autonomousVehicleGoal, YAML_FILE, true);
+        lookAheadVehicle.getPlan(mainTunnelLeft, limitedPredictabilityVehicleGoal, YAML_FILE, true);
+        autonomousVehicle1.getPlan(drawPoint17, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle2.getPlan(drawPoint19, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle3.getPlan(drawPoint20, autonomousVehicleGoal, YAML_FILE,true);
+        autonomousVehicle4.getPlan(drawPoint21, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle5.getPlan(drawPoint22, autonomousVehicleGoal, YAML_FILE,true);
+        autonomousVehicle6.getPlan(drawPoint23, autonomousVehicleGoal, YAML_FILE, true);
+        autonomousVehicle7.getPlan(drawPoint24, autonomousVehicleGoal, YAML_FILE, true);
 
         // Instantiate a trajectory envelope coordinator.
         final var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2);
@@ -73,20 +73,20 @@ public class SevenAutonomousOneLookAheadVehicles {
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);
 
-        // Set up a simple GUI (null means empty map, otherwise provide yaml file)
+        // Set up a simple GUI (null means an empty map, otherwise provide yaml file)
         var viz = new BrowserVisualization();
         viz.setMap(YAML_FILE);
         viz.setFontScale(0);
         viz.setInitialTransform(11, 45, -3.5);
         tec.setVisualization(viz);
 
-        var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehiclePath1);
-        var m2 = new Mission(autonomousVehicle2.getID(), autonomousVehiclePath2);
-        var m3 = new Mission(autonomousVehicle3.getID(), autonomousVehiclePath3);
-        var m4 = new Mission(autonomousVehicle4.getID(), autonomousVehiclePath4);
-        var m5 = new Mission(autonomousVehicle5.getID(), autonomousVehiclePath5);
-        var m6 = new Mission(autonomousVehicle6.getID(), autonomousVehiclePath6);
-        var m7 = new Mission(autonomousVehicle7.getID(), autonomousVehiclePath7);
+        var m1 = new Mission(autonomousVehicle1.getID(), autonomousVehicle1.getPath());
+        var m2 = new Mission(autonomousVehicle2.getID(), autonomousVehicle2.getPath());
+        var m3 = new Mission(autonomousVehicle3.getID(), autonomousVehicle3.getPath());
+        var m4 = new Mission(autonomousVehicle4.getID(), autonomousVehicle4.getPath());
+        var m5 = new Mission(autonomousVehicle5.getID(), autonomousVehicle5.getPath());
+        var m6 = new Mission(autonomousVehicle6.getID(), autonomousVehicle6.getPath());
+        var m7 = new Mission(autonomousVehicle7.getID(), autonomousVehicle7.getPath());
         var m8 = new Mission(lookAheadVehicle.getID(), lookAheadInitialPlan);
 
         Missions.enqueueMission(m1);
