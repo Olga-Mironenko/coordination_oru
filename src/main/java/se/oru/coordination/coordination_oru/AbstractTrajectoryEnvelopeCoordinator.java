@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.SwingUtilities;
@@ -110,6 +111,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected HashMap<Integer, Dependency> currentDependencies = new HashMap<Integer, Dependency>();
 
 	protected static Logger metaCSPLogger = MetaCSPLogging.getLogger(TrajectoryEnvelopeCoordinator.class);
+	//static { metaCSPLogger.setLevel(Level.SEVERE); }
 	protected String logDirName = null;
 
 	protected HashMap<AbstractTrajectoryEnvelopeTracker,Pair<Integer,Long>> communicatedCPs = new HashMap<AbstractTrajectoryEnvelopeTracker, Pair<Integer,Long>>();
@@ -403,7 +405,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 */
 	public ForwardModel getForwardModel(int robotID) {
 		if (forwardModels.containsKey(robotID)) return forwardModels.get(robotID);
-		System.out.println("Returning default FM for " + robotID);
+		//System.out.println("Returning default FM for " + robotID);
 		return new ForwardModel() {
 			@Override
 			public boolean canStop(TrajectoryEnvelope te, RobotReport currentState, int targetPathIndex, boolean useVelocity) {
@@ -728,7 +730,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				}
 			};
 
-			currentParkingEnvelopes.add(tracker.getTrajectoryEnvelope());				
+			currentParkingEnvelopes.add(tracker.getTrajectoryEnvelope());
 
 			synchronized (trackers) {
 				externalCPCounters.remove(trackers.get(robotID));
