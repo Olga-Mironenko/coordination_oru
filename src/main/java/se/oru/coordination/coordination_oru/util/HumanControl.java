@@ -30,7 +30,8 @@ public class HumanControl {
             var vehicle = VehiclesHashMap.getVehicle(robotID);
 
             Pose currentPose = rr.getPose();
-            PoseSteering[] newPath = vehicle.getPlan(currentPose, new Pose[]{ goal }, Missions.getMapYAMLFilename(), false);
+            vehicle.getPlan(currentPose, new Pose[]{ goal }, Missions.getMapYAMLFilename(), false);
+            var newPath = vehicle.getPath();
 
             PoseSteering[] currentPath = getCurrentPath(robotID);
             if (currentPath == null || rr.getPathIndex() == -1) { // TODO: check for a dummy tracker too

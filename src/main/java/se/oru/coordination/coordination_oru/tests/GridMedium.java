@@ -123,14 +123,20 @@ public class GridMedium {
 
         if (humFinish != null) {
             HumanControl.targetVelocityHuman = 10;
-            Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[] { humFinish }, YAML_FILE, ishumReturn)));
+            hum0.getPlan(humStart, new Pose[] { humFinish }, YAML_FILE, ishumReturn);
+            Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPath()));
         }
 
-        Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, YAML_FILE,  true)));
-        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, YAML_FILE, true)));
-        Missions.enqueueMission(new Mission(aut3.getID(), aut3.getPlan(aut3Start, new Pose[] { aut3Finish }, YAML_FILE,  true)));
-        Missions.enqueueMission(new Mission(aut4.getID(), aut4.getPlan(aut4Start, new Pose[] { aut4Finish }, YAML_FILE, true)));
-        Missions.enqueueMission(new Mission(aut5.getID(), aut5.getPlan(aut5Start, new Pose[] { aut5Finish }, YAML_FILE,  true)));
+        aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, YAML_FILE,  true);
+        aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, YAML_FILE, true);
+        aut3.getPlan(aut3Start, new Pose[] { aut3Finish }, YAML_FILE,  true);
+        aut4.getPlan(aut4Start, new Pose[] { aut4Finish }, YAML_FILE, true);
+        aut5.getPlan(aut5Start, new Pose[] { aut5Finish }, YAML_FILE,  true);
+        Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPath()));
+        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPath()));
+        Missions.enqueueMission(new Mission(aut3.getID(), aut3.getPath()));
+        Missions.enqueueMission(new Mission(aut4.getID(), aut4.getPath()));
+        Missions.enqueueMission(new Mission(aut5.getID(), aut5.getPath()));
 
         final boolean isChangeVelocity = false;
         if (isChangeVelocity) {

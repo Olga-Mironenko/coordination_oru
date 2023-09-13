@@ -119,11 +119,14 @@ public class TestClick {
 
         if (humFinish != null) {
             HumanControl.targetVelocityHuman = 10;
-            Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPlan(humStart, new Pose[] { humFinish }, YAML_FILE, ishumReturn)));
+            hum0.getPlan(humStart, new Pose[] { humFinish }, YAML_FILE, ishumReturn);
+            Missions.enqueueMission(new Mission(hum0.getID(), (hum0.getPath())));
         }
 
-        Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, YAML_FILE,  true)));
-        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, YAML_FILE, true)));
+        aut1.getPlan(aut1Start, new Pose[] { aut1Finish }, YAML_FILE,  true);
+        aut2.getPlan(aut2Start, new Pose[] { aut2Finish }, YAML_FILE, true);
+        Missions.enqueueMission(new Mission(aut1.getID(), aut1.getPath()));
+        Missions.enqueueMission(new Mission(aut2.getID(), aut2.getPath()));
 
         final boolean isChangeVelocity = false;
         if (isChangeVelocity) {

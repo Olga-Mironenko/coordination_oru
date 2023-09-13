@@ -31,7 +31,7 @@ public class AutonomousVehicle extends AbstractVehicle {
     }
 
     @Override
-    public PoseSteering[] getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
+    public void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
         String filenameCache = null;
         PoseSteering[] path = null;
         if (goals.length == 1) {
@@ -77,8 +77,6 @@ public class AutonomousVehicle extends AbstractVehicle {
                 throw new RuntimeException(e);
             }
         }
-
-        return path;
     }
 
     private static String poseToString(Pose pose) {
