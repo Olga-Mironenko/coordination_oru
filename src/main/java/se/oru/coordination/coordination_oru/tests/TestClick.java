@@ -22,6 +22,7 @@ public class TestClick {
 
         BrowserVisualization.isStatusText = true;
         GatedThread.enable();
+        Missions.isWriteStatistics = true;
 
         new GatedThread("runDemo") {
             @Override

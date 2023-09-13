@@ -26,6 +26,7 @@ public class GridReturn {
 
         BrowserVisualization.isStatusText = true;
         GatedThread.enable();
+        Missions.isWriteStatistics = true;
 
         new GatedThread("startScenario") {
             @Override
