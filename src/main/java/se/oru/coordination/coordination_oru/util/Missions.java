@@ -1371,6 +1371,58 @@ public class Missions {
 		}
 	}
 
+	public synchronized static void startMissionDispatcher(final TrajectoryEnvelopeCoordinator tec, final long endTimestamp) {
+		for (int robotID : tec.getAllRobotIDs()) {
+			dispatchableRobots.add(robotID);
+			loopMissions.put(robotID, true);
+		}
+
+		assert missionDispatchThread == null;
+		missionDispatchThread = new GatedThread("missionDispatchThread") {
+			@Override
+			public void runCore() {
+				while (System.currentTimeMillis() < endTimestamp) {
+					for (int robotID : dispatchableRobots) {
+						if (! Missions.hasMissions(robotID)) {
+							continue;
+						}
+
+						Mission m = Missions.peekMission(robotID);
+						assert m != null;
+
+						synchronized (tec) {
+							if (! tec.addMissions(m)) {
+								continue; // robot wasn't free to accept a new mission
+							}
+
+							Missions.dequeueMission(m.getRobotID());
+							if (loopMissions.get(robotID)) {
+								Missions.enqueueMission(m);
+							}
+						}
+					}
+
+					try {
+						GatedThread.sleep(500);
+					}
+					catch (InterruptedException e) {
+						e.printStackTrace();
+						return;
+					}
+
+					if (isUpdateRobotReports) {
+						updateRobotReports(tec); // Call to update all the robot reports
+					}
+
+					if (isWriteStatistics) {
+						writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
+					}
+				}
+			}
+		};
+		missionDispatchThread.start();
+	}
+
 	/**
 	 * Adds robots for mission looping, i.e., assigns the looping status of the missions for each robot.
 	 * Robots of type {@code "AutonomousRobot"} have their missions set to loop.

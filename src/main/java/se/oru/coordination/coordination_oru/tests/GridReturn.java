@@ -124,7 +124,7 @@ public class GridReturn {
         tec.setVisualization(viz);
 
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, loopTime);
+        Missions.startMissionDispatcher(tec, loopTime);
         Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
         final boolean isInverse = true;

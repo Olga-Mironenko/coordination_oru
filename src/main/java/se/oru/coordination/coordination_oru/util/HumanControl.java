@@ -41,7 +41,7 @@ public class HumanControl {
             var newPath = vehicle.getPath();
 
             PoseSteering[] currentPath = getCurrentPath(robotID);
-            if (currentPath == null || rr.getPathIndex() == -1) { // TODO: check for a dummy tracker too
+            if (currentPath == null || rr.getPathIndex() == -1) {
                 targetVelocityHuman = targetVelocityHumanInitial; // TODO: move the code to the dummy tracker or somewhere
                 Missions.enqueueMission(new Mission(robotID, newPath));
             } else {
