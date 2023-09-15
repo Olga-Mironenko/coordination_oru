@@ -5,16 +5,12 @@ import java.awt.Color;
 import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 
-import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.code.*;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.*;
-import se.oru.coordination.coordination_oru.util.gates.GatedThread;
-
-import static se.oru.coordination.coordination_oru.util.Printer.print;
 
 public class GridReturn {
     enum Scenario {
@@ -22,29 +18,15 @@ public class GridReturn {
     }
 
     public static void main(String[] args) {
-        Printer.resetTime();
-        print("started");
-
-        BrowserVisualization.isStatusText = true;
-        GatedThread.enable();
-        Missions.isWriteStatistics = true;
-
-        new GatedThread("startScenario") {
+        new Demo() {
             @Override
-            public void runCore() {
-                try {
-                    startScenario();
-                } catch (NoPathFound e) {
-                    throw new RuntimeException(e);
-                }
+            protected void run(String scenarioString) {
+                runDemo(scenarioString);
             }
-        }.start();
-
-        GatedThread.runGatekeeper();
+        }.exec();
     }
 
-    protected static void startScenario() throws NoPathFound {
-        final String scenarioString = System.getenv().get("SCENARIO");
+    protected static void runDemo(String scenarioString) {
         final Scenario scenario = Scenario.BASIC;
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);

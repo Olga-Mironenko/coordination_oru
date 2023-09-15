@@ -13,8 +13,6 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrack
 import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
-import static se.oru.coordination.coordination_oru.util.Printer.print;
-
 
 public class GridTest {
     enum Scenario {
@@ -43,30 +41,16 @@ public class GridTest {
     }
 
     public static void main(String[] args) {
-        Printer.resetTime();
-        print("started");
-
-        BrowserVisualization.isStatusText = true;
-        GatedThread.enable();
-        Missions.isWriteStatistics = true;
-
-        new GatedThread("startScenario") {
+        new Demo() {
             @Override
-            public void runCore() {
-                try {
-                    startScenario();
-                } catch (NoPathFound e) {
-                    throw new RuntimeException(e);
-                }
+            protected void run(String scenarioString) {
+                runDemo(scenarioString);
             }
-        }.start();
-
-        GatedThread.runGatekeeper();
+        }.exec();
     }
 
-    protected static void startScenario() throws NoPathFound {
-        final String scenarioString = System.getenv().get("SCENARIO");
-        final Scenario scenario = scenarioString == null ? Scenario.FORCING_GLOBAL_STOP_12 :
+    protected static void runDemo(String scenarioString) {
+        Scenario scenario = scenarioString == null ? Scenario.FORCING_GLOBAL_STOP_12 :
                 Scenario.valueOf(scenarioString);
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);

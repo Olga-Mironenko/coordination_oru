@@ -17,29 +17,16 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class TestClick {
     public static void main(String[] args) {
-        Printer.resetTime();
-        Printer.print("started");
-
-        BrowserVisualization.isStatusText = true;
-        GatedThread.enable();
-        Missions.isWriteStatistics = true;
-
-        new GatedThread("runDemo") {
+        new Demo() {
             @Override
-            public void runCore() {
-                try {
-                    runDemo();
-                } catch (NoPathFound e) {
-                    throw new RuntimeException(e);
-                }
+            protected void run(String scenarioString) {
+                assert scenarioString == null;
+                runDemo();
             }
-        }.start();
-
-        GatedThread.runGatekeeper();
+        }.exec();
     }
 
-    protected static void runDemo() throws NoPathFound {
-
+    protected static void runDemo() {
         final int loopMinutes = 5;
         final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);
         final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
