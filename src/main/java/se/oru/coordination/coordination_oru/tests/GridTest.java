@@ -10,6 +10,7 @@ import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPla
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
+import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
 import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
@@ -58,62 +59,27 @@ public class GridTest {
         final double loopMinutes = 60;
         final long loopTime = System.currentTimeMillis() + Math.round(loopMinutes * 60 * 1000);
 
-        final String YAML_FILE = "maps/map-grid.yaml";
-
-        final double xLeft = 4.0;
-        final double xRight = 56.0;
-        final double yTop = 56.5;
-        final double yBottom = 3.0;
-
-        final double xColumn1 = 14.5;
-        final double xColumn2 = 30.0;
-        final double xColumn3 = 45.7;
-        final double yRow1 = 44.0;
-        final double yRow2 = 30.0;
-        final double yRow3 = 15.5;
-
-        final double thetaDown = -Math.PI/2;
-        final double thetaUp = Math.PI/2;
-        final double thetaRight = 0;
-        final double thetaLeft = Math.PI;
-
-        final Pose column1Top = new Pose(xColumn1, yTop, thetaDown);
-        final Pose column2Top = new Pose(xColumn2, yTop, thetaDown);
-        final Pose column3Top = new Pose(xColumn3, yTop, thetaDown);
-
-        final Pose column1Bottom = new Pose(xColumn1, yBottom, thetaUp);
-        final Pose column2Bottom = new Pose(xColumn2, yBottom, thetaLeft); // left is for the robot 0 to look down
-        final Pose column3Bottom = new Pose(xColumn3, yBottom, thetaUp);
-
-        final Pose row1Left = new Pose(xLeft, yRow1, thetaRight);
-        final Pose row2Left = new Pose(xLeft, yRow2, thetaRight);
-        final Pose row3Left = new Pose(xLeft, yRow3, thetaRight);
-
-        final Pose row1Right = new Pose(xRight, yRow1, thetaLeft);
-        final Pose row2Right = new Pose(xRight, yRow2, thetaLeft);
-        final Pose row3Right = new Pose(xRight, yRow3, thetaLeft);
-
-        final Pose centerDownward = new Pose(xColumn2, yRow2, thetaDown);
-
-        final Pose humStart = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? column1Top : column2Top;
-        final Pose humFinish = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? column2Bottom : column2Bottom;
-
         final boolean ishumLoop = true;
 
-        final Pose aut1Start = row1Left;
-        final Pose aut1Finish = row1Right;
+        final String YAML_FILE = "maps/map-grid.yaml";
 
-        final Pose aut2Start = row2Left;
-        final Pose aut2Finish = row2Right;
+        final Pose humStart = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? GridMapConstants.column1Top : GridMapConstants.column2Top;
+        final Pose humFinish = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? GridMapConstants.column2Bottom : GridMapConstants.column2Bottom;
 
-        final Pose aut3Start = row3Left;
-        final Pose aut3Finish = row3Right;
+        final Pose aut1Start = GridMapConstants.row1Left;
+        final Pose aut1Finish = GridMapConstants.row1Right;
 
-        final Pose aut4Start = column1Top;
-        final Pose aut4Finish = column1Bottom;
+        final Pose aut2Start = GridMapConstants.row2Left;
+        final Pose aut2Finish = GridMapConstants.row2Right;
 
-        final Pose aut5Start = row3Left;
-        final Pose aut5Finish = row1Right;
+        final Pose aut3Start = GridMapConstants.row3Left;
+        final Pose aut3Finish = GridMapConstants.row3Right;
+
+        final Pose aut4Start = GridMapConstants.column1Top;
+        final Pose aut4Finish = GridMapConstants.column1Bottom;
+
+        final Pose aut5Start = GridMapConstants.row3Left;
+        final Pose aut5Finish = GridMapConstants.row1Right;
 
         final double precisionCoefficient = 1;
         final double maxVelocity = 5.0 * precisionCoefficient;
