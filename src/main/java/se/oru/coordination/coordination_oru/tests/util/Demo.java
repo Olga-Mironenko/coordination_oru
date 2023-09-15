@@ -1,4 +1,4 @@
-package se.oru.coordination.coordination_oru.tests;
+package se.oru.coordination.coordination_oru.tests.util;
 
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
