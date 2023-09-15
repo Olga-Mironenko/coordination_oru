@@ -6,6 +6,7 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.util.Missions;
+import se.oru.coordination.coordination_oru.util.NoPathFoundError;
 
 import java.awt.*;
 import java.io.File;
@@ -58,7 +59,7 @@ public class AutonomousVehicle extends AbstractVehicle {
             rsp.setStart(initial);
             rsp.setGoals(goals);
             rsp.plan();
-            if (rsp.getPath() == null) throw new Error("No path found.");
+            if (rsp.getPath() == null) throw new NoPathFoundError();
             pathFwd = rsp.getPath();
             if (inversePath) {
                 pathInv = rsp.getPathInverseWithoutFirstAndLastPose();

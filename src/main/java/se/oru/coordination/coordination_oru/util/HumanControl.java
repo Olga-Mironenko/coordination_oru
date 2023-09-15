@@ -30,7 +30,14 @@ public class HumanControl {
             var vehicle = VehiclesHashMap.getVehicle(robotID);
 
             Pose currentPose = rr.getPose();
-            vehicle.getPlan(currentPose, new Pose[]{ goal }, Missions.getMapYAMLFilename(), false);
+            try {
+                vehicle.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
+            }
+            catch (NoPathFoundError error) {
+                isWorking = false;
+                return;
+            }
+
             var newPath = vehicle.getPath();
 
             PoseSteering[] currentPath = getCurrentPath(robotID);
