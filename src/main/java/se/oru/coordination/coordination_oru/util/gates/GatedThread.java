@@ -5,6 +5,7 @@ import se.oru.coordination.coordination_oru.util.Printer;
 abstract public class GatedThread extends Thread {
     protected static boolean isGated = false;
     protected static Gatekeeper gatekeeper;
+    protected Gate gateStart;
 
     /**
      * This function must be called before any other use of `GatedThread`.
@@ -31,9 +32,18 @@ abstract public class GatedThread extends Thread {
     abstract public void runCore();
 
     @Override
+    public void start() {
+        gateStart = new Gate(getName() + "'s gateStart");
+        super.start();
+        if (isGated) {
+            gateStart.await();
+        }
+    }
+
+    @Override
     public void run() {
         if (isGated) {
-            gatekeeper.pauseCurrentThread("initial", true); // at the beginning of each thread
+            gatekeeper.pauseCurrentThread("initial", true, gateStart); // at the beginning of each thread
             Printer.print("ready");
         }
 
@@ -48,7 +58,7 @@ abstract public class GatedThread extends Thread {
     public static void sleep(long millis) throws InterruptedException {
         if (isGated) {
             Thread.sleep(millis / 10); // TODO: This is for the browser to catch up.
-            gatekeeper.pauseCurrentThread("sleep(" + millis + ")", false);
+            gatekeeper.pauseCurrentThread("sleep(" + millis + ")", false, null);
         } else {
             Thread.sleep(millis);
         }

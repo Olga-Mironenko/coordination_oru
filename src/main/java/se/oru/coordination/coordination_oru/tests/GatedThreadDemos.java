@@ -100,6 +100,7 @@ class DemoGatekeeper {
 
 public class GatedThreadDemos {
     public static void main(String[] args) throws InterruptedException {
+        Printer.enable();
         DemoPushAwait.run();
         DemoChild.run();
         DemoGatekeeper.run();

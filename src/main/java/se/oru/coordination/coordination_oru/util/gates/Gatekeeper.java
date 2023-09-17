@@ -14,11 +14,14 @@ public class Gatekeeper {
         gateSelf.push();
     }
 
-    public void pauseCurrentThread(String nameStep, boolean isInitial) {
+    public void pauseCurrentThread(String nameStep, boolean isInitial, Gate gateToPush) {
         Gate gate = new Gate(Thread.currentThread().getName() + "'s " + nameStep);
         gates.add(gate);
+        if (gateToPush != null) {
+            gateToPush.push();
+        }
 
-        if (!isInitial) {
+        if (! isInitial) {
             processNextGate();
         }
         gate.await();

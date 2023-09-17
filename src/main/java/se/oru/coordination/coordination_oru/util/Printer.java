@@ -4,6 +4,10 @@ public class Printer {
     protected static long initialMoment = System.currentTimeMillis();
     public static boolean isEnabled = false;
 
+    public static void enable() {
+        isEnabled = true;
+    }
+
     public static void resetTime() {
         if (! isEnabled) {
             return;
