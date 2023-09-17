@@ -18,6 +18,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.vividsolutions.jts.geom.Coordinate;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class BrowserVisualizationSocket extends WebSocketAdapter {
 
@@ -78,6 +79,16 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
 
     @Override
     public void onWebSocketText(String message) {
+        GatedThread.awaitCurrentGate();
+        try {
+            onWebSocketTextCore(message);
+        }
+        finally {
+            GatedThread.moveToNextGate();
+        }
+    }
+
+    private void onWebSocketTextCore(String message) {
         super.onWebSocketText(message);
         System.out.println("Received TEXT message: " + message);
 
@@ -104,7 +115,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
             if (delta != null) {
                 HumanControl.changeTargetVelocityHuman(delta);
             }
-	} else {
+	    } else {
             System.out.println("Unknown event: " + event);
         }
     }

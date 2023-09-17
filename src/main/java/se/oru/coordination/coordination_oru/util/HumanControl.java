@@ -30,6 +30,10 @@ public class HumanControl {
             var vehicle = VehiclesHashMap.getVehicle(robotID);
 
             Pose currentPose = rr.getPose();
+            // currentPose = (105, 200)
+            // [(90, 200), (100, 200), (110, 200), (120, 200), (130, 200)]
+            //                  ^                                old goal
+
             try {
                 vehicle.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
             }
@@ -38,7 +42,11 @@ public class HumanControl {
                 return;
             }
 
+            assert tec.getRobotReport(robotID).toString().equals(rr.toString());
+
             var newPath = vehicle.getPath();
+            // [(105, 200), (115, 300), (120, 400), (130, 400)]
+            //                                       (new) goal
 
             PoseSteering[] currentPath = getCurrentPath(robotID);
             if (currentPath == null || rr.getPathIndex() == -1) {
@@ -47,6 +55,9 @@ public class HumanControl {
             } else {
                 int replacementIndex = getReplacementIndex(robotID);
                 PoseSteering[] replacementPath = computeReplacementPath(currentPath, replacementIndex, newPath);
+                // [(90, 200), (100, 200), (105, 200), (115, 300), (120, 400), (130, 400)]
+                //                  ^     |                                     (new) goal
+                //           replacementIndex=1
                 HumanControl.changePath(robotID, replacementPath, replacementIndex);
             }
         } finally {
@@ -97,8 +108,7 @@ public class HumanControl {
     }
 
     protected static int getReplacementIndex(int robotID) {
-        return Math.max(0, getPathIndex(robotID) + 2);
-        // TODO: why does `- 10` work better than `+ 10`?
+        return getPathIndex(robotID);
     }
 
     protected static void changePath(int robotID, PoseSteering[] replacementPath, int replacementIndex) {
@@ -111,12 +121,20 @@ public class HumanControl {
         // TODO: It changes significantly sometimes.
     }
 
-    public static PoseSteering[] computeReplacementPath(PoseSteering[] initialPath, int replacementIndex, PoseSteering[] newPath) {
-        replacementIndex = Math.min(replacementIndex, initialPath.length - 1); // TODO
-        PoseSteering[] replacementPath = new PoseSteering[replacementIndex + newPath.length];
-        // TODO: replacementIndex: off by one error? (replacementIndex=2 -> preserve 3 points)
-        for (int i = 0; i < replacementIndex; i++) replacementPath[i] = initialPath[i];
-        for (int i = 0; i < newPath.length; i++) replacementPath[i + replacementIndex] = newPath[i];
+    public static PoseSteering[] computeReplacementPath(PoseSteering[] oldPath, int replacementIndex, PoseSteering[] newPath) {
+        // [(90, 200), (100, 200), (105, 200), (115, 300), (120, 400), (130, 400)]
+        //                  ^     |                                     (new) goal
+        //           replacementIndex=1
+        int numOld = replacementIndex + 1;
+
+        PoseSteering[] replacementPath = new PoseSteering[numOld + newPath.length];
+
+        // replacementPath = oldPath[:replacementIndex + 1]
+        System.arraycopy(oldPath, 0, replacementPath, 0, numOld);
+
+        // replacementPath += newPath
+        System.arraycopy(newPath, 0, replacementPath, numOld, newPath.length);
+
         return replacementPath;
     }
 }

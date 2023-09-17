@@ -33,8 +33,12 @@ abstract public class GatedThread extends Thread {
 
     @Override
     public void start() {
-        gateStart = new Gate(getName() + "'s gateStart");
+        if (isGated) {
+            gateStart = new Gate(getName() + "'s gateStart");
+        }
+
         super.start();
+
         if (isGated) {
             gateStart.await();
         }
@@ -49,15 +53,12 @@ abstract public class GatedThread extends Thread {
 
         runCore();
 
-        if (isGated) {
-            Printer.print("finished");
-            gatekeeper.processNextGate(); // at the end of each thread
-        }
+        moveToNextGate(); // at the end of each thread
     }
 
     public static void sleep(long millis) throws InterruptedException {
         if (isGated) {
-            Thread.sleep(millis / 10); // TODO: This is for the browser to catch up.
+            Thread.sleep(millis / 20); // TODO: This is for the browser to catch up.
             gatekeeper.pauseCurrentThread("sleep(" + millis + ")", false, null);
         } else {
             Thread.sleep(millis);
@@ -75,6 +76,19 @@ abstract public class GatedThread extends Thread {
     public static void skipCycles(int numCycles) {
         for (int i = 1; i <= numCycles; i++) {
             sleepWithoutException(i);
+        }
+    }
+
+    public static void awaitCurrentGate() {
+        if (isGated) {
+            gatekeeper.pauseCurrentThread("initial", true, null);
+        }
+    }
+
+    public static void moveToNextGate() {
+        if (isGated) {
+            Printer.print("finished");
+            gatekeeper.processNextGate();
         }
     }
 }
