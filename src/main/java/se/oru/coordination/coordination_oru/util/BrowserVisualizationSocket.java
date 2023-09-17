@@ -21,7 +21,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 
 public class BrowserVisualizationSocket extends WebSocketAdapter {
 
-    public static HashSet<RemoteEndpoint> ENDPOINTS = null;
+    public static HashSet<RemoteEndpoint> ENDPOINTS = new HashSet<RemoteEndpoint>();
     public static BufferedImage map = null;
     public static double resolution = 1;
     public static Coordinate origin = null;
@@ -33,7 +33,6 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
     public void onWebSocketConnect(Session sess) {
         super.onWebSocketConnect(sess);
         System.out.println("Socket Connected: " + sess);
-        if (ENDPOINTS == null) ENDPOINTS = new HashSet<RemoteEndpoint>();
         synchronized (ENDPOINTS) {
             ENDPOINTS.add(super.getRemote());
             //Send map and map parameters if present

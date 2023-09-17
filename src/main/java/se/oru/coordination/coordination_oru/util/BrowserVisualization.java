@@ -170,7 +170,7 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 	
 	private void enqueueMessage(String message) {
-		if (BrowserVisualizationSocket.ENDPOINTS != null && BrowserVisualizationSocket.ENDPOINTS.size() > 0) {
+		if (BrowserVisualizationSocket.ENDPOINTS.size() > 0) {
 			synchronized (BrowserVisualizationSocket.ENDPOINTS) {
 				this.msgQueue.add(message);
 			}
@@ -178,7 +178,7 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 	
 	private void sendMessages() {
-		if (BrowserVisualizationSocket.ENDPOINTS != null && BrowserVisualizationSocket.ENDPOINTS.size() > 0) {
+		if (BrowserVisualizationSocket.ENDPOINTS.size() > 0) {
 			synchronized (BrowserVisualizationSocket.ENDPOINTS) {
 				for (String message : this.msgQueue) {
 					sendMessage(message);
@@ -191,13 +191,11 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 	
 	private void sendMessage(String text) {
-		if (BrowserVisualizationSocket.ENDPOINTS != null) {
-			for (RemoteEndpoint rep : BrowserVisualizationSocket.ENDPOINTS) {
-				try {
-					rep.sendString(text);
-				}
-				catch(IOException e) { e.printStackTrace(); }
+		for (RemoteEndpoint rep : BrowserVisualizationSocket.ENDPOINTS) {
+			try {
+				rep.sendString(text);
 			}
+			catch(IOException e) { e.printStackTrace(); }
 		}
 	}
 

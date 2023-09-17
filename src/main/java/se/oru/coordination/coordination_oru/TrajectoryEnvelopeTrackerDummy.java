@@ -106,7 +106,7 @@ public abstract class TrajectoryEnvelopeTrackerDummy extends AbstractTrajectoryE
 		onPositionUpdate();
 		while (!parkingFinished) {
 			//updateDeadline(this.te, DELTA_FUTURE);
-			//onPositionUpdate();
+			onPositionUpdate();
 			try { GatedThread.sleep(trackingPeriodInMillis); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}/*
