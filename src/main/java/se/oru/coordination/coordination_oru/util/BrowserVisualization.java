@@ -309,7 +309,8 @@ public class BrowserVisualization implements FleetVisualization {
 				if (numIntegrateCalls.containsKey(id)) {
 					numCalls = numIntegrateCalls.get(id);
 				}
-				text += "; numIntegrateCalls: " + numCalls;
+				//text += "; numIntegrateCalls: " + numCalls;
+				text += "; traveled " + round(rr.getElapsedTrackingTime()) + " s (virt. time)";
 			}
 
 			text += "; " + stringifyMissions(Missions.getMissions(id));

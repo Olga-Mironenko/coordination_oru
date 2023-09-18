@@ -53,7 +53,7 @@ public abstract class TrajectoryEnvelopeTrackerDummy extends AbstractTrajectoryE
 		
 	@Override
 	public RobotReport getRobotReport() {
-		return new RobotReport(te.getRobotID(), traj.getPose()[0], currentIndex, 0.0, 0.0, -1);
+		return new RobotReport(te.getRobotID(), traj.getPose()[0], currentIndex, 0.0, 0.0, 0.0, -1);
 	}
 
 	

@@ -42,8 +42,8 @@ public abstract class AbstractVehicle {
     private final double startTime = System.nanoTime();
     private Color color;
     private Color colorInMotion;
-    public RobotReport currentRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
-    public RobotReport lastRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, -1);
+    public RobotReport currentRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, 0.0, -1);
+    public RobotReport lastRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, 0.0, -1);
     private double totalDistance;
     private double totalTime;
     private int cycles;

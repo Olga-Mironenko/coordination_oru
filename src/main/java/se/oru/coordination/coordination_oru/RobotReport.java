@@ -17,6 +17,7 @@ public class RobotReport {
 	private int pathIndex = -1;
 	private double velocity = 0.0;
 	private double distanceTraveled = 0.0;
+	private double elapsedTrackingTime = 0;
 	private int criticalPoint = -1;
 	private int robotID = -1;
 	
@@ -28,12 +29,13 @@ public class RobotReport {
 	 * @param distanceTraveled The distance traveled so far along the current current path.
 	 * @param criticalPoint The current active critical point of the robot (-1 if no critical point).
 	 */
-	public RobotReport(int robotID, Pose pose, int pathIndex, double velocity, double distanceTraveled, int criticalPoint) {
+	public RobotReport(int robotID, Pose pose, int pathIndex, double velocity, double distanceTraveled, double elapsedTrackingTime, int criticalPoint) {
 		this.robotID = robotID;
 		this.pose = pose;
 		this.velocity = velocity;
 		this.pathIndex = pathIndex;
 		this.distanceTraveled = distanceTraveled;
+		this.elapsedTrackingTime = elapsedTrackingTime;
 		this.criticalPoint = criticalPoint;
 	}
 	
@@ -104,4 +106,7 @@ public class RobotReport {
 		return "Distance: " + MetaCSPLogging.printDouble(this.distanceTraveled,4) +  "  Pose: " + this.pose + "  Index: " + this.pathIndex + "  Velocity: " + MetaCSPLogging.printDouble(velocity,4);
 	}
 
+	public double getElapsedTrackingTime() {
+		return elapsedTrackingTime;
+	}
 }

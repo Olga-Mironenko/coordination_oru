@@ -600,7 +600,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	@Override
 	public RobotReport getRobotReport() {
 		if (state == null) return null;
-		if (!this.th.isAlive()) return new RobotReport(te.getRobotID(), traj.getPose()[0], -1, 0.0, 0.0, -1);
+		if (!this.th.isAlive()) return new RobotReport(te.getRobotID(), traj.getPose()[0], -1, 0.0, 0.0, 0.0, -1);
 		synchronized(state) {
 			Pose pose = null;
 			int currentPathIndex = -1;
@@ -620,7 +620,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				currentPathIndex = poses.length-1;
 				pose = poses[currentPathIndex];
 			}
-			return new RobotReport(te.getRobotID(), pose, currentPathIndex, state.getVelocity(), state.getPosition(), this.criticalPoint);
+			return new RobotReport(te.getRobotID(), pose, currentPathIndex, state.getVelocity(), state.getPosition(), elapsedTrackingTime, this.criticalPoint);
 		}
 	}
 
@@ -644,7 +644,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			currentPathIndex = poses.length-1;
 			pose = poses[currentPathIndex];
 		}
-		return new RobotReport(-1, pose, currentPathIndex, auxState.getVelocity(), auxState.getPosition(), -1);
+		return new RobotReport(-1, pose, currentPathIndex, auxState.getVelocity(), auxState.getPosition(), 0.0,-1);
 	}
 
 	public RobotReport getRobotReport(State auxState) {
@@ -667,7 +667,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			currentPathIndex = poses.length-1;
 			pose = poses[currentPathIndex];
 		}
-		return new RobotReport(te.getRobotID(), pose, currentPathIndex, auxState.getVelocity(), auxState.getPosition(), -1);
+		return new RobotReport(te.getRobotID(), pose, currentPathIndex, auxState.getVelocity(), auxState.getPosition(), 0.0, -1);
 	}
 
 	public void setNumberOfReplicas(int numberOfReplicas) {
@@ -707,6 +707,9 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		int myTEID = te.getID();
 
 		while (true) {
+			//Compute deltaTime
+			long timeStart = Calendar.getInstance().getTimeInMillis();
+
 			if (emergencyBreaker.isStopped(myRobotID)) {
 				break;
 			}
@@ -775,9 +778,6 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				skipIntegration = true; // at current iteration
 			}
 
-			//Compute deltaTime
-			long timeStart = Calendar.getInstance().getTimeInMillis();
-
 			//Update the robot's state via RK4 numerical integration
 			if (!skipIntegration) {
 				if (atCP) {
@@ -809,7 +809,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			catch (InterruptedException e) { e.printStackTrace(); }
 
 			//Advance time to reflect how much we have slept (~ trackingPeriod)
- 			long deltaTimeInMillis = GatedThread.isEnabled() ? delay : Calendar.getInstance().getTimeInMillis() - timeStart;
+ 			long deltaTimeInMillis = GatedThread.isEnabled() ? trackingPeriodInMillis : Calendar.getInstance().getTimeInMillis() - timeStart;
 			deltaTime = deltaTimeInMillis / this.temporalResolution;
 			elapsedTrackingTime += deltaTime;
 		}
