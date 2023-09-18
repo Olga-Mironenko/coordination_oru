@@ -47,19 +47,19 @@ abstract public class GatedThread extends Thread {
     @Override
     public void run() {
         if (isGated) {
-            gatekeeper.pauseCurrentThread("initial", true, gateStart); // at the beginning of each thread
+            gatekeeper.pauseCurrentThread("initial", true, false, gateStart);
             Printer.print("ready");
         }
 
         runCore();
 
-        moveToNextGate(); // at the end of each thread
+        moveToNextGate();
     }
 
     public static void sleep(long millis) throws InterruptedException {
         if (isGated) {
+            gatekeeper.pauseCurrentThread("sleep(" + millis + ")", false, false,null);
             Thread.sleep(millis / 20); // TODO: This is for the browser to catch up.
-            gatekeeper.pauseCurrentThread("sleep(" + millis + ")", false, null);
         } else {
             Thread.sleep(millis);
         }
@@ -81,7 +81,7 @@ abstract public class GatedThread extends Thread {
 
     public static void awaitCurrentGate() {
         if (isGated) {
-            gatekeeper.pauseCurrentThread("initial", true, null);
+            gatekeeper.pauseCurrentThread("initial", true, true, null);
         }
     }
 

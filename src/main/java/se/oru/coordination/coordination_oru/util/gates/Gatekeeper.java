@@ -2,11 +2,13 @@ package se.oru.coordination.coordination_oru.util.gates;
 
 import se.oru.coordination.coordination_oru.util.Printer;
 
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class Gatekeeper {
-    protected BlockingQueue<Gate> gates = new LinkedBlockingQueue<>();
+    protected BlockingDeque<Gate> gates = new LinkedBlockingDeque<>();
     protected Gate gateSelf;
 
     public void processNextGate() {
@@ -14,14 +16,18 @@ public class Gatekeeper {
         gateSelf.push();
     }
 
-    public void pauseCurrentThread(String nameStep, boolean isInitial, Gate gateToPush) {
+    public void pauseCurrentThread(String nameStep, boolean isThreadInitialization, boolean isQueueHead, Gate gateStart) {
         Gate gate = new Gate(Thread.currentThread().getName() + "'s " + nameStep);
-        gates.add(gate);
-        if (gateToPush != null) {
-            gateToPush.push();
+        if (isQueueHead) {
+            gates.addFirst(gate);
+        } else {
+            gates.add(gate);
+        }
+        if (gateStart != null) {
+            gateStart.push();
         }
 
-        if (! isInitial) {
+        if (! isThreadInitialization) {
             processNextGate();
         }
         gate.await();
