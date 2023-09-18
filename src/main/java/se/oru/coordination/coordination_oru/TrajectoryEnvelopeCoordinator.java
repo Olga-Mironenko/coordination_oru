@@ -1427,6 +1427,90 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 		}
 	}
 
+	/**
+	 * Replace the path of a robot's {@link TrajectoryEnvelope} on the fly while discarding a piece of the old path.
+	 * @param robotID The ID of the robot whose {@link TrajectoryEnvelope} is to be recomputed.
+	 * @param newPath The path based on which the new {@link TrajectoryEnvelope} should be computed.
+	 * @param breakingPathIndex Last point on the current path to preserve.
+	 * @ATTENTION When the path is not concatenated, it is supposed the robot has already traversed the overall path.
+	 */
+	public synchronized void updatePath(int robotID, PoseSteering[] newPath, int breakingPathIndex) {
+
+		synchronized (solver) {
+
+			synchronized(trackers) {
+				if (!trackers.containsKey(robotID)) {
+					metaCSPLogger.warning("Invalid robotID. Place the robot before!");
+					return;
+				}
+			}
+
+			synchronized (allCriticalSections) {
+				//Get current envelope
+				TrajectoryEnvelope te = this.getCurrentTrajectoryEnvelope(robotID);
+
+				if (viz != null) {
+					viz.removeEnvelope(te);
+				}
+
+				metaCSPLogger.info("Replacing TE " + te.getID() + " (Robot" + robotID + ") with breaking point " + breakingPathIndex + ".");
+
+				//---------------------------------------------------------
+
+				//Remove CSs involving this robot, clearing the history.
+				cleanUpRobotCS(te.getRobotID(), breakingPathIndex);
+				//---------------------------------------------------------
+
+				//Make new envelope
+				TrajectoryEnvelope newTE = solver.createEnvelopeNoParking(robotID, newPath, "Driving", this.getFootprint(robotID));
+
+				//Notify tracker
+				synchronized (trackers) {
+					this.trackers.get(robotID).updateTrajectoryEnvelope(newTE);
+				}
+
+				//Stitch together with rest of constraint network (temporal constraints with parking envelopes etc.)
+				for (Constraint con : solver.getConstraintNetwork().getOutgoingEdges(te)) {
+					if (con instanceof AllenIntervalConstraint) {
+						AllenIntervalConstraint aic = (AllenIntervalConstraint)con;
+						if (aic.getTypes()[0].equals(AllenIntervalConstraint.Type.Meets)) {
+							TrajectoryEnvelope newEndParking = solver.createParkingEnvelope(robotID, PARKING_DURATION, newTE.getTrajectory().getPose()[newTE.getTrajectory().getPose().length-1], "whatever", getFootprint(robotID));
+							TrajectoryEnvelope oldEndParking = (TrajectoryEnvelope)aic.getTo();
+
+							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(te));
+							solver.removeVariable(te);
+							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(oldEndParking));
+							solver.removeVariable(oldEndParking);
+
+							AllenIntervalConstraint newMeets = new AllenIntervalConstraint(AllenIntervalConstraint.Type.Meets);
+							newMeets.setFrom(newTE);
+							newMeets.setTo(newEndParking);
+							solver.addConstraint(newMeets);
+
+							break;
+						}
+					}
+				}
+
+				if (viz != null) {
+					viz.addEnvelope(newTE);
+				}
+
+				//Add as if it were a new envelope, that way it will be accounted for in computeCriticalSections()
+				envelopesToTrack.add(newTE);
+
+				//Recompute CSs involving this robot
+				createCriticalSections();
+
+				envelopesToTrack.remove(newTE);
+
+				forceCriticalPointReTransmission.put(robotID, true);
+				updateDependencies();
+
+			}
+		}
+	}
+
 
 	/**
 	 * Truncate the {@link TrajectoryEnvelope} of a given robot at the closest dynamically-feasible path point. This path point is computed via the robot's {@link ForwardModel}.

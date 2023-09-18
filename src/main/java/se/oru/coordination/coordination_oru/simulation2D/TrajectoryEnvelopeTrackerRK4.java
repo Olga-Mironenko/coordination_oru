@@ -825,7 +825,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		//persevere with last path point in case listeners didn't catch it!
 		long timerStart = getCurrentTimeInMillis();
 		while (getCurrentTimeInMillis()-timerStart < WAIT_AMOUNT_AT_END) {
-			//System.out.println("Waiting " + te.getComponent());
+//			System.out.println("Waiting " + te.getComponent());
 			try { GatedThread.sleep(trackingPeriodInMillis); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
