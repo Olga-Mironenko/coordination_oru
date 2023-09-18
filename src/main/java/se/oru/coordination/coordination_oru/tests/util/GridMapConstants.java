@@ -5,8 +5,8 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 public class GridMapConstants extends BaseMapConstants {
     public final static double xLeft = 4.0;
     public final static double xRight = 56.0;
-    public final static double yTop = 56.5;
-    public final static double yBottom = 3.0;
+    public final static double yTop = 56.0;
+    public final static double yBottom = 4.0;
 
     public final static double xColumn1 = 14.5;
     public final static double xColumn2 = 30.0;
