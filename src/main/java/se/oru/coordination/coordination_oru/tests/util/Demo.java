@@ -9,6 +9,8 @@ public abstract class Demo {
     protected abstract void run(String scenarioString);
 
     public void exec() {
+        checkForAssertions();
+
         Printer.resetTime();
         Printer.print("started");
 
@@ -26,5 +28,15 @@ public abstract class Demo {
         }.start();
 
         GatedThread.runGatekeeper();
+    }
+
+    private void checkForAssertions() {
+        try {
+            assert false;
+        }
+        catch (AssertionError e) {
+            return;
+        }
+        throw new RuntimeException("assertions are disabled (add `-ea` to VM options)");
     }
 }
