@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class Gatekeeper {
-    protected BlockingDeque<Gate> gates = new LinkedBlockingDeque<>();
+    protected LinkedBlockingDeque<Gate> gates = new LinkedBlockingDeque<>();
     protected Gate gateSelf;
 
     public void processNextGate() {
@@ -36,15 +36,12 @@ public class Gatekeeper {
     public void run() {
         assert gateSelf == null;
 
-        while (true) {
+        while (! gates.isEmpty()) {
             gateSelf = new Gate("gatekeeper's");
 
-            Gate gate;
-            try {
-                gate = gates.take(); // blocks if the queue is empty
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            Gate gate = gates.poll();
+            assert gate != null;
+
             Printer.print("SWITCHING TO " + gate.name);
             gate.push();
 
