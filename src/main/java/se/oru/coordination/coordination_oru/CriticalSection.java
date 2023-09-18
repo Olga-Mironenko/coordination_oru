@@ -198,6 +198,14 @@ public class CriticalSection {
 		double velocity;
 		double time;
 
+		/**
+		 * This is an estimation of distance, velocity, time for the current CS and a given robot.
+		 * For the inferior robot, the distance estimation is from the current point until the end of the CS (`getEnd`).
+		 * For the superior robot, the distance estimation is from the current point until the start of the CS (`getStart`).
+		 * The resulting time estimation is used in {@link CriticalSection#canPassFirst(int)}.
+		 *
+		 * @param isInferior Whether the robot should normally give way to the other one within the CS.
+		 */
 		public DistanceEstimation(int robotID, boolean isInferior) {
 			TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 			RobotReport rr = tec.getRobotReport(robotID);
@@ -209,9 +217,17 @@ public class CriticalSection {
 			distance = deltaIndexes == 0 ? 0.0 :
 					TrajectoryEnvelopeTrackerRK4.computeDistance(tec.trackers.get(robotID).traj, currentIndex, goalIndex);
 			velocity = estimateVelocity(robotID, isInferior);
-			time = distance / velocity;
+			time = distance / velocity; // m / m/s = s
 		}
 
+		/**
+		 * This is an estimation of velocity (useful before slipping through a CS).
+		 * The more the speed reserve (`delta`), the greater the estimation is.
+		 * So this is averageish between `currentVelocity` and `maxVelocity`.
+		 *
+		 * The primary reason for this calculation is to avoid zero estimation when the current velocity
+		 * is temporarily zero.
+		 */
 		protected double estimateVelocity(int robotID, boolean isInferior) {
 			TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 			double maxVelocity = tec.getRobotMaxVelocity(robotID);
