@@ -314,7 +314,7 @@ public class GridTest {
                         knobsAfterForcing.restorePriorities();
                     }
 
-                    GatedThread.sleepWithoutException(100);
+                    GatedThread.sleepWithoutTryCatch(100);
                 }
             }
         }.start();

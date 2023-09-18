@@ -4,10 +4,19 @@ import se.oru.coordination.coordination_oru.util.Printer;
 
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * Essentially this is just a {@link CountDownLatch} with count 1.
+ */
 public class Gate {
     protected String name;
     protected CountDownLatch latch = new CountDownLatch(1);
+    /**
+     * This is to check that the `Gate` is pushed only once.
+     */
     protected boolean isPushed = false;
+    /**
+     * This is to check that the `Gate` is awaited only once.
+     */
     protected boolean isAwaited = false;
 
     public Gate(String name) {

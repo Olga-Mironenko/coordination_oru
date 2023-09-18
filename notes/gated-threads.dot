@@ -1,0 +1,45 @@
+digraph {
+    user [shape=triangle]
+    user -> "GatedThread.enable" [label="starts the program"]
+
+    subgraph cluster_main_thread {
+        label=<<b>main</b> thread>
+
+        "GatedThread.enable" -> "start child" -> "start child 2" -> "GatedThread.runGatekeeper"
+        "GatedThread.runGatekeeper" -> gateSelf_create
+
+        subgraph cluster_gatekeeper_run {
+            label=<<b>Gatekeeper</b>.run()>
+            graph [style=dashed]
+
+            gateSelf_create [label="create a new gate of mine"]
+            gateChild_take [label="get a child's gate from the queue"]
+            gateChild_push [label="push the child's gate"]
+            gateSelf_await [label="await my gate"]
+            gateSelf_create -> gateChild_take -> gateChild_push -> gateSelf_await -> gateSelf_create
+        }
+    }
+
+    begin -> "gatekeeper.pauseCurrentThread" [label="calls (initial=true)", style=dashed, dir=both]
+    sleep -> "gatekeeper.pauseCurrentThread" [label="calls (initial=false)", constraint=false, style=dashed, dir=both]
+    end -> "gatekeeper.processNextGate" [label="calls"]
+    "gatekeeper.pauseCurrentThread" -> gateChild_take [label="1. enqueues a new gate", style=dotted]
+    "gatekeeper.pauseCurrentThread" -> "gatekeeper.processNextGate" [label="2. calls if initial=false", style=dotted]
+    gateChild_push -> "gatekeeper.pauseCurrentThread" [label="3. ends the pause", style="dotted"]
+    "gatekeeper.processNextGate" -> gateSelf_await [label="pushes the gatekeeper's gate"]
+
+    subgraph cluster_child_thread {
+        label=<thread<b>Child</b>.run()>
+
+        "start child" -> begin [style=dashed]
+        begin -> work
+
+        subgraph cluster_runCore {
+        label=<runCore()>
+            graph [style=dashed]
+
+            work -> sleep -> work
+        }
+        work -> end
+    }
+}
