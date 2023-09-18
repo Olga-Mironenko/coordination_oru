@@ -20,7 +20,7 @@ public class PaperScenario_6A1L {
         String absolutePath = System.getProperty("user.dir");
         String resultsDirectory = absolutePath + "/src/main/java/se/oru/coordination/coordination_oru/results/lookAheadPaper_2023";
         final String YAML_FILE = "maps/mine-map-paper-2023.yaml";
-        double lookAheadDistance = 15;
+        double lookAheadDistance = 25;
         int intervalInSeconds = 1;
         int terminationInMinutes = 30;
         int numOfCallsForLookAheadRobot = 10;
@@ -61,13 +61,13 @@ public class PaperScenario_6A1L {
         var autonomousRobot6 = new AutonomousVehicle();
         var lookAheadRobot = new LookAheadVehicle(1, lookAheadDistance, Color.GREEN, 5, 2, 0.9, 0.5);
 
-        autonomousRobot1.getPlan(drawPoint28, autonomousRobotGoal1, YAML_FILE, true);
-        autonomousRobot2.getPlan(drawPoint30, autonomousRobotGoal1, YAML_FILE, true);
-        autonomousRobot3.getPlan(drawPoint32A, autonomousRobotGoal2, YAML_FILE, true);
-        autonomousRobot4.getPlan(drawPoint34, autonomousRobotGoal2, YAML_FILE, true);
-        autonomousRobot5.getPlan(drawPoint35, autonomousRobotGoal3, YAML_FILE, true);
-        autonomousRobot6.getPlan(drawPoint12, autonomousRobotGoal3, YAML_FILE, true);
-        lookAheadRobot.getPlan(entrance, limitedLookAheadRobotGoal, YAML_FILE, true);
+        autonomousRobot1.getPlan(drawPoint28, autonomousRobotGoal1, YAML_FILE, false);
+        autonomousRobot2.getPlan(drawPoint30, autonomousRobotGoal1, YAML_FILE, false);
+        autonomousRobot3.getPlan(drawPoint32A, autonomousRobotGoal2, YAML_FILE, false);
+        autonomousRobot4.getPlan(drawPoint34, autonomousRobotGoal2, YAML_FILE, false);
+        autonomousRobot5.getPlan(drawPoint35, autonomousRobotGoal3, YAML_FILE, false);
+        autonomousRobot6.getPlan(drawPoint12, autonomousRobotGoal3, YAML_FILE, false);
+        lookAheadRobot.getPlan(entrance, limitedLookAheadRobotGoal, YAML_FILE, false);
 
         // Instantiate a trajectory envelope coordinator.
         var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2.5);
@@ -107,7 +107,7 @@ public class PaperScenario_6A1L {
 
         // Set Heuristics
         var heuristic = new Heuristics();
-        tec.addComparator(heuristic.closest());
+//        tec.addComparator(heuristic.closest());
         String heuristicName = heuristic.getHeuristicName();
 
         // Set Local Re-ordering and Local Re-Planning to break Deadlocks
@@ -132,8 +132,8 @@ public class PaperScenario_6A1L {
         var m7 = new Mission(lookAheadRobot.getID(), lookAheadRobotInitialPlan);
 //        m4.setStoppingPoint(orePass3, 10000); //FIXME I think it does not work.
 
-        var randomRobotCaller = new RandomRobotCaller(numOfCallsForLookAheadRobot, terminationInMinutes);
-        randomRobotCaller.scheduleRandomCalls(m7);
+//        var randomRobotCaller = new RandomRobotCaller(numOfCallsForLookAheadRobot, terminationInMinutes);
+//        randomRobotCaller.scheduleRandomCalls(m7);
 
         Missions.enqueueMission(m1);
         Missions.enqueueMission(m2);
@@ -144,7 +144,7 @@ public class PaperScenario_6A1L {
         Missions.enqueueMission(m7);
         Missions.setMap(YAML_FILE);
 
-        Missions.startMissionDispatchers(tec, 1, 2, 3, 4, 5, 6, 7);
+        Missions.startMissionDispatchers(tec, true,1, 2, 3, 4, 5, 6, 7);
 //        Missions.startMissionDispatchers(tec, lookAheadDistance, writeRobotReports,
 //                intervalInSeconds, terminationInMinutes, heuristicName, resultsDirectory);
     }

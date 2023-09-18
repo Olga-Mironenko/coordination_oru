@@ -49,14 +49,14 @@ public class LookAheadVehicle extends AbstractVehicle {
      * @param tec The TrajectoryEnvelopeCoordinator containing the robots.
      */
     public synchronized void updateLookAheadRobotPath(TrajectoryEnvelopeCoordinator tec, LookAheadVehicle lookAheadVehicle) {
-        System.out.println("Free " + tec.isFree(lookAheadVehicle.getID()));
-        System.out.println("Driving " + tec.isDriving(lookAheadVehicle.getID()));
-        System.out.println("Blocked " + tec.isBlocked());
-        System.out.println("Deadlocked " + tec.isDeadlocked());
-        System.out.println("Parked " + tec.isParked(lookAheadVehicle.getID()));
+//        System.out.println("Free " + tec.isFree(lookAheadVehicle.getID()));
+//        System.out.println("Driving " + tec.isDriving(lookAheadVehicle.getID()));
+//        System.out.println("Blocked " + tec.isBlocked());
+//        System.out.println("Deadlocked " + tec.isDeadlocked());
+//        System.out.println("Parked " + tec.isParked(lookAheadVehicle.getID()));
         if (tec.isDriving(lookAheadVehicle.getID()) && lookAheadVehicle.getLookAheadDistance() != -1) {
             var newPath = lookAheadVehicle.getLimitedPath(lookAheadVehicle.getID(), lookAheadVehicle.getLookAheadDistance(), tec);
-            tec.replacePath(lookAheadVehicle.getID(), newPath, 0, false, null);
+            tec.updatePath(lookAheadVehicle.getID(), newPath, 0);
         }
     }
 

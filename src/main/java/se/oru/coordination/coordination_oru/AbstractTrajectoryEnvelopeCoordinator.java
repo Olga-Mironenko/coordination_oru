@@ -1865,7 +1865,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 			//metaCSPLogger.finest("Dist R" + rr1.getRobotID() + " = " + dist1 + "; Dist R" + rr2.getRobotID() + " = " + dist2);
 			return dist1 > dist2 ? 1 : -1;
 		}
-		return 0;
+		return -2;
 	}
 
 	/**
