@@ -1,0 +1,12 @@
+- Run this in a separate terminal:
+  - `cd ~/coordination_oru/logs/entire`
+  - `~/coordination_oru/logprocessing/dateize-log-names.sh`
+- Run demos:
+  - A single demo:
+    - in IDEA with the following setting:
+      - Run/Debug Configurations > $DEMO > Logs > Save console output to file: 
+        - ~/coordination_oru/logs/entire/$DEMO.log
+    - or in a terminal (e.g., to run `GridTest` with `FORCING_CS1_WITH_STOPS`):
+      - `SCENARIO=FORCING_CS1_PRIORITIES_CHANGE ~/coordination_oru/logprocessing/run-demo.sh GridTest`
+  - Multiple demos:
+    - `~/coordination_oru/logprocessing/run-scenarios.sh 60m GridTest FORCING_CS1_PRIORITIES_CHANGE FORCING_CS1_WITH_STOPS`
