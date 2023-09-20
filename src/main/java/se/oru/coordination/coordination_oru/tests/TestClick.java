@@ -103,7 +103,7 @@ public class TestClick {
         tec.setVisualization(viz);
 
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatchers(tec, loopTime);
+        Missions.startMissionDispatcher(tec, loopTime);
         Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
         if (humFinish != null) {
@@ -134,7 +134,7 @@ public class TestClick {
             }.start();
         }
 
-        final boolean isNewMission = true;
+        final boolean isNewMission = false;
         if (isNewMission) {
             new GatedThread("new mission") {
                 @Override
