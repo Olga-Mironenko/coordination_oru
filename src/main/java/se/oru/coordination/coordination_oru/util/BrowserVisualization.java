@@ -38,6 +38,7 @@ import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class BrowserVisualization implements FleetVisualization {
 	
@@ -273,6 +274,11 @@ public class BrowserVisualization implements FleetVisualization {
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
 		String text = "";
 
+		if (Timekeeper.isTimekeeperActive()) {
+			text += "Cycle: " + Timekeeper.getNumCyclesPassed() + "<br>";
+			text += "Virtual seconds: " + round(Timekeeper.getVirtualMillisPassed() / 1000.0) + "<br>";
+			text += "Real seconds: " + round(Timekeeper.getRealMillisPassed() / 1000.0) + "<br>";
+		}
 		if (AbstractVehicle.scenarioId != null) {
 			text += "Scenario: " + AbstractVehicle.scenarioId + "<br>";
 		}
