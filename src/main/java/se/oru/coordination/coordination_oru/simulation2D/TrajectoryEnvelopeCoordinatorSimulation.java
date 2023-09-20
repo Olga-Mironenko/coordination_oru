@@ -3,33 +3,23 @@ package se.oru.coordination.coordination_oru.simulation2D;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.metacsp.framework.BinaryConstraint;
 import org.metacsp.framework.Constraint;
-import org.metacsp.framework.ConstraintNetwork;
 import org.metacsp.framework.Variable;
-import org.metacsp.framework.multi.MultiBinaryConstraint;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
-import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
-import org.metacsp.utility.UI.Callback;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.util.AffineTransformation;
 
 import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.CollisionEvent;
 import se.oru.coordination.coordination_oru.CriticalSection;
-import se.oru.coordination.coordination_oru.Dependency;
-import se.oru.coordination.coordination_oru.ForwardModel;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.TrackingCallback;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
-import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeCoordinator {
@@ -264,8 +254,26 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 
 	@Override
 	public AbstractTrajectoryEnvelopeTracker getNewTracker(TrajectoryEnvelope te, TrackingCallback cb) {
+		if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled) {
+			return getNewAdaptiveTracker(te, cb);
+		}
+
 		if (this.getRobotTrackingPeriodInMillis(te.getRobotID()) == null || this.getRobotMaxVelocity(te.getRobotID()) == null || this.getRobotMaxAcceleration(te.getRobotID()) == null) throw new Error("Robot" +  te.getRobotID() + ": missing kinodynamic parameters.");
 		TrajectoryEnvelopeTrackerRK4 ret = new TrajectoryEnvelopeTrackerRK4(te, this.getRobotTrackingPeriodInMillis(te.getRobotID()), TEMPORAL_RESOLUTION, this, cb) {
+			//Method for measuring time in the trajectory envelope tracker
+			@Override
+			public long getCurrentTimeInMillis() {
+				return tec.getCurrentTimeInMillis();
+			}
+		};
+		//ret.setUseInternalCriticalPoints(this.useInternalCPs);
+		ret.setUseInternalCriticalPoints(false);
+		return ret;
+	}
+
+	private AbstractTrajectoryEnvelopeTracker getNewAdaptiveTracker(TrajectoryEnvelope te, TrackingCallback cb) {
+		if (this.getRobotTrackingPeriodInMillis(te.getRobotID()) == null || this.getRobotMaxVelocity(te.getRobotID()) == null || this.getRobotMaxAcceleration(te.getRobotID()) == null) throw new Error("Robot" +  te.getRobotID() + ": missing kinodynamic parameters.");
+		AdaptiveTrajectoryEnvelopeTrackerRK4 ret = new AdaptiveTrajectoryEnvelopeTrackerRK4(te, this.getRobotTrackingPeriodInMillis(te.getRobotID()), TEMPORAL_RESOLUTION, this, cb) {
 			//Method for measuring time in the trajectory envelope tracker
 			@Override
 			public long getCurrentTimeInMillis() {

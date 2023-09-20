@@ -9,7 +9,7 @@ import se.oru.coordination.coordination_oru.code.*;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
 import se.oru.coordination.coordination_oru.util.*;
@@ -89,7 +89,7 @@ public class GridReturn {
         //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
         //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
 
-        TrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
+        AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, maxAcceleration, trackingPeriod);
         tec.setupSolver(0, 100000000);

@@ -6,9 +6,9 @@ import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
 import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.util.*;
 
@@ -157,7 +157,7 @@ public class ProductionLine {
         AutonomousVehicle aut4 = null;
         AutonomousVehicle aut5 = null;
 
-        TrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
+        AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, maxAcceleration, trackingPeriod);
         tec.setupSolver(0, 100000000);

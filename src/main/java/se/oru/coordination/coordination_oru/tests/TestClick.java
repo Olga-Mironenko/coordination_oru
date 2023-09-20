@@ -11,7 +11,7 @@ import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
@@ -74,7 +74,7 @@ public class TestClick {
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
         System.out.println(VehiclesHashMap.getInstance().getList());
 
-        TrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, true);
+        AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, true);
 
         // Instantiate a trajectory envelope coordinator.
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, 2);

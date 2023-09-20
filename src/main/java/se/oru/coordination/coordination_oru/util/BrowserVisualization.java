@@ -35,8 +35,8 @@ import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class BrowserVisualization implements FleetVisualization {
@@ -287,9 +287,11 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + "<br>";
 		}
 
-		String textEmergencyBreaker = TrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
-		if (textEmergencyBreaker != null) {
-			text += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
+		if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled) {
+			String textEmergencyBreaker = AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
+			if (textEmergencyBreaker != null) {
+				text += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
+			}
 		}
 
 		for (int id : idToVehicle.keySet()) {

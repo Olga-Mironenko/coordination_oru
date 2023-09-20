@@ -20,7 +20,8 @@ public class RobotReport {
 	private double elapsedTrackingTime = 0;
 	private int criticalPoint = -1;
 	private int robotID = -1;
-	
+
+
 	/**
 	 * Create a {@link RobotReport} with given current state of the robot.
 	 * @param pose The current pose of the robot.
@@ -29,16 +30,20 @@ public class RobotReport {
 	 * @param distanceTraveled The distance traveled so far along the current current path.
 	 * @param criticalPoint The current active critical point of the robot (-1 if no critical point).
 	 */
-	public RobotReport(int robotID, Pose pose, int pathIndex, double velocity, double distanceTraveled, double elapsedTrackingTime, int criticalPoint) {
+	public RobotReport(int robotID, Pose pose, int pathIndex, double velocity, double distanceTraveled, int criticalPoint) {
 		this.robotID = robotID;
 		this.pose = pose;
 		this.velocity = velocity;
 		this.pathIndex = pathIndex;
 		this.distanceTraveled = distanceTraveled;
-		this.elapsedTrackingTime = elapsedTrackingTime;
 		this.criticalPoint = criticalPoint;
 	}
-	
+
+	public RobotReport(int robotID, Pose pose, int pathIndex, double velocity, double distanceTraveled, double elapsedTrackingTime, int criticalPoint) {
+		this(robotID, pose, pathIndex, velocity, distanceTraveled, criticalPoint);
+		this.elapsedTrackingTime = elapsedTrackingTime;
+	}
+
 	/**
 	 * Get the ID of the robot to which this report refers to.
 	 * @return The ID of the robot.

@@ -18,7 +18,6 @@ import org.metacsp.utility.UI.Callback;
 import org.metacsp.utility.logging.MetaCSPLogging;
 
 import se.oru.coordination.coordination_oru.simulation2D.State;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 /**
@@ -31,6 +30,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
  *
  */
 public abstract class AbstractTrajectoryEnvelopeTracker {
+	public static boolean isEnabled = false;
 
 	protected AbstractTrajectoryEnvelopeCoordinator tec = null;
 	protected TrajectoryEnvelope te = null;

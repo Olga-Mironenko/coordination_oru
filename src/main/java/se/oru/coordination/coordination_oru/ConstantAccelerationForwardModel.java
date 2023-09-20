@@ -4,7 +4,9 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.State;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 
 public class ConstantAccelerationForwardModel implements ForwardModel {
 
@@ -31,16 +33,16 @@ public class ConstantAccelerationForwardModel implements ForwardModel {
 		long lookaheadInMillis = this.controlPeriodInMillis + 2*(TrajectoryEnvelopeCoordinator.MAX_TX_DELAY + trackingPeriodInMillis);
 		if (lookaheadInMillis > 0) {
 			while (time*this.temporalResolution < lookaheadInMillis) {
-                            se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4.integrateRK4(
-                                    state, time, deltaTime, false, maxVel, 1.0, maxAccel, te.getRobotID());
+				se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4.integrateRK4(
+						state, time, deltaTime, false, maxVel, 1.0, maxAccel);
 				time += deltaTime;
 			}
 		}
 		//decelerate from maximum to stop
 		while (state.getVelocity() > 0) {
 			if (state.getPosition() > distance) return false;
-                        se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4
-                                .integrateRK4(state, time, deltaTime, true, maxVel, 1.0, maxAccel, te.getRobotID());
+			se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4
+					.integrateRK4(state, time, deltaTime, true, maxVel, 1.0, maxAccel);
 			time += deltaTime;
 		}
 		return true;
@@ -78,14 +80,24 @@ public class ConstantAccelerationForwardModel implements ForwardModel {
 		long lookaheadInMillis = this.controlPeriodInMillis + 2*(TrajectoryEnvelopeCoordinator.MAX_TX_DELAY + trackingPeriodInMillis);
 		if (lookaheadInMillis > 0) {
 			while (time*temporalResolution < lookaheadInMillis) {
-                            se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4.integrateRK4(
-                                    state, time, deltaTime, false, maxVel, 1.0, maxAccel * 1.1, te.getRobotID());
+				if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled) {
+					AdaptiveTrajectoryEnvelopeTrackerRK4.integrateRK4(
+							state, time, deltaTime, false, maxVel, 1.0, maxAccel * 1.1, te.getRobotID());
+				} else {
+					TrajectoryEnvelopeTrackerRK4.integrateRK4(
+							state, time, deltaTime, false, maxVel, 1.0, maxAccel * 1.1);
+				}
 				time += deltaTime;
 			}
 		}
 		while (state.getVelocity() > 0) {
-                    se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4.integrateRK4(state,
-                            time, deltaTime, true, maxVel, 1.0, maxAccel * 0.9, te.getRobotID());
+			if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled) {
+				AdaptiveTrajectoryEnvelopeTrackerRK4.integrateRK4(state,
+						time, deltaTime, true, maxVel, 1.0, maxAccel * 0.9, te.getRobotID());
+			} else {
+				TrajectoryEnvelopeTrackerRK4.integrateRK4(state,
+						time, deltaTime, true, maxVel, 1.0, maxAccel * 0.9);
+			}
 			time += deltaTime;
 		}
 		return getPathIndex(te,state);

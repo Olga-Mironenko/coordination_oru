@@ -1876,7 +1876,6 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 * @return An instance of a trajectory envelope tracker.
 	 */
 	public abstract AbstractTrajectoryEnvelopeTracker getNewTracker(TrajectoryEnvelope te, TrackingCallback cb);
-
 	/**
 	 * Determine if a robot is free to accept a new mission (that is, the robot is in state WAITING_FOR_TASK).
 	 * @param robotID The ID of the robot.

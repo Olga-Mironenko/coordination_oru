@@ -15,6 +15,10 @@ public class Derivative {
 		this.velocity = velocity;
 		this.acceleration = acceleration;
 	}
+
+	public static Derivative evaluate(State initialState, double time, double deltaTime, Derivative deriv, boolean slowDown, double MAX_VELOCITY, double MAX_VELOCITY_DAMPENING_FACTOR, double MAX_ACCELERATION) {
+		return evaluate(initialState, time,deltaTime, deriv, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION, MAX_ACCELERATION);
+	}
 	
 	public static Derivative evaluate(State initialState, double time, double deltaTime, Derivative deriv, boolean slowDown, double MAX_VELOCITY, double MAX_VELOCITY_DAMPENING_FACTOR, double MAX_ACCELERATION, double MAX_DECELERATION) {
 		double position = initialState.getPosition() + deriv.getVelocity()*deltaTime;
