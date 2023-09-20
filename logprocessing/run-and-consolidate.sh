@@ -6,12 +6,12 @@ set -eu
 
 root=$(dirname "$0")
 
-timeout=15s
+timeout=60m
 demo=GridTest
 scenarios=(
   BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST
-#  BASELINE_IDEAL_DRIVER_HUMAN_FIRST
-#  BASELINE_IDEAL_DRIVER_FIRST_COME
+  BASELINE_IDEAL_DRIVER_HUMAN_FIRST
+  BASELINE_IDEAL_DRIVER_FIRST_COME
   FORCING_CS1_PRIORITIES_CHANGE
 #  FORCING_CS1_WITH_STOPS
 #  FORCING_CS1_CS2_PRIORITIES_CHANGE
@@ -25,6 +25,9 @@ scenarios=(
 #  FORCING_UPCOMING_PRIORITIES_CHANGE_21
 )
 
+reference=$(mktemp --tmpdir run-and-consolidate.XXXX)
+trap 'rm -f "$reference"' EXIT
+
 set -x
 "$root"/run-scenarios.sh "$timeout" "$demo" "${scenarios[@]}"
-"$root"/consolidate-rundirs-to-sorted-csv.sh  # TODO: take only current files
+"$root"/consolidate-rundirs-to-sorted-csv.sh "$reference"
