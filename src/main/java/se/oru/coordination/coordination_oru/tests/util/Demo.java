@@ -5,7 +5,6 @@ import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.Printer;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
-import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public abstract class Demo {
     protected abstract void run(String scenarioString);
@@ -19,7 +18,7 @@ public abstract class Demo {
         AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled = true;
         BrowserVisualization.isStatusText = true;
         GatedThread.enable();
-        Missions.isWriteStatistics = true;
+        Missions.isStatistics = true;
 
         Demo thisDemo = this;
 

@@ -63,8 +63,7 @@ public class Missions {
 	protected static BufferedImage map = null;
 	protected static double mapResolution = -1;
 	protected static Coordinate mapOrigin = null;
-	public static boolean isUpdateRobotReports = false;
-	public static boolean isWriteStatistics = false;
+	public static boolean isStatistics = false;
 
 	protected static double minPathDistance = -1;
 	
@@ -1356,10 +1355,8 @@ public class Missions {
 						//Sleep for a little (0.5 sec)
 						try { GatedThread.sleep(500); }
 						catch (InterruptedException e) { e.printStackTrace(); }
-						if (isUpdateRobotReports) {
+						if (isStatistics) {
 							updateRobotReports(tec); // Call to update all the robot reports
-						}
-						if (isWriteStatistics) {
 							writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
 						}
 // 						LookAheadVehicle.updateLookAheadVehiclesPath(tec); // Call to update limited predictable vehicles paths
@@ -1410,11 +1407,8 @@ public class Missions {
 						return;
 					}
 
-					if (isUpdateRobotReports) {
+					if (isStatistics) {
 						updateRobotReports(tec); // Call to update all the robot reports
-					}
-
-					if (isWriteStatistics) {
 						writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
 					}
 				}
