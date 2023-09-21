@@ -12,21 +12,58 @@ scenarios=(
   BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST
   BASELINE_IDEAL_DRIVER_HUMAN_FIRST
   BASELINE_IDEAL_DRIVER_FIRST_COME
-  FORCING_CS1_PRIORITIES_CHANGE
-#  FORCING_CS1_WITH_STOPS
-#  FORCING_CS1_CS2_PRIORITIES_CHANGE
-#  FORCING_CS1_CS2_WITH_STOPS
-#  FORCING_UPCOMING_PRIORITIES_CHANGE
-#  FORCING_UPCOMING_WITH_STOPS
-#  FORCING_GLOBAL_STOP
-#  FORCING_GLOBAL_STOP_11
-#  FORCING_GLOBAL_STOP_12
-#  FORCING_UPCOMING_PRIORITIES_CHANGE_22
-#  FORCING_UPCOMING_PRIORITIES_CHANGE_21
 )
+
+scenarios+=(
+  S_DP1C
+  S_DP1M
+  S_DP2C
+  S_DP2M
+  S_DP3C
+  S_DP3M
+  S_DPGC
+  S_DPGM
+  S_DS1C
+  S_DS1M
+  S_DS2C
+  S_DS2M
+  S_DS3C
+  S_DS3M
+  S_DSGC
+  S_DSGM
+  S_UP1C
+  S_UP1M
+  S_UP2C
+  S_UP2M
+  S_UP3C
+  S_UP3M
+  S_UPGC
+  S_UPGM
+  S_US1C
+  S_US1M
+  S_US2C
+  S_US2M
+  S_US3C
+  S_US3M
+  S_USGC
+  S_USGM
+)
+
+# S_{D,U}{P,S}{1,2,3,G}{C,M}
+#for a in D U; do
+#  for b in P S; do
+#    for c in 1 2 3 G; do
+#      for d in C M; do
+#        scenarios+=(S_"$a$b$c$d")
+#      done
+#    done
+#  done
+#done
 
 reference=$(mktemp --tmpdir run-and-consolidate.XXXX)
 trap 'rm -f "$reference"' EXIT
+
+trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT
 
 set -x
 "$root"/run-scenarios.sh "$timeout" "$demo" "${scenarios[@]}"

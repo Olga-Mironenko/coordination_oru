@@ -15,31 +15,43 @@ import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
 import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
-
+/**
+ * Variations of forcing:
+ * - (A) where forcing happens:
+ *   D) first downwards
+ *   U) both first downwards and first upwards
+ * - (B) which reaction to forcing:
+ *   P) priority change
+ *   S) stops
+ * - (C) who is affected:
+ *   1) the robot before the first crossroad
+ *   2) the robots before the first and second crossroads
+ *   3) the robots before all three crossroads
+ *   G) all robots regardless of their positions (globally)
+ * - (D) when everything comes back to normal:
+ *   C) after the first crossroad
+ *   M) after the end of mission
+ *
+ * + baselines
+ */
 public class GridTest {
+    enum TraitA { AD, AU }
+    enum TraitB { BP, BS }
+
+    enum TraitC { C1, C2, C3, CG }
+    enum TraitD { DC, DM }
+
     enum Scenario {
         BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1,
-        BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST,
-        BASELINE_IDEAL_DRIVER_HUMAN_FIRST,
-        BASELINE_IDEAL_DRIVER_FIRST_COME,
 
-        FORCING_CS1_PRIORITIES_CHANGE,
-        FORCING_CS1_WITH_STOPS,
+        BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST, // DONE
+        BASELINE_IDEAL_DRIVER_HUMAN_FIRST, // DONE
+        BASELINE_IDEAL_DRIVER_FIRST_COME, // DONE
 
-        FORCING_CS1_CS2_PRIORITIES_CHANGE,
-        FORCING_CS1_CS2_WITH_STOPS,
-
-        FORCING_UPCOMING_PRIORITIES_CHANGE,
-        FORCING_UPCOMING_WITH_STOPS,
-
-        FORCING_GLOBAL_STOP,
-        // The same as FORCING_UPCOMING_WITH_STOPS, but other robots stop even they have already passed,
-        // the intersection (so there are no critical sections for them to stop before).
-
-        FORCING_GLOBAL_STOP_11,
-        FORCING_GLOBAL_STOP_12,
-        FORCING_UPCOMING_PRIORITIES_CHANGE_21,
-        FORCING_UPCOMING_PRIORITIES_CHANGE_22, // would be the same as BASELINE_IDEAL_DRIVER_HUMAN_FIRST ?
+        S_DP1C, S_DP1M, S_DP2C, S_DP2M, S_DP3C, S_DP3M, S_DPGC, S_DPGM,
+        S_DS1C, S_DS1M, S_DS2C, S_DS2M, S_DS3C, S_DS3M, S_DSGC, S_DSGM,
+        S_UP1C, S_UP1M, S_UP2C, S_UP2M, S_UP3C, S_UP3M, S_UPGC, S_UPGM,
+        S_US1C, S_US1M, S_US2C, S_US2M, S_US3C, S_US3M, S_USGC, S_USGM,
     }
 
     public static void main(String[] args) {
@@ -52,8 +64,10 @@ public class GridTest {
     }
 
     protected static void runDemo(String scenarioString) {
-        Scenario scenario = scenarioString == null ? Scenario.FORCING_GLOBAL_STOP_12 :
-                Scenario.valueOf(scenarioString);
+        if (scenarioString == null) {
+            scenarioString = Scenario.S_DPGM.toString();
+        }
+        Scenario scenario = Scenario.valueOf(scenarioString);
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
@@ -174,92 +188,76 @@ public class GridTest {
         new GatedThread("forcing thread") {
             @Override
             public void runCore() {
-                boolean isForcing = true;
-                assert(Forcing.priorityDistance == Double.NEGATIVE_INFINITY);
-                assert(Forcing.stopDistance == Double.NEGATIVE_INFINITY);
-                assert(! Forcing.isGlobalTemporaryStop);
-                assert(Forcing.isRestorePrioritiesAfterTheNearestIntersection);
-
-                double[] ysDownwardsForcing = new double[] { humStart.getY() - 6.5 };
-                double[] ysDownwardsResumingRobots = new double[] { humStart.getY() - 16.5 };
-                double[] ysDownwardsRestoringPriorities = new double[] {};
-
-                double[] ysUpwardsForcing = new double[] {};
-                double[] ysUpwardsResumingRobots = new double[] {};
-                double[] ysUpwardsRestoringPriorities = new double[] {};
-
                 switch (scenario) {
                     case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1:
                     case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
                     case BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
                     case BASELINE_IDEAL_DRIVER_FIRST_COME:
-                        isForcing = false;
-                        // For manual use:
-                        Forcing.priorityDistance = 10.0;
-                        Forcing.stopDistance = 10.0;
-                        break;
+                        return;
+                }
 
-                    case FORCING_CS1_PRIORITIES_CHANGE:
-                        Forcing.priorityDistance = 10.0;
-                        break;
-                    case FORCING_CS1_WITH_STOPS:
-                        Forcing.priorityDistance = 10.0;
-                        Forcing.stopDistance = 10.0;
-                        break;
+                TraitA traitA = TraitA.valueOf("A" + scenario.toString().charAt(2));
+                TraitB traitB = TraitB.valueOf("B" + scenario.toString().charAt(3));
+                TraitC traitC = TraitC.valueOf("C" + scenario.toString().charAt(4));
+                TraitD traitD = TraitD.valueOf("D" + scenario.toString().charAt(5));
 
-                    case FORCING_CS1_CS2_PRIORITIES_CHANGE:
-                        Forcing.priorityDistance = 20.0;
-                        break;
-                    case FORCING_CS1_CS2_WITH_STOPS:
-                        Forcing.priorityDistance = 20.0;
-                        Forcing.stopDistance = 20.0;
-                        break;
+                assert(Forcing.priorityDistance == Double.NEGATIVE_INFINITY);
+                assert(Forcing.stopDistance == Double.NEGATIVE_INFINITY);
+                assert(! Forcing.isGlobalTemporaryStop);
+                assert(Forcing.isResetAfterCurrentCrossroad);
 
-                    case FORCING_UPCOMING_PRIORITIES_CHANGE:
+                // Derive information from traits:
+                boolean isUpwards = traitA == TraitA.AU;
+                boolean isStop = traitB == TraitB.BS;
+
+                switch (traitC) {
+                    case C1:
+                        Forcing.priorityDistance = 10;
+                        break;
+                    case C2:
+                        Forcing.priorityDistance = 20;
+                        break;
+                    case C3:
                         Forcing.priorityDistance = Double.POSITIVE_INFINITY;
                         break;
-                    case FORCING_UPCOMING_WITH_STOPS:
-                        Forcing.priorityDistance = Double.POSITIVE_INFINITY;
-                        Forcing.stopDistance = Double.POSITIVE_INFINITY;
-                        break;
-                    case FORCING_GLOBAL_STOP:
-                        Forcing.priorityDistance = Double.POSITIVE_INFINITY;
-                        Forcing.isGlobalTemporaryStop = true;
-                        break;
-
-                    case FORCING_GLOBAL_STOP_11:
-                    case FORCING_GLOBAL_STOP_12:
-                    case FORCING_UPCOMING_PRIORITIES_CHANGE_21:
-                    case FORCING_UPCOMING_PRIORITIES_CHANGE_22:
-                        boolean isStop = scenario == Scenario.FORCING_GLOBAL_STOP_11 || scenario == Scenario.FORCING_GLOBAL_STOP_12;
-                        boolean isUpwards = scenario == Scenario.FORCING_GLOBAL_STOP_12 || scenario == Scenario.FORCING_UPCOMING_PRIORITIES_CHANGE_22;
-
-                        Forcing.priorityDistance = Double.POSITIVE_INFINITY;
-                        Forcing.isRestorePrioritiesAfterTheNearestIntersection = false;
-
+                    case CG:
                         if (isStop) {
                             Forcing.isGlobalTemporaryStop = true;
-                        }
-
-                        ysDownwardsForcing = new double[] { humStart.getY() - 4.0 }; // TODO: temporary
-                        ysDownwardsRestoringPriorities = new double[] { humFinish.getY() };
-                        ysDownwardsResumingRobots = isStop ? ysDownwardsRestoringPriorities : new double[] {};
-
-                        if (isUpwards) {
-                            ysUpwardsForcing = new double[]{ humFinish.getY() + 4.0 };
-                            ysUpwardsRestoringPriorities = new double[]{ humStart.getY() };
-                            ysUpwardsResumingRobots = isStop ? ysUpwardsRestoringPriorities : new double[] {};
+                        } else {
+                            // Affect current sections. (TODO: comparatorsOrig, etc.)
+                            Forcing.priorityDistance = Double.POSITIVE_INFINITY;
                         }
                         break;
-
-                    default:
-                        throw new RuntimeException(String.valueOf(scenario));
+                }
+                if (isStop) {
+                    Forcing.stopDistance = Forcing.priorityDistance;
                 }
 
-                if (! isForcing) {
-                    return;
+                boolean isManualRestoring = traitD == TraitD.DM;
+
+                // Propagate the information:
+                double[] ysDownwardsForcing = new double[]{humStart.getY() - 4.0};
+                double[] ysDownwardsResumingRobots = new double[]{};
+                double[] ysDownwardsRestoringPriorities = new double[]{};
+
+                double[] ysUpwardsForcing = new double[]{humFinish.getY() + 4.0};
+                double[] ysUpwardsResumingRobots = new double[]{};
+                double[] ysUpwardsRestoringPriorities = new double[]{};
+
+                if (isManualRestoring) {
+                    Forcing.isResetAfterCurrentCrossroad = false;
+                    ysDownwardsRestoringPriorities = ysDownwardsResumingRobots = new double[]{humStart.getY()};
+                    ysUpwardsRestoringPriorities = ysUpwardsResumingRobots = new double[]{humStart.getY()};
                 }
 
+                if (!isUpwards) {
+                    ysUpwardsForcing = ysUpwardsRestoringPriorities = ysUpwardsResumingRobots = new double[] {};
+                }
+                if (!isStop) {
+                    ysDownwardsResumingRobots = ysUpwardsResumingRobots = new double[] {};
+                }
+
+                // Apply the information:
                 KnobsAfterForcing knobsAfterForcing = null;
                 while (true) {
                     boolean isForcingNow = false;

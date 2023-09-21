@@ -9,5 +9,12 @@ root=$(dirname "$0")
 repo=$root/..
 cd "$repo"
 
+args_gradlew=(
+   --no-daemon
+   --max-workers=1
+   --no-parallel
+   --no-scan
+   run -Pdemo="$demo"
+)
 set -x
-exec ./gradlew --no-daemon run -Pdemo="$demo" >./logs/entire/"$demo".log 2>&1
+./gradlew "${args_gradlew[@]}" |& tee ./logs/entire/"$demo".log

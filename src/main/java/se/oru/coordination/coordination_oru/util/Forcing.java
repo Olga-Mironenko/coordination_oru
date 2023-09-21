@@ -20,13 +20,14 @@ public class Forcing {
     public static double stopDistance = Double.NEGATIVE_INFINITY; // stop the other robot of that intersection?
 
     public static boolean isGlobalTemporaryStop = false;
-    public static boolean isRestorePrioritiesAfterTheNearestIntersection = true;
+    public static boolean isResetAfterCurrentCrossroad = true;
 
     public static KnobsAfterForcing forceDriving(int robotID) {
         robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
+        // TODO: remove (since `tec.comparators.addComparator(new Heuristics().lowestIDNumber())` is done unconditionally)
         final ArrayList<CriticalSection> criticalSectionsForPriority =
                 selectCriticalSections(robotID, tec.allCriticalSections, priorityDistance, Integer.MAX_VALUE);
         for (CriticalSection cs : criticalSectionsForPriority) {
@@ -61,6 +62,7 @@ public class Forcing {
             stopRobot(robot);
         }
 
+        // TODO: Does this affect only sections created afterwards?
         ComparatorChain comparatorsOrig = tec.comparators;
         if (robotID == 0) {
             tec.comparators = new ComparatorChain();
@@ -101,6 +103,7 @@ public class Forcing {
             public String[] onPositionUpdate() {
                 if (areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsForPriority)) {
                     knobsAfterForcing.restorePriorities();
+                    knobsAfterForcing.resumeRobots();
                 }
                 return null;
             }
@@ -115,7 +118,7 @@ public class Forcing {
             public void beforeTrackingFinished() { }
         };
 
-        if (isRestorePrioritiesAfterTheNearestIntersection && ! criticalSectionsForPriority.isEmpty()) {
+        if (isResetAfterCurrentCrossroad && ! criticalSectionsForPriority.isEmpty()) {
             tec.addTrackingCallback(robotID, cb);
         }
 
