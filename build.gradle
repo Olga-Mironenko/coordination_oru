@@ -80,10 +80,10 @@ dependencies {
   // (NOTE: you have to create this directory if you need it)
   //compile fileTree(dir: 'lib', include: '**/*.jar')
 
+  implementation fileTree(dir: 'lib', include: '**/*.jar')
 }
 
 run {
-    enableAssertions = true
     if (project.hasProperty("demo")) {
         args(demo)
     }

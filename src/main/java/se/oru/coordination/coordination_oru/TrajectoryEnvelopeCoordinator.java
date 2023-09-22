@@ -1153,12 +1153,12 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							if (!(trackers.get(robotID) instanceof TrajectoryEnvelopeTrackerDummy)) numberDrivingRobots++;
 
 						// Update look-ahead paths
-						for (Integer robotID : trackers.keySet()) {
-							if (VehiclesHashMap.getVehicle(robotID).getType().equals("LookAheadVehicle")) {
-								var lookAheadVehicle = (LookAheadVehicle) VehiclesHashMap.getVehicle(robotID);
-								lookAheadVehicle.updateLookAheadRobotPath(tec, lookAheadVehicle);
-							}
-						}
+//						for (Integer robotID : trackers.keySet()) {
+//							if (VehiclesHashMap.getVehicle(robotID).getType().equals("LookAheadVehicle")) {
+//								var lookAheadVehicle = (LookAheadVehicle) VehiclesHashMap.getVehicle(robotID);
+//								lookAheadVehicle.updateLookAheadRobotPath(tec, lookAheadVehicle);
+//							}
+//						}
 
 						if (!missionsPool.isEmpty()) {
 
