@@ -5,18 +5,14 @@
 package se.oru.coordination.coordination_oru.gui_oru;
 
 import addPath.ImageWindow;
-import javax.swing.JFileChooser;
-import java.io.File;
+import org.json.simple.parser.ParseException;
 
-import java.awt.Color;
-import java.awt.Image;
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.DefaultListModel;
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-import org.json.simple.parser.ParseException;
 
 
 
@@ -24,21 +20,18 @@ import org.json.simple.parser.ParseException;
  *
  * @author bader
  */
-public class interface1 extends javax.swing.JFrame {
+public class GUIInterface extends javax.swing.JFrame {
 
-    /**
-     * Creates new form NewMaria
-     */
-    int indexOfList=0;
+    int indexOfList = 0;
     
-    String fileName="";
+    String fileName = "";
     
     int selectIndexTab = 0;
     
     int countIteration;
     long time_ms;
     
-    public interface1() {
+    public GUIInterface() {
         
         initComponents();
         
@@ -46,13 +39,13 @@ public class interface1 extends javax.swing.JFrame {
         this.textBox_nameFileWrite.setVisible(false);
         this.btn_okFileName.setVisible(false);
         
-        GuiTool.initGuiTool();
+        GUITools.initGUITools();
         this.panel_Robots.setVisible(false);
         
         
         this.label_repeat.setEnabled(false);
         this.textBox_repeat.setEnabled(false);
-        countIteration=100000;
+        countIteration = 100000;
         
         this.label_time.setEnabled(false);
         this.textBox_time.setEnabled(false);
@@ -176,7 +169,7 @@ public class interface1 extends javax.swing.JFrame {
         aboutMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Interface oru");
+        setTitle("Coordination_ORU Interface");
         setResizable(false);
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -196,7 +189,7 @@ public class interface1 extends javax.swing.JFrame {
 
         jLabel13.setFont(new java.awt.Font("Liberation Serif", 0, 24)); // NOI18N
         jLabel13.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel13.setText("Please select to create/open json file.");
+        jLabel13.setText("Please load the project file from the projects folder.");
 
         btn_load.setFont(new java.awt.Font("Liberation Sans", 0, 20)); // NOI18N
         btn_load.setText("Load");
@@ -872,11 +865,11 @@ public class interface1 extends javax.swing.JFrame {
             //listRobots.removeAll();
             fileName = selectedFile.getAbsolutePath();
             try {
-                JsonFile.readDataFromJson(fileName,GuiTool.pkg);
+                JSONFile.readDataFromJson(fileName, GUITools.pkg);
             } catch (IOException ex) {
-                Logger.getLogger(interface1.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(GUIInterface.class.getName()).log(Level.SEVERE, null, ex);
             } catch (ParseException ex) {
-                Logger.getLogger(interface1.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(GUIInterface.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IndexOutOfBoundsException ex)
             {
                 JOptionPane.showMessageDialog(null, "خطأ: لا يوجد دليل للمصفوفة", "خطأ", JOptionPane.ERROR_MESSAGE);
@@ -884,14 +877,14 @@ public class interface1 extends javax.swing.JFrame {
 
             
             this.indexOfList=0;
-            for(int i=0;i<GuiTool.pkg.robotJson.length;i++)
+            for(int i = 0; i< GUITools.pkg.robotJson.length; i++)
             {
                 //listRobots.addItem("R"+(i+1));
                 this.lModel.addElement("R"+(i+1));
             }
             this.listRobot1.setModel(lModel);
             this.listRobot1.setSelectedIndex(0);
-            GuiTool.selectListRobots(indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2, textBox_map);
+            GUITools.selectListRobots(indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2, textBox_map);
             this.interfaceEnable(true);
         }
     }//GEN-LAST:event_openMenuItemActionPerformed
@@ -924,7 +917,7 @@ public class interface1 extends javax.swing.JFrame {
 //            System.out.println("Selected file: " + selectedFile.getAbsolutePath());
             
             String [] strs = selectedFile.getAbsolutePath().split("/");
-            GuiTool.pkg.yamlFile = strs[strs.length-2]+"/"+strs[strs.length-1];
+            GUITools.pkg.yamlFile = strs[strs.length-2]+"/"+strs[strs.length-1];
             this.textBox_map.setText(strs[strs.length-2]+"/"+strs[strs.length-1]);
             
             String fileNameMap = selectedFile.getAbsolutePath().split("[.]")[0];
@@ -952,14 +945,14 @@ public class interface1 extends javax.swing.JFrame {
         if(this.listRobot1.getModel().getSize()!=0)  // اذا وجد عناصر موجودة في قائمة الروبوتات
         {
             int index_selected = this.listRobot1.getSelectedIndex();
-            GuiTool.deleteRobot(index_selected);
+            GUITools.deleteRobot(index_selected);
             
             this.listRobot1.removeAll();
             this.lModel = new DefaultListModel();
 
             this.indexOfList = this.listRobot1.getSelectedIndex();
             //this.indexOfList=0;
-            for(int i=0;i<GuiTool.pkg.robotJson.length;i++)
+            for(int i = 0; i< GUITools.pkg.robotJson.length; i++)
             {
                 lModel.addElement("R"+(i+1));
             }
@@ -967,7 +960,7 @@ public class interface1 extends javax.swing.JFrame {
             
             //to select on JList
             this.listRobot1.setSelectedIndex(0);
-            GuiTool.selectListRobots(indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2, textBox_map);
+            GUITools.selectListRobots(indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2, textBox_map);
             //------------------------
         }
         
@@ -1033,7 +1026,7 @@ public class interface1 extends javax.swing.JFrame {
                 interfaceEnable(false);
             }
             this.listRobot1.setSelectedIndex(indexOfList);
-            GuiTool.selectListRobots(indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2, textBox_map);
+            GUITools.selectListRobots(indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2, textBox_map);
             
         }
         isNewRobot = !isNewRobot;
@@ -1051,11 +1044,11 @@ public class interface1 extends javax.swing.JFrame {
         
         if(this.checkTime.isSelected())
         {
-            T_timer.time_ms = Long.parseLong(this.textBox_time.getText());
+            Timer.time_ms = Long.parseLong(this.textBox_time.getText());
         }
         else
         {
-            T_timer.time_ms = 100000000;
+            Timer.time_ms = 100000000;
         }
         
         if(this.checkRepeat.isSelected())
@@ -1072,9 +1065,9 @@ public class interface1 extends javax.swing.JFrame {
         else
             StatusRobot.setFileName_CSV(this.textBox_nameFileWrite.getText().split("[.]")[0]+".csv");
         
-        T_timer.btn_stop = this.btn_stop1;
-        T_timer.l_log = this.label_log;
-        GuiTool.run(this.textBox_log,countIteration);
+        Timer.btn_stop = this.btn_stop1;
+        Timer.l_log = this.label_log;
+        GUITools.run(this.textBox_log,countIteration);
         
         this.btn_Next.doClick();
         this.btn_Back.setEnabled(false);
@@ -1087,7 +1080,7 @@ public class interface1 extends javax.swing.JFrame {
         
         //########################## Apply ###############################
         
-        GuiTool.btn_Apply(isNewRobot, btn_newRobot, indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2,textBox_map);
+        GUITools.btn_Apply(isNewRobot, btn_newRobot, indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2,textBox_map);
         interfaceEnable(true);
         this.btn_Test.setEnabled(true);
         this.btn_run.setEnabled(true);
@@ -1102,7 +1095,7 @@ public class interface1 extends javax.swing.JFrame {
     private void listRobot1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_listRobot1MouseClicked
         // TODO add your handling code here:
         indexOfList=listRobot1.getSelectedIndex();
-        GuiTool.selectListRobots(indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2, textBox_map);
+        GUITools.selectListRobots(indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2, textBox_map);
     }//GEN-LAST:event_listRobot1MouseClicked
 
     private void btn_loadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_loadActionPerformed
@@ -1128,24 +1121,24 @@ public class interface1 extends javax.swing.JFrame {
 
             fileName = selectedFile.getAbsolutePath();
             try {
-                JsonFile.readDataFromJson(fileName,GuiTool.pkg);
+                JSONFile.readDataFromJson(fileName, GUITools.pkg);
                 String[] fileName_aux = fileName.split("/");
             this.textBox_nameFileWrite.setText(fileName_aux[fileName_aux.length-1]);
 
             this.indexOfList=0; 
             lModel = new DefaultListModel();
-            for(int i=0;i<GuiTool.pkg.robotJson.length;i++)
+            for(int i = 0; i< GUITools.pkg.robotJson.length; i++)
             {
                 this.lModel.addElement("R"+(i+1));
             }
             this.listRobot1.setModel(lModel);
 
             this.listRobot1.setSelectedIndex(0);
-            GuiTool.selectListRobots(indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2, textBox_map);
+            GUITools.selectListRobots(indexOfList, listRobot1, textBox_name, textBox_velocity, textBox_acceleration, textBox_color, textBox_size, textBox_path,textBox_iterationRobot2, textBox_map);
 
-            this.textBox_nameCSV.setText(GuiTool.pkg.csvFileName);
+            this.textBox_nameCSV.setText(GUITools.pkg.csvFileName);
             this.checkRepeat.setSelected(true);
-            this.textBox_repeat.setText(GuiTool.pkg.experimentIteration+"");
+            this.textBox_repeat.setText(GUITools.pkg.experimentIteration+"");
             this.textBox_repeat.setEnabled(true);
 
             if(this.listRobot1.getModel().getSize()==0)     //لا يوجد عناصر في قائمة الروبوتات
@@ -1164,17 +1157,17 @@ public class interface1 extends javax.swing.JFrame {
                 this.btn_Save1.setEnabled(true);
             }
 
-            String fileNameMap = GuiTool.pkg.yamlFile.split("[.]")[0].split("/")[1];
+            String fileNameMap = GUITools.pkg.yamlFile.split("[.]")[0].split("/")[1];
             ImageIcon img = new ImageIcon(new File("").getAbsolutePath()+"/maps/"+fileNameMap+".png");
             Image ii = img.getImage().getScaledInstance(450, 300, Image.SCALE_SMOOTH);
             img = new ImageIcon(ii);
             this.l_image.setIcon(img);
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Error: The file cannot be opened", "Error", JOptionPane.ERROR_MESSAGE);
-                Logger.getLogger(interface1.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(GUIInterface.class.getName()).log(Level.SEVERE, null, ex);
             } catch (ParseException ex) {
                 JOptionPane.showMessageDialog(null, "Error: The file cannot be opened", "Error", JOptionPane.ERROR_MESSAGE);
-                Logger.getLogger(interface1.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(GUIInterface.class.getName()).log(Level.SEVERE, null, ex);
             } 
             catch (IndexOutOfBoundsException ex)
             {
@@ -1214,7 +1207,7 @@ public class interface1 extends javax.swing.JFrame {
         this.btn_Test.setEnabled(true);
         this.btn_Back.setEnabled(true);
         this.btn_Next.setEnabled(true);
-        GuiTool.stop();
+        GUITools.stop();
 
     }//GEN-LAST:event_btn_stop1ActionPerformed
 
@@ -1256,16 +1249,16 @@ public class interface1 extends javax.swing.JFrame {
         // TODO add your handling code here:
         
         // ######################### Save ############################
-        GuiTool.pkg.csvFileName = this.textBox_nameCSV.getText();
+        GUITools.pkg.csvFileName = this.textBox_nameCSV.getText();
         if(this.checkRepeat.isSelected())
         {
-            GuiTool.pkg.experimentIteration = Long.parseLong(this.textBox_repeat.getText());
+            GUITools.pkg.experimentIteration = Long.parseLong(this.textBox_repeat.getText());
         }
         else
         {
-            GuiTool.pkg.experimentIteration = (long) 1;
+            GUITools.pkg.experimentIteration = (long) 1;
         }
-        GuiTool.btn_save(fileName);
+        GUITools.btn_save(fileName);
     }//GEN-LAST:event_btn_Save1ActionPerformed
 
     private void checkTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkTimeActionPerformed
@@ -1292,7 +1285,7 @@ public class interface1 extends javax.swing.JFrame {
         {
             this.label_repeat.setEnabled(true);
             this.textBox_repeat.setEnabled(true);
-            countIteration= (int) GuiTool.pkg.experimentIteration;
+            countIteration= (int) GUITools.pkg.experimentIteration;
             this.textBox_repeat.setText(countIteration+"");
         }
         else
@@ -1311,10 +1304,10 @@ public class interface1 extends javax.swing.JFrame {
         this.btn_Test.setEnabled(false);
         this.btn_Back.setEnabled(false);
         
-        T_timer.time_ms = 100000000;
-        T_timer.btn_stop = this.btn_stop1;
-        T_timer.l_log = this.label_log;
-        GuiTool.run(this.textBox_log,100000);
+        Timer.time_ms = 100000000;
+        Timer.btn_stop = this.btn_stop1;
+        Timer.l_log = this.label_log;
+        GUITools.run(this.textBox_log,100000);
         
         selectIndexTab=4;
         this.jTabbedPane1.setSelectedIndex(selectIndexTab);
@@ -1326,14 +1319,14 @@ public class interface1 extends javax.swing.JFrame {
         {
             this.interfaceEnable(true);
 
-            GuiTool.pkg.yamlFile="";
+            GUITools.pkg.yamlFile="";
             while(this.listRobot1.getModel().getSize()!=0)
             {
                 this.btn_deleteRobot.doClick();
             }
             this.textBox_map.setText("yamlFile.yaml");
             this.fileName=this.textBox_nameFileWrite.getText();
-            GuiTool.pkg.robotJson = new RobotJson[0];
+            GUITools.pkg.robotJson = new RobotJson[0];
             this.l_image.setIcon(null);
             
             this.textBox_nameFileWrite.setEnabled(false);
@@ -1384,7 +1377,7 @@ public class interface1 extends javax.swing.JFrame {
 
     private void addPathActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addPathActionPerformed
         // TODO add your handling code here:
-        String fileNameMap = GuiTool.pkg.yamlFile.split("[.]")[0]+".png";
+        String fileNameMap = GUITools.pkg.yamlFile.split("[.]")[0]+".png";
         fileNameMap = new File("").getAbsolutePath()+"/"+fileNameMap;
         ImageWindow.addPath(fileNameMap);
         ImageWindow.textArea = textBox_path;
@@ -1412,13 +1405,13 @@ public class interface1 extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(interface1.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(GUIInterface.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(interface1.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(GUIInterface.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(interface1.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(GUIInterface.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(interface1.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(GUIInterface.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         //</editor-fold>
@@ -1426,7 +1419,7 @@ public class interface1 extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new interface1().setVisible(true);
+                new GUIInterface().setVisible(true);
             }
         });
     }

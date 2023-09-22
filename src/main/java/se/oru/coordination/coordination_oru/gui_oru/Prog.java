@@ -26,7 +26,7 @@ public class Prog {
     
     public void progRun(int iteration_Experiment) throws InterruptedException, FileNotFoundException, IOException, ParseException{
 
-        pkg = GuiTool.pkg;
+        pkg = GUITools.pkg;
 
         MyRobot.initMyRobot();
         
@@ -203,7 +203,7 @@ public class Prog {
 			}
 		});
 		
-		JsonFile.createPathFile(new File("").getAbsolutePath()+"/"+"path.txt",pkg.robotJson);
+		JSONFile.createPathFile(new File("").getAbsolutePath()+"/"+"path.txt",pkg.robotJson);
 		Missions.loadRoadMap(new File("").getAbsolutePath()+"/"+"path.txt");
 
 		initFootPrint(myRobot,pkg);
@@ -234,7 +234,7 @@ public class Prog {
                 tec.setCheckCollisions(true);
                 
                 
-                JsonFile.writeFile("Maria222.txt","",false);
+                JSONFile.writeFile("Maria222.txt","",false);
 		int way_1,way_2;
 		for(int i=0;i<pkg.robotJson.length;i++)
 		{	
@@ -256,7 +256,7 @@ public class Prog {
 
                     tec.setMotionPlanner(i+1, myRobot[i].rsp);
 
-                    JsonFile.writeFile("Maria222.txt","R"+i+1+":"+pkg.robotJson[i].path.length+"\n",true);
+                    JSONFile.writeFile("Maria222.txt","R"+i+1+":"+pkg.robotJson[i].path.length+"\n",true);
 
                     for(int countRobot=1; countRobot<=pkg.robotJson[i].iterationPath;countRobot++)
                     {

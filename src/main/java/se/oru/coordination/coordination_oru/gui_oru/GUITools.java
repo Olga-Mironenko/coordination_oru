@@ -21,13 +21,13 @@ import se.oru.coordination.coordination_oru.util.Missions;
  *
  * @author bader
  */
-public class GuiTool{
+public class GUITools {
     
-    public static interface1 interf = null;
+    public static GUIInterface interf = null;
     public static Prog prg = new Prog();
     public static PkgRobotWithMap pkg = new PkgRobotWithMap();
     
-    public static void initGuiTool()
+    public static void initGUITools()
     {
         pkg.robotJson = new RobotJson[0];
         prg = new Prog();
@@ -41,7 +41,7 @@ public class GuiTool{
     
     public static void stop()
     {
-        T_timer.isStop=true;           //لايقاف مؤقت التجربة الذي يوضع في سجل الروبوتات
+        Timer.isStop=true;           //لايقاف مؤقت التجربة الذي يوضع في سجل الروبوتات
 //        LogRobot.isStoplog = false;    //لإيقاف السجل للروبوتات
         
         removeAllMission();
@@ -66,22 +66,21 @@ public class GuiTool{
             prg.progRun(countIteration);
         } catch (InterruptedException ex) 
         {
-            Logger.getLogger(interface1.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GUIInterface.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) 
         {
-            Logger.getLogger(interface1.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GUIInterface.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ParseException ex) 
         {
-            Logger.getLogger(interface1.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GUIInterface.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    
+
     public static void btn_save(String fileName)
     {
-        if(fileName!="")
+        if(fileName != "")
         {
-            JsonFile.writeDataToJson(fileName, pkg);
+            JSONFile.writeDataToJson(fileName, pkg);
         }
     }
     
@@ -94,10 +93,10 @@ public class GuiTool{
             pkg.robotJson[indexOfList].velocity= Double.valueOf(textBox_velocity.getText()) ;
             pkg.robotJson[indexOfList].accleration= Double.valueOf(textBox_acceleration.getText()) ;
             pkg.robotJson[indexOfList].color=textBox_color.getText();
-            pkg.robotJson[indexOfList].size=JsonFile.convertStringtoSizeArray_interface(textBox_size.getText());
-            pkg.robotJson[indexOfList].indexSize = JsonFile.convertStringtoSizeArray_interface(textBox_size.getText()).length;
-            pkg.robotJson[indexOfList].path=JsonFile.convertStringtoPathArray_interface(textBox_path.getText());
-            pkg.robotJson[indexOfList].indexPath = JsonFile.convertStringtoPathArray_interface(textBox_path.getText()).length;
+            pkg.robotJson[indexOfList].size= JSONFile.convertStringtoSizeArray_interface(textBox_size.getText());
+            pkg.robotJson[indexOfList].indexSize = JSONFile.convertStringtoSizeArray_interface(textBox_size.getText()).length;
+            pkg.robotJson[indexOfList].path= JSONFile.convertStringtoPathArray_interface(textBox_path.getText());
+            pkg.robotJson[indexOfList].indexPath = JSONFile.convertStringtoPathArray_interface(textBox_path.getText()).length;
 
             pkg.robotJson[indexOfList].iterationPath = Integer.parseInt(textBox_iterationRobot2.getText());
         }
@@ -114,28 +113,28 @@ public class GuiTool{
 
             //
             int len;
-            len = JsonFile.convertStringtoSizeArray_interface(textBox_size.getText()).length;
+            len = JSONFile.convertStringtoSizeArray_interface(textBox_size.getText()).length;
             newPkg.robotJson[0].size = new Point[len];
             for(int j=0;j<len;j++)
             {
                 newPkg.robotJson[0].size[j] = new Point();
-                Point [] po = JsonFile.convertStringtoSizeArray_interface(textBox_size.getText());
+                Point [] po = JSONFile.convertStringtoSizeArray_interface(textBox_size.getText());
                 newPkg.robotJson[0].size[j].setPoint(po[j].x, po[j].y);
             }
 
-            len = JsonFile.convertStringtoSizeArray_interface(textBox_path.getText()).length;
+            len = JSONFile.convertStringtoSizeArray_interface(textBox_path.getText()).length;
             newPkg.robotJson[0].path = new Point[len];
             for(int j=0;j<len;j++)
             {
                 newPkg.robotJson[0].path[j] = new Point();
-                Point [] po = JsonFile.convertStringtoSizeArray_interface(textBox_path.getText());
+                Point [] po = JSONFile.convertStringtoSizeArray_interface(textBox_path.getText());
                 newPkg.robotJson[0].path[j].setPoint(po[j].x, po[j].y, po[j].theta);
             }
             //
             newPkg.robotJson[0].indexSize=newPkg.robotJson[0].size.length;
             newPkg.robotJson[0].indexPath=newPkg.robotJson[0].path.length;
             //
-            newPkg.yamlFile = GuiTool.pkg.yamlFile;
+            newPkg.yamlFile = GUITools.pkg.yamlFile;
 //            newPkg.robotJson[0].iteration = Integer.parseInt(textBox_iterationRobot.getText());
             newPkg.robotJson[0].iterationPath = Integer.parseInt(textBox_iterationRobot2.getText());
             //
@@ -144,7 +143,7 @@ public class GuiTool{
             //------------------------------------------------------------
             DefaultListModel lModel = new DefaultListModel();
             int i;
-            for(i=0;i<GuiTool.pkg.robotJson.length;i++)
+            for(i=0; i< GUITools.pkg.robotJson.length; i++)
             {
                 //listRobots.addItem("R"+(i+1));
                 lModel.addElement("R"+(i+1));
@@ -153,8 +152,6 @@ public class GuiTool{
             //-------------------------------------------------------------
 
             btn_newRobot.setText("New Robot");
-            
-            
 
         }
     }
@@ -169,8 +166,8 @@ public class GuiTool{
             textBox_velocity.setText(pkg.robotJson[indexOfList].velocity +"");
             textBox_acceleration.setText(pkg.robotJson[indexOfList].accleration+"");
             textBox_color.setText(pkg.robotJson[indexOfList].color);
-            textBox_size.setText(JsonFile.dataToSize_interface(pkg.robotJson[indexOfList].size));
-            textBox_path.setText(JsonFile.dataToPath_interface(pkg.robotJson[indexOfList].path));
+            textBox_size.setText(JSONFile.dataToSize_interface(pkg.robotJson[indexOfList].size));
+            textBox_path.setText(JSONFile.dataToPath_interface(pkg.robotJson[indexOfList].path));
             textBox_map.setText(pkg.yamlFile);
 
             textBox_iterationRobot2.setText(pkg.robotJson[indexOfList].iterationPath+"");

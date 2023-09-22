@@ -1,16 +1,16 @@
 package se.oru.coordination.coordination_oru.gui_oru;
 
 public class RobotJson {
-    String name="";
-    double velocity=0;
-    double accleration=0;
-    String color="";
+    String name = "";
+    double velocity = 0;
+    double accleration = 0;
+    String color = "";
     Point [] size;
     Point [] path;
-    int indexSize=0;
-    int indexPath=0;
+    int indexSize = 0;
+    int indexPath = 0;
     //int iteration=0;
-    int iterationPath=1;
+    int iterationPath = 1;
     
     RobotJson(RobotJson robotJson2)
     {
@@ -29,11 +29,11 @@ public class RobotJson {
         ;
     }
 
-    void setCountOfSize(int n)
-    {
+    void setCountOfSize(int n) {
         size = new Point[n];
-        for(int i=0;i<n;i++)
-        size[i] = new Point();
+        for(int i=0;i<n;i++) {
+            size[i] = new Point();
+        }
     }
     
     void setCountOfPath(int n)

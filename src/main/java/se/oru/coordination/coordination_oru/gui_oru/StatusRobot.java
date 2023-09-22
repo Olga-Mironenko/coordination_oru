@@ -205,7 +205,7 @@ public class StatusRobot {
                 if(textArea!=null)
                 {
                     st += ">> Repeat \n";
-                    st += "Time: " + T_timer.currentTime + " ms \n";
+                    st += "Time: " + Timer.currentTime + " ms \n";
                     st += "Robot ("+robotID+"): "+"Stop " +"\n";
                     st += "From Location: " + arrMission.get(0).getFromLocation() +"\n";
                     st += "Source: "+ arrMission.get(0).getFromLocation() + "\n";
@@ -219,7 +219,7 @@ public class StatusRobot {
             
             if(textArea!=null)
             {
-                st += "Time: " + T_timer.currentTime + " ms \n";
+                st += "Time: " + Timer.currentTime + " ms \n";
                 st += "Robot ("+robotID+"): "+"Drive " +"\n";
                 st += "To Location: " + arrMission.get(i_Stop).getToLocation() +"\n";
                 st += "Source: "+ arrMission.get(0).getFromLocation() + "\n";
@@ -247,9 +247,9 @@ public class StatusRobot {
         if(isFirstOpen == false)
         {
             isFirstOpen = true;
-            JsonFile.writeFile(csvFileName,"",false);
-            T_timer.isStop = true;
-            T_timer.setTimer();
+            JSONFile.writeFile(csvFileName,"",false);
+            Timer.isStop = true;
+            Timer.setTimer();
         }
         
         //isStop() يعني هلأ توقف
@@ -264,13 +264,13 @@ public class StatusRobot {
             
             if(textArea!=null)
             {
-                st += "Time: " + T_timer.currentTime + " ms \n";
+                st += "Time: " + Timer.currentTime + " ms \n";
                 st += "Robot ("+robotID+"): "+"Stop " +"\n";
 
                 if(i_Stop == arrMission.size()) //اذا وصل للاخير
                 {
                     IsEndPosition = true;
-                    endTimeOfRobot[robotID-1]=T_timer.currentTime;
+                    endTimeOfRobot[robotID-1]= Timer.currentTime;
                     finish[robotID-1]=true;
                     StatusExperiment.stopRobot[robotID-1]=-1;
                     st += "From Location: " + arrMission.get(arrMission.size()-1).getToLocation() +"\n";
@@ -294,7 +294,7 @@ public class StatusRobot {
             if(i_Stop == arrMission.size()) //اذا وصل للاخير
             {
                 IsEndPosition = true;
-                endTimeOfRobot[robotID-1]=T_timer.currentTime;
+                endTimeOfRobot[robotID-1]= Timer.currentTime;
                 finish[robotID-1]=true;
                 StatusExperiment.stopRobot[robotID-1]=-1;
             }
@@ -361,7 +361,7 @@ public class StatusRobot {
                     if(enable_iterationExperiment)
                         str+=(iterExperiment-1)+",";
                     
-                    long timeExp=T_timer.currentTime;
+                    long timeExp= Timer.currentTime;
                     if(enable_endTimeOfExperiment)
                         str+=timeExp+" ms"+",";
                     
@@ -394,7 +394,7 @@ public class StatusRobot {
                             endTimeOfRobot[i]=-1;
                     }
                     
-                    JsonFile.writeFile(csvFileName,str+"\n", true);
+                    JSONFile.writeFile(csvFileName,str+"\n", true);
                 }
             };
             t.start();
@@ -437,7 +437,7 @@ public class StatusRobot {
         {
             statusThread[i]=false;
         }
-        T_timer.isStop=true;
+        Timer.isStop=true;
     }
     public void anlysis(int robotID)
     {

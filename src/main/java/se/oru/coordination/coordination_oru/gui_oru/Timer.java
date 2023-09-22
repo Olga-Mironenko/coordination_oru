@@ -1,10 +1,9 @@
 package se.oru.coordination.coordination_oru.gui_oru;
-import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 
-public class T_timer {
+public class Timer {
     public static long updataTime = 1;
     public static long currentTime = 0;
     public static boolean isStop = false;
@@ -18,7 +17,7 @@ public class T_timer {
         // long seconds = endTime; // عدد الثواني التي تريد عمل مؤقت لها
         currentTime = 0;
         isStop = false;
-        Timer timer = new Timer();
+        java.util.Timer timer = new java.util.Timer();
         timer.schedule(new TimerTask() 
         {
             public void run() 
