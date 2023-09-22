@@ -218,13 +218,12 @@ public class GridTest {
                         Forcing.priorityDistance = 20;
                         break;
                     case C3:
-                        Forcing.priorityDistance = Double.POSITIVE_INFINITY;
+                        Forcing.priorityDistance = 30;
                         break;
                     case CG:
                         if (isStop) {
                             Forcing.isGlobalTemporaryStop = true;
                         } else {
-                            // Affect current sections. (TODO: comparatorsOrig, etc.)
                             Forcing.priorityDistance = Double.POSITIVE_INFINITY;
                         }
                         break;
@@ -246,7 +245,7 @@ public class GridTest {
 
                 if (isManualRestoring) {
                     Forcing.isResetAfterCurrentCrossroad = false;
-                    ysDownwardsRestoringPriorities = ysDownwardsResumingRobots = new double[]{humStart.getY()};
+                    ysDownwardsRestoringPriorities = ysDownwardsResumingRobots = new double[]{humFinish.getY()};
                     ysUpwardsRestoringPriorities = ysUpwardsResumingRobots = new double[]{humStart.getY()};
                 }
 
@@ -259,6 +258,7 @@ public class GridTest {
 
                 // Apply the information:
                 KnobsAfterForcing knobsAfterForcing = null;
+                Double positionAtForcingStart = null;
                 while (true) {
                     boolean isForcingNow = false;
                     boolean isResumingNow = false;
@@ -300,16 +300,32 @@ public class GridTest {
                     if (isForcingNow) {
                         assert ! isResumingNow;
                         assert ! isRestoringNow;
+                        // Because that's perhaps not fully supported.
                     }
 
                     if (isForcingNow) {
                         knobsAfterForcing = Forcing.forceDriving(hum0.getID());
+                        positionAtForcingStart = hum0.getCurrentRobotReport().getDistanceTraveled();
                     }
+
                     if (isResumingNow) {
+                        assert positionAtForcingStart != null;
                         knobsAfterForcing.resumeRobots();
                     }
                     if (isRestoringNow) {
+                        assert positionAtForcingStart != null;
                         knobsAfterForcing.restorePriorities();
+                    }
+                    if (isResumingNow || isRestoringNow) {
+                        positionAtForcingStart = null;
+                    }
+
+                    if (positionAtForcingStart != null) {
+                        double distanceTraveled = hum0.getCurrentRobotReport().getDistanceTraveled() - positionAtForcingStart;
+                        assert distanceTraveled >= 0; // otherwise, we are in a new mission, but restoring/resuming hasn't happened
+                        if (! knobsAfterForcing.updateForcing(distanceTraveled)) {
+                            positionAtForcingStart = null;
+                        }
                     }
 
                     GatedThread.sleepWithoutTryCatch(100);

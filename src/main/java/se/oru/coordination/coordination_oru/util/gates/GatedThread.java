@@ -130,14 +130,27 @@ abstract public class GatedThread extends Thread {
      */
     @Override
     public void run() {
-        if (isGated) {
-            gatekeeper.pauseCurrentThread("initial", true, false, gateStart);
-            Printer.print("ready");
+        if (! isGated) {
+            runCore();
+            return;
         }
 
-        runCore();
+        gatekeeper.pauseCurrentThread("initial", true, false, gateStart);
+        Printer.print("ready");
 
-        moveToNextGate();
+        if (gatekeeper.trackDeath) {
+            try {
+                runCore();
+            } catch (Throwable e) {
+                gatekeeper.hasSomeoneDied = true;
+                throw e;
+            } finally {
+                moveToNextGate();
+            }
+        } else { // for better debugging experience
+            runCore();
+            moveToNextGate();
+        }
     }
 
     /**

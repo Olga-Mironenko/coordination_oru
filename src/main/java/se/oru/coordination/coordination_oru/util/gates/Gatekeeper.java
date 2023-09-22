@@ -14,6 +14,9 @@ public class Gatekeeper {
      */
     protected Gate gateSelf;
 
+    public boolean hasSomeoneDied = false;
+    public final boolean trackDeath = false;
+
     /**
      * This method passes control from a gated thread to the gatekeeper.
      */
@@ -67,6 +70,19 @@ public class Gatekeeper {
 
             // Note: By this moment, `gateSelf.push()` may have already happened.
             gateSelf.await(); // Wait for the pushed thread to pause/finish.
+
+            if (hasSomeoneDied) {
+                //System.exit(1);
+
+                System.err.println("someone has died, sleeping indefinitely");
+                while (true) {
+                    try {
+                        Thread.sleep(Long.MAX_VALUE);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
         }
     }
 }

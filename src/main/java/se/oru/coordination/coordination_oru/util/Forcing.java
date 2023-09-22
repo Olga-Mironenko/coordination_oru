@@ -22,105 +22,94 @@ public class Forcing {
     public static boolean isGlobalTemporaryStop = false;
     public static boolean isResetAfterCurrentCrossroad = true;
 
+    private final static int maxNumberOfHumans = 1;
+
     public static KnobsAfterForcing forceDriving(int robotID) {
         robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);
 
-        TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+        final TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-        // TODO: remove (since `tec.comparators.addComparator(new Heuristics().lowestIDNumber())` is done unconditionally)
-        final ArrayList<CriticalSection> criticalSectionsForPriority =
-                selectCriticalSections(robotID, tec.allCriticalSections, priorityDistance, Integer.MAX_VALUE);
-        for (CriticalSection cs : criticalSectionsForPriority) {
-            cs.setHigher(robotID, 1);
-        }
-
-        TreeSet<Integer> robotsToStop = new TreeSet<>();
-        if (isGlobalTemporaryStop) {
-            robotsToStop.addAll(VehiclesHashMap.getList().keySet());
-            robotsToStop.remove(robotID);
-        } else {
-            final ArrayList<CriticalSection> criticalSectionsForStop =
-                    selectCriticalSections(robotID, tec.allCriticalSections, stopDistance, Integer.MAX_VALUE);
-
-            for (CriticalSection cs : criticalSectionsForStop) {
-                int robotToStop;
-                if (cs.isTe1(robotID)) {
-                    robotToStop = cs.getTe2RobotID();
-                } else if (cs.isTe2(robotID)) {
-                    robotToStop = cs.getTe1RobotID();
-                } else {
-                    throw new RuntimeException();
-                }
-                assert robotToStop != robotID;
-
-                if (!cs.isRobotOnCS(robotToStop)) {
-                    robotsToStop.add(robotToStop);
-                }
-            }
-        }
-        for (int robot : robotsToStop) {
-            stopRobot(robot);
-        }
-
-        // TODO: Does this affect only sections created afterwards?
-        ComparatorChain comparatorsOrig = tec.comparators;
-        if (robotID == 0) {
-            tec.comparators = new ComparatorChain();
-            tec.comparators.addComparator(new Heuristics().lowestIDNumber());
-        }
+        HashSet<CriticalSection> criticalSectionsToRestorePrioritiesLater = new HashSet<>();
+        TreeSet<Integer> robotsToResumeLater = new TreeSet<>();
 
         KnobsAfterForcing knobsAfterForcing = new KnobsAfterForcing() {
             @Override
-            public void resumeRobots() {
+            public boolean updateForcing(double distanceTraveled) {
+                if (isResetAfterCurrentCrossroad && areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsToRestorePrioritiesLater)) {
+                    restorePriorities();
+                    resumeRobots();
+                    return false;
+                }
+
+                double priorityDistanceRemaining = Math.max(0, priorityDistance - distanceTraveled);
+                if (priorityDistanceRemaining > 0) {
+                    final ArrayList<CriticalSection> criticalSectionsForPriority =
+                            selectCriticalSections(robotID, tec.allCriticalSections, priorityDistanceRemaining, Integer.MAX_VALUE);
+                    for (CriticalSection cs : criticalSectionsForPriority) {
+                        if (criticalSectionsToRestorePrioritiesLater.contains(cs)) {
+                            continue;
+                        }
+                        cs.setHigher(robotID, 1);
+                        criticalSectionsToRestorePrioritiesLater.add(cs);
+                    }
+                }
+
+                TreeSet<Integer> robotsToStop = new TreeSet<>();
+                if (isGlobalTemporaryStop) {
+                    robotsToStop.addAll(VehiclesHashMap.getList().keySet());
+                    robotsToStop.remove(robotID);
+                } else {
+                    double stopDistanceRemaining = Math.max(0, stopDistance - distanceTraveled);
+                    if (stopDistanceRemaining > 0) {
+                        final ArrayList<CriticalSection> criticalSectionsForStop =
+                                selectCriticalSections(robotID, tec.allCriticalSections, stopDistanceRemaining, Integer.MAX_VALUE);
+
+                        for (CriticalSection cs : criticalSectionsForStop) {
+                            int robotToStop;
+                            if (cs.isTe1(robotID)) {
+                                robotToStop = cs.getTe2RobotID();
+                            } else if (cs.isTe2(robotID)) {
+                                robotToStop = cs.getTe1RobotID();
+                            } else {
+                                throw new RuntimeException();
+                            }
+                            assert robotToStop != robotID;
+
+                            if (!cs.isRobotOnCS(robotToStop)) {
+                                robotsToStop.add(robotToStop);
+                            }
+                        }
+                    }
+                }
                 for (int robot : robotsToStop) {
+                    if (robotsToResumeLater.contains(robot)) {
+                        continue;
+                    }
+                    stopRobot(robot);
+                    robotsToResumeLater.add(robot);
+                }
+
+                return true;
+            }
+
+            @Override
+            public void resumeRobots() {
+                for (int robot : robotsToResumeLater) {
                     resumeRobot(robot);
                 }
-                robotsToStop.clear();
+                robotsToResumeLater.clear();
             }
 
             @Override
             public void restorePriorities() {
-                for (CriticalSection cs : criticalSectionsForPriority) {
+                for (CriticalSection cs : criticalSectionsToRestorePrioritiesLater) {
                     if (tec.allCriticalSections.contains(cs)) {
                         cs.setHigher(robotID, 0);
                     }
                 }
-                criticalSectionsForPriority.clear();
-                if (robotID == 0) {
-                    tec.comparators = comparatorsOrig;
-                }
+                criticalSectionsToRestorePrioritiesLater.clear();
             }
         };
-
-        TrackingCallback cb = new TrackingCallback(null) {
-            @Override
-            public void onTrackingStart() { }
-
-            @Override
-            public void onTrackingFinished() { }
-
-            @Override
-            public String[] onPositionUpdate() {
-                if (areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsForPriority)) {
-                    knobsAfterForcing.restorePriorities();
-                    knobsAfterForcing.resumeRobots();
-                }
-                return null;
-            }
-
-            @Override
-            public void onNewGroundEnvelope() { }
-
-            @Override
-            public void beforeTrackingStart() { }
-
-            @Override
-            public void beforeTrackingFinished() { }
-        };
-
-        if (isResetAfterCurrentCrossroad && ! criticalSectionsForPriority.isEmpty()) {
-            tec.addTrackingCallback(robotID, cb);
-        }
 
         return knobsAfterForcing;
     }
@@ -199,7 +188,7 @@ public class Forcing {
 
     protected static boolean areSomeCriticalSectionsWithHighPriorityGone(
             HashSet<CriticalSection> allCriticalSections,
-            ArrayList<CriticalSection> criticalSectionsWithHighPriority) {
+            Set<CriticalSection> criticalSectionsWithHighPriority) {
         for (CriticalSection cs : criticalSectionsWithHighPriority) {
             if (! allCriticalSections.contains(cs)) {
                 return true;
@@ -211,12 +200,16 @@ public class Forcing {
     protected static void stopRobot(int robotID) {
         System.out.println(robotID);
 
-        robotIDToFreezingCounter.put(robotID, robotIDToFreezingCounter.getOrDefault(robotID, 0) + 1);
+        int counter = robotIDToFreezingCounter.getOrDefault(robotID, 0);
+        assert 0 <= counter && counter < maxNumberOfHumans;
+        robotIDToFreezingCounter.put(robotID, counter + 1);
     }
 
     public static void resumeRobot(int robotID) {
         System.out.println(robotID);
 
-        robotIDToFreezingCounter.put(robotID, Math.max(0, robotIDToFreezingCounter.getOrDefault(robotID, 0) - 1));
+        int counter = robotIDToFreezingCounter.getOrDefault(robotID, 0);
+        assert 0 < counter && counter <= maxNumberOfHumans;
+        robotIDToFreezingCounter.put(robotID, counter - 1);
     }
 }

@@ -731,6 +731,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			CriticalSection criticalSection = getFirstOfCurrentCriticalSections();
 			if (! skipIntegration && criticalSection != null) {
 				assert criticalSection.robotIDInferior == myRobotID;
+
 				if (criticalSection.canPassFirst(myRobotID)) {
 					criticalPoint = -1;
 					onTrajectoryEnvelopeUpdate(); // reset `positionToSlowDown`, etc.

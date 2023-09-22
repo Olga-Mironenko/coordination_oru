@@ -1407,6 +1407,7 @@ public class Missions {
 						return;
 					}
 
+					// TODO: Move out from here.
 					if (isStatistics) {
 						updateRobotReports(tec); // Call to update all the robot reports
 						writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename

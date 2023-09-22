@@ -9,47 +9,47 @@ root=$(dirname "$0")
 timeout=60m
 demo=GridTest
 scenarios=(
-  BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST
-  BASELINE_IDEAL_DRIVER_HUMAN_FIRST
-  BASELINE_IDEAL_DRIVER_FIRST_COME
+#  BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST #DONE
+#  BASELINE_IDEAL_DRIVER_HUMAN_FIRST     #DONE
+#  BASELINE_IDEAL_DRIVER_FIRST_COME      #DONE
 )
 
 scenarios+=(
-  S_DP1C
+#  S_DP1C #DONE
   S_DP1M
-  S_DP2C
+#  S_DP2C #DONE
   S_DP2M
-  S_DP3C
-  S_DP3M
+#  S_DP3C #DONE
+#  S_DP3M #DONE
   S_DPGC
-  S_DPGM
-  S_DS1C
-  S_DS1M
-  S_DS2C
-  S_DS2M
-  S_DS3C
-  S_DS3M
-  S_DSGC
-  S_DSGM
+#  S_DPGM
+#  S_DS1C #DONE
+  S_DS1M #FIXME
+#  S_DS2C #DONE
+  S_DS2M #FIXME
+#  S_DS3C #DONE
+  S_DS3M #FIXME
+#  S_DSGC #DONE
+#  S_DSGM #DONE
   S_UP1C
   S_UP1M
   S_UP2C
   S_UP2M
   S_UP3C
-  S_UP3M
+#  S_UP3M #DONE
   S_UPGC
-  S_UPGM
+#  S_UPGM
   S_US1C
-  S_US1M
-  S_US2C
-  S_US2M
-  S_US3C
-  S_US3M
-  S_USGC
-  S_USGM
+  S_US1M #FIXME
+  S_US2C #FIXME
+#  S_US2M
+#  S_US3C
+#  S_US3M
+#  S_USGC
+#  S_USGM #DONE
 )
 
-# S_{D,U}{P,S}{1,2,3,G}{C,M}
+## S_{D,U}{P,S}{1,2,3,G}{C,M}
 #for a in D U; do
 #  for b in P S; do
 #    for c in 1 2 3 G; do
@@ -59,6 +59,28 @@ scenarios+=(
 #    done
 #  done
 #done
+
+## S_{D,U}{P,S}{1,2,3,G}{C,M}
+#for c in 1 2 3 G; do
+#  for d in C M; do
+#    for a in D U; do
+#      for b in P S; do
+#        echo -n "  -$a$b$c$d"
+#      done
+#    done
+#    echo
+#  done
+#done
+#table=(
+#  -DP1C  -DS1C  -UP1C  -US1C
+#  -DP1M  -DS1M  -UP1M  -US1M
+#  -DP2C  +DS2C  -UP2C  -US2C
+#  -DP2M  +DS2M  -UP2M  -US2M
+#  -DP3C  -DS3C  -UP3C  -US3C
+#  -DP3M  -DS3M  -UP3M  -US3M
+#  -DPGC  -DSGC  -UPGC  -USGC
+#  -DPGM  -DSGM  -UPGM  -USGM
+#)
 
 reference=$(mktemp --tmpdir run-and-consolidate.XXXX)
 trap 'rm -f "$reference"' EXIT

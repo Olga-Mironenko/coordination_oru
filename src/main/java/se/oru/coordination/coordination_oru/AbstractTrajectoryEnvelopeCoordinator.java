@@ -135,6 +135,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	protected boolean yieldIfParking = true;
 	protected boolean checkEscapePoses = true;
 
+	// TODO: Remove old callbacks (to avoid memory leak).
 	protected HashMap<Integer,TrackingCallback> trackingCallbacks = new HashMap<Integer, TrackingCallback>();	
 	protected Callback inferenceCallback = null;
 
