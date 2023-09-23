@@ -139,9 +139,9 @@ public class TestClick {
             new GatedThread("new mission") {
                 @Override
                 public void runCore() {
-                    GatedThread.skipCycles(100);
+                    GatedThread.skipTimesteps(100);
                     HumanControl.moveRobot(hum0.getID(), drawPoint20_bottom);
-                    GatedThread.skipCycles(10);
+                    GatedThread.skipTimesteps(10);
                     HumanControl.changeTargetVelocityHuman(1); // requires emergency break
                 }
             }.start();

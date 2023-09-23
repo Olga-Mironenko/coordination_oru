@@ -187,10 +187,10 @@ abstract public class GatedThread extends Thread {
      * Skip a deterministic amount of simulation time.
      * A `GatedThread` cycle repeats when any given gated thread executes again.
      *
-     * @param numCycles The number of `GatedThread` cycles.
+     * @param numTimesteps The number of `GatedThread` cycles.
      */
-    public static void skipCycles(int numCycles) {
-        for (int i = 1; i <= numCycles; i++) {
+    public static void skipTimesteps(int numTimesteps) {
+        for (int i = 1; i <= numTimesteps; i++) {
             sleepWithoutTryCatch(i);
         }
     }

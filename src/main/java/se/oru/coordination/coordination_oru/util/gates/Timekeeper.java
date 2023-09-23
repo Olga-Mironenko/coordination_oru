@@ -4,7 +4,7 @@ import java.util.Calendar;
 
 public class Timekeeper extends GatedThread {
     static int timestepsPassed = 0;
-    static final int virtualMillisPerCycle = 100;
+    static final int virtualMillisPerTimestep = 100;
     static int realMillisPassed = 0;
     static boolean hasCreated = false;
     static boolean isSingleSleep = false;
@@ -20,7 +20,7 @@ public class Timekeeper extends GatedThread {
     }
 
     public static int getVirtualMillisPassed() {
-        return timestepsPassed * virtualMillisPerCycle;
+        return timestepsPassed * virtualMillisPerTimestep;
     }
 
     public static int getRealMillisPassed() {
@@ -35,7 +35,7 @@ public class Timekeeper extends GatedThread {
     public void runCore() {
         long millisStarted = Calendar.getInstance().getTimeInMillis();
         while (true) {
-            skipCycles(1);
+            skipTimesteps(1);
             timestepsPassed++;
             realMillisPassed = (int) (Calendar.getInstance().getTimeInMillis() - millisStarted);
             int millisToSleep = isSingleSleep ? getVirtualMillisPassed() - getRealMillisPassed() * 2 : 0;
