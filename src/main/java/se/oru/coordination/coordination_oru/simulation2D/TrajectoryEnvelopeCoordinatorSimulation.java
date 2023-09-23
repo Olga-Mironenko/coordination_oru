@@ -20,6 +20,7 @@ import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.TrackingCallback;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
+import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeCoordinator {
@@ -254,21 +255,42 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 
 	@Override
 	public AbstractTrajectoryEnvelopeTracker getNewTracker(TrajectoryEnvelope te, TrackingCallback cb) {
+
+		if (this.getRobotTrackingPeriodInMillis(te.getRobotID()) == null || this.getRobotMaxVelocity(te.getRobotID()) == null || this.getRobotMaxAcceleration(te.getRobotID()) == null) throw new Error("Robot" +  te.getRobotID() + ": missing kinodynamic parameters.");
+
+		// Set the AdaptiveRK4 tracker
 		if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled) {
 			return getNewAdaptiveTracker(te, cb);
 		}
 
-		if (this.getRobotTrackingPeriodInMillis(te.getRobotID()) == null || this.getRobotMaxVelocity(te.getRobotID()) == null || this.getRobotMaxAcceleration(te.getRobotID()) == null) throw new Error("Robot" +  te.getRobotID() + ": missing kinodynamic parameters.");
-		TrajectoryEnvelopeTrackerRK4 ret = new TrajectoryEnvelopeTrackerRK4(te, this.getRobotTrackingPeriodInMillis(te.getRobotID()), TEMPORAL_RESOLUTION, this, cb) {
-			//Method for measuring time in the trajectory envelope tracker
-			@Override
-			public long getCurrentTimeInMillis() {
-				return tec.getCurrentTimeInMillis();
-			}
-		};
-		//ret.setUseInternalCriticalPoints(this.useInternalCPs);
-		ret.setUseInternalCriticalPoints(false);
-		return ret;
+		// Set the LookAhead tracker
+		if (VehiclesHashMap.getVehicle(te.getRobotID()).getType().equals("LookAheadVehicle")) {
+			var ret = new TrajectoryEnvelopeTrackerLookAhead(te, this.getRobotTrackingPeriodInMillis(te.getRobotID()),
+					TEMPORAL_RESOLUTION, this, cb) {
+				@Override
+				public long getCurrentTimeInMillis() {
+					return tec.getCurrentTimeInMillis();
+				}
+			};
+			//ret.setUseInternalCriticalPoints(this.useInternalCPs);
+			ret.setUseInternalCriticalPoints(false);
+			return ret;
+		}
+		else {
+
+			// Set the RK4 tracker for all other types of vehicles
+			var ret = new TrajectoryEnvelopeTrackerRK4(te, this.getRobotTrackingPeriodInMillis(te.getRobotID()), TEMPORAL_RESOLUTION, this, cb) {
+				//Method for measuring time in the trajectory envelope tracker
+				@Override
+				public long getCurrentTimeInMillis() {
+					return tec.getCurrentTimeInMillis();
+				}
+			};
+			//ret.setUseInternalCriticalPoints(this.useInternalCPs);
+			ret.setUseInternalCriticalPoints(false);
+			return ret;
+		}
+
 	}
 
 	private AbstractTrajectoryEnvelopeTracker getNewAdaptiveTracker(TrajectoryEnvelope te, TrackingCallback cb) {

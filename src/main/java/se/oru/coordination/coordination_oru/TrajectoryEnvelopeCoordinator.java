@@ -1203,7 +1203,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 					//Sleep a little...
 					//expectedSleepingTime = Math.max(500,CONTROL_PERIOD-Calendar.getInstance().getTimeInMillis()+threadLastUpdate);
-					expectedSleepingTime = 500;
+					expectedSleepingTime = 100;
 					effectiveSleepingTime = Calendar.getInstance().getTimeInMillis();
 					if (CONTROL_PERIOD > 0) {
 						try { GatedThread.sleep(expectedSleepingTime); }
@@ -1349,7 +1349,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							TrajectoryEnvelope oldEndParking = (TrajectoryEnvelope)aic.getTo();
 
 							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(te));
-//							solver.removeVariable(te);
+							solver.removeVariable(te);
 							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(oldEndParking));
 							solver.removeVariable(oldEndParking);
 
