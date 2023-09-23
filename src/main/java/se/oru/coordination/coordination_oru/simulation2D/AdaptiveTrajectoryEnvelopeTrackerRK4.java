@@ -673,126 +673,170 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return null;
 	}
 
+	private boolean checkFreezing() {
+		int myRobotID = te.getRobotID();
+
+		Integer pathIndexToStop = Forcing.robotIDToPathIndexToStop.getOrDefault(myRobotID, null);
+		if (pathIndexToStop != null && getRobotReport().getPathIndex() >= pathIndexToStop) {
+			Forcing.robotIDToPathIndexToStop.remove(myRobotID);
+			Forcing.robotIDToFreezingCounter.put(myRobotID, Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) + 1);
+		}
+
+		boolean isFreezing = Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) > 0;
+		if (isFreezing) {
+			state = new State(state.getPosition(), 0);
+			return true;
+		}
+		return false;
+	}
+
+	private void checkIfCanPassFirst() {
+		// Forget about a CS if the robot can pass first there:
+		CriticalSection criticalSection = getFirstOfCurrentCriticalSections();
+		if (criticalSection == null) {
+			return;
+		}
+
+		int myRobotID = te.getRobotID();
+
+		//assert criticalSection.getInferior() == myRobotID;
+		// After forcing ends, priority change affects `criticalSection` but doesn't propagate to
+		// `criticalPoint` yet (at least sometimes).
+
+		if (criticalSection.getInferior() != myRobotID || criticalSection.canPassFirst(myRobotID)) {
+			criticalPoint = -1;
+			onTrajectoryEnvelopeUpdate(); // reset `positionToSlowDown`, etc.
+		}
+	}
+
+	enum Status {
+		DRIVING,
+		STOPPED_AT_CP,
+		FROZEN,
+		FULL_STOP
+	}
+
+	private Status checkIfStoppedBecauseOfCriticalPoint(Status status) {
+		int myRobotID = te.getRobotID();
+
+		//End condition: passed the middle AND velocity < 0 AND no criticalPoint
+		//if (state.getPosition() >= totalDistance/2.0 && state.getVelocity() < 0.0) {
+		boolean continueToStay = this.state.getPosition() >= this.positionToSlowDown && this.state.getVelocity() <= 0.0;
+
+		if (! continueToStay) {
+			if (status == Status.STOPPED_AT_CP) {
+				metaCSPLogger.info("Resuming from critical point (" + te.getComponent() + ")");
+			}
+
+			return Status.DRIVING;
+		}
+
+		// waiting for another robot
+
+		if (status == Status.STOPPED_AT_CP) {
+			return status;
+		}
+
+		assert status == Status.DRIVING;
+		assert continueToStay;
+		if (criticalPoint == -1) { // The end of mission.
+			//set state to final position, just in case it didn't quite get there (it's certainly close enough)
+			this.state = new State(totalDistance, 0.0);
+			onPositionUpdate();
+			return Status.FULL_STOP;
+		}
+
+		// We have just arrived at a CP.
+
+		int pathIndex = getRobotReport().getPathIndex();
+		metaCSPLogger.info("At critical point (" + te.getComponent() + "): " + criticalPoint + " (" + pathIndex + ")");
+		if (pathIndex > criticalPoint) {
+			metaCSPLogger.severe("* ATTENTION! STOPPED AFTER!! *");
+
+			emergencyBreaker.stopRobots(myRobotID, pathIndex);
+			if (emergencyBreaker.isStopped(myRobotID)) {
+				return Status.FULL_STOP;
+			}
+			// TODO: Do emergency break when `state.getPosition() >= this.positionToSlowDown` and
+			// `pathIndex > criticalPoint` (regardless of `state.getVelocity() < 0.0`)?
+		}
+
+		return Status.STOPPED_AT_CP;
+	}
+
+	private void updateState(double deltaTime, double maxVelocity, double maxAcceleration) {
+		slowingDown = state.getPosition() >= positionToSlowDown;
+		double dampening = getCurvatureDampening(getRobotReport().getPathIndex(), false);
+
+		// Prefer to stop earlier than to cross over.
+		State stateTemp = new State(state.getPosition(), state.getVelocity());
+		integrateRK4(stateTemp, elapsedTrackingTime, deltaTime, slowingDown, maxVelocity, dampening, maxAcceleration, te.getRobotID());
+		if (! slowingDown && stateTemp.getPosition() >= positionToSlowDown) {
+			slowingDown = true;
+			integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, maxVelocity, dampening, maxAcceleration, te.getRobotID());
+		} else {
+			state = stateTemp;
+		}
+	}
+
+	private double waitForNextStep(long timeStart) {
+		//Sleep for tracking period
+		int delay = trackingPeriodInMillis;
+		if (NetworkConfiguration.getMaximumTxDelay() > 0) delay += rand.nextInt(NetworkConfiguration.getMaximumTxDelay());
+		try { GatedThread.sleep(delay); }
+		catch (InterruptedException e) { e.printStackTrace(); }
+
+		//Advance time to reflect how much we have slept (~ trackingPeriod)
+		long deltaTimeInMillis = GatedThread.isEnabled() ? trackingPeriodInMillis : Calendar.getInstance().getTimeInMillis() - timeStart;
+		return deltaTimeInMillis / this.temporalResolution;
+	}
+
 	@Override
 	public void run() {
 		this.elapsedTrackingTime = 0.0;
 
 		double deltaTime = 0.0;
-		boolean atCP = false;
 		int myRobotID = te.getRobotID();
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(myRobotID);
 		int myTEID = te.getID();
+		Status status = Status.DRIVING;
 
 		while (true) {
-			//Compute deltaTime
 			long timeStart = Calendar.getInstance().getTimeInMillis();
 
 			if (emergencyBreaker.isStopped(myRobotID)) {
+				// TODO: just skip the current time step?
+				status = Status.FULL_STOP;
 				break;
 			}
 
-			boolean skipIntegration = false;
-
-			Integer pathIndexToStop = Forcing.robotIDToPathIndexToStop.getOrDefault(myRobotID, null);
-			if (pathIndexToStop != null && getRobotReport().getPathIndex() >= pathIndexToStop) {
-				Forcing.robotIDToPathIndexToStop.remove(myRobotID);
-				Forcing.robotIDToFreezingCounter.put(myRobotID, Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) + 1);
+			if (checkFreezing()) {
+				status = Status.FROZEN;
 			}
 
-			boolean isFreezing = Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) > 0;
-			if (isFreezing) {
-				state = new State(state.getPosition(), 0);
-				skipIntegration = true;
+			if (status == Status.DRIVING) {
+				checkIfCanPassFirst();
 			}
 
-			CriticalSection criticalSection = getFirstOfCurrentCriticalSections();
-			if (! skipIntegration && criticalSection != null) {
-				//assert criticalSection.getInferior() == myRobotID;
-				// After forcing ends, priority change affects `criticalSection` but doesn't propagate to
-				// `criticalPoint` yet (at least sometimes).
-
-				if (criticalSection.getInferior() != myRobotID || criticalSection.canPassFirst(myRobotID)) {
-					criticalPoint = -1;
-					onTrajectoryEnvelopeUpdate(); // reset `positionToSlowDown`, etc.
-				}
-			}
-
-			//End condition: passed the middle AND velocity < 0 AND no criticalPoint
-			//if (state.getPosition() >= totalDistance/2.0 && state.getVelocity() < 0.0) {
-			if (! skipIntegration && state.getPosition() >= this.positionToSlowDown && state.getVelocity() <= 0.0) { // waiting for another robot
-				if (criticalPoint == -1 && !atCP) {
-					//set state to final position, just in case it didn't quite get there (it's certainly close enough)
-					state = new State(totalDistance, 0.0);
-					onPositionUpdate();
-					break;
-				}
-
-				assert criticalPoint != -1 || atCP;
-
-				//Vel < 0 hence we are at CP, thus we need to skip integration
-				if (!atCP /*&& getRobotReport().getPathIndex() == criticalPoint*/) {
-					assert criticalPoint != -1 : state.getPosition();
-
-					// . . . . . . . . .
-					//       ^     C
-					int pathIndex = getRobotReport().getPathIndex();
-					metaCSPLogger.info("At critical point (" + te.getComponent() + "): " + criticalPoint + " (" + pathIndex + ")");
-					if (pathIndex > criticalPoint) {
-						// . . . . . . . . .
-						//     C ^
-						metaCSPLogger.severe("* ATTENTION! STOPPED AFTER!! *");
-
-						emergencyBreaker.stopRobots(myRobotID, pathIndex);
-						if (emergencyBreaker.isStopped(myRobotID)) {
-							break;
-						}
-						// TODO: Do emergency break when `state.getPosition() >= this.positionToSlowDown` and
-						// `pathIndex > criticalPoint` (regardless of `state.getVelocity() < 0.0`)?
-					}
-
-					atCP = true;
-				}
-
-				assert criticalPoint != -1 || atCP;
-
-				skipIntegration = true; // at current iteration
+			status = checkIfStoppedBecauseOfCriticalPoint(status);
+			if (status == Status.FULL_STOP) {
+				break;
 			}
 
 			//Update the robot's state via RK4 numerical integration
-			if (!skipIntegration) {
-				if (atCP) {
-					metaCSPLogger.info("Resuming from critical point (" + te.getComponent() + ")");
-					atCP = false;
-				}
-				slowingDown = state.getPosition() >= positionToSlowDown;
-				double dampening = getCurvatureDampening(getRobotReport().getPathIndex(), false);
-
-				// Prefer to stop earlier than to cross over.
-				State stateTemp = new State(state.getPosition(), state.getVelocity());
-				integrateRK4(stateTemp, elapsedTrackingTime, deltaTime, slowingDown, vehicle.getMaxVelocity(), dampening, vehicle.getMaxAcceleration(), te.getRobotID());
-				if (! slowingDown && stateTemp.getPosition() >= positionToSlowDown) {
-					slowingDown = true;
-					integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, vehicle.getMaxVelocity(), dampening, vehicle.getMaxAcceleration(), te.getRobotID());
-				} else {
-					state = stateTemp;
-				}
+			if (status == Status.DRIVING) { // TODO: skip if `deltaTime == 0.0`
+				updateState(deltaTime, vehicle.getMaxVelocity(), vehicle.getMaxAcceleration());
 			}
 
 			//Do some user function on position update
 			onPositionUpdate();
 			enqueueOneReport();
 
-			//Sleep for tracking period
-			int delay = trackingPeriodInMillis;
-			if (NetworkConfiguration.getMaximumTxDelay() > 0) delay += rand.nextInt(NetworkConfiguration.getMaximumTxDelay());
-			try { GatedThread.sleep(delay); }
-			catch (InterruptedException e) { e.printStackTrace(); }
-
-			//Advance time to reflect how much we have slept (~ trackingPeriod)
- 			long deltaTimeInMillis = GatedThread.isEnabled() ? trackingPeriodInMillis : Calendar.getInstance().getTimeInMillis() - timeStart;
-			deltaTime = deltaTimeInMillis / this.temporalResolution;
+			deltaTime = waitForNextStep(timeStart);
 			elapsedTrackingTime += deltaTime;
 		}
+
+		assert status == Status.FULL_STOP;
 
 		//continue transmitting until the coordinator will be informed of having reached the last position.
 		while (tec.getRobotReport(te.getRobotID()).getPathIndex() != -1)
