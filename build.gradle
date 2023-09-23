@@ -81,11 +81,15 @@ dependencies {
   //compile fileTree(dir: 'lib', include: '**/*.jar')
 
   implementation fileTree(dir: 'lib', include: '**/*.jar')
-    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+  implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 }
 
 run {
-    if (project.hasProperty("demo")) {
-        args(demo)
-    }
+  if (project.hasProperty("assert")) {
+    enableAssertions = true
+  }
+
+  if (project.hasProperty("demo")) {
+    args(demo)
+  }
 }

@@ -14,7 +14,9 @@ args_gradlew=(
    --max-workers=1
    --no-parallel
    --no-scan
-   run -Pdemo="$demo"
+   run
+   -Passert
+   -Pdemo="$demo"
 )
 set -x
 ./gradlew "${args_gradlew[@]}" |& tee ./logs/entire/"$demo".log
