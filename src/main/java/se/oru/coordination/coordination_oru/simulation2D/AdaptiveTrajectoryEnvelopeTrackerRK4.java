@@ -42,6 +42,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	public static EmergencyBreaker emergencyBreaker = new EmergencyBreaker(false, false);
 
+	public Status latestStatusForVisualization;
+
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
 	}
@@ -590,7 +592,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				currentPathIndex = poses.length-1;
 				pose = poses[currentPathIndex];
 			}
-			return new RobotReport(te.getRobotID(), pose, currentPathIndex, state.getVelocity(), state.getPosition(), elapsedTrackingTime, this.criticalPoint);
+			RobotReport rr = new RobotReport(te.getRobotID(), pose, currentPathIndex, state.getVelocity(), state.getPosition(), elapsedTrackingTime, this.criticalPoint);
+			rr.statusString = latestStatusForVisualization == null ? null : latestStatusForVisualization.toString();
+			return rr;
 		}
 	}
 
@@ -716,7 +720,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		FULL_STOP
 	}
 
-	private Status checkIfStoppedBecauseOfCriticalPoint(Status status) {
+	private Status checkIfStopped(Status status) {
 		int myRobotID = te.getRobotID();
 
 		//End condition: passed the middle AND velocity < 0 AND no criticalPoint
@@ -800,6 +804,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(myRobotID);
 		int myTEID = te.getID();
 		Status status = Status.DRIVING;
+		Status statusBeforeFreezing = null;
 
 		while (true) {
 			long timeStart = Calendar.getInstance().getTimeInMillis();
@@ -810,17 +815,28 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				break;
 			}
 
-			if (checkFreezing()) {
-				status = Status.FROZEN;
+			if (status != Status.FROZEN) {
+				if (checkFreezing()) {
+					statusBeforeFreezing = status;
+					status = Status.FROZEN;
+				}
+			} else {
+				if (! checkFreezing()) {
+					assert statusBeforeFreezing != null;
+					status = statusBeforeFreezing;
+					statusBeforeFreezing = null;
+				}
 			}
 
 			if (status == Status.DRIVING) {
 				checkIfCanPassFirst();
 			}
 
-			status = checkIfStoppedBecauseOfCriticalPoint(status);
-			if (status == Status.FULL_STOP) {
-				break;
+			if (status != Status.FROZEN) {
+				status = checkIfStopped(status);
+				if (status == Status.FULL_STOP) {
+					break;
+				}
 			}
 
 			//Update the robot's state via RK4 numerical integration
@@ -828,6 +844,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				updateState(deltaTime, vehicle.getMaxVelocity(), vehicle.getMaxAcceleration());
 			}
 
+			latestStatusForVisualization = status;
 			//Do some user function on position update
 			onPositionUpdate();
 			enqueueOneReport();

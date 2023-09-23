@@ -20,6 +20,7 @@ public class RobotReport {
 	private double elapsedTrackingTime = 0;
 	private int criticalPoint = -1;
 	private int robotID = -1;
+	public String statusString = null;
 
 
 	/**

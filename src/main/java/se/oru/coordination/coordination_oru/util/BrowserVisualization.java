@@ -304,8 +304,9 @@ public class BrowserVisualization implements FleetVisualization {
 			if (rr == null) {
 				text += "no robot report";
 			} else {
-				text += "i=" + rr.getPathIndex();
-				text += " (CP=" + rr.getCriticalPoint() + ") ";
+				text += String.format("i=%d (CP=%d, %s) ",
+						rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
+				);
 				text += "; p=" + rr.getPose();
 
 				double velocity = rr.getVelocity();
