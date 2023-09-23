@@ -14,12 +14,12 @@ import java.util.function.Function;
  * te1 and te2 are {@link TrajectoryEnvelope}s that overlap when robot 1 is in pose
  * with index start1 and robot 2 is in pose with index start2, until the two robots reach poses
  * end1 and end2 respectively.
- * 
+ *
  * @author fpa
  *
  */
 public class CriticalSection {
-	
+
 	private TrajectoryEnvelope te1;
 	private TrajectoryEnvelope te2;
 	private int te1Start = -1;
@@ -31,6 +31,13 @@ public class CriticalSection {
 	public int te1HigherWeight = 0;
 	public int te2HigherWeight = 0;
 
+	public int getInferior() {
+		return robotIDInferior;
+	}
+
+	// Transient information (not used in `equal`, `hashCode`):
+	public int robotIDInferior = -1;
+
 	public CriticalSection(TrajectoryEnvelope te1, TrajectoryEnvelope te2, int te1Start, int te2Start, int te1End, int te2End) {
 		this.te1 = te1;
 		this.te2 = te2;
@@ -39,7 +46,7 @@ public class CriticalSection {
 		this.te1End = te1End;
 		this.te2End = te2End;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -52,7 +59,7 @@ public class CriticalSection {
 		if (te1 == null || te2 == null) {
 			if (other.te1 != null && other.te2 != null)
 				return false;
-			else if (te1 == null) 
+			else if (te1 == null)
 				return te2.equals((other.te1 == null) ? other.te2 : other.te1);
 		} else {
 			if (!(te1.equals(other.te1) && te2.equals(other.te2) || te1.equals(other.te2) && te2.equals(other.te1)))
@@ -108,15 +115,15 @@ public class CriticalSection {
 	public int getTe1Break() {
 		return te1Break;
 	}
-	
+
 	public int getTe2Break() {
 		return te2Break;
 	}
-	
+
 	public void setTe1Break(int te1Break) {
 		this.te1Break = te1Break;
 	}
-	
+
 	public void setTe2Break(int te2Break) {
 		this.te2Break = te2Break;
 	}
@@ -195,14 +202,6 @@ public class CriticalSection {
 		double velocity;
 		double time;
 
-		/**
-		 * This is an estimation of distance, velocity, time for the current CS and a given robot.
-		 * For the inferior robot, the distance estimation is from the current point until the end of the CS (`getEnd`).
-		 * For the superior robot, the distance estimation is from the current point until the start of the CS (`getStart`).
-		 * The resulting time estimation is used in {@link CriticalSection#canPassFirst(int)}.
-		 *
-		 * @param isInferior Whether the robot should normally give way to the other one within the CS.
-		 */
 		public DistanceEstimation(int robotID, boolean isInferior) {
 			TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 			RobotReport rr = tec.getRobotReport(robotID);
@@ -214,17 +213,9 @@ public class CriticalSection {
 			distance = deltaIndexes == 0 ? 0.0 :
 					TrajectoryEnvelopeTrackerRK4.computeDistance(tec.trackers.get(robotID).traj, currentIndex, goalIndex);
 			velocity = estimateVelocity(robotID, isInferior);
-			time = distance / velocity; // m / m/s = s
+			time = distance / velocity;
 		}
 
-		/**
-		 * This is an estimation of velocity (useful before slipping through a CS).
-		 * The more the speed reserve (`delta`), the greater the estimation is.
-		 * So this is averageish between `currentVelocity` and `maxVelocity`.
-		 *
-		 * The primary reason for this calculation is to avoid zero estimation when the current velocity
-		 * is temporarily zero.
-		 */
 		protected double estimateVelocity(int robotID, boolean isInferior) {
 			TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 			double maxVelocity = tec.getRobotMaxVelocity(robotID);
@@ -256,46 +247,33 @@ public class CriticalSection {
 		ret += robot1 + makeStars(te1HigherWeight) + " [" + getTe1Start() + ";" + getTe1End() + "], ";
 		ret += robot2 + makeStars(te2HigherWeight) + " [" + getTe2Start() + ";" + getTe2End() + "]";
 
-		DistanceEstimation estimationInferior = new DistanceEstimation(getInferior(), true);
-		DistanceEstimation estimationSuperior = new DistanceEstimation(getSuperior(), false);
+		if (robotIDInferior == -1) {
+			return ret;
+		}
+		int robotIDSuperior = getOtherRobotID(robotIDInferior);
+
+		DistanceEstimation estimationInferior = new DistanceEstimation(robotIDInferior, true);
+		DistanceEstimation estimationSuperior = new DistanceEstimation(robotIDSuperior, false);
 		ret += String.format(
 				" (inferior %d %s make %s before superior %d makes %s)",
-				getInferior(), canPassFirst(getInferior()) ? "will" : "will not", estimationInferior,
-				getSuperior(), estimationSuperior
+				robotIDInferior, canPassFirst(robotIDInferior) ? "will" : "will NOT", estimationInferior,
+				robotIDSuperior, estimationSuperior
 		);
 		return ret;
 	}
 
 	public boolean canPassFirst(int myID) {
-		boolean isInferior = ! isSuperior(myID);
 		int otherID = getOtherRobotID(myID);
+
+		boolean isInferior = myID == robotIDInferior;
+		if (! isInferior) {
+			assert otherID == robotIDInferior;
+		}
 
 		DistanceEstimation myEstimation = new DistanceEstimation(myID, isInferior);
 		DistanceEstimation otherEstimation = new DistanceEstimation(otherID, ! isInferior);
 
 		return myEstimation.time < otherEstimation.time;
-	}
-
-	public boolean is1Before2() {
-		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-		return tec.getOrderOfCriticalSection(
-				this,
-				tec.getRobotReport(getTe1RobotID()),
-				tec.getRobotReport(getTe2RobotID())
-		);
-	}
-
-	public boolean isSuperior(int robotID) {
-		assert robotID == getTe1RobotID() || robotID == getTe2RobotID();
-		return is1Before2() ? robotID == getTe1RobotID() : robotID == getTe2RobotID();
-	}
-
-	public int getInferior() {
-		return is1Before2() ? getTe2RobotID() : getTe1RobotID();
-	}
-
-	public int getSuperior() {
-		return is1Before2() ? getTe1RobotID() : getTe2RobotID();
 	}
 
 	private String makeStars(int count) {
