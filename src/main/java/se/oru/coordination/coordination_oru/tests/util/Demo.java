@@ -23,7 +23,7 @@ public abstract class Demo {
 
         Demo thisDemo = this;
 
-        //new Timekeeper().start();
+        new Timekeeper().start();
 
         new GatedThread("demo.run") {
             @Override

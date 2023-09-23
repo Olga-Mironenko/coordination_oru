@@ -31,9 +31,6 @@ public class CriticalSection {
 	public int te1HigherWeight = 0;
 	public int te2HigherWeight = 0;
 
-	// Transient information (not used in `equal`, `hashCode`):
-	public int robotIDInferior = -1;
-
 	public CriticalSection(TrajectoryEnvelope te1, TrajectoryEnvelope te2, int te1Start, int te2Start, int te1End, int te2End) {
 		this.te1 = te1;
 		this.te2 = te2;
@@ -259,33 +256,46 @@ public class CriticalSection {
 		ret += robot1 + makeStars(te1HigherWeight) + " [" + getTe1Start() + ";" + getTe1End() + "], ";
 		ret += robot2 + makeStars(te2HigherWeight) + " [" + getTe2Start() + ";" + getTe2End() + "]";
 
-		if (robotIDInferior == -1) {
-			return ret;
-		}
-		int robotIDSuperior = getOtherRobotID(robotIDInferior);
-
-		DistanceEstimation estimationInferior = new DistanceEstimation(robotIDInferior, true);
-		DistanceEstimation estimationSuperior = new DistanceEstimation(robotIDSuperior, false);
+		DistanceEstimation estimationInferior = new DistanceEstimation(getInferior(), true);
+		DistanceEstimation estimationSuperior = new DistanceEstimation(getSuperior(), false);
 		ret += String.format(
 				" (inferior %d %s make %s before superior %d makes %s)",
-				robotIDInferior, canPassFirst(robotIDInferior) ? "will" : "will NOT", estimationInferior,
-				robotIDSuperior, estimationSuperior
+				getInferior(), canPassFirst(getInferior()) ? "will" : "will not", estimationInferior,
+				getSuperior(), estimationSuperior
 		);
 		return ret;
 	}
 
 	public boolean canPassFirst(int myID) {
+		boolean isInferior = ! isSuperior(myID);
 		int otherID = getOtherRobotID(myID);
-
-		boolean isInferior = myID == robotIDInferior;
-		if (! isInferior) {
-			assert otherID == robotIDInferior;
-		}
 
 		DistanceEstimation myEstimation = new DistanceEstimation(myID, isInferior);
 		DistanceEstimation otherEstimation = new DistanceEstimation(otherID, ! isInferior);
 
 		return myEstimation.time < otherEstimation.time;
+	}
+
+	public boolean is1Before2() {
+		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+		return tec.getOrderOfCriticalSection(
+				this,
+				tec.getRobotReport(getTe1RobotID()),
+				tec.getRobotReport(getTe2RobotID())
+		);
+	}
+
+	public boolean isSuperior(int robotID) {
+		assert robotID == getTe1RobotID() || robotID == getTe2RobotID();
+		return is1Before2() ? robotID == getTe1RobotID() : robotID == getTe2RobotID();
+	}
+
+	public int getInferior() {
+		return is1Before2() ? getTe2RobotID() : getTe1RobotID();
+	}
+
+	public int getSuperior() {
+		return is1Before2() ? getTe1RobotID() : getTe2RobotID();
 	}
 
 	private String makeStars(int count) {

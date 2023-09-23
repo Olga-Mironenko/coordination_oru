@@ -85,6 +85,16 @@ public class Forcing {
                     if (robotsToResumeLater.contains(robot)) {
                         continue;
                     }
+
+                    boolean willBeRestored = false;
+                    for (CriticalSection cs : criticalSectionsToRestorePrioritiesLater) {
+                        if (cs.getInferior() == robot) {
+                            willBeRestored = true;
+                            break;
+                        }
+                    }
+                    assert willBeRestored; // otherwise, `stopDistance` is not consistent with `priorityDistance`
+
                     stopRobot(robot);
                     robotsToResumeLater.add(robot);
                 }

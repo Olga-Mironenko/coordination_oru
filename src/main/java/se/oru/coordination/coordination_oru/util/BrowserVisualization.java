@@ -274,23 +274,20 @@ public class BrowserVisualization implements FleetVisualization {
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
 		String text = "";
 
-		if (Timekeeper.isTimekeeperActive()) {
-			text += "Cycle: " + Timekeeper.getNumCyclesPassed() + "<br>";
-			text += "Virtual seconds: " + round(Timekeeper.getVirtualMillisPassed() / 1000.0) + "<br>";
-			text += "Real seconds: " + round(Timekeeper.getRealMillisPassed() / 1000.0) + "<br>";
-		}
 		if (AbstractVehicle.scenarioId != null) {
 			text += "Scenario: " + AbstractVehicle.scenarioId + "<br>";
 		}
-		if (Forcing.priorityDistance != Double.NEGATIVE_INFINITY) {
-			text += "Priority distance: " + Forcing.priorityDistance + "<br>";
-		}
-		if (Forcing.stopDistance != Double.NEGATIVE_INFINITY) {
-			text += "Stop distance: " + Forcing.stopDistance + "<br>";
+
+		if (Timekeeper.isTimekeeperActive()) {
+			text += String.format("Time: step %d, virt. %.1f s, real %.1f s<br>",
+					Timekeeper.getTimestepsPassed(),
+					Timekeeper.getVirtualMillisPassed() / 1000.0,
+					Timekeeper.getRealMillisPassed() / 1000.0
+			);
 		}
 
 		if (idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
-			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + "<br>";
+			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + " m/s<br>";
 		}
 
 		if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled) {

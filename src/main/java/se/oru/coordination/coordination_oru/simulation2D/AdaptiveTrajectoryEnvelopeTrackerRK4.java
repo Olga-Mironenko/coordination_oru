@@ -134,7 +134,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			if (this.criticalPoint != -1) {
 				int criticalPoint = this.criticalPoint;
 				this.criticalPoint = -1;
-				this.criticalSections = null;
 				setCriticalPoint(criticalPoint);
 			}
 		}
@@ -493,8 +492,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		if (criticalPointToSet == -1) {
 			//The critical point has been reset, go to the end
-			this.criticalPoint = criticalPointToSet;
-			this.criticalSections = null;
+			this.criticalPoint = -1;
 			this.totalDistance = computeDistance(0, traj.getPose().length - 1);
 			this.positionToSlowDown = computePositionToSlowDown(totalDistance, false);
 			metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
@@ -518,33 +516,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				criticalSections.add(cs);
 			}
 		}
+
 		//assert ! criticalSections.isEmpty();
-
-		HashSet<CriticalSection> criticalSectionsReal = new HashSet<>();
-		for (CriticalSection cs : criticalSections) {
-			boolean is1Before2 = tec.getOrderOfCriticalSection(
-					cs,
-					tec.getRobotReport(cs.getTe1RobotID()),
-					tec.getRobotReport(cs.getTe2RobotID())
-			);
-			if (cs.isTe1(robotID) == is1Before2) { // we have priority
-				continue;
-			}
-
-			boolean isReal = true;
-			for (int id : new int[] { cs.getTe1RobotID(), cs.getTe2RobotID() }) {
-				// TODO: When `robotIDToFreezingCounter` changes, call `setCriticalPoint` for other robots.
-				if (id != robotID && Forcing.robotIDToFreezingCounter.getOrDefault(id, 0) > 0) {
-					isReal = false;
-				}
-			}
-
-			if (isReal) {
-				criticalSectionsReal.add(cs);
-			}
-		}
-
-		if (criticalSectionsReal.isEmpty()) {
+		if (criticalSections.isEmpty()) {
 			return;
 		}
 
@@ -558,17 +532,13 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 				//assert criticalSectionsReal.size() == 1; // doesn't work when the other robot returns through the same intersection
 				//this.criticalSection = criticalSectionsReal.iterator().next();
-				this.criticalSections = CriticalSection.sortCriticalSections(criticalSectionsReal);
+				this.criticalSections = CriticalSection.sortCriticalSections(criticalSections);
 				// If there are several CSes that are close to each other
 				// (contained in `criticalSectionsReal` or related to different calls of `setCriticalPoint`),
 				// then they can be combined into a single artificial `this.criticalSection`.
 
 				this.totalDistance = targetDistance;
 				this.positionToSlowDown = positionToSlowDownTemporary;
-
-				for (CriticalSection cs : criticalSectionsReal) {
-					cs.robotIDInferior = robotID;
-				}
 
 				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
 				return;
@@ -581,7 +551,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		// So we would stop after the critical point.
 		if (Forcing.robotIDToFreezingCounter.getOrDefault(robotID, 0) > 0) {
 			Integer positionToStop = null;
-			for (CriticalSection cs : criticalSectionsReal) {
+			for (CriticalSection cs : criticalSections) {
 				Integer end = cs.getEnd(robotID);
 				assert end != null;
 				int stop = end + 1;
@@ -592,7 +562,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			Forcing.robotIDToPathIndexToStop.put(robotID, positionToStop);
 			Forcing.robotIDToFreezingCounter.put(robotID, 0);
 		}
-		for (CriticalSection cs : criticalSectionsReal) {
+		for (CriticalSection cs : criticalSections) {
 			cs.setHigher(robotID, 2);
 		}
 	}
@@ -682,13 +652,20 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		this.numberOfReplicas = Math.max(1, (int)Math.ceil(coordinationNumberOfReplicas*(double)trackingPeriodInMillis/coordinationPeriodInMillis));
 	}
 
+	private ArrayList<CriticalSection> getCriticalSections() {
+		if (criticalPoint == -1) {
+			return null;
+		}
+		return criticalSections;
+	}
+
 	private CriticalSection getFirstOfCurrentCriticalSections() {
-		if (criticalSections == null) {
+		if (getCriticalSections() == null) {
 			return null;
 		}
 
 		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-		for (CriticalSection cs : criticalSections) {
+		for (CriticalSection cs : getCriticalSections()) {
 			if (tec.allCriticalSections.contains(cs)) {
 				return cs;
 			}
@@ -730,9 +707,11 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 			CriticalSection criticalSection = getFirstOfCurrentCriticalSections();
 			if (! skipIntegration && criticalSection != null) {
-				assert criticalSection.robotIDInferior == myRobotID;
+				//assert criticalSection.getInferior() == myRobotID;
+				// After forcing ends, priority change affects `criticalSection` but doesn't propagate to
+				// `criticalPoint` yet (at least sometimes).
 
-				if (criticalSection.canPassFirst(myRobotID)) {
+				if (criticalSection.getInferior() != myRobotID || criticalSection.canPassFirst(myRobotID)) {
 					criticalPoint = -1;
 					onTrajectoryEnvelopeUpdate(); // reset `positionToSlowDown`, etc.
 				}

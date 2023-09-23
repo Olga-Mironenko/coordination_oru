@@ -163,7 +163,7 @@ abstract public class GatedThread extends Thread {
     public static void sleep(long millis) throws InterruptedException {
         if (isGated) {
             gatekeeper.pauseCurrentThread("sleep(" + millis + ")", false, false,null);
-            if (! Timekeeper.isTimekeeperActive()) {
+            if (! Timekeeper.isSingleSleep) {
                 Thread.sleep(Math.round(millis / sleepSpeedRate)); // TODO: This is for the browser to catch up.
             }
         } else {

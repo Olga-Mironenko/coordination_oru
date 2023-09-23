@@ -16,36 +16,36 @@ scenarios=(
 
 scenarios+=(
 #  S_DP1C #DONE
-  S_DP1M
+#  S_DP1M #DONE
 #  S_DP2C #DONE
-  S_DP2M
+#  S_DP2M #DONE
 #  S_DP3C #DONE
 #  S_DP3M #DONE
-  S_DPGC
-#  S_DPGM
+#  S_DPGC #DONE
+  S_DPGM
 #  S_DS1C #DONE
-  S_DS1M #FIXME
+  S_DS1M
 #  S_DS2C #DONE
-  S_DS2M #FIXME
+#  S_DS2M #DONE?
 #  S_DS3C #DONE
-  S_DS3M #FIXME
+  S_DS3M
 #  S_DSGC #DONE
 #  S_DSGM #DONE
-  S_UP1C
-  S_UP1M
-  S_UP2C
-  S_UP2M
-  S_UP3C
+#  S_UP1C #DONE
+#  S_UP1M #DONE
+#  S_UP2C #DONE
+#  S_UP2M #DONE
+#  S_UP3C #DONE
 #  S_UP3M #DONE
-  S_UPGC
-#  S_UPGM
-  S_US1C
-  S_US1M #FIXME
-  S_US2C #FIXME
-#  S_US2M
-#  S_US3C
-#  S_US3M
-#  S_USGC
+#  S_UPGC #DONE
+  S_UPGM
+#  S_US1C #DONE
+  S_US1M
+#  S_US2C #DONE?
+  S_US2M
+  S_US3C
+  S_US3M
+  S_USGC
 #  S_USGM #DONE
 )
 

@@ -65,7 +65,7 @@ public class GridTest {
 
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.S_DPGM.toString();
+            scenarioString = Scenario.S_USGC.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
 
@@ -221,10 +221,11 @@ public class GridTest {
                         Forcing.priorityDistance = 30;
                         break;
                     case CG:
+                        Forcing.priorityDistance = Double.POSITIVE_INFINITY;
+                        // Even on `isStop` (for `isResetAfterCurrentCrossroad` to work).
+
                         if (isStop) {
                             Forcing.isGlobalTemporaryStop = true;
-                        } else {
-                            Forcing.priorityDistance = Double.POSITIVE_INFINITY;
                         }
                         break;
                 }
