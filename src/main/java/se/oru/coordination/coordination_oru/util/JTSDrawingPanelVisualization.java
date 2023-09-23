@@ -5,8 +5,7 @@ import java.awt.event.KeyListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import org.metacsp.multi.spatial.DE9IM.GeometricShapeDomain;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
@@ -23,6 +22,8 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 public class JTSDrawingPanelVisualization implements FleetVisualization {
 
 	private JTSDrawingPanel panel = null;
+
+	public JFrame frame;
 
 	public JTSDrawingPanelVisualization() {
 		this(null);
@@ -76,8 +77,17 @@ public class JTSDrawingPanelVisualization implements FleetVisualization {
 	}
 	
 	private void setupGUI(String mapYAMLFile) {
-		//Show everything in a GUI (vehicle positions are updated in real time by the trackers, see below)
-		this.panel = JTSDrawingPanel.makeEmpty("Current status of robots");
+		// Show everything in a GUI (vehicle positions are updated in real time by the trackers, see below)
+		//=================================== Here Maria Edit ====================================
+		//this.panel = JTSDrawingPanel.makeEmpty("Current status of robots");
+		panel = new JTSDrawingPanel();
+		frame = new JFrame("Current status of robots");
+		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		frame.add(panel);
+		frame.setSize(500, 500);
+		frame.setVisible(true);
+		//=================================== Here Maria Edit ====================================
+
 		//setPriorityOfEDT(Thread.MIN_PRIORITY);
 		//setPriorityOfEDT(Thread.MAX_PRIORITY);
 		panel.setSmoothTransitions(true);

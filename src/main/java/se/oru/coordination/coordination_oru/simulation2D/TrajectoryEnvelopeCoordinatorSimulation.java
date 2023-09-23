@@ -376,6 +376,10 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 		ret.add(CONNECTOR_LEAF + 			"Re-planned paths .... " + replanningTrialsCounter.get() + ", successful: " + successfulReplanningTrialsCounter.get() + ".");
 		return ret.toArray(new String[ret.size()]);
 	}
+
+	public int getCountCollisionsList() {
+		return collisionsList.size();
+	}
 	
 	@Override
 	public void onCriticalSectionUpdate() {
