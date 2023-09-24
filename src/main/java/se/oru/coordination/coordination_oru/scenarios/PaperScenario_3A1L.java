@@ -58,9 +58,9 @@ public class PaperScenario_3A1L {
         var autonomousRobot3 = new AutonomousVehicle();
         var lookAheadVehicle = new LookAheadVehicle(1, lookAheadDistance, Color.GREEN, 5, 2, 0.9, 0.5);
 
-        autonomousRobot1.getPlan(drawPoint28, autonomousRobotGoal1, YAML_FILE, false);
-        autonomousRobot2.getPlan(drawPoint32A, autonomousRobotGoal2, YAML_FILE, false);
-        autonomousRobot3.getPlan(drawPoint35, autonomousRobotGoal3, YAML_FILE, false);
+        autonomousRobot1.getPlan(drawPoint28, autonomousRobotGoal1, YAML_FILE, true);
+        autonomousRobot2.getPlan(drawPoint32A, autonomousRobotGoal2, YAML_FILE, true);
+        autonomousRobot3.getPlan(drawPoint35, autonomousRobotGoal3, YAML_FILE, true);
         lookAheadVehicle.getPlan(entrance, limitedLookAheadRobotGoal, YAML_FILE, false);
 
         // Instantiate a trajectory envelope coordinator.
@@ -88,9 +88,9 @@ public class PaperScenario_3A1L {
         tec.placeRobot(lookAheadVehicle.getID(), entrance);
 
         // Set Heuristics
-        var heuristic = new Heuristics();
+//        var heuristic = new Heuristics();
 //        tec.addComparator(heuristic.closest());
-        String heuristicName = heuristic.getHeuristicName();
+//        String heuristicName = heuristic.getHeuristicName();
 
         // Set Local Re-ordering and Local Re-Planning to break Deadlocks
         tec.setBreakDeadlocks(true, false, false);

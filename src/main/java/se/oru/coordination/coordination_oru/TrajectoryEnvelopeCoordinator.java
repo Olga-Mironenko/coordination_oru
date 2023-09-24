@@ -1483,12 +1483,12 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						AllenIntervalConstraint aic = (AllenIntervalConstraint)con;
 						if (aic.getTypes()[0].equals(AllenIntervalConstraint.Type.Meets)) {
 							TrajectoryEnvelope newEndParking = solver.createParkingEnvelope(robotID, PARKING_DURATION, newTE.getTrajectory().getPose()[newTE.getTrajectory().getPose().length-1], "whatever", getFootprint(robotID));
-							TrajectoryEnvelope oldEndParking = (TrajectoryEnvelope)aic.getTo();
+//							TrajectoryEnvelope oldEndParking = (TrajectoryEnvelope)aic.getTo();
 
-							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(te));
-							solver.removeVariable(te);
-							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(oldEndParking));
-							solver.removeVariable(oldEndParking);
+//							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(te));
+//							solver.removeVariable(te);
+//							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(oldEndParking));
+//							solver.removeVariable(oldEndParking);
 
 							AllenIntervalConstraint newMeets = new AllenIntervalConstraint(AllenIntervalConstraint.Type.Meets);
 							newMeets.setFrom(newTE);
@@ -1518,7 +1518,6 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			}
 		}
 	}
-
 
 	/**
 	 * Truncate the {@link TrajectoryEnvelope} of a given robot at the closest dynamically-feasible path point. This path point is computed via the robot's {@link ForwardModel}.

@@ -264,7 +264,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 		}
 
 		// Set the LookAhead tracker
-		if (VehiclesHashMap.getVehicle(te.getRobotID()).getType().equals("LookAheadVehicle")) {
+		if (!VehiclesHashMap.getList().isEmpty() && VehiclesHashMap.getVehicle(te.getRobotID()).getType().equals("LookAheadVehicle")) {
 			var ret = new TrajectoryEnvelopeTrackerLookAhead(te, this.getRobotTrackingPeriodInMillis(te.getRobotID()),
 					TEMPORAL_RESOLUTION, this, cb) {
 				@Override

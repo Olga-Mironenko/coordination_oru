@@ -5,11 +5,14 @@ import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
+import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.util.Forcing;
 import se.oru.coordination.coordination_oru.util.HumanControl;
 
 import java.util.*;
+
+import static se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation.tec;
 
 public abstract class TrajectoryEnvelopeTrackerLookAhead extends AbstractTrajectoryEnvelopeTracker implements Runnable {
 	public static double coefDeltaTimeForSlowDown = 0.1;
@@ -587,29 +590,6 @@ public abstract class TrajectoryEnvelopeTrackerLookAhead extends AbstractTraject
 		}
 	}
 
-	private static RobotReport getRobotReport(Trajectory traj, State auxState) {
-		if (auxState == null) return null;
-		Pose pose = null;
-		int currentPathIndex = -1;
-		double accumulatedDist = 0.0;
-		Pose[] poses = traj.getPose();
-		for (int i = 0; i < poses.length-1; i++) {
-			double deltaS = poses[i].distanceTo(poses[i+1]);
-			accumulatedDist += deltaS;
-			if (accumulatedDist > auxState.getPosition()) {
-				double ratio = 1.0-(accumulatedDist-auxState.getPosition())/deltaS;
-				pose = poses[i].interpolate(poses[i+1], ratio);
-				currentPathIndex = i;
-				break;
-			}
-		}
-		if (currentPathIndex == -1) {
-			currentPathIndex = poses.length-1;
-			pose = poses[currentPathIndex];
-		}
-		return new RobotReport(-1, pose, currentPathIndex, auxState.getVelocity(), auxState.getPosition(), -1);
-	}
-
 	public RobotReport getRobotReport(State auxState) {
 		if (auxState == null) return null;
 		Pose pose = null;
@@ -658,36 +638,21 @@ public abstract class TrajectoryEnvelopeTrackerLookAhead extends AbstractTraject
 		int myTEID = te.getID();
 
 		while (true) {
-			if (emergencyBreaker.isStopped(myRobotID)) {
-				break;
-			}
 
 			boolean skipIntegration = false;
 
-			Integer pathIndexToStop = Forcing.robotIDToPathIndexToStop.getOrDefault(myRobotID, null);
-			if (pathIndexToStop != null && getRobotReport().getPathIndex() >= pathIndexToStop) {
-				Forcing.robotIDToPathIndexToStop.remove(myRobotID);
-				Forcing.robotIDToFreezingCounter.put(myRobotID, Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) + 1);
-			}
-
-			boolean isFreezing = Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) > 0;
-			if (isFreezing) {
-				state = new State(state.getPosition(), 0);
-				skipIntegration = true;
-			}
-
-			CriticalSection criticalSection = getFirstOfCurrentCriticalSections();
-			if (! skipIntegration && criticalSection != null) {
-				assert criticalSection.robotIDInferior == myRobotID;
-				if (criticalSection.canPassFirst(myRobotID)) {
-					criticalPoint = -1;
-					onTrajectoryEnvelopeUpdate(); // reset `positionToSlowDown`, etc.
-				}
-			}
+//			CriticalSection criticalSection = getFirstOfCurrentCriticalSections();
+//			if (criticalSection != null) {
+//				assert criticalSection.robotIDInferior == myRobotID;
+//				if (criticalSection.canPassFirst(myRobotID)) {
+//					criticalPoint = -1;
+//					onTrajectoryEnvelopeUpdate(); // reset `positionToSlowDown`, etc.
+//				}
+//			}
 
 			//End condition: passed the middle AND velocity < 0 AND no criticalPoint
 			//if (state.getPosition() >= totalDistance/2.0 && state.getVelocity() < 0.0) {
-			if (! skipIntegration && state.getPosition() >= this.positionToSlowDown && state.getVelocity() <= 0.0) { // waiting for another robot
+			if (state.getPosition() >= this.positionToSlowDown && state.getVelocity() <= 0.0) { // waiting for another robot
 				if (criticalPoint == -1 && !atCP) {
 					//set state to final position, just in case it didn't quite get there (it's certainly close enough)
 					state = new State(totalDistance, 0.0);
@@ -695,13 +660,10 @@ public abstract class TrajectoryEnvelopeTrackerLookAhead extends AbstractTraject
 					break;
 				}
 
-				assert criticalPoint != -1 || atCP;
-
-				//Vel < 0 hence we are at CP, thus we need to skip integration
+                //Vel < 0 hence we are at CP, thus we need to skip integration
 				if (!atCP /*&& getRobotReport().getPathIndex() == criticalPoint*/) {
-					assert criticalPoint != -1 : state.getPosition();
 
-					// . . . . . . . . .
+                    // . . . . . . . . .
 					//       ^     C
 					int pathIndex = getRobotReport().getPathIndex();
 					metaCSPLogger.info("At critical point (" + te.getComponent() + "): " + criticalPoint + " (" + pathIndex + ")");
@@ -709,21 +671,12 @@ public abstract class TrajectoryEnvelopeTrackerLookAhead extends AbstractTraject
 						// . . . . . . . . .
 						//     C ^
 						metaCSPLogger.severe("* ATTENTION! STOPPED AFTER!! *");
-
-						emergencyBreaker.stopRobots(myRobotID, pathIndex);
-						if (emergencyBreaker.isStopped(myRobotID)) {
-							break;
-						}
-						// TODO: Do emergency break when `state.getPosition() >= this.positionToSlowDown` and
-						// `pathIndex > criticalPoint` (regardless of `state.getVelocity() < 0.0`)?
 					}
 
 					atCP = true;
 				}
 
-				assert criticalPoint != -1 || atCP;
-
-				skipIntegration = true; // at current iteration
+                skipIntegration = true; // at current iteration
 			}
 
 			//Compute deltaTime
@@ -749,6 +702,10 @@ public abstract class TrajectoryEnvelopeTrackerLookAhead extends AbstractTraject
 				}
 			}
 
+//			System.out.println(state);
+//			System.out.println(getRobotReport());
+//			System.out.println(this.traj.getPose().length);
+
 			//Do some user function on position update
 			onPositionUpdate();
 			enqueueOneReport();
@@ -766,21 +723,21 @@ public abstract class TrajectoryEnvelopeTrackerLookAhead extends AbstractTraject
 		}
 
 		//continue transmitting until the coordinator will be informed of having reached the last position.
-		while (tec.getRobotReport(te.getRobotID()).getPathIndex() != -1)
-		{
-			enqueueOneReport();
-			try { Thread.sleep(trackingPeriodInMillis); }
-			catch (InterruptedException e) { e.printStackTrace(); }
-		}
+//		while (tec.getRobotReport(te.getRobotID()).getPathIndex() != -1)
+//		{
+//			enqueueOneReport();
+//			try { Thread.sleep(trackingPeriodInMillis); }
+//			catch (InterruptedException e) { e.printStackTrace(); }
+//		}
 
 		//persevere with last path point in case listeners didn't catch it!
-		long timerStart = getCurrentTimeInMillis();
-		while (getCurrentTimeInMillis()-timerStart < WAIT_AMOUNT_AT_END) {
+//		long timerStart = getCurrentTimeInMillis();
+//		while (getCurrentTimeInMillis()-timerStart < WAIT_AMOUNT_AT_END) {
 //			System.out.println("Waiting " + te.getComponent());
-			try { Thread.sleep(trackingPeriodInMillis); }
-			catch (InterruptedException e) { e.printStackTrace(); }
-		}
-		metaCSPLogger.info("LookAhead tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + myTEID + ")");
+//			try { Thread.sleep(trackingPeriodInMillis); }
+//			catch (InterruptedException e) { e.printStackTrace(); }
+//		}
+//		metaCSPLogger.info("LookAhead tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + myTEID + ")");
 	}
 
 	@Override

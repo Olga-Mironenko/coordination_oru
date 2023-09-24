@@ -17,7 +17,8 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
 	public static double coefDeltaTimeForSlowDown = 0.1;
-
+	protected final double MAX_VELOCITY = 5.0;
+	protected final double MAX_ACCELERATION = 2.0;
 	public static double coefAccelerationToDeceleration = 3.0;
 
 	protected static final long WAIT_AMOUNT_AT_END = 3000;
@@ -292,10 +293,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	private TreeMap<Double,Double> computeSlowdownProfile() {
 		final double coef = 1.1; // slightly more than 1.0 to model speed which is greater than any actual speed
 
-		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
+//		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
 
 		TreeMap<Double,Double> ret = new TreeMap<Double, Double>();
-		State tempStateBW = new State(0.0, vehicle.getMaxVelocity()*coef);
+		State tempStateBW = new State(0.0, MAX_VELOCITY*coef);
 		ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
 		double time = 0.0;
@@ -307,7 +308,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			//Use slightly conservative max deceleration (which is positive acceleration since we simulate FW dynamics).
 			// (This is regarding dampeningBW < 1?)
 
-			integrateRK4(tempStateBW, time, deltaTime, true, vehicle.getMaxVelocity()*coef, dampeningBW, vehicle.getMaxAcceleration(), -1);
+			integrateRK4(tempStateBW, time, deltaTime, true, MAX_VELOCITY*coef, dampeningBW, MAX_ACCELERATION, -1);
 			ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
 			time += deltaTime;
@@ -326,7 +327,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			return state.getPosition(); // essentially force slowing down
 		}
 
-		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
+//		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
 
 		State stateToBe = new State(state.getPosition(), Math.max(0, state.getVelocity()));
 		double time = 0.0;
@@ -355,7 +356,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			prevPosition = stateToBe.getPosition();
 
 			double dampeningFW = getCurvatureDampening(getRobotReport(stateToBe).getPathIndex(), true);
-			integrateRK4(stateToBe, time, deltaTime, false, vehicle.getMaxVelocity(), dampeningFW, vehicle.getMaxAcceleration(), te.getRobotID());
+			integrateRK4(stateToBe, time, deltaTime, false, MAX_VELOCITY, dampeningFW, MAX_ACCELERATION, te.getRobotID());
 			assert stateToBe.getPosition() > prevPosition;
 
 			time += deltaTime;
@@ -703,7 +704,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		double deltaTime = 0.0;
 		boolean atCP = false;
 		int myRobotID = te.getRobotID();
-		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(myRobotID);
+//		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(myRobotID); TODO introduce VehicleHashMap & Vehicles class
 		int myTEID = te.getID();
 
 		while (true) {
@@ -789,10 +790,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 				// Prefer to stop earlier than to cross over.
 				State stateTemp = new State(state.getPosition(), state.getVelocity());
-				integrateRK4(stateTemp, elapsedTrackingTime, deltaTime, slowingDown, vehicle.getMaxVelocity(), dampening, vehicle.getMaxAcceleration(), te.getRobotID());
+				integrateRK4(stateTemp, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION, te.getRobotID());
 				if (! slowingDown && stateTemp.getPosition() >= positionToSlowDown) {
 					slowingDown = true;
-					integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, vehicle.getMaxVelocity(), dampening, vehicle.getMaxAcceleration(), te.getRobotID());
+					integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION, te.getRobotID());
 				} else {
 					state = stateTemp;
 				}

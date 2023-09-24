@@ -891,8 +891,10 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 			else {
 				HashMap<Integer, Dependency> currentDeps = getCurrentDependencies();
 				Dependency dep = currentDeps.containsKey(robotID) ? getCurrentDependencies().get(robotID) : null;
-				Pose waitingPose = (dep == null) ? tracker.getTrajectoryEnvelope().getTrajectory().getPose()[tracker.getTrajectoryEnvelope().getTrajectory().getPose().length-1] : dep.getWaitingPose();
-				currentFP = makeObstacles(robotID, waitingPose)[0];
+				if (dep != null) {
+					Pose waitingPose = dep.getWaitingPose();
+					currentFP = makeObstacles(robotID, waitingPose)[0];
+				}
 
 				//In case the robot has stopped a little beyond the critical point
 				int currentPoint = this.getRobotReport(robotID).getPathIndex();
@@ -1866,7 +1868,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 			//metaCSPLogger.finest("Dist R" + rr1.getRobotID() + " = " + dist1 + "; Dist R" + rr2.getRobotID() + " = " + dist2);
 			return dist1 > dist2 ? 1 : -1;
 		}
-		return -2;
+		return 1;
 	}
 
 	/**
