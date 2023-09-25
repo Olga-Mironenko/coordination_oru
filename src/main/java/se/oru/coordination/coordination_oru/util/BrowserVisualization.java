@@ -150,6 +150,7 @@ public class BrowserVisualization implements FleetVisualization {
         Server server = new Server();
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(8081);
+		connector.setIdleTimeout(30 * 60 * 1000); // 30 min. (for long pauses inside the debugger)
         server.addConnector(connector);
 
         // Setup the basic application "context" for this application at "/"
@@ -304,7 +305,7 @@ public class BrowserVisualization implements FleetVisualization {
 			if (rr == null) {
 				text += "no robot report";
 			} else {
-				text += String.format("i=%d (CP=%d, %s) ",
+				text += String.format("i=%d (CP=%d, %s)",
 						rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
 				);
 				text += "; p=" + rr.getPose();

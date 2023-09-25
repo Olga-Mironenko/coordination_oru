@@ -65,7 +65,7 @@ public class GridTest {
 
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.S_USGM.toString();
+            scenarioString = Scenario.S_USGC.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
 

@@ -382,14 +382,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			}
 		}
 
-                var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
-                // numIntegrateCalls = {1: 11}
-                if (!numIntegrateCalls.containsKey(robotID)) {
-                    numIntegrateCalls.put(robotID, 0);
-                }
-                // numIntegrateCalls = {1: 11, 2: 0}
-                numIntegrateCalls.put(robotID, numIntegrateCalls.get(robotID) + 1);
-                // numIntegrateCalls = {1: 11, 2: 1}
+		var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
+		numIntegrateCalls.put(robotID, numIntegrateCalls.getOrDefault(robotID, 0) + 1);
 
 		synchronized(state) {
 			Derivative a = Derivative.evaluate(state, time, 0.0, new Derivative(), slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION, MAX_DECELERATION);
@@ -398,8 +392,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			Derivative d = Derivative.evaluate(state, time, deltaTime, c, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION, MAX_DECELERATION);
 
 			double dxdt = (1.0f / 6.0f) * ( a.getVelocity() + 2.0f*(b.getVelocity() + c.getVelocity()) + d.getVelocity() );
-                        double dvdt = (1.0f / 6.0f) * (a.getAcceleration()
-                                + 2.0f * (b.getAcceleration() + c.getAcceleration()) + d.getAcceleration());
+			double dvdt = (1.0f / 6.0f) * (a.getAcceleration()
+					+ 2.0f * (b.getAcceleration() + c.getAcceleration()) + d.getAcceleration());
 
 		    state.setPosition(state.getPosition()+dxdt*deltaTime);
 		    state.setVelocity(state.getVelocity()+dvdt*deltaTime);
@@ -551,7 +545,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 
 		// So we would stop after the critical point.
-		if (Forcing.robotIDToFreezingCounter.getOrDefault(robotID, 0) > 0) {
+		if (Forcing.isRobotFrozen(robotID)) {
 			Integer positionToStop = null;
 			for (CriticalSection cs : criticalSections) {
 				Integer end = cs.getEnd(robotID);
@@ -684,14 +678,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		if (pathIndexToStop != null && getRobotReport().getPathIndex() >= pathIndexToStop) {
 			Forcing.robotIDToPathIndexToStop.remove(myRobotID);
 			Forcing.robotIDToFreezingCounter.put(myRobotID, Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) + 1);
+			// TODO: Restore the original counter.
 		}
 
-		boolean isFreezing = Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) > 0;
-		if (isFreezing) {
-			state = new State(state.getPosition(), 0);
-			return true;
-		}
-		return false;
+		return Forcing.isRobotFrozen(myRobotID);
 	}
 
 	private void checkIfCanPassFirst() {
@@ -716,7 +706,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	enum Status {
 		DRIVING,
 		STOPPED_AT_CP,
-		FROZEN,
 		FULL_STOP
 	}
 
@@ -769,7 +758,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	private void updateState(double deltaTime, double maxVelocity, double maxAcceleration) {
-		slowingDown = state.getPosition() >= positionToSlowDown;
+		slowingDown = state.getPosition() >= positionToSlowDown || checkFreezing();
 		double dampening = getCurvatureDampening(getRobotReport().getPathIndex(), false);
 
 		// Prefer to stop earlier than to cross over.
@@ -804,7 +793,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(myRobotID);
 		int myTEID = te.getID();
 		Status status = Status.DRIVING;
-		Status statusBeforeFreezing = null;
 
 		while (true) {
 			long timeStart = Calendar.getInstance().getTimeInMillis();
@@ -815,28 +803,13 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				break;
 			}
 
-			if (status != Status.FROZEN) {
-				if (checkFreezing()) {
-					statusBeforeFreezing = status;
-					status = Status.FROZEN;
-				}
-			} else {
-				if (! checkFreezing()) {
-					assert statusBeforeFreezing != null;
-					status = statusBeforeFreezing;
-					statusBeforeFreezing = null;
-				}
-			}
-
 			if (status == Status.DRIVING) {
 				checkIfCanPassFirst();
 			}
 
-			if (status != Status.FROZEN) {
-				status = checkIfStopped(status);
-				if (status == Status.FULL_STOP) {
-					break;
-				}
+			status = checkIfStopped(status);
+			if (status == Status.FULL_STOP) {
+				break;
 			}
 
 			//Update the robot's state via RK4 numerical integration
