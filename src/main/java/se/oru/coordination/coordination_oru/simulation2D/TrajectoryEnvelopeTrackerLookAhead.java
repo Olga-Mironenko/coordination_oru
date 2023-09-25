@@ -628,7 +628,7 @@ public abstract class TrajectoryEnvelopeTrackerLookAhead extends AbstractTraject
 	}
 
 	@Override
-	public void run() {
+	public synchronized void run() {
 		this.elapsedTrackingTime = 0.0;
 
 		double deltaTime = 0.0;
@@ -702,6 +702,7 @@ public abstract class TrajectoryEnvelopeTrackerLookAhead extends AbstractTraject
 				}
 			}
 
+			System.out.println(getRobotReport());
 //			System.out.println(state);
 //			System.out.println(getRobotReport());
 //			System.out.println(this.traj.getPose().length);
@@ -711,7 +712,7 @@ public abstract class TrajectoryEnvelopeTrackerLookAhead extends AbstractTraject
 			enqueueOneReport();
 
 			//Sleep for tracking period
-			int delay = trackingPeriodInMillis;
+			int delay = 50;
 			if (NetworkConfiguration.getMaximumTxDelay() > 0) delay += rand.nextInt(NetworkConfiguration.getMaximumTxDelay());
 			try { Thread.sleep(delay); }
 			catch (InterruptedException e) { e.printStackTrace(); }

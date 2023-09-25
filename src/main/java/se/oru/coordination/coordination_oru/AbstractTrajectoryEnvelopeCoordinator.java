@@ -1571,6 +1571,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 					AbstractTrajectoryEnvelopeTracker tracker = getNewTracker(te, cb);
 					trackers.put(te.getRobotID(), tracker);
 					externalCPCounters.put(tracker, -1);
+					// TODO Check maybe tracker is generated here (Multiple RK4 tracker issue).
 				}
 
 				//Now we can signal the parking that it can end (i.e., its deadline will no longer be prolonged)
@@ -1868,7 +1869,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 			//metaCSPLogger.finest("Dist R" + rr1.getRobotID() + " = " + dist1 + "; Dist R" + rr2.getRobotID() + " = " + dist2);
 			return dist1 > dist2 ? 1 : -1;
 		}
-		return 1;
+		return 0;
 	}
 
 	/**

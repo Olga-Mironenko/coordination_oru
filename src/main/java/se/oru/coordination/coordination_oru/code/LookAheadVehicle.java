@@ -169,8 +169,8 @@ public class LookAheadVehicle extends AbstractVehicle {
         }
 
         // Create a new path with a limited length
-//        return Arrays.copyOfRange(fullPath, 0, pathIndex);
-        return Arrays.copyOfRange(fullPath, Math.max(robotReport.getPathIndex(), 0), pathIndex);
+        return Arrays.copyOfRange(fullPath, 0, pathIndex);
+//        return Arrays.copyOfRange(fullPath, Math.max(robotReport.getPathIndex(), 0), pathIndex);
     }
 
     public double getLookAheadDistance() {

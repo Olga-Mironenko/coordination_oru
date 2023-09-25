@@ -1,38 +1,40 @@
 package se.oru.coordination.coordination_oru.simulation2D;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Random;
+import java.util.TreeMap;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 
-import se.oru.coordination.coordination_oru.*;
-import se.oru.coordination.coordination_oru.code.AbstractVehicle;
-import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
-import se.oru.coordination.coordination_oru.util.Forcing;
-import se.oru.coordination.coordination_oru.util.HumanControl;
+import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
+import se.oru.coordination.coordination_oru.NetworkConfiguration;
+import se.oru.coordination.coordination_oru.RobotReport;
+import se.oru.coordination.coordination_oru.TrackingCallback;
+import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.util.Missions;
-import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
-	public static double coefDeltaTimeForSlowDown = 0.1;
-	protected final double MAX_VELOCITY = 5.0;
-	protected final double MAX_ACCELERATION = 2.0;
-	public static double coefAccelerationToDeceleration = 3.0;
 
 	protected static final long WAIT_AMOUNT_AT_END = 3000;
 	protected static final double EPSILON = 0.01;
+	protected final double MAX_VELOCITY;
+	protected final double MAX_ACCELERATION;
 	protected double overallDistance = 0.0;
 	protected double totalDistance = 0.0;
-	protected double positionToSlowDown = Double.POSITIVE_INFINITY;
+	protected double positionToSlowDown = -1.0;
 	protected double elapsedTrackingTime = 0.0;
 	private Thread th = null;
 	protected State state = null;
 	protected double[] curvatureDampening = null;
 	private ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
 	private int numberOfReplicas = 1;
-	private Random rand = new Random(1); //Calendar.getInstance().getTimeInMillis());
+	private Random rand = new Random(Calendar.getInstance().getTimeInMillis());
 	private TreeMap<Double,Double> slowDownProfile = null;
 	private boolean slowingDown = false;
 	private boolean useInternalCPs = true;
@@ -41,10 +43,13 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	private HashMap<Integer,Integer> userCPReplacements = null;
 
-	public static EmergencyBreaker emergencyBreaker = new EmergencyBreaker(false, false);
-
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
+	}
+
+	public TrajectoryEnvelopeTrackerRK4(TrajectoryEnvelope te, int timeStep, double temporalResolution, TrajectoryEnvelopeCoordinatorSimulation tec, TrackingCallback cb) {
+		this(te, timeStep, temporalResolution, 5.0, 2.0, tec, cb);
+		setNumberOfReplicas(tec.getNumberOfReplicas(), tec.getControlPeriod());
 	}
 
 	private void computeInternalCriticalPoints() {
@@ -102,21 +107,17 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		return curvatureDampening[this.traj.getPose().length-1-index];
 	}
 
-	public TrajectoryEnvelopeTrackerRK4(TrajectoryEnvelope te, int timeStep, double temporalResolution, TrajectoryEnvelopeCoordinator tec, TrackingCallback cb) {
+	public TrajectoryEnvelopeTrackerRK4(TrajectoryEnvelope te, int timeStep, double temporalResolution, double maxVelocity, double maxAcceleration, TrajectoryEnvelopeCoordinator tec, TrackingCallback cb) {
 		super(te, temporalResolution, tec, timeStep, cb);
+		this.MAX_VELOCITY = maxVelocity;
+		this.MAX_ACCELERATION = maxAcceleration;
 		this.state = new State(0.0, 0.0);
 		this.totalDistance = this.computeDistance(0, traj.getPose().length-1);
 		this.overallDistance = totalDistance;
 		this.computeInternalCriticalPoints();
-		this.slowDownProfile = this.computeSlowdownProfile();
-		this.positionToSlowDown = this.computePositionToSlowDown(totalDistance, false);
-		TrajectoryEnvelopeTrackerRK4 self = this;
-		this.th = new GatedThread("RK4 tracker " + te.getComponent()) {
-			@Override
-			public void runCore() {
-				self.run();
-			}
-		};
+		this.slowDownProfile = this.getSlowdownProfile();
+		this.positionToSlowDown = this.computePositionToSlowDown();
+		this.th = new Thread(this, "RK4 tracker " + te.getComponent());
 		this.th.setPriority(Thread.MAX_PRIORITY);
 	}
 
@@ -127,25 +128,17 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			this.overallDistance = totalDistance;
 			this.internalCriticalPoints.clear();
 			this.computeInternalCriticalPoints();
-			this.slowDownProfile = this.computeSlowdownProfile();
-			this.positionToSlowDown = this.computePositionToSlowDown(totalDistance, false);
+			this.slowDownProfile = this.getSlowdownProfile();
+			this.positionToSlowDown = this.computePositionToSlowDown();
 			reportsList.clear();
 			reportTimeLists.clear(); //semplify to avoid discontinuities ... to be fixed.
-
-			if (this.criticalPoint != -1) {
-				int criticalPoint = this.criticalPoint;
-				this.criticalPoint = -1;
-				this.criticalSections = null;
-				setCriticalPoint(criticalPoint);
-			}
 		}
 	}
 
 	@Override
 	public void startTracking() {
-		assert th != null; // TODO: remove the while loop
 		while (this.th == null) {
-			try { GatedThread.sleep(10); }
+			try { Thread.sleep(10); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
 		this.th.start();
@@ -254,9 +247,9 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	}
 
 	private void startInternalCPThread() {
-		Thread t = new GatedThread("internalCPThread") {
+		Thread t = new Thread() {
 			@Override
-			public void runCore() {
+			public void run() {
 				userCPReplacements = new HashMap<Integer, Integer>();
 
 				while (th.isAlive()) {
@@ -281,7 +274,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 						internalCriticalPoints.remove(i);
 					}
 
-					try { GatedThread.sleep(trackingPeriodInMillis); }
+					try { Thread.sleep(trackingPeriodInMillis); }
 					catch (InterruptedException e) { e.printStackTrace(); }
 				}
 			}
@@ -290,121 +283,75 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	}
 
 
-	private TreeMap<Double,Double> computeSlowdownProfile() {
-		final double coef = 1.1; // slightly more than 1.0 to model speed which is greater than any actual speed
-
-//		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
-
-		TreeMap<Double,Double> ret = new TreeMap<Double, Double>();
-		State tempStateBW = new State(0.0, MAX_VELOCITY*coef);
+	private TreeMap<Double,Double> getSlowdownProfile() {
+		TreeMap<Double,Double> ret = new TreeMap<Double, Double>(Collections.reverseOrder());
+		State tempStateBW = new State(0.0, 0.0);
 		ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
 		double time = 0.0;
-		double deltaTime = coefDeltaTimeForSlowDown * this.trackingPeriodInMillis /this.temporalResolution;
+		double deltaTime = 0.5*(this.trackingPeriodInMillis/this.temporalResolution);
 		//Compute where to slow down (can do forward here for both states...)
-
-		while (tempStateBW.getVelocity() > 0.0) {
+		while (tempStateBW.getVelocity() < MAX_VELOCITY*1.1) {
 			double dampeningBW = getCurvatureDampening(getRobotReport(tempStateBW).getPathIndex(), true);
-			//Use slightly conservative max deceleration (which is positive acceleration since we simulate FW dynamics).
-			// (This is regarding dampeningBW < 1?)
-
-			integrateRK4(tempStateBW, time, deltaTime, true, MAX_VELOCITY*coef, dampeningBW, MAX_ACCELERATION, -1);
-			ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
-
+			//Use slightly conservative max deceleration (which is positive acceleration since we simulate FW dynamics)
+			integrateRK4(tempStateBW, time, deltaTime, false, MAX_VELOCITY*1.1, dampeningBW, MAX_ACCELERATION);
 			time += deltaTime;
-		}
-
-		for (var entry : ret.entrySet()) {
-			ret.put(entry.getKey(), tempStateBW.getPosition() - entry.getValue());
+			ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 		}
 
 		//for (Double speed : ret.keySet()) System.out.println("@speed " + speed + " --> " + ret.get(speed));
-		return ret; // map each speed to the stopping distance for it
+		return ret;
 	}
 
-	private double computePositionToSlowDown(double targetDistance, boolean isRealCriticalPoint) {
-		if (state.getPosition() >= targetDistance) {
-			return state.getPosition(); // essentially force slowing down
-		}
-
-//		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
-
-		State stateToBe = new State(state.getPosition(), Math.max(0, state.getVelocity()));
+	private double computePositionToSlowDown() {
+		State tempStateFW = new State(state.getPosition(), state.getVelocity());
 		double time = 0.0;
-		double deltaTime = coefDeltaTimeForSlowDown * this.trackingPeriodInMillis / this.temporalResolution;
-		Double prevPosition = null;
+		double deltaTime = 0.5*(this.trackingPeriodInMillis/this.temporalResolution);
 
 		//Compute where to slow down (can do forward here, we have the slowdown profile...)
-		while (stateToBe.getPosition() < targetDistance) {
-			var approximation = slowDownProfile.ceilingEntry(stateToBe.getVelocity());
-			assert approximation != null; // otherwise, `slowDownProfile` must contain entries for greater speeds
-
-			double speedApproximate = approximation.getKey();
-			assert speedApproximate >= stateToBe.getVelocity();
-
-			double stoppingDistanceApproximate = approximation.getValue();
-			// stoppingDistanceApproximate >= actual stopping distance
-
-			double landingPosition = stateToBe.getPosition() + stoppingDistanceApproximate;
-			if (landingPosition > targetDistance) {
-				if (prevPosition == null) {
-					return state.getPosition();
+		while (tempStateFW.getPosition() < this.totalDistance) {
+			double prevSpeed = -1.0;
+			boolean firstTime = true;
+			for (Double speed : this.slowDownProfile.keySet()) {
+				//Find your speed in the table (table is ordered w/ highest speed first)...
+				if (tempStateFW.getVelocity() > speed) {
+					//If this speed lands you after total dist you are OK (you've checked at lower speeds and either returned or breaked...)
+					double landingPosition = tempStateFW.getPosition() + (firstTime ? 0.0 : slowDownProfile.get(prevSpeed));
+					if (landingPosition > totalDistance) {
+						//System.out.println("Found: speed = " + tempStateFW.getVelocity() + " space needed = " + slowDownProfile.get(prevSpeed) + " (delta = " + Math.abs(totalDistance-landingPosition) + ")");
+						//System.out.println("Position to slow down = " + tempStateFW.getPosition());
+						return tempStateFW.getPosition();
+					}
+					//System.out.println("Found: speed = " + tempStateFW.getVelocity() + " space needed = " + slowDownProfile.get(speed) + " (undershoot by " + (totalDistance-tempStateFW.getPosition()+slowDownProfile.get(speed)) + ")");
+					break;
 				}
-				return prevPosition; // at `prevPosition`, `landingPosition <= totalDistance`
+				firstTime = false;
+				prevSpeed = speed;
 			}
 
-			prevPosition = stateToBe.getPosition();
-
-			double dampeningFW = getCurvatureDampening(getRobotReport(stateToBe).getPathIndex(), true);
-			integrateRK4(stateToBe, time, deltaTime, false, MAX_VELOCITY, dampeningFW, MAX_ACCELERATION, te.getRobotID());
-			assert stateToBe.getPosition() > prevPosition;
+			double dampeningFW = getCurvatureDampening(getRobotReport(tempStateFW).getPathIndex(), true);
+			integrateRK4(tempStateFW, time, deltaTime, false, MAX_VELOCITY, dampeningFW, MAX_ACCELERATION);
 
 			time += deltaTime;
 		}
-
-		throw new RuntimeException("we should have returned a value in the loop");
+		return -this.totalDistance;
 	}
 
-	public static void integrateRK4(
-			State state, double time, double deltaTime, boolean slowDown,
-			double MAX_VELOCITY, double MAX_VELOCITY_DAMPENING_FACTOR, double MAX_ACCELERATION,
-			int robotID
-	) {
-		assert MAX_VELOCITY_DAMPENING_FACTOR == 1.0; // this is just to check whether it can be different
-
-		double MAX_DECELERATION = MAX_ACCELERATION * coefAccelerationToDeceleration;
-
-		// Use `targetVelocity`:
-		if (robotID == HumanControl.idHuman) {
-			MAX_VELOCITY = Math.min(MAX_VELOCITY, HumanControl.targetVelocityHuman); // MAX_ACCELERATION or 0
-			if (! slowDown) {
-				slowDown = state.getVelocity() > HumanControl.targetVelocityHuman; // -MAX_ACCELERATION
-			}
-		}
-
-		var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
-		// numIntegrateCalls = {1: 11}
-		if (!numIntegrateCalls.containsKey(robotID)) {
-			numIntegrateCalls.put(robotID, 0);
-		}
-		// numIntegrateCalls = {1: 11, 2: 0}
-		numIntegrateCalls.put(robotID, numIntegrateCalls.get(robotID) + 1);
-		// numIntegrateCalls = {1: 11, 2: 1}
-
+	public static void integrateRK4(State state, double time, double deltaTime, boolean slowDown, double MAX_VELOCITY, double MAX_VELOCITY_DAMPENING_FACTOR, double MAX_ACCELERATION) {
 		synchronized(state) {
-			Derivative a = Derivative.evaluate(state, time, 0.0, new Derivative(), slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION, MAX_DECELERATION);
-			Derivative b = Derivative.evaluate(state, time, deltaTime/2.0, a, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION, MAX_DECELERATION);
-			Derivative c = Derivative.evaluate(state, time, deltaTime/2.0, b, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR,MAX_ACCELERATION, MAX_DECELERATION);
-			Derivative d = Derivative.evaluate(state, time, deltaTime, c, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION, MAX_DECELERATION);
+			Derivative a = Derivative.evaluate(state, time, 0.0, new Derivative(), slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
+			Derivative b = Derivative.evaluate(state, time, deltaTime/2.0, a, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
+			Derivative c = Derivative.evaluate(state, time, deltaTime/2.0, b, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR,MAX_ACCELERATION);
+			Derivative d = Derivative.evaluate(state, time, deltaTime, c, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
 
 			double dxdt = (1.0f / 6.0f) * ( a.getVelocity() + 2.0f*(b.getVelocity() + c.getVelocity()) + d.getVelocity() );
-			double dvdt = (1.0f / 6.0f) * (a.getAcceleration()
-					+ 2.0f * (b.getAcceleration() + c.getAcceleration()) + d.getAcceleration());
+			double dvdt = (1.0f / 6.0f) * ( a.getAcceleration() + 2.0f*(b.getAcceleration() + c.getAcceleration()) + d.getAcceleration() );
 
 			state.setPosition(state.getPosition()+dxdt*deltaTime);
 			state.setVelocity(state.getVelocity()+dvdt*deltaTime);
 		}
 	}
+
 
 	@Override
 	public void setCriticalPoint(int criticalPointToSet, int extCPCounter) {
@@ -414,10 +361,8 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		final int numberOfReplicas = this.numberOfReplicas;
 
 		//Define a thread that will send the information
-		Thread waitToTXThread = new GatedThread("Wait to TX thread for robot " + te.getRobotID()) {
-
-			@Override
-			public void runCore() {
+		Thread waitToTXThread = new Thread("Wait to TX thread for robot " + te.getRobotID()) {
+			public void run() {
 
 				int delayTx = 0;
 				if (NetworkConfiguration.getMaximumTxDelay() > 0) {
@@ -427,7 +372,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				}
 
 				//Sleep for delay in communication
-				try { GatedThread.sleep(delayTx); }
+				try { Thread.sleep(delayTx); }
 				catch (InterruptedException e) { e.printStackTrace(); }
 
 				//if possible (according to packet loss, send
@@ -474,128 +419,55 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	}
 
+
 	@Override
 	public void setCriticalPoint(int criticalPointToSet) {
-		setCriticalPoint(criticalPointToSet, false);
-	}
 
-	public void setCriticalPoint(int criticalPointToSet, boolean isUnconditionalStop) {
-		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
-		RobotReport rr = getRobotReport();
-		int robotID = rr.getRobotID();
+		if (this.criticalPoint != criticalPointToSet) {
 
-		/*
-		if (this.criticalPoint == criticalPointToSet) {
-			//Same critical point was already set
-			metaCSPLogger.warning("Critical point (" + te.getComponent() + ") " + criticalPointToSet + " was already set!");
-			return;
-		}
-		*/
+			//A new intermediate index to stop at has been given
+			if (criticalPointToSet != -1 && criticalPointToSet > getRobotReport().getPathIndex()) {
+				//Store backups in case we are too late for critical point
+				double totalDistanceBKP = this.totalDistance;
+				int criticalPointBKP = this.criticalPoint;
+				double positionToSlowDownBKP = this.positionToSlowDown;
 
-		if (criticalPointToSet == -1) {
-			//The critical point has been reset, go to the end
-			this.criticalPoint = criticalPointToSet;
-			this.criticalSections = null;
-			this.totalDistance = computeDistance(0, traj.getPose().length - 1);
-			this.positionToSlowDown = computePositionToSlowDown(totalDistance, false);
-			metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
-			return;
-		}
-
-		//A new intermediate index to stop at has been given
-		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-		HashSet<CriticalSection> criticalSections = new HashSet<>();
-		for (CriticalSection cs : tec.allCriticalSections) {
-			Integer start = cs.getStart(robotID);
-			if (start == null) {
-				continue;
-			}
-			Integer end = cs.getEnd(robotID);
-			assert end != null;
-
-			final int margin = AbstractTrajectoryEnvelopeCoordinator.TRAILING_PATH_POINTS;
-
-			if (start - margin <= criticalPointToSet && criticalPointToSet <= end + margin) {
-				criticalSections.add(cs);
-			}
-		}
-		//assert ! criticalSections.isEmpty();
-
-		HashSet<CriticalSection> criticalSectionsReal = new HashSet<>();
-		for (CriticalSection cs : criticalSections) {
-			boolean is1Before2 = tec.getOrderOfCriticalSection(
-					cs,
-					tec.getRobotReport(cs.getTe1RobotID()),
-					tec.getRobotReport(cs.getTe2RobotID())
-			);
-			if (cs.isTe1(robotID) == is1Before2) { // we have priority
-				continue;
-			}
-
-			boolean isReal = true;
-			for (int id : new int[] { cs.getTe1RobotID(), cs.getTe2RobotID() }) {
-				// TODO: When `robotIDToFreezingCounter` changes, call `setCriticalPoint` for other robots.
-				if (id != robotID && Forcing.robotIDToFreezingCounter.getOrDefault(id, 0) > 0) {
-					isReal = false;
-				}
-			}
-
-			if (isReal) {
-				criticalSectionsReal.add(cs);
-			}
-		}
-
-		if (criticalSectionsReal.isEmpty()) {
-			return;
-		}
-
-		if (isUnconditionalStop || criticalPointToSet > rr.getPathIndex()) {
-			//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
-			double targetDistance = computeDistance(0, criticalPointToSet);
-			double positionToSlowDownTemporary = computePositionToSlowDown(targetDistance, true);
-
-			if (isUnconditionalStop || positionToSlowDownTemporary > state.getPosition()) {
 				this.criticalPoint = criticalPointToSet;
+				//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
+				this.totalDistance = computeDistance(0, criticalPointToSet);
+				this.positionToSlowDown = computePositionToSlowDown();
 
-				//assert criticalSectionsReal.size() == 1; // doesn't work when the other robot returns through the same intersection
-				//this.criticalSection = criticalSectionsReal.iterator().next();
-				this.criticalSections = CriticalSection.sortCriticalSections(criticalSectionsReal);
-				// If there are several CSes that are close to each other
-				// (contained in `criticalSectionsReal` or related to different calls of `setCriticalPoint`),
-				// then they can be combined into a single artificial `this.criticalSection`.
-
-				this.totalDistance = targetDistance;
-				this.positionToSlowDown = positionToSlowDownTemporary;
-
-				for (CriticalSection cs : criticalSectionsReal) {
-					cs.robotIDInferior = robotID;
+				//We are too late for critical point, restore everything
+				if (this.positionToSlowDown < state.getPosition()) {
+					metaCSPLogger.warning("Ignored critical point (" + te.getComponent() + "): " + criticalPointToSet + " because slowdown distance (" + this.positionToSlowDown +") < current distance (" + state.getPosition() + ")");
+					this.criticalPoint = criticalPointBKP;
+					this.totalDistance = totalDistanceBKP;
+					this.positionToSlowDown = positionToSlowDownBKP;
 				}
+				else {
+					metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
+				}
+			}
 
-				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
-				return;
+			//Critical point <= current position, ignore -- WHY??
+			else if (criticalPointToSet != -1 && criticalPointToSet <= getRobotReport().getPathIndex()) {
+				metaCSPLogger.warning("Ignored critical point (" + te.getComponent() + "): " + criticalPointToSet + " because robot is already at " + getRobotReport().getPathIndex() + " (and current CP is " + this.criticalPoint + ")");
+			}
 
-				// TODO: If not `areCriticalSectionsFound`, `this.criticalPoint` becomes outdated sometimes?
-				// (Unless `setCriticalPoint` is always called for `-1` before getting called for real points.)
+			//The critical point has been reset, go to the end
+			else if (criticalPointToSet == -1) {
+				this.criticalPoint = criticalPointToSet;
+				this.totalDistance = computeDistance(0, traj.getPose().length-1);
+				this.positionToSlowDown = computePositionToSlowDown();
+				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
 			}
 		}
 
-		// So we would stop after the critical point.
-		if (Forcing.robotIDToFreezingCounter.getOrDefault(robotID, 0) > 0) {
-			Integer positionToStop = null;
-			for (CriticalSection cs : criticalSectionsReal) {
-				Integer end = cs.getEnd(robotID);
-				assert end != null;
-				int stop = end + 1;
-				if (positionToStop == null || end > stop) {
-					positionToStop = stop;
-				}
-			}
-			Forcing.robotIDToPathIndexToStop.put(robotID, positionToStop);
-			Forcing.robotIDToFreezingCounter.put(robotID, 0);
+		//Same critical point was already set
+		else {
+			metaCSPLogger.warning("Critical point (" + te.getComponent() + ") " + criticalPointToSet + " was already set!");
 		}
-		for (CriticalSection cs : criticalSectionsReal) {
-			cs.setHigher(robotID, 2);
-		}
+
 	}
 
 	@Override
@@ -683,61 +555,21 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		this.numberOfReplicas = Math.max(1, (int)Math.ceil(coordinationNumberOfReplicas*(double)trackingPeriodInMillis/coordinationPeriodInMillis));
 	}
 
-	private CriticalSection getFirstOfCurrentCriticalSections() {
-		if (criticalSections == null) {
-			return null;
-		}
-
-		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-		for (CriticalSection cs : criticalSections) {
-			if (tec.allCriticalSections.contains(cs)) {
-				return cs;
-			}
-		}
-		return null;
-	}
-
 	@Override
 	public void run() {
 		this.elapsedTrackingTime = 0.0;
-
 		double deltaTime = 0.0;
 		boolean atCP = false;
 		int myRobotID = te.getRobotID();
-//		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(myRobotID); TODO introduce VehicleHashMap & Vehicles class
 		int myTEID = te.getID();
 
+
 		while (true) {
-			if (emergencyBreaker.isStopped(myRobotID)) {
-				break;
-			}
-
-			boolean skipIntegration = false;
-
-			Integer pathIndexToStop = Forcing.robotIDToPathIndexToStop.getOrDefault(myRobotID, null);
-			if (pathIndexToStop != null && getRobotReport().getPathIndex() >= pathIndexToStop) {
-				Forcing.robotIDToPathIndexToStop.remove(myRobotID);
-				Forcing.robotIDToFreezingCounter.put(myRobotID, Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) + 1);
-			}
-
-			boolean isFreezing = Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) > 0;
-			if (isFreezing) {
-				state = new State(state.getPosition(), 0);
-				skipIntegration = true;
-			}
-
-			CriticalSection criticalSection = getFirstOfCurrentCriticalSections();
-			if (! skipIntegration && criticalSection != null) {
-				assert criticalSection.robotIDInferior == myRobotID;
-				if (criticalSection.canPassFirst(myRobotID)) {
-					criticalPoint = -1;
-					onTrajectoryEnvelopeUpdate(); // reset `positionToSlowDown`, etc.
-				}
-			}
 
 			//End condition: passed the middle AND velocity < 0 AND no criticalPoint
+			boolean skipIntegration = false;
 			//if (state.getPosition() >= totalDistance/2.0 && state.getVelocity() < 0.0) {
-			if (! skipIntegration && state.getPosition() >= this.positionToSlowDown && state.getVelocity() <= 0.0) { // waiting for another robot
+			if (state.getPosition() >= this.positionToSlowDown && state.getVelocity() < 0.0) {
 				if (criticalPoint == -1 && !atCP) {
 					//set state to final position, just in case it didn't quite get there (it's certainly close enough)
 					state = new State(totalDistance, 0.0);
@@ -745,35 +577,16 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 					break;
 				}
 
-				assert criticalPoint != -1 || atCP;
-
 				//Vel < 0 hence we are at CP, thus we need to skip integration
 				if (!atCP /*&& getRobotReport().getPathIndex() == criticalPoint*/) {
-					assert criticalPoint != -1 : state.getPosition();
-
-					// . . . . . . . . .
-					//       ^     C
 					int pathIndex = getRobotReport().getPathIndex();
 					metaCSPLogger.info("At critical point (" + te.getComponent() + "): " + criticalPoint + " (" + pathIndex + ")");
-					if (pathIndex > criticalPoint) {
-						// . . . . . . . . .
-						//     C ^
-						metaCSPLogger.severe("* ATTENTION! STOPPED AFTER!! *");
-
-						emergencyBreaker.stopRobots(myRobotID, pathIndex);
-						if (emergencyBreaker.isStopped(myRobotID)) {
-							break;
-						}
-						// TODO: Do emergency break when `state.getPosition() >= this.positionToSlowDown` and
-						// `pathIndex > criticalPoint` (regardless of `state.getVelocity() < 0.0`)?
-					}
-
+					if (pathIndex > criticalPoint) metaCSPLogger.severe("* ATTENTION! STOPPED AFTER!! *");
 					atCP = true;
 				}
 
-				assert criticalPoint != -1 || atCP;
+				skipIntegration = true;
 
-				skipIntegration = true; // at current iteration
 			}
 
 			//Compute deltaTime
@@ -785,18 +598,11 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 					metaCSPLogger.info("Resuming from critical point (" + te.getComponent() + ")");
 					atCP = false;
 				}
-				slowingDown = state.getPosition() >= positionToSlowDown;
+				slowingDown = false;
+				if (state.getPosition() >= positionToSlowDown) slowingDown = true;
 				double dampening = getCurvatureDampening(getRobotReport().getPathIndex(), false);
+				integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION);
 
-				// Prefer to stop earlier than to cross over.
-				State stateTemp = new State(state.getPosition(), state.getVelocity());
-				integrateRK4(stateTemp, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION, te.getRobotID());
-				if (! slowingDown && stateTemp.getPosition() >= positionToSlowDown) {
-					slowingDown = true;
-					integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, MAX_VELOCITY, dampening, MAX_ACCELERATION, te.getRobotID());
-				} else {
-					state = stateTemp;
-				}
 			}
 
 			//Do some user function on position update
@@ -806,12 +612,12 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			//Sleep for tracking period
 			int delay = trackingPeriodInMillis;
 			if (NetworkConfiguration.getMaximumTxDelay() > 0) delay += rand.nextInt(NetworkConfiguration.getMaximumTxDelay());
-			try { GatedThread.sleep(delay); }
+			try { Thread.sleep(delay); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 
 			//Advance time to reflect how much we have slept (~ trackingPeriod)
-			long deltaTimeInMillis = GatedThread.isEnabled() ? delay : Calendar.getInstance().getTimeInMillis() - timeStart;
-			deltaTime = deltaTimeInMillis / this.temporalResolution;
+			long deltaTimeInMillis = Calendar.getInstance().getTimeInMillis()-timeStart;
+			deltaTime = deltaTimeInMillis/this.temporalResolution;
 			elapsedTrackingTime += deltaTime;
 		}
 
@@ -819,21 +625,21 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		while (tec.getRobotReport(te.getRobotID()).getPathIndex() != -1)
 		{
 			enqueueOneReport();
-			try { GatedThread.sleep(trackingPeriodInMillis); }
+			try { Thread.sleep(trackingPeriodInMillis); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
 
 		//persevere with last path point in case listeners didn't catch it!
 		long timerStart = getCurrentTimeInMillis();
 		while (getCurrentTimeInMillis()-timerStart < WAIT_AMOUNT_AT_END) {
-//			System.out.println("Waiting " + te.getComponent());
-			try { GatedThread.sleep(trackingPeriodInMillis); }
+			//System.out.println("Waiting " + te.getComponent());
+			try { Thread.sleep(trackingPeriodInMillis); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
 		metaCSPLogger.info("RK4 tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + myTEID + ")");
 	}
 
-	public static double[] computeDTs(Trajectory traj, double maxVel, double maxAccel, int robotID) {
+	public static double[] computeDTs(Trajectory traj, double maxVel, double maxAccel) {
 		double distance = computeDistance(traj, 0, traj.getPose().length-1);
 		State state = new State(0.0, 0.0);
 		double time = 0.0;
@@ -846,7 +652,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 		//First compute time to stop (can do FW here...)
 		while (state.getPosition() < distance/2.0 && state.getVelocity() < maxVel) {
-			integrateRK4(state, time, deltaTime, false, maxVel, 1.0, maxAccel, robotID);
+			integrateRK4(state, time, deltaTime, false, maxVel, 1.0, maxAccel);
 			time += deltaTime;
 		}
 		double positionToSlowDown = distance-state.getPosition();
@@ -857,10 +663,10 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		while (true) {
 			if (state.getPosition() >= distance/2.0 && state.getVelocity() < 0.0) break;
 			if (state.getPosition() >= positionToSlowDown) {
-				integrateRK4(state, time, deltaTime, true, maxVel, 1.0, maxAccel, robotID);
+				integrateRK4(state, time, deltaTime, true, maxVel, 1.0, maxAccel);
 			}
 			else {
-				integrateRK4(state, time, deltaTime, false, maxVel, 1.0, maxAccel, robotID);
+				integrateRK4(state, time, deltaTime, false, maxVel, 1.0, maxAccel);
 			}
 			//System.out.println("Time: " + time + " " + rr);
 			//System.out.println("Time: " + MetaCSPLogging.printDouble(time,4) + "\tpos: " + MetaCSPLogging.printDouble(state.getPosition(),4) + "\tvel: " + MetaCSPLogging.printDouble(state.getVelocity(),4));
@@ -884,8 +690,6 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	}
 
-	@Override
-	public State getState() {
-		return state;
-	}
+
+
 }

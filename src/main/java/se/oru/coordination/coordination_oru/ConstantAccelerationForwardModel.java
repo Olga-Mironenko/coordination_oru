@@ -34,7 +34,7 @@ public class ConstantAccelerationForwardModel implements ForwardModel {
 		if (lookaheadInMillis > 0) {
 			while (time*this.temporalResolution < lookaheadInMillis) {
 				se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4.integrateRK4(
-						state, time, deltaTime, false, maxVel, 1.0, maxAccel, te.getRobotID());
+						state, time, deltaTime, false, maxVel, 1.0, maxAccel);
 				time += deltaTime;
 			}
 		}
@@ -42,7 +42,7 @@ public class ConstantAccelerationForwardModel implements ForwardModel {
 		while (state.getVelocity() > 0) {
 			if (state.getPosition() > distance) return false;
 			se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4
-					.integrateRK4(state, time, deltaTime, true, maxVel, 1.0, maxAccel, te.getRobotID());
+					.integrateRK4(state, time, deltaTime, true, maxVel, 1.0, maxAccel);
 			time += deltaTime;
 		}
 		return true;
@@ -85,7 +85,7 @@ public class ConstantAccelerationForwardModel implements ForwardModel {
 							state, time, deltaTime, false, maxVel, 1.0, maxAccel * 1.1, te.getRobotID());
 				} else {
 					TrajectoryEnvelopeTrackerRK4.integrateRK4(
-							state, time, deltaTime, false, maxVel, 1.0, maxAccel * 1.1, te.getRobotID());
+							state, time, deltaTime, false, maxVel, 1.0, maxAccel * 1.1);
 				}
 				time += deltaTime;
 			}
@@ -96,7 +96,7 @@ public class ConstantAccelerationForwardModel implements ForwardModel {
 						time, deltaTime, true, maxVel, 1.0, maxAccel * 0.9, te.getRobotID());
 			} else {
 				TrajectoryEnvelopeTrackerRK4.integrateRK4(state,
-						time, deltaTime, true, maxVel, 1.0, maxAccel * 0.9, te.getRobotID());
+						time, deltaTime, true, maxVel, 1.0, maxAccel * 0.9);
 			}
 			time += deltaTime;
 		}

@@ -51,41 +51,45 @@ public class PaperScenario_3A1L {
         final Pose[] autonomousRobotGoal1 = {orePass1};
         final Pose[] autonomousRobotGoal2 = {orePass2};
         final Pose[] autonomousRobotGoal3 = {orePass3};
-        final Pose[] limitedLookAheadRobotGoal = {mainTunnelLeft};
+        final Pose[] autonomousRobotGoal4= {mainTunnelLeft};
+//        final Pose[] limitedLookAheadRobotGoal = {mainTunnelLeft};
 
         var autonomousRobot1 = new AutonomousVehicle(1, Color.YELLOW, 5, 2, 0.9, 0.5);
         var autonomousRobot2 = new AutonomousVehicle();
         var autonomousRobot3 = new AutonomousVehicle();
-        var lookAheadVehicle = new LookAheadVehicle(1, lookAheadDistance, Color.GREEN, 5, 2, 0.9, 0.5);
+        var autonomousRobot4 = new AutonomousVehicle();
+//        var lookAheadVehicle = new LookAheadVehicle(1, lookAheadDistance, Color.GREEN, 5, 2, 0.9, 0.5);
 
         autonomousRobot1.getPlan(drawPoint28, autonomousRobotGoal1, YAML_FILE, true);
         autonomousRobot2.getPlan(drawPoint32A, autonomousRobotGoal2, YAML_FILE, true);
         autonomousRobot3.getPlan(drawPoint35, autonomousRobotGoal3, YAML_FILE, true);
-        lookAheadVehicle.getPlan(entrance, limitedLookAheadRobotGoal, YAML_FILE, false);
+        autonomousRobot4.getPlan(entrance, autonomousRobotGoal4, YAML_FILE, true);
+//        lookAheadVehicle.getPlan(entrance, limitedLookAheadRobotGoal, YAML_FILE, false);
 
         // Instantiate a trajectory envelope coordinator.
         var tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 5, 2.5);
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
-        tec.setForwardModel(autonomousRobot1.getID(), new ConstantAccelerationForwardModel(autonomousRobot1.getMaxAcceleration(),
-                autonomousRobot1.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
-                tec.getRobotTrackingPeriodInMillis(autonomousRobot1.getID())));
-        tec.setForwardModel(autonomousRobot2.getID(), new ConstantAccelerationForwardModel(autonomousRobot2.getMaxAcceleration(),
-                autonomousRobot2.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
-                tec.getRobotTrackingPeriodInMillis(autonomousRobot2.getID())));
-        tec.setForwardModel(autonomousRobot3.getID(), new ConstantAccelerationForwardModel(autonomousRobot3.getMaxAcceleration(),
-                autonomousRobot3.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
-                tec.getRobotTrackingPeriodInMillis(autonomousRobot3.getID())));
-        tec.setForwardModel(lookAheadVehicle.getID(), new ConstantAccelerationForwardModel(lookAheadVehicle.getMaxAcceleration(),
-                lookAheadVehicle.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
-                tec.getRobotTrackingPeriodInMillis(lookAheadVehicle.getID())));
+//        tec.setForwardModel(autonomousRobot1.getID(), new ConstantAccelerationForwardModel(autonomousRobot1.getMaxAcceleration(),
+//                autonomousRobot1.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
+//                tec.getRobotTrackingPeriodInMillis(autonomousRobot1.getID())));
+//        tec.setForwardModel(autonomousRobot2.getID(), new ConstantAccelerationForwardModel(autonomousRobot2.getMaxAcceleration(),
+//                autonomousRobot2.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
+//                tec.getRobotTrackingPeriodInMillis(autonomousRobot2.getID())));
+//        tec.setForwardModel(autonomousRobot3.getID(), new ConstantAccelerationForwardModel(autonomousRobot3.getMaxAcceleration(),
+//                autonomousRobot3.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
+//                tec.getRobotTrackingPeriodInMillis(autonomousRobot3.getID())));
+//        tec.setForwardModel(lookAheadVehicle.getID(), new ConstantAccelerationForwardModel(lookAheadVehicle.getMaxAcceleration(),
+//                lookAheadVehicle.getMaxVelocity(), tec.getTemporalResolution(), tec.getControlPeriod(),
+//                tec.getRobotTrackingPeriodInMillis(lookAheadVehicle.getID())));
 
         tec.setDefaultFootprint(autonomousRobot1.getFootprint());
         tec.placeRobot(autonomousRobot1.getID(), drawPoint28);
         tec.placeRobot(autonomousRobot2.getID(), drawPoint32A);
         tec.placeRobot(autonomousRobot3.getID(), drawPoint35);
-        tec.placeRobot(lookAheadVehicle.getID(), entrance);
+        tec.placeRobot(autonomousRobot4.getID(), entrance);
+//        tec.placeRobot(lookAheadVehicle.getID(), entrance);
 
         // Set Heuristics
 //        var heuristic = new Heuristics();
@@ -107,7 +111,8 @@ public class PaperScenario_3A1L {
         var m1 = new Mission(autonomousRobot1.getID(), autonomousRobot1.getPath());
         var m2 = new Mission(autonomousRobot2.getID(), autonomousRobot2.getPath());
         var m3 = new Mission(autonomousRobot3.getID(), autonomousRobot3.getPath());
-        var m4 = new Mission(lookAheadVehicle.getID(), lookAheadVehicle.getLimitedPath(lookAheadVehicle.getID(), lookAheadDistance, tec));
+        var m4 = new Mission(autonomousRobot4.getID(), autonomousRobot4.getPath());
+//        var m4 = new Mission(lookAheadVehicle.getID(), lookAheadVehicle.getLimitedPath(lookAheadVehicle.getID(), lookAheadDistance, tec));
 //        m4.setStoppingPoint(orePass3, 10000); FIXME I think it does not work.
 
 //        var randomRobotCaller = new RandomRobotCaller(numOfCallsForLookAheadRobot, terminationInMinutes);
