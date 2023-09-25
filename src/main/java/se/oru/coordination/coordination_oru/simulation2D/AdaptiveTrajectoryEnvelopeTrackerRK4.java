@@ -862,6 +862,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			try { GatedThread.sleep(trackingPeriodInMillis); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
+		// By this moment, a dummy tracker (which reports index=-1) has been started.
 
 		//persevere with last path point in case listeners didn't catch it!
 		long timerStart = getCurrentTimeInMillis();

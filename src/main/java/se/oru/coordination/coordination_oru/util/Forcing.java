@@ -86,14 +86,8 @@ public class Forcing {
                         continue;
                     }
 
-                    boolean willBeRestored = false;
-                    for (CriticalSection cs : criticalSectionsToRestorePrioritiesLater) {
-                        if (cs.getInferior() == robot) {
-                            willBeRestored = true;
-                            break;
-                        }
-                    }
-                    assert willBeRestored; // otherwise, `stopDistance` is not consistent with `priorityDistance`
+                    // Note: If the robot is not in `criticalSectionsToRestorePrioritiesLater`,
+                    // then it's after all critical sections with the human, so no priority change is needed.
 
                     stopRobot(robot);
                     robotsToResumeLater.add(robot);
@@ -221,5 +215,11 @@ public class Forcing {
         int counter = robotIDToFreezingCounter.getOrDefault(robotID, 0);
         assert 0 < counter && counter <= maxNumberOfHumans;
         robotIDToFreezingCounter.put(robotID, counter - 1);
+    }
+
+    public static boolean isRobotFrozen(int robotID) {
+        int counter = robotIDToFreezingCounter.getOrDefault(robotID, 0);
+        assert 0 <= counter && counter <= maxNumberOfHumans;
+        return counter > 0;
     }
 }

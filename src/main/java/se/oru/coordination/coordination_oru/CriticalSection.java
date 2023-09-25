@@ -3,6 +3,7 @@ package se.oru.coordination.coordination_oru;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
+import se.oru.coordination.coordination_oru.util.Forcing;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -231,6 +232,10 @@ public class CriticalSection {
 
 			if (! isInferior) {
 				return maxVelocity;
+			}
+
+			if (Forcing.isRobotFrozen(robotID)) {
+				return 0.0;
 			}
 
 			RobotReport rr = tec.getRobotReport(robotID);

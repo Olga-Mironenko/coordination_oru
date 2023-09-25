@@ -65,7 +65,7 @@ public class GridTest {
 
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.S_USGC.toString();
+            scenarioString = Scenario.S_USGM.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
 
@@ -322,10 +322,20 @@ public class GridTest {
                     }
 
                     if (positionAtForcingStart != null) {
-                        double distanceTraveled = hum0.getCurrentRobotReport().getDistanceTraveled() - positionAtForcingStart;
-                        assert distanceTraveled >= 0; // otherwise, we are in a new mission, but restoring/resuming hasn't happened
-                        if (! knobsAfterForcing.updateForcing(distanceTraveled)) {
-                            positionAtForcingStart = null;
+                        int index = hum0.getCurrentRobotReport().getPathIndex();
+                        if (index == -1) {
+                            // A new mission has started but forcing hasn't stopped. Let's stop it now.
+                            // This is a hack: we should rely not on explicit positions like
+                            // `ysUpwardsRestoringPriorities` (which are sometimes not reached when mission ends)
+                            // but rather on events like "the first crossroad has passed" and "the mission has ended".
+                            knobsAfterForcing.resumeRobots();
+                            knobsAfterForcing.restorePriorities();
+                        } else {
+                            double distanceTraveled = hum0.getCurrentRobotReport().getDistanceTraveled() - positionAtForcingStart;
+                            assert distanceTraveled >= 0; // otherwise, we are in a new mission, but restoring/resuming hasn't happened
+                            if (!knobsAfterForcing.updateForcing(distanceTraveled)) {
+                                positionAtForcingStart = null;
+                            }
                         }
                     }
 

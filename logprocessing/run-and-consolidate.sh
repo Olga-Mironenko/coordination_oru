@@ -22,13 +22,13 @@ scenarios+=(
 #  S_DP3C #DONE
 #  S_DP3M #DONE
 #  S_DPGC #DONE
-  S_DPGM
+#  S_DPGM #DONE
 #  S_DS1C #DONE
-  S_DS1M
+#  S_DS1M #DONE
 #  S_DS2C #DONE
-#  S_DS2M #DONE?
+#  S_DS2M #DONE
 #  S_DS3C #DONE
-  S_DS3M
+#  S_DS3M #DONE
 #  S_DSGC #DONE
 #  S_DSGM #DONE
 #  S_UP1C #DONE
@@ -38,15 +38,15 @@ scenarios+=(
 #  S_UP3C #DONE
 #  S_UP3M #DONE
 #  S_UPGC #DONE
-  S_UPGM
+  S_UPGM # FIXME
 #  S_US1C #DONE
-  S_US1M
-#  S_US2C #DONE?
-  S_US2M
-  S_US3C
-  S_US3M
-  S_USGC
-#  S_USGM #DONE
+  S_US1M # FIXME
+#  S_US2C #DONE
+  S_US2M # FIXME
+#  S_US3C # DONE
+#  S_US3M # tomorrow
+#  S_USGC # tomorrow
+#  S_USGM # DONE
 )
 
 ## S_{D,U}{P,S}{1,2,3,G}{C,M}
