@@ -15,12 +15,12 @@ import java.util.function.Function;
  * te1 and te2 are {@link TrajectoryEnvelope}s that overlap when robot 1 is in pose
  * with index start1 and robot 2 is in pose with index start2, until the two robots reach poses
  * end1 and end2 respectively.
- * 
+ *
  * @author fpa
  *
  */
 public class CriticalSection {
-	
+
 	private TrajectoryEnvelope te1;
 	private TrajectoryEnvelope te2;
 	private int te1Start = -1;
@@ -40,7 +40,7 @@ public class CriticalSection {
 		this.te1End = te1End;
 		this.te2End = te2End;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -53,7 +53,7 @@ public class CriticalSection {
 		if (te1 == null || te2 == null) {
 			if (other.te1 != null && other.te2 != null)
 				return false;
-			else if (te1 == null) 
+			else if (te1 == null)
 				return te2.equals((other.te1 == null) ? other.te2 : other.te1);
 		} else {
 			if (!(te1.equals(other.te1) && te2.equals(other.te2) || te1.equals(other.te2) && te2.equals(other.te1)))
@@ -109,15 +109,15 @@ public class CriticalSection {
 	public int getTe1Break() {
 		return te1Break;
 	}
-	
+
 	public int getTe2Break() {
 		return te2Break;
 	}
-	
+
 	public void setTe1Break(int te1Break) {
 		this.te1Break = te1Break;
 	}
-	
+
 	public void setTe2Break(int te2Break) {
 		this.te2Break = te2Break;
 	}
