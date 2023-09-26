@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package se.oru.coordination.coordination_oru.gui_oru;
+package se.oru.coordination.coordination_oru.gui;
 import se.oru.coordination.coordination_oru.util.Missions;
 
 /**
