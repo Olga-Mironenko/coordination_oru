@@ -10,10 +10,30 @@ public class GridMapConstants extends BaseMapConstants {
 
     public final static double xColumn1 = 14.5;
     public final static double xColumn2 = 30.0;
-    public final static double xColumn3 = 45.7;
+    public final static double xColumn3 = 45.5;
     public final static double yRow1 = 44.0;
     public final static double yRow2 = 30.0;
-    public final static double yRow3 = 15.5;
+    public final static double yRow3 = 16.0;
+
+    /*
+    x:
+       4   14.5   30   45.5   56
+       <     +     +     +     >
+        10.5   15.5  15.5  10.5
+
+    y:
+        56  ^
+               12
+        44  +
+               14
+        30  +
+               14
+        16  +
+               |
+        8   F  |12
+               |
+        4   V
+     */
 
     public final static Pose column1Top = new Pose(xColumn1, yTop, thetaDown);
     public final static Pose column2Top = new Pose(xColumn2, yTop, thetaDown);

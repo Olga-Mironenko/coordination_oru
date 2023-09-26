@@ -234,15 +234,13 @@ public class CriticalSection {
 				return maxVelocity;
 			}
 
-			if (Forcing.isRobotFrozen(robotID)) {
-				return 0.0;
-			}
+			double futureVelocity = Forcing.isRobotFrozen(robotID) ? 0 : maxVelocity;
 
 			RobotReport rr = tec.getRobotReport(robotID);
 			double currentVelocity = rr.getVelocity();
-			double delta = Math.abs(maxVelocity - currentVelocity);
+			double delta = Math.abs(futureVelocity - currentVelocity);
 
-			return Math.min(currentVelocity, maxVelocity) + 0.4 * delta;
+			return Math.min(currentVelocity, futureVelocity) + 0.4 * delta;
 		}
 
 		@Override

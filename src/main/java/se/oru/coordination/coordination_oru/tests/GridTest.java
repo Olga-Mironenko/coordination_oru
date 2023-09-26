@@ -63,6 +63,21 @@ public class GridTest {
         }.exec();
     }
 
+    protected static double computeDistanceToStop(double velocity, double acceleration) {
+        // velocity = 12 m/s
+        // deceleration = acceleration * coefAccelerationToDeceleration = 2 * 3 = 6 m/s^2
+        double deceleration = acceleration * AdaptiveTrajectoryEnvelopeTrackerRK4.coefAccelerationToDeceleration;
+        // => timeToStop = velocity / deceleration = 2 s (6 m/s^2 * 2 s = 12 m/s)
+        double timeToStop = velocity / deceleration;
+
+        // avgSpeed (while stopping) = velocity / 2 = 6 m/s
+        double avgSpeed = velocity / 2;
+        // => distanceToStop = timeToStop * avgSpeed = 12 m
+        double distanceToStop = timeToStop * avgSpeed;
+
+        return distanceToStop;
+    }
+
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
             scenarioString = Scenario.S_USGM.toString();
@@ -96,11 +111,18 @@ public class GridTest {
         final Pose aut5Start = GridMapConstants.row3Left;
         final Pose aut5Finish = GridMapConstants.row1Right;
 
-        final double maxVelocityHum = 10.0;
+        // v = maxVelocityHum = 12 m/s
+        // a = -maxAccelerationHum * coefAccelerationToDeceleration = -2 * 3 = -6 m/s^2
+        // => timeToStop = 2 s (-6 m/s^2 * 2 s = -12 m/s)
+        // avg. speed (while stopping): vAvg = maxVelocityHum / 2 = 6 m/s
+        // => distanceToStop = timeToStop * vAvg = 12 m
+        final double maxVelocityHum = 5.0;
+        final double maxAccelerationHum = 2.0; // closer to 0.5 in reality
         final double maxVelocityAut = 5.0;
-        final double maxAccelerationHum = 10.0;
         final double maxAccelerationAut = 2.0;
         final int trackingPeriod = 100; // ms
+
+        double distanceToStop = computeDistanceToStop(maxVelocityHum, maxAccelerationHum);
 
         double xLength = 2.5;
         double yLength = 1.5;
