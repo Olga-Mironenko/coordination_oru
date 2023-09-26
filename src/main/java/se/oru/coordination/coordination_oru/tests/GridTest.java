@@ -65,7 +65,7 @@ public class GridTest {
 
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.S_USGC.toString();
+            scenarioString = Scenario.S_USGM.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
 
@@ -96,18 +96,19 @@ public class GridTest {
         final Pose aut5Start = GridMapConstants.row3Left;
         final Pose aut5Finish = GridMapConstants.row1Right;
 
-        final double precisionCoefficient = 1;
-        final double maxVelocity = 5.0 * precisionCoefficient;
-        final double maxAcceleration = 2.0 * precisionCoefficient;
-        final int trackingPeriod = (int) Math.round(100 / precisionCoefficient);
+        final double maxVelocityHum = 10.0;
+        final double maxVelocityAut = 5.0;
+        final double maxAccelerationHum = 10.0;
+        final double maxAccelerationAut = 2.0;
+        final int trackingPeriod = 100; // ms
 
         double xLength = 2.5;
         double yLength = 1.5;
         double xLengthInner = 1.5;
         double yLengthInner = 1.0;
 
-        HumanControl.targetVelocityHumanInitial = maxVelocity;
-        HumanControl.targetVelocityHuman = maxVelocity;
+        HumanControl.targetVelocityHumanInitial = maxVelocityHum;
+        HumanControl.targetVelocityHuman = maxVelocityHum;
 
         AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow
@@ -120,16 +121,16 @@ public class GridTest {
         AutonomousVehicle aut5 = null;
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, maxAcceleration, xLength, yLength);
-        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
-        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
-        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
-        //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
-        //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLength, yLength);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum, xLength, yLength);
+        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
+        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
+        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
+        //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
+        //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
 
         AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
 
-        TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, maxVelocity, maxAcceleration, trackingPeriod);
+        TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 0, 0, trackingPeriod);
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
