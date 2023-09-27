@@ -308,7 +308,7 @@ public class BrowserVisualization implements FleetVisualization {
 				text += String.format("i=%d (CP=%d, %s)",
 						rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
 				);
-				text += "; p=" + rr.getPose();
+				text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
 
 				double velocity = rr.getVelocity();
 				text += "; v=" + round(velocity) + " m/s";
@@ -325,6 +325,9 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "; " + stringifyMissions(Missions.getMissions(id));
 
 			text += "<br>";
+		}
+		if (Forcing.forcingSinceTimestep != -1) {
+			text += "Forcing since step " + Forcing.forcingSinceTimestep + "<br>";
 		}
 		text += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
 		setOverlayText(text);

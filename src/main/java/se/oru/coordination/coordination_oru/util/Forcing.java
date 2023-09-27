@@ -1,12 +1,10 @@
 package se.oru.coordination.coordination_oru.util;
 
-import org.apache.commons.collections.comparators.ComparatorChain;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.CriticalSection;
-import se.oru.coordination.coordination_oru.TrackingCallback;
-import se.oru.coordination.coordination_oru.code.Heuristics;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 import java.util.*;
 
@@ -24,13 +22,19 @@ public class Forcing {
 
     private final static int maxNumberOfHumans = 1;
 
+    public static int forcingSinceTimestep = -1;
+    protected static boolean isDone = false;
+
     public static KnobsAfterForcing forceDriving(int robotID) {
+        forcingSinceTimestep = Timekeeper.getTimestepsPassed();
         robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);
 
         final TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
         HashSet<CriticalSection> criticalSectionsToRestorePrioritiesLater = new HashSet<>();
         TreeSet<Integer> robotsToResumeLater = new TreeSet<>();
+
+        isDone = false;
 
         KnobsAfterForcing knobsAfterForcing = new KnobsAfterForcing() {
             @Override
@@ -41,6 +45,10 @@ public class Forcing {
                     return false;
                 }
 
+                if (false && isDone && Timekeeper.getTimestepsPassed() > 100) {
+                    return true;
+                }
+
                 double priorityDistanceRemaining = Math.max(0, priorityDistance - distanceTraveled);
                 if (priorityDistanceRemaining > 0) {
                     final ArrayList<CriticalSection> criticalSectionsForPriority =
@@ -49,6 +57,7 @@ public class Forcing {
                         if (criticalSectionsToRestorePrioritiesLater.contains(cs)) {
                             continue;
                         }
+
                         cs.setHigher(robotID, 1);
                         criticalSectionsToRestorePrioritiesLater.add(cs);
                     }
@@ -93,6 +102,7 @@ public class Forcing {
                     robotsToResumeLater.add(robot);
                 }
 
+                isDone = true;
                 return true;
             }
 
@@ -102,6 +112,7 @@ public class Forcing {
                     resumeRobot(robot);
                 }
                 robotsToResumeLater.clear();
+                forcingSinceTimestep = -1;
             }
 
             @Override
@@ -112,6 +123,7 @@ public class Forcing {
                     }
                 }
                 criticalSectionsToRestorePrioritiesLater.clear();
+                forcingSinceTimestep = -1;
             }
         };
 

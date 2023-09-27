@@ -525,8 +525,12 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				if (!communicatedCPs.containsKey(tracker) || communicatedCPs.containsKey(tracker) && communicatedCPs.get(tracker).getFirst() != criticalPoint || retransmitt ) {
 					communicatedCPs.put(tracker, new Pair<Integer,Long>(criticalPoint, Calendar.getInstance().getTimeInMillis()));
 					externalCPCounters.replace(tracker,externalCPCounters.get(tracker)+1);
-					tracker.setCriticalPoint(criticalPoint, externalCPCounters.get(tracker)%Integer.MAX_VALUE);
+					if (false && GatedThread.isEnabled()) { // TODO
+						tracker.setCriticalPoint(criticalPoint);
+					} else {
+						tracker.setCriticalPoint(criticalPoint, externalCPCounters.get(tracker) % Integer.MAX_VALUE);
 
+					}
 					//for statistics
 					totalMsgsSent.incrementAndGet(); 
 					if (retransmitt) totalMsgsReTx.incrementAndGet();

@@ -135,7 +135,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 			if (this.criticalPoint != -1) {
 				int criticalPoint = this.criticalPoint;
-				this.criticalPoint = -1;
+				this.setFieldCriticalPoint(-1);
 				setCriticalPoint(criticalPoint);
 			}
 		}
@@ -491,7 +491,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		if (criticalPointToSet == -1) {
 			//The critical point has been reset, go to the end
-			this.criticalPoint = -1;
+			this.setFieldCriticalPoint(-1);
 			this.totalDistance = computeDistance(0, traj.getPose().length - 1);
 			this.positionToSlowDown = computePositionToSlowDown(totalDistance, false);
 			metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
@@ -527,7 +527,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			double positionToSlowDownTemporary = computePositionToSlowDown(targetDistance, true);
 
 			if (isUnconditionalStop || positionToSlowDownTemporary > state.getPosition()) {
-				this.criticalPoint = criticalPointToSet;
+				this.setFieldCriticalPoint(criticalPointToSet);
 
 				//assert criticalSectionsReal.size() == 1; // doesn't work when the other robot returns through the same intersection
 				//this.criticalSection = criticalSectionsReal.iterator().next();
@@ -701,7 +701,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		// `criticalPoint` yet (at least sometimes).
 
 		if (criticalSection.getInferior() != myRobotID || criticalSection.canPassFirst(myRobotID)) {
-			criticalPoint = -1;
+			setFieldCriticalPoint(-1);
 			onTrajectoryEnvelopeUpdate(); // reset `positionToSlowDown`, etc.
 		}
 	}

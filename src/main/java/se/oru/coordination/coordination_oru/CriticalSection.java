@@ -214,8 +214,12 @@ public class CriticalSection {
 
 			distance = deltaIndexes == 0 ? 0.0 :
 					TrajectoryEnvelopeTrackerRK4.computeDistance(tec.trackers.get(robotID).traj, currentIndex, goalIndex);
-			velocity = estimateVelocity(robotID, isInferior);
-			time = distance / velocity; // m / m/s = s
+			if (distance == 0.0) {
+				time = 0.0;
+			} else {
+				velocity = estimateVelocity(robotID, isInferior);
+				time = distance / velocity; // m / m/s = s
+			}
 		}
 
 		/**
@@ -271,6 +275,7 @@ public class CriticalSection {
 
 	public boolean canPassFirst(int myID) {
 		boolean isInferior = ! isSuperior(myID);
+		//assert isInferior; // TODO: enable it
 		int otherID = getOtherRobotID(myID);
 
 		DistanceEstimation myEstimation = new DistanceEstimation(myID, isInferior);

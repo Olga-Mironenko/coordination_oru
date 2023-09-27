@@ -20,6 +20,8 @@ import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.TrackingCallback;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
+import se.oru.coordination.coordination_oru.code.AbstractVehicle;
+import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeCoordinator {
@@ -192,7 +194,15 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	public Double getRobotMaxVelocity(int robotID) {
 		if (this.robotMaxVelocity.containsKey(robotID)) 
 			return this.robotMaxVelocity.get(robotID);
-		return DEFAULT_MAX_VELOCITY;
+		if (! GatedThread.isEnabled()) {
+			return DEFAULT_MAX_VELOCITY;
+		}
+
+		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(robotID);
+		if (vehicle == null) {
+			return DEFAULT_MAX_VELOCITY;
+		}
+		return vehicle.getMaxVelocity();
 	}
 	
 	/**
@@ -204,7 +214,15 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	public Double getRobotMaxAcceleration(int robotID) {
 		if (this.robotMaxAcceleration.containsKey(robotID)) 
 			return this.robotMaxAcceleration.get(robotID);
-		return DEFAULT_MAX_ACCELERATION;
+		if (! GatedThread.isEnabled()) {
+			return DEFAULT_MAX_ACCELERATION;
+		}
+
+		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(robotID);
+		if (vehicle == null) {
+			return DEFAULT_MAX_ACCELERATION;
+		}
+		return vehicle.getMaxAcceleration();
 	}
 	
 	@Override

@@ -69,7 +69,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 		this.te = te;
 		this.traj = te.getTrajectory();
 		this.externalCPCounter = -1;
-		this.criticalPoint = -1;
+		this.setFieldCriticalPoint(-1);
 		this.temporalResolution = temporalResolution;
 		this.startingTimeInMillis = tec.getCurrentTimeInMillis();
 		this.tec = tec;
@@ -224,6 +224,10 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 	 */
 	public int getCriticalPoint() {
 		return this.criticalPoint;
+	}
+
+	protected void setFieldCriticalPoint(int criticalPoint) {
+		this.criticalPoint = criticalPoint;
 	}
 	
 	/**
