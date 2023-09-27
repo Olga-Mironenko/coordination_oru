@@ -1,4 +1,4 @@
-package se.oru.coordination.coordination_oru.gui_oru;
+package se.oru.coordination.coordination_oru.gui;
 import java.util.TimerTask;
 import javax.swing.JButton;
 import javax.swing.JLabel;

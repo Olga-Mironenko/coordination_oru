@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package se.oru.coordination.coordination_oru.gui_oru;
+package se.oru.coordination.coordination_oru.gui;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -48,18 +48,15 @@ public class GUITools {
 
 
         prg.tec.stopInference();
-        prg.viz.frame.dispose();
-        prg.viz.frame.removeAll();
+//        prg.viz.frame.dispose();
+//        prg.viz.frame.removeAll();
 
-        prg.tec=new TrajectoryEnvelopeCoordinatorSimulation();
+        prg.tec = new TrajectoryEnvelopeCoordinatorSimulation();
     }
     
-    public static void run(JTextArea textArea,int countIteration)
-    {
-        
+    public static void run(JTextArea textArea,int countIteration) {
         try {
             StatusRobot.textArea = textArea;
-            
             StatusRobot.setIterationOfExperiment(countIteration);
             StatusExperiment.setIterationOfExperiment(countIteration);
 
@@ -86,7 +83,7 @@ public class GUITools {
     
     public static void btn_Apply(boolean isNewRobot,JButton btn_newRobot,int indexOfList,JList listRobots,JTextField textBox_name,JTextField textBox_velocity,JTextField textBox_acceleration,JTextField textBox_color, JTextArea textBox_size, JTextArea textBox_path,JTextField textBox_iterationRobot2, JLabel textBox_map)
     {
-        if(isNewRobot==true) //هنا يعني لم يتم اضافة روبوت جديد اي لم يتم الضغط على زر روبوت جديد
+        if(isNewRobot) //هنا يعني لم يتم اضافة روبوت جديد اي لم يتم الضغط على زر روبوت جديد
         {
             //هنا يتم تعديل بيانات الروبوت
             pkg.robotJson[indexOfList].name=textBox_name.getText();
@@ -124,7 +121,7 @@ public class GUITools {
 
             len = JSONFile.convertStringtoSizeArray_interface(textBox_path.getText()).length;
             newPkg.robotJson[0].path = new Point[len];
-            for(int j=0;j<len;j++)
+            for(int j=0; j<len; j++)
             {
                 newPkg.robotJson[0].path[j] = new Point();
                 Point [] po = JSONFile.convertStringtoSizeArray_interface(textBox_path.getText());

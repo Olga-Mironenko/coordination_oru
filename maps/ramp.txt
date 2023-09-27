@@ -1,0 +1,55 @@
+Ramp Scenario:
+
+Ramp Bottom
+--
+Pixel (x,y) = (48,421)
+Position (x,y) = (4.8500000000000005,19.35)
+Color (r,g,b,a) = (255,255,255,255)
+Occupancy map bit: 0
+Occupancy value: 1.0
+State: free (threshold is 0.3)
+
+Parking Place 1
+--
+Pixel (x,y) = (349,308)
+Position (x,y) = (34.95,30.650000000000002)
+Color (r,g,b,a) = (255,255,255,255)
+Occupancy map bit: 0
+Occupancy value: 1.0
+State: free (threshold is 0.3)
+
+Parking Place 2
+--
+Pixel (x,y) = (546,220)
+Position (x,y) = (54.650000000000006,39.45)
+Color (r,g,b,a) = (255,255,255,255)
+Occupancy map bit: 0
+Occupancy value: 1.0
+State: free (threshold is 0.3)
+
+Parking Place 3
+--
+Pixel (x,y) = (939,159)
+Position (x,y) = (93.95,45.550000000000004)
+Color (r,g,b,a) = (255,255,255,255)
+Occupancy map bit: 0
+Occupancy value: 1.0
+State: free (threshold is 0.3)
+
+Parking Place 4
+--
+Pixel (x,y) = (1220,145)
+Position (x,y) = (122.05000000000001,46.95)
+Color (r,g,b,a) = (255,255,255,255)
+Occupancy map bit: 0
+Occupancy value: 1.0
+State: free (threshold is 0.3)
+
+Ramp Top
+--
+Pixel (x,y) = (1515,122)
+Position (x,y) = (151.55,49.25)
+Color (r,g,b,a) = (255,255,255,255)
+Occupancy map bit: 0
+Occupancy value: 1.0
+State: free (threshold is 0.3)
