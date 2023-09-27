@@ -11,5 +11,5 @@ scenarios=("$@")
 root=$(dirname "$0")
 set -x
 for scenario in "${scenarios[@]}"; do
-  timeout "$timeout" env SCENARIO="$scenario" "$root"/run-demo.sh "$demo" || [ $? = 124 ]
+  env SCENARIO="$scenario" "$root"/run-demo.sh "$demo" "$timeout" || [ $? = 124 ]
 done

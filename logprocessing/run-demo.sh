@@ -2,8 +2,9 @@
 
 set -eu
 
-[ $# = 1 ]
+[ $# = 1 ] || [ $# = 2 ]
 demo=$1
+timeout=${2:-infinity}
 
 root=$(dirname "$0")
 repo=$root/..
@@ -19,4 +20,5 @@ args_gradlew=(
    -Pdemo="$demo"
 )
 set -x
-./gradlew "${args_gradlew[@]}" |& tee ./logs/entire/"$demo".log
+timeout --kill-after=10s "$timeout" ./gradlew "${args_gradlew[@]}" |&
+  tee ./logs/entire/"$demo".log

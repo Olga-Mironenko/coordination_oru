@@ -5,6 +5,7 @@ import java.awt.Color;
 import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 
+import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.*;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
@@ -80,7 +81,7 @@ public class GridTest {
 
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.S_USGM.toString();
+            scenarioString = Scenario.S_USGC.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
 
@@ -282,7 +283,7 @@ public class GridTest {
 
                 // Apply the information:
                 KnobsAfterForcing knobsAfterForcing = null;
-                Double positionAtForcingStart = null;
+                RobotReport rrAtForcingStart = null;
                 while (true) {
                     boolean isForcingNow = false;
                     boolean isResumingNow = false;
@@ -329,35 +330,35 @@ public class GridTest {
 
                     if (isForcingNow) {
                         knobsAfterForcing = Forcing.forceDriving(hum0.getID());
-                        positionAtForcingStart = hum0.getCurrentRobotReport().getDistanceTraveled();
+                        rrAtForcingStart = hum0.getCurrentRobotReport();
                     }
 
                     if (isResumingNow) {
-                        assert positionAtForcingStart != null;
+                        assert rrAtForcingStart != null;
                         knobsAfterForcing.resumeRobots();
                     }
                     if (isRestoringNow) {
-                        assert positionAtForcingStart != null;
+                        assert rrAtForcingStart != null;
                         knobsAfterForcing.restorePriorities();
                     }
                     if (isResumingNow || isRestoringNow) {
-                        positionAtForcingStart = null;
+                        rrAtForcingStart = null;
                     }
 
-                    if (positionAtForcingStart != null) {
-                        int index = hum0.getCurrentRobotReport().getPathIndex();
-                        if (index == -1) {
+                    if (rrAtForcingStart != null) {
+                        if (hum0.getCurrentRobotReport().getPathIndex() < rrAtForcingStart.getPathIndex()) {
                             // A new mission has started but forcing hasn't stopped. Let's stop it now.
                             // This is a hack: we should rely not on explicit positions like
                             // `ysUpwardsRestoringPriorities` (which are sometimes not reached when mission ends)
                             // but rather on events like "the first crossroad has passed" and "the mission has ended".
+                            // A (slightly) better approach would be to compare mission IDs (that can be stored in RRs).
                             knobsAfterForcing.resumeRobots();
                             knobsAfterForcing.restorePriorities();
                         } else {
-                            double distanceTraveled = hum0.getCurrentRobotReport().getDistanceTraveled() - positionAtForcingStart;
+                            double distanceTraveled = hum0.getCurrentRobotReport().getDistanceTraveled() - rrAtForcingStart.getDistanceTraveled();
                             assert distanceTraveled >= 0; // otherwise, we are in a new mission, but restoring/resuming hasn't happened
                             if (!knobsAfterForcing.updateForcing(distanceTraveled)) {
-                                positionAtForcingStart = null;
+                                rrAtForcingStart = null;
                             }
                         }
                     }

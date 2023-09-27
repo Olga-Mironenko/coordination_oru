@@ -6,6 +6,8 @@ set -eu
 
 root=$(dirname "$0")
 
+"$root"/stop-all-demos.sh
+
 timeout=60m
 demo=GridTest
 scenarios=(
@@ -38,14 +40,14 @@ scenarios+=(
 #  S_UP3C #DONE
 #  S_UP3M #DONE
 #  S_UPGC #DONE
-  S_UPGM # FIXME
+#  S_UPGM #DONE
 #  S_US1C #DONE
-  S_US1M # FIXME
+#  S_US1M #DONE
 #  S_US2C #DONE
-  S_US2M # FIXME
+#  S_US2M #DONE
 #  S_US3C # DONE
-#  S_US3M # tomorrow
-#  S_USGC # tomorrow
+#  S_US3M #DONE
+  S_USGC
 #  S_USGM # DONE
 )
 
