@@ -554,12 +554,11 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				Integer end = cs.getEnd(robotID);
 				assert end != null;
 				int stop = end + 1;
-				if (positionToStop == null || end > stop) {
+				if (positionToStop == null || stop > positionToStop) {
 					positionToStop = stop;
 				}
 			}
 			Forcing.robotIDToPathIndexToStop.put(robotID, positionToStop);
-			Forcing.robotIDToFreezingCounter.put(robotID, 0);
 		}
 		for (CriticalSection cs : criticalSections) {
 			cs.setHigher(robotID, 2);
@@ -677,11 +676,12 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	private boolean checkFreezing() {
 		int myRobotID = te.getRobotID();
 
-		Integer pathIndexToStop = Forcing.robotIDToPathIndexToStop.getOrDefault(myRobotID, null);
-		if (pathIndexToStop != null && getRobotReport().getPathIndex() >= pathIndexToStop) {
+		Integer pathIndexToStop = Forcing.robotIDToPathIndexToStop.get(myRobotID);
+		if (pathIndexToStop != null) {
+			if (getRobotReport().getPathIndex() < pathIndexToStop) {
+				return false;
+			}
 			Forcing.robotIDToPathIndexToStop.remove(myRobotID);
-			Forcing.robotIDToFreezingCounter.put(myRobotID, Forcing.robotIDToFreezingCounter.getOrDefault(myRobotID, 0) + 1);
-			// TODO: Restore the original counter.
 		}
 
 		return Forcing.isRobotFrozen(myRobotID);
