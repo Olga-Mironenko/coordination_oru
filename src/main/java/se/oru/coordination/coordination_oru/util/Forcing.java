@@ -9,9 +9,20 @@ import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 import java.util.*;
 
 public class Forcing {
-    public static HashMap<Integer, Integer> robotIDToFreezingCounter = new HashMap<>(); // TODO: use semaphores
-    public static HashMap<Integer, Integer> robotIDToPathIndexToStop = new HashMap<>();
     public static TreeMap<Integer, Integer> robotIDToNumForcingEvents = new TreeMap<>();
+
+    /**
+     * Each time a robot does forcing, it increases counters for all affected robots.
+     * Each time a robot stops forcing, it decreases counters for all affected robots.
+     * An affected robot may drive only if its counter is zero (or if it's on an intersection).
+     * Namely, if an affected robot is already on an intersection, it ignores the counter.
+     */
+    public static HashMap<Integer, Integer> robotIDToFreezingCounter = new HashMap<>(); // TODO: use semaphores
+    /**
+     * If a robot should have been frozen while on an intersection,
+     * it postpones freezing until the specified path index.
+     */
+    public static HashMap<Integer, Integer> robotIDToPathIndexToStop = new HashMap<>();
 
     // Distances between the current robot and intersections to check:
     public static double priorityDistance = Double.NEGATIVE_INFINITY; // change the priority of that intersection?
@@ -23,7 +34,6 @@ public class Forcing {
     private final static int maxNumberOfHumans = 1;
 
     public static int forcingSinceTimestep = -1;
-    protected static boolean isDone = false;
 
     public static KnobsAfterForcing forceDriving(int robotID) {
         forcingSinceTimestep = Timekeeper.getTimestepsPassed();
@@ -34,8 +44,6 @@ public class Forcing {
         HashSet<CriticalSection> criticalSectionsToRestorePrioritiesLater = new HashSet<>();
         TreeSet<Integer> robotsToResumeLater = new TreeSet<>();
 
-        isDone = false;
-
         KnobsAfterForcing knobsAfterForcing = new KnobsAfterForcing() {
             @Override
             public boolean updateForcing(double distanceTraveled) {
@@ -43,10 +51,6 @@ public class Forcing {
                     restorePriorities();
                     resumeRobots();
                     return false;
-                }
-
-                if (false && isDone && Timekeeper.getTimestepsPassed() > 100) {
-                    return true;
                 }
 
                 double priorityDistanceRemaining = Math.max(0, priorityDistance - distanceTraveled);
@@ -102,7 +106,6 @@ public class Forcing {
                     robotsToResumeLater.add(robot);
                 }
 
-                isDone = true;
                 return true;
             }
 

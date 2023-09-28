@@ -547,8 +547,12 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			}
 		}
 
-		// So we would stop after the critical point.
+		// If this code has been reached, it means that the robot should have stopped before the intersection
+		// but doesn't manage to do so because of the speed.
+		// So we will stop after the critical point.
 		if (Forcing.isRobotFrozen(robotID)) {
+			// Here we find where the critical section ends. In case there are several critical sections
+			// related to the critical point, we use the end of the last critical section.
 			Integer positionToStop = null;
 			for (CriticalSection cs : criticalSections) {
 				Integer end = cs.getEnd(robotID);
@@ -562,6 +566,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 		for (CriticalSection cs : criticalSections) {
 			cs.setHigher(robotID, 2);
+			// So the current robot has greater priority than all others (unless they are in the same situation).
 		}
 	}
 
@@ -679,8 +684,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		Integer pathIndexToStop = Forcing.robotIDToPathIndexToStop.get(myRobotID);
 		if (pathIndexToStop != null) {
 			if (getRobotReport().getPathIndex() < pathIndexToStop) {
+				// The autonomous robot should stop in the future. So we ignore whether it's frozen.
 				return false;
 			}
+			// The autonomous robot should stop now (unless it has been already unfrozen).
 			Forcing.robotIDToPathIndexToStop.remove(myRobotID);
 		}
 
@@ -700,7 +707,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		// After forcing ends, priority change affects `criticalSection` but doesn't propagate to
 		// `criticalPoint` yet (at least sometimes).
 
-		if (criticalSection.getInferior() != myRobotID || criticalSection.canPassFirst(myRobotID)) {
+		if (myRobotID == criticalSection.getSuperior() || criticalSection.canPassFirst(myRobotID)) {
 			setFieldCriticalPoint(-1);
 			onTrajectoryEnvelopeUpdate(); // reset `positionToSlowDown`, etc.
 		}
@@ -721,15 +728,16 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		if (! continueToStay) {
 			if (status == Status.STOPPED_AT_CP) {
+				// STOPPED_AT_CP -> DRIVING if CP=-1 (so `positionToSlowDown` becomes large, so
+				// `state.getPosition() >= positionToSlowDown` is false).
 				metaCSPLogger.info("Resuming from critical point (" + te.getComponent() + ")");
 			}
 
 			return Status.DRIVING;
 		}
 
-		// waiting for another robot
-
 		if (status == Status.STOPPED_AT_CP) {
+			// waiting for another robot
 			return status;
 		}
 
@@ -803,6 +811,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			if (emergencyBreaker.isStopped(myRobotID)) {
 				// TODO: just skip the current time step?
 				status = Status.FULL_STOP;
+				// TODO: Make a new status where we decelerate the robot and exit
+				// (rather than just stop its control).
 				break;
 			}
 
