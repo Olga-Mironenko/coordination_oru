@@ -81,7 +81,7 @@ public class GridTest {
 
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.S_USGM.toString();
+            scenarioString = Scenario.S_USGC.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
 
@@ -117,10 +117,10 @@ public class GridTest {
         // => timeToStop = 2 s (-6 m/s^2 * 2 s = -12 m/s)
         // avg. speed (while stopping): vAvg = maxVelocityHum / 2 = 6 m/s
         // => distanceToStop = timeToStop * vAvg = 12 m
-        final double maxVelocityHum = 3.0;
+        final double maxVelocityHum = 5.0;
         final double maxAccelerationHum = 2.0; // closer to 0.5 in reality
-        final double maxVelocityAut = 12.0;
-        final double maxAccelerationAut = 10.0;
+        final double maxVelocityAut = 5.0;
+        final double maxAccelerationAut = 2.0;
         final int trackingPeriod = 100; // ms
 
         double distanceToStop = computeDistanceToStop(maxVelocityHum, maxAccelerationHum);

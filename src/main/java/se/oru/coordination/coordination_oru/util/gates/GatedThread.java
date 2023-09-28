@@ -12,7 +12,7 @@ abstract public class GatedThread extends Thread {
      */
     protected static boolean isGated = false;
 
-    public static double sleepSpeedRate = 30;
+    public static double sleepSpeedRate = 10;
 
     /**
      * The synchronizer of `GatedThread`s.
