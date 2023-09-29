@@ -9,6 +9,7 @@ import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 
 public class HumanControl {
+    public static boolean isEnabledForBrowser = false;
     public static double targetVelocityHumanInitial = Double.POSITIVE_INFINITY; // essentially a limit
     public static double targetVelocityHuman = targetVelocityHumanInitial;
     public static int idHuman = 0;

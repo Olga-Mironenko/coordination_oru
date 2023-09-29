@@ -36,6 +36,7 @@ import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 import static se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation.tec;
 
@@ -78,6 +79,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 	//Set if inferring precedence constraints
 	protected boolean fake = false;
+
+	public static int timestepOfLastCallOfGetOrderOfCriticalSection = -1;
 
 
 	/**
@@ -565,6 +568,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	//returns true if robot1 should go before robot2
 	//returns false if robot2 should go before robot1
 	public boolean getOrderOfCriticalSection(CriticalSection cs, RobotReport robotReport1, RobotReport robotReport2) {
+		timestepOfLastCallOfGetOrderOfCriticalSection = Timekeeper.getTimestepsPassed();
+
 		RobotAtCriticalSection r1atcs = new RobotAtCriticalSection(robotReport1, cs);
 		RobotAtCriticalSection r2atcs = new RobotAtCriticalSection(robotReport2, cs);
 

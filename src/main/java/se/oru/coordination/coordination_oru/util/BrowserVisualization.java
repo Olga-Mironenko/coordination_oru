@@ -33,6 +33,7 @@ import com.vividsolutions.jts.geom.util.AffineTransformation;
 import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.RobotReport;
+import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
@@ -327,6 +328,7 @@ public class BrowserVisualization implements FleetVisualization {
 		if (Forcing.forcingSinceTimestep != -1) {
 			text += "Forcing since step " + Forcing.forcingSinceTimestep + "<br>";
 		}
+		text += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
 		text += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
 		setOverlayText(text);
 	}

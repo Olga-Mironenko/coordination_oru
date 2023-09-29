@@ -275,11 +275,11 @@ public class CriticalSection {
 
 	public boolean canPassFirst(int myID) {
 		boolean isInferior = ! isSuperior(myID);
-		//assert isInferior; // TODO: enable it
+		assert isInferior;
 		int otherID = getOtherRobotID(myID);
 
-		DistanceEstimation myEstimation = new DistanceEstimation(myID, isInferior);
-		DistanceEstimation otherEstimation = new DistanceEstimation(otherID, ! isInferior);
+		DistanceEstimation myEstimation = new DistanceEstimation(myID, true);
+		DistanceEstimation otherEstimation = new DistanceEstimation(otherID, false);
 
 		return myEstimation.time < otherEstimation.time;
 	}

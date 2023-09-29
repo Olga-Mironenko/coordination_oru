@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru.tests.util;
 
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
+import se.oru.coordination.coordination_oru.util.HumanControl;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.Printer;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
@@ -17,6 +18,7 @@ public abstract class Demo {
         Printer.print("started");
 
         AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledGlobally = true;
+        //HumanControl.isEnabledForBrowser = true;
         BrowserVisualization.isStatusText = true;
         GatedThread.enable();
         Missions.isStatistics = true;

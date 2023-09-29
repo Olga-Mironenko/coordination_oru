@@ -95,11 +95,11 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         Gson gson = new Gson();
         JsonArray array = new JsonParser().parse(message).getAsJsonArray();
         String event = gson.fromJson(array.get(0), String.class);
-        if (event.equals("click")) {
+        if (HumanControl.isEnabledForBrowser && event.equals("click")) {
             Pose poseOrig = gson.fromJson(array.get(1), Pose.class);
             Pose pose = new Pose(poseOrig.getX(), poseOrig.getY(), poseOrig.getTheta());
             HumanControl.moveRobot(HumanControl.idHuman, pose);
-        } else if (event.equals("keydown")) {
+        } else if (HumanControl.isEnabledForBrowser && event.equals("keydown")) {
             String code = gson.fromJson(array.get(1), String.class);
             System.out.println("keydown: code=" + code);
             Double delta = null;
