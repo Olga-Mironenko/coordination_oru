@@ -151,6 +151,11 @@ public class GridTest {
         //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
         //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
 
+        //hum0.isAdaptiveTracker = true;
+        //aut1.isAdaptiveTracker = true;
+        //aut2.isAdaptiveTracker = true;
+        //aut3.isAdaptiveTracker = true;
+
         AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 0, 0, trackingPeriod);

@@ -272,7 +272,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 
 	@Override
 	public AbstractTrajectoryEnvelopeTracker getNewTracker(TrajectoryEnvelope te, TrackingCallback cb) {
-		if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled) {
+		if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledForTe(te)) {
 			return getNewAdaptiveTracker(te, cb);
 		}
 

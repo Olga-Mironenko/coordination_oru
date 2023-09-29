@@ -16,6 +16,8 @@ import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
+	public static boolean isEnabledGlobally = false;
+
 	public static double coefDeltaTimeForSlowDown = 0.1;
 
 	public static double coefAccelerationToDeceleration = 3.0;
@@ -914,5 +916,13 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	@Override
 	public State getState() {
 		return state;
+	}
+
+	public static boolean isEnabledForTe(TrajectoryEnvelope te) {
+		if (isEnabledGlobally) {
+			return true;
+		}
+		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
+		return vehicle.isAdaptiveTracker;
 	}
 }

@@ -30,8 +30,6 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
  *
  */
 public abstract class AbstractTrajectoryEnvelopeTracker {
-	public static boolean isEnabled = false;
-
 	protected AbstractTrajectoryEnvelopeCoordinator tec = null;
 	protected TrajectoryEnvelope te = null;
 	protected Trajectory traj = null;

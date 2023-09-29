@@ -54,6 +54,7 @@ public abstract class AbstractVehicle {
     private PoseSteering[] path;
     private double pathLength;
     private boolean isRundirPrepared = false;
+    public boolean isAdaptiveTracker = false;
     private static final String rundirsRoot = "logs/rundirs";
     private static final String dateString = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
     private static final String rundirCurrent = rundirsRoot + "/current";

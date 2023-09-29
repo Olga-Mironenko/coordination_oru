@@ -291,11 +291,9 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + " m/s<br>";
 		}
 
-		if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled) {
-			String textEmergencyBreaker = AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
-			if (textEmergencyBreaker != null) {
-				text += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
-			}
+		String textEmergencyBreaker = AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
+		if (textEmergencyBreaker != null) {
+			text += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
 		}
 
 		for (int id : idToVehicle.keySet()) {

@@ -16,7 +16,7 @@ public abstract class Demo {
         Printer.resetTime();
         Printer.print("started");
 
-        AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled = true;
+        AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledGlobally = true;
         BrowserVisualization.isStatusText = true;
         GatedThread.enable();
         Missions.isStatistics = true;

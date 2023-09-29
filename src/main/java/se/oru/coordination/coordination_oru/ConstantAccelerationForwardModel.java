@@ -80,7 +80,7 @@ public class ConstantAccelerationForwardModel implements ForwardModel {
 		long lookaheadInMillis = this.controlPeriodInMillis + 2*(TrajectoryEnvelopeCoordinator.MAX_TX_DELAY + trackingPeriodInMillis);
 		if (lookaheadInMillis > 0) {
 			while (time*temporalResolution < lookaheadInMillis) {
-				if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled) {
+				if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledForTe(te)) {
 					AdaptiveTrajectoryEnvelopeTrackerRK4.integrateRK4(
 							state, time, deltaTime, false, maxVel, 1.0, maxAccel * 1.1, te.getRobotID());
 				} else {
@@ -91,7 +91,7 @@ public class ConstantAccelerationForwardModel implements ForwardModel {
 			}
 		}
 		while (state.getVelocity() > 0) {
-			if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabled) {
+			if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledForTe(te)) {
 				AdaptiveTrajectoryEnvelopeTrackerRK4.integrateRK4(state,
 						time, deltaTime, true, maxVel, 1.0, maxAccel * 0.9, te.getRobotID());
 			} else {
