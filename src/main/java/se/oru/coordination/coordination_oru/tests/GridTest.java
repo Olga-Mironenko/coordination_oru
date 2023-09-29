@@ -81,7 +81,7 @@ public class GridTest {
 
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.S_USGC.toString();
+            scenarioString = Scenario.BASELINE_IDEAL_DRIVER_HUMAN_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
 

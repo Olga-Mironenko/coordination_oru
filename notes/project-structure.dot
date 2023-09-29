@@ -1,0 +1,180 @@
+// TODO: move tec.placeRobot into "a parking episode" (or something like that)
+digraph {
+    // Data:
+    missions [shape=rect, xlabel="queues"]
+    mission [shape=rect, xlabel="(robotID, path)"]
+    missionsPool [shape=rect, xlabel="currently active"]
+    path [shape=rect]
+    pose [shape=rect, xlabel="(x, y, angle)"]
+    envelopesToTrack [shape=rect, xlabel="list of TEs"]
+    TE [shape=rect, xlabel="(robotID, path, footprint)"]
+    "new TE" [shape=rect]
+    "Meta-CSP" [shape=triangle]
+    user [shape=triangle]
+    TEC [xlabel="`tec inference`,\nThe Coordinator"]
+    allCriticalSections [shape=rect, xlabel="set of CSs"]
+    "critical section" [shape=rect, xlabel="(te1[from,to], te2[from,to])"]
+    "critical point" [shape=rect, xlabel="`from` of the inferior TE of the CS"]
+    TrajectoryEnvelopeTrackerRK4 [shape=rect, xlabel="(TE, callbacks),\nsomething that drives a single TE"]
+    "tracker.run" [xlabel="decides on velocity and acceleration\nstep by step"]
+    state [shape=rect, xlabel="(position, velocity)"]
+    "tracker.positionToSlowDown" [shape=rect]
+    currentParkingEnvelopes [shape=rect]
+
+    subgraph cluster_main {
+        label=<<b>main</b> thread<br/>(the entrypoint of the program)>
+
+        "main" -> "a scenario" [label="1. calls"]
+        "main" -> "gatekeeper.run" [label="2. calls"]
+    }
+
+    subgraph cluster_startScenario {
+        label=<<b>startScenario</b> (thread)>
+
+        "a scenario" -> startMissionDispatchers [label="2. calls"]
+        "a scenario" -> enqueueMission [label="3. calls"]
+        enqueueMission -> "vehicle.getPlan" [label="1. calls"]
+        "vehicle.getPlan" -> RSP [label="creates"]
+        RSP -> path [label="computes"]
+        path -> mission [label="is part of"]
+        pose -> path [label="is part of"]
+        enqueueMission -> mission [label="2. constructs"]
+        mission -> missions [label="gets added"]
+    }
+
+    subgraph cluster_missionDispatchThread {
+        label=<<b>missionDispatchThread</b>>
+
+        missions -> missionDispatchThread [label="gets read in"]
+        startMissionDispatchers -> missionDispatchThread [label="starts", style=dashed]
+        missionDispatchThread -> "missionsPool" [label="1. reads (is the robot free?)"]
+        missionDispatchThread -> "tec.addMissions" [label="2. calls (if free)"]
+        "tec.addMissions" -> TE [label="creates"]
+        TE -> missionsPool [label="gets added into"]
+        TE -> "Meta-CSP" [label="part of"]
+    }
+
+    subgraph cluster_TEC {
+        label=<<b>TEC</b> thread<br/>(started in setupInferenceCallback)>
+
+        "a scenario" -> TEC [label="starts", constraint=false, style=dashed]
+        missionsPool -> TEC [label="gets read in"]
+        TEC -> envelopesToTrack [label="1. adds the TE"]
+        TEC -> startTrackingAddedMissions [label="2. calls"]
+        TEC -> createCriticalSections [label="3. calls"]
+        TEC -> "tracker.setCriticalPoint" [label="4. calls"]
+        envelopesToTrack -> createCriticalSections [label="gets read"]
+        envelopesToTrack -> startTrackingAddedMissions [label="gets read"]
+
+        createCriticalSections -> allCriticalSections [label="writes to"]
+        startTrackingAddedMissions -> TrajectoryEnvelopeTrackerRK4 [label="creates"]
+
+        createCriticalSections -> "tracker.getRobotReport" [label="calls"]
+        allCriticalSections -> "tracker.setCriticalPoint" [label="is used by"]
+        allCriticalSections -> "critical section" [label="consists of"]
+        "critical section" -> "critical point" [label="extracts into"]
+        "critical point" -> "tracker.setCriticalPoint" [label="is passed to"]
+        "tracker.setCriticalPoint" -> "tracker.positionToSlowDown" [label="changes if needed"]
+    }
+
+    subgraph cluster_tracker_threads {
+        label=<a pair of parallel <b>RK4</b> threads<br/>(a pair for each mission)>
+        graph [style=dotted]
+
+        subgraph cluster_tracker_RK4 {
+            label=<<b>tracker's</b> thread<br/>(<b>specialized</b>)>
+            graph [style=solid]
+
+            "tracker.run" [label="run"]
+            TrajectoryEnvelopeTrackerRK4 -> "tracker.run" [label="starts the thread\nin tracker's constructor", constraint=false, style=dashed]
+            state -> "tracker.run" [label="affects"]
+            "tracker.positionToSlowDown" -> "tracker.run" [label="affects"]
+            "tracker.run" -> integrateRK4 [label="calls"]
+            integrateRK4 -> state [label="changes"]
+        }
+
+        subgraph cluster_tracker_abstract {
+        label=<<b>tracker's</b> thread<br/>(<b>abstract</b>)>
+            graph [style=solid]
+
+            "(abstract) tracker.run" [label="run"]
+            TrajectoryEnvelopeTrackerRK4 -> "(abstract) tracker.run" [label="starts the thread\nin tracker's constructor", style=dashed]
+            "(abstract) tracker.run" -> "tracker's callbacks" [label="calls (when tracking stages change)"]
+        }
+    }
+
+    subgraph cluster_parking {
+        label=<a <b>parking</b> episode>
+
+        "a scenario" -> "tec.placeRobot" [label="1. calls"]
+        "tracker's callbacks" -> "tec.placeRobot" [label="include\n(when tracking finishes)"]
+
+        "tec.placeRobot" -> "(dummy, abstract) tracker.run" [label="1. starts the thread", style=dashed]
+        "tec.placeRobot" -> "(dummy) tracker.run" [label="2. starts the thread", style=dashed]
+
+        "tec.placeRobot" -> currentParkingEnvelopes [label="3. registers the TE\nof the dummy tracker"]
+        currentParkingEnvelopes -> allCriticalSections [label="affects", constraint=false, style=dashed]
+
+        subgraph cluster_tracker_dummy_threads {
+            label=<a pair of parallel <b>dummy</b> threads<br/>(a pair for each parking episode for each robot)>
+            graph [style=dotted]
+
+            subgraph cluster_tracker_dummy_RK4 {
+                label=<<b>dummy tracker's</b> thread<br/>(<b>specialized</b>)>
+                graph [style=solid]
+
+                "(dummy) tracker.run" [label="run"]
+            }
+
+            subgraph cluster_tracker_dummy_abstract {
+                label=<<b>dummy tracker's</b> thread<br/>(<b>abstract</b>)>
+                graph [style=solid]
+
+                "(dummy, abstract) tracker.run" [label="run"]
+            }
+        }
+    }
+
+    user -> "HumanControl.moveRobot" [label="calls by clicking mouse"]
+    user -> "HumanControl.changeTargetVelocityHuman" [label="calls by pressing ←, →"]
+
+    subgraph cluster_visualization {
+        label=<a <b>BrowserVisualizationSocket</b> thread>
+
+        "HumanControl.moveRobot" -> "tec.replacePath" [label="calls"]
+        "HumanControl.changeTargetVelocityHuman"  -> "tec.replacePath" [label="calls\n(to recompute critical points)"]
+        "tec.replacePath" -> "new TE" [label="creates"]
+        "tec.replacePath" -> createCriticalSections [label="calls", constraint=false, style=dashed]
+        "new TE" -> TrajectoryEnvelopeTrackerRK4 [label="affects"]
+    }
+}
+
+/*
+gates = {LinkedBlockingQueue@4190}    size = 12
+
+Common:
+7 = {Gate@4201} "Gate[missionDispatchThread's sleep(500)]" -- передаёт миссии от сценария координатору
+5 = {Gate@4199} "Gate[TrajectoryEnvelopeCoordinator inference's sleep(500)]" -- координатор
+6 = {Gate@4200} "Gate[Visualization update thread's sleep(30)]" -- визуализация (передача данных в браузер)
+8 = {Gate@4202} "Gate[forcing thread's sleep(100)]" -- конкретно в GridTest
+
+Robot 0:
+4 = {Gate@4198} "Gate[Abstract tracker Robot0's sleep(100)]" -- отслеживание этапов
+3 = {Gate@4197} "Gate[RK4 tracker Robot0's sleep(100)]" -- собственно изменение этапов
+    or Gate[Parking tracker Robot0's initial] -- Dummy
+
+Robot 1:
+2 = {Gate@4196} "Gate[Abstract tracker Robot1's sleep(100)]"
+1 = {Gate@4195} "Gate[RK4 tracker Robot1's sleep(100)]"
+
+Robot 2:
+0 = {Gate@4194} "Gate[Abstract tracker Robot2's sleep(100)]"
+11 = {Gate@4205} "Gate[RK4 tracker Robot2's sleep(100)]"
+
+Robot 3:
+10 = {Gate@4204} "Gate[Abstract tracker Robot3's sleep(100)]"
+9 = {Gate@4203} "Gate[RK4 tracker Robot3's sleep(100)]"
+
+
+RobotReport(te.getRobotID(), pose, currentPathIndex, state.getVelocity(), state.getPosition(), this.criticalPoint);
+*/

@@ -45,10 +45,10 @@ scenarios+=(
 #  S_US1M #DONE
 #  S_US2C #DONE
 #  S_US2M #DONE
-#  S_US3C # DONE
+#  S_US3C #DONE
 #  S_US3M #DONE
-  S_USGC
-#  S_USGM # DONE
+#  S_USGC #DONE
+#  S_USGM #DONE
 )
 
 ## S_{D,U}{P,S}{1,2,3,G}{C,M}
