@@ -1525,8 +1525,10 @@ public class Missions {
 	}
 
 	private static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
-		for (int robotID : tec.getAllRobotIDs()) {
-			VehiclesHashMap.getVehicle(robotID).writeStatistics();
+		synchronized (tec.trackers) {
+			for (int robotID : tec.getAllRobotIDs()) {
+				VehiclesHashMap.getVehicle(robotID).writeStatistics();
+			}
 		}
 	}
 
