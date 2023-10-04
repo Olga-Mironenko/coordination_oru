@@ -37,13 +37,24 @@ public class RandomRobotCaller {
      * @param mission The mission to be scheduled.
      */
     public void scheduleRandomCalls(Mission mission) {
-        int lastCallTime = 0;
-        for (int i = 0; i < numCalls; i++) {
-            int maxDelay = (((simulationTime - 2) * 60 - lastCallTime - 2 * 60 * (numCalls - i - 1)) / (numCalls - i));
-            int delay = (i == 0 ? random.nextInt(60) + 1 // Random time up to one minute for the first call
-                    : random.nextInt(Math.max(1, maxDelay)) + 1); // Random time up to the max delay for subsequent calls
-            lastCallTime += delay + (i == 0 ? 0 : 2 * 60); // Add the delay and two minutes to the last call time for subsequent calls
+        int totalSimulationSeconds = simulationTime * 60; // Convert minutes to seconds
+        int buffer = 60; // Buffer for the end of the simulation (60 seconds = 1 minute)
+        int averageInterval = (totalSimulationSeconds - buffer) / numCalls;
 
+        int lastCallTime = 0;
+
+        for (int i = 0; i < numCalls; i++) {
+            // Get a random delay around the average interval
+            int minDelay = (int) (0.8 * averageInterval);
+            int maxDelay = (int) (1.2 * averageInterval);
+            int delay = random.nextInt(maxDelay - minDelay + 1) + minDelay;
+
+            // Ensure the last call fits within the remaining simulation time minus the buffer
+            if (i == numCalls - 1 && (lastCallTime + delay) > (totalSimulationSeconds - buffer)) {
+                delay = totalSimulationSeconds - buffer - lastCallTime;
+            }
+
+            lastCallTime += delay;
             this.executorService.schedule(() -> callLookAheadRobot(mission), lastCallTime, TimeUnit.SECONDS);
             System.out.printf("Method will be called at: %d minutes %d seconds.%n", lastCallTime / 60, lastCallTime % 60);
         }
