@@ -372,7 +372,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			double MAX_VELOCITY, double MAX_VELOCITY_DAMPENING_FACTOR, double MAX_ACCELERATION,
 			int robotID
 	) {
-		assert MAX_VELOCITY_DAMPENING_FACTOR == 1.0; // this is just to check whether it can be different
+		//assert MAX_VELOCITY_DAMPENING_FACTOR == 1.0; // this is just to check whether it can be different
 
 		double MAX_DECELERATION = MAX_ACCELERATION * coefAccelerationToDeceleration;
 

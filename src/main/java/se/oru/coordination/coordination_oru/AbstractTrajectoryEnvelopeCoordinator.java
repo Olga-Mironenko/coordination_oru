@@ -73,7 +73,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	public static int EFFECTIVE_CONTROL_PERIOD = 0;
 
 	//Number of additional path points robot 2 should stay behind robot 1
-	public static int TRAILING_PATH_POINTS = 0;
+	public static int TRAILING_PATH_POINTS = 0; // 3 is also OK
 
 	protected boolean overlay = false;
 	protected boolean quiet = false;
