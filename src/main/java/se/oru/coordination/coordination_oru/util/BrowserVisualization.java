@@ -48,6 +48,7 @@ public class BrowserVisualization implements FleetVisualization {
 	private String overlayText = null;
 
 	public static boolean isStatusText = false;
+	public static boolean isExtendedText = false;
 
 	public BrowserVisualization() {
 		this("localhost", 30);
@@ -280,7 +281,7 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "Scenario: " + AbstractVehicle.scenarioId + "<br>";
 		}
 
-		if (Timekeeper.isTimekeeperActive()) {
+		if (BrowserVisualization.isExtendedText && Timekeeper.isTimekeeperActive()) {
 			text += String.format("Time: step %d, virt. %.1f s, real %.1f s<br>",
 					Timekeeper.getTimestepsPassed(),
 					Timekeeper.getVirtualMillisPassed() / 1000.0,
@@ -288,12 +289,12 @@ public class BrowserVisualization implements FleetVisualization {
 			);
 		}
 
-		if (idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
+		if (BrowserVisualization.isExtendedText && idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
 			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + " m/s<br>";
 		}
 
 		String textEmergencyBreaker = AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
-		if (textEmergencyBreaker != null) {
+		if (BrowserVisualization.isExtendedText && textEmergencyBreaker != null) {
 			text += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
 		}
 
@@ -328,8 +329,10 @@ public class BrowserVisualization implements FleetVisualization {
 		if (Forcing.forcingSinceTimestep != -1) {
 			text += "Forcing since step " + Forcing.forcingSinceTimestep + "<br>";
 		}
-		text += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
-		text += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
+		if (BrowserVisualization.isExtendedText) {
+			text += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
+			text += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
+		}
 		setOverlayText(text);
 	}
 

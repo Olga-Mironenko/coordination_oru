@@ -5,10 +5,7 @@ import java.awt.Color;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 
 import se.oru.coordination.coordination_oru.Mission;
-import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
-import se.oru.coordination.coordination_oru.code.Heuristics;
-import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
-import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.code.*;
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
@@ -57,7 +54,7 @@ public class TestClick {
         final Pose drawPoint38 = new Pose(20.1,25.7,-Math.PI/2);
         final Pose orePassOppositePoint = new Pose(53,32.4,-Math.PI/2);
 
-        final Pose humStart = mainTunnelBetween19And20;
+        final Pose humStart = drawPoint20;
         final Pose humFinish = null;
         final boolean ishumReturn = false;
         final boolean ishumLoop = false;
@@ -66,9 +63,13 @@ public class TestClick {
         final Pose aut2Start = mainTunnelLeft;
         final Pose aut2Finish = drawPoint18;
 
-        final int maxVelocity = 8;
+        HumanControl.isEnabledForBrowser = true;
+        final int maxVelocity = 4;
+        final int maxVelocityHuman = 10;
+        HumanControl.targetVelocityHumanInitial = 3;
+        HumanControl.targetVelocityHuman = 3;
 
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, 2, 0.5, 0.5);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHuman, 2, 0.5, 0.5);
         AutonomousVehicle aut1 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 0.5, 0.5);
         AutonomousVehicle aut2 = new AutonomousVehicle(0, Color.RED, Color.RED, maxVelocity, 2, 0.5, 0.5);
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
@@ -107,7 +108,6 @@ public class TestClick {
         Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
         if (humFinish != null) {
-            HumanControl.targetVelocityHuman = 10;
             hum0.getPlan(humStart, new Pose[] { humFinish }, YAML_FILE, ishumReturn);
             Missions.enqueueMission(new Mission(hum0.getID(), (hum0.getPath())));
         }
