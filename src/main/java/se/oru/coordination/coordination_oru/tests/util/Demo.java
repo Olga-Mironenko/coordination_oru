@@ -17,10 +17,15 @@ public abstract class Demo {
         Printer.resetTime();
         Printer.print("started");
 
-        AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledGlobally = true;
-        //HumanControl.isEnabledForBrowser = true;
+        boolean isOriginalTracker = true;
+
+        if (! isOriginalTracker) {
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledGlobally = true;
+            //HumanControl.isEnabledForBrowser = true;
+            GatedThread.enable();
+        }
+
         BrowserVisualization.isStatusText = true;
-        GatedThread.enable();
         Missions.isStatistics = true;
 
         Demo thisDemo = this;

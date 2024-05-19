@@ -923,6 +923,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			return true;
 		}
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
+		if (vehicle == null) {
+			return false;
+		}
 		return vehicle.isAdaptiveTracker;
 	}
 }
