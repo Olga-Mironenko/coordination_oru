@@ -293,13 +293,18 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + " m/s<br>";
 		}
 
+		if (HumanControl.status != null) {
+			text += HumanControl.status + "<br>";
+		}
+
 		String textEmergencyBreaker = AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
 		if (BrowserVisualization.isExtendedText && textEmergencyBreaker != null) {
 			text += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
 		}
 
 		for (int id : idToVehicle.keySet()) {
-			text += "(Robot " + id + ") ";
+			AbstractVehicle vehicle = idToVehicle.get(id);
+			text += "(Vehicle " + id + ", " + vehicle.getType() + ") ";
 
 			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
 			if (rr == null) {

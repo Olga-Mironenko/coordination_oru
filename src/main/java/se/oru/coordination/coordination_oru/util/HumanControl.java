@@ -7,6 +7,7 @@ import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class HumanControl {
     public static boolean isEnabledForBrowser = false;
@@ -14,6 +15,8 @@ public class HumanControl {
     public static double targetVelocityHuman = targetVelocityHumanInitial;
     public static int idHuman = 0;
     public static boolean isWorking = false;
+
+    public static String status = null;
 
     // TODO: race condition (click/keypress)
     // TODO: crashes on click and then (immediately) keypress
@@ -35,10 +38,14 @@ public class HumanControl {
             // [(90, 200), (100, 200), (110, 200), (120, 200), (130, 200)]
             //                  ^                                old goal
 
+            String statusPrefix = String.format("Human controlled path for %s -> %s", currentPose, goal);
+
             try {
+                status = String.format("%s: finding...", statusPrefix);
                 vehicle.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
             }
             catch (NoPathFoundError error) {
+                status = String.format("%s: failed to find", statusPrefix);
                 isWorking = false;
                 return;
             }
@@ -46,6 +53,7 @@ public class HumanControl {
             assert tec.getRobotReport(robotID).toString().equals(rr.toString());
 
             var newPath = vehicle.getPath();
+            status = String.format("%s: found a path with %d poses", statusPrefix, newPath.length);
             // [(105, 200), (115, 300), (120, 400), (130, 400)]
             //                                       (new) goal
 
