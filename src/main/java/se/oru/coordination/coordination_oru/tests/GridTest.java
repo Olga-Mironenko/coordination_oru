@@ -16,25 +16,6 @@ import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
 import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
-/**
- * Variations of forcing:
- * - (A) where forcing happens:
- *   D) first downwards
- *   U) both first downwards and first upwards
- * - (B) which reaction to forcing:
- *   P) priority change
- *   S) stops
- * - (C) who is affected:
- *   1) the robot before the first crossroad
- *   2) the robots before the first and second crossroads
- *   3) the robots before all three crossroads
- *   G) all robots regardless of their positions (globally)
- * - (D) when everything comes back to normal:
- *   C) after the first crossroad
- *   M) after the end of mission
- *
- * + baselines
- */
 public class GridTest {
     enum TraitA { AD, AU }
     enum TraitB { BP, BS }
@@ -53,6 +34,23 @@ public class GridTest {
         S_DS1C, S_DS1M, S_DS2C, S_DS2M, S_DS3C, S_DS3M, S_DSGC, S_DSGM,
         S_UP1C, S_UP1M, S_UP2C, S_UP2M, S_UP3C, S_UP3M, S_UPGC, S_UPGM,
         S_US1C, S_US1M, S_US2C, S_US2M, S_US3C, S_US3M, S_USGC, S_USGM,
+        /**
+         * Variations of forcing:
+         * - (A) where forcing happens:
+         *   D) first downwards
+         *   U) both first downwards and first upwards
+         * - (B) which reaction to forcing:
+         *   P) priority change
+         *   S) stops
+         * - (C) who is affected:
+         *   1) the robot before the first crossroad
+         *   2) the robots before the first and second crossroads
+         *   3) the robots before all three crossroads
+         *   G) all robots regardless of their positions (globally)
+         * - (D) when everything comes back to normal:
+         *   C) after the first crossroad
+         *   M) after the end of mission
+         */
     }
 
     public static void main(String[] args) {

@@ -17,9 +17,10 @@ public abstract class Demo {
         Printer.resetTime();
         Printer.print("started");
 
-        boolean isOriginalTracker = true;
+        boolean isOriginalTracker = false;
 
         if (! isOriginalTracker) {
+            BrowserVisualization.isExtendedText = true;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledGlobally = true;
             //HumanControl.isEnabledForBrowser = true;
             GatedThread.enable();
