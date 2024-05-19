@@ -1371,7 +1371,7 @@ public class Missions {
 	public synchronized static void startMissionDispatcher(final TrajectoryEnvelopeCoordinator tec, final long endTimestamp) {
 		for (int robotID : tec.getAllRobotIDs()) {
 			dispatchableRobots.add(robotID);
-			loopMissions.put(robotID, true);
+//			loopMissions.put(robotID, true);
 		}
 
 		assert missionDispatchThread == null;

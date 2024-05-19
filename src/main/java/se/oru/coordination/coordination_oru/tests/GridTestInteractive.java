@@ -43,10 +43,8 @@ public class GridTestInteractive {
 
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
-        final double loopMinutes = 60;
-        final long loopTime = System.currentTimeMillis() + Math.round(loopMinutes * 60 * 1000);
-
-        final boolean ishumLoop = true;
+        final double workMinutes = 60;
+        final long endTimestamp = System.currentTimeMillis() + Math.round(workMinutes * 60 * 1000);
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
@@ -128,13 +126,16 @@ public class GridTestInteractive {
         tec.setVisualization(viz);
 
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatcher(tec, loopTime);
-        Missions.loopMissions.put(hum0.getID(), ishumLoop);
+        Missions.startMissionDispatcher(tec, endTimestamp);
 
-        final boolean isInverse = false;
-        Missions.enqueueMissions(hum0, humStart, humFinish, isInverse);
-        Missions.enqueueMissions(aut1, aut1Start, aut1Finish, isInverse);
-        Missions.enqueueMissions(aut2, aut2Start, aut2Finish, isInverse);
-        Missions.enqueueMissions(aut3, aut3Start, aut3Finish, isInverse);
+        Missions.loopMissions.put(hum0.getID(), false);
+        Missions.loopMissions.put(aut1.getID(), true);
+        Missions.loopMissions.put(aut2.getID(), true);
+        Missions.loopMissions.put(aut3.getID(), true);
+
+        Missions.enqueueMissions(hum0, humStart, humFinish, false, true);
+        Missions.enqueueMissions(aut1, aut1Start, aut1Finish, false);
+        Missions.enqueueMissions(aut2, aut2Start, aut2Finish, false);
+        Missions.enqueueMissions(aut3, aut3Start, aut3Finish, false);
     }
 }
