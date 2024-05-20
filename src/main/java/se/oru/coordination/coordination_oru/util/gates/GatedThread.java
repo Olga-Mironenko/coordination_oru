@@ -12,7 +12,7 @@ abstract public class GatedThread extends Thread {
      */
     protected static boolean isGated = false;
 
-    public static double sleepSpeedRate = 60;
+    public static int millisArtificialSleep = 7;
 
     /**
      * The synchronizer of `GatedThread`s.
@@ -154,6 +154,8 @@ abstract public class GatedThread extends Thread {
     }
 
     /**
+     * This code is to be executed in the thread of a child (not in the gatekeeper, etc.).
+     *
      * In the normal mode, this is just `Thread.sleep`.
      * In the gated mode, this is to pass control to another gated thread.
      *
@@ -162,12 +164,16 @@ abstract public class GatedThread extends Thread {
      */
     public static void sleep(long millis) throws InterruptedException {
         if (isGated) {
-            gatekeeper.pauseCurrentThread("sleep(" + millis + ")", false, false,null);
             if (! Timekeeper.isSingleSleep) {
-                Thread.sleep(Math.round(millis / sleepSpeedRate)); // TODO: This is for the browser to catch up.
+                Thread.sleep(millisArtificialSleep); // TODO: This is for the browser to catch up.
             }
+            // At this point, the child is going to transfer control to another child through the gatekeeper.
+            gatekeeper.pauseCurrentThread("sleep(" + millis + ")", false, false,null);
+            // At this point, the child gains control again.
         } else {
+            // At this point, the child is going to sleep.
             Thread.sleep(millis);
+            // At this point, the child wakes up.
         }
     }
 
