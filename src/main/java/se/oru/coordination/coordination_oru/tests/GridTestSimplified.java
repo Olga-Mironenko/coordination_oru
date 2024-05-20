@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru.tests;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
+import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.Heuristics;
@@ -11,14 +12,27 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
 import se.oru.coordination.coordination_oru.util.*;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 import java.awt.*;
 
-public class GridTestInteractive {
+public class GridTestSimplified {
     enum Scenario {
-        AUTOMATED_FIRST,
-        HUMAN_FIRST,
-        FIRST_COME,
+        BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST,
+        BASELINE_IDEAL_DRIVER_HUMAN_FIRST,
+        BASELINE_IDEAL_DRIVER_FIRST_COME,
+
+        DOWN_PRIORITY_GLOBAL_CROSSROAD,
+        DOWN_STOP_GLOBAL_CROSSROAD,
+        /**
+         * Variations of forcing:
+         * - (DOWN) where forcing happens: when moving downwards
+         * - which reaction to forcing:
+         *   (PRIORITY) priority change
+         *   (STOP) stops
+         * - (GLOBAL) who is affected: all robots regardless of their positions (globally)
+         * - (CROSSROAD) when everything comes back to normal: after the first crossroad
+         */
     }
 
     public static void main(String[] args) {
@@ -31,13 +45,12 @@ public class GridTestInteractive {
     }
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.HUMAN_FIRST.toString();
+            scenarioString = Scenario.DOWN_PRIORITY_GLOBAL_CROSSROAD.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
-        HumanControl.isEnabledForBrowser = true;
-        BrowserVisualization.isExtendedText = false;
+//        BrowserVisualization.isExtendedText = false;
 
         final double workMinutes = 60;
         final long endTimestamp = System.currentTimeMillis() + Math.round(workMinutes * 60 * 1000);
@@ -60,7 +73,7 @@ public class GridTestInteractive {
         final double maxAccelerationHum = 2.0;
         final double maxVelocityAut = 5.0;
         final double maxAccelerationAut = 2.0;
-        final int trackingPeriod = 100; // ms
+        final int trackingPeriod = 100; // ms (ignored when gated threads are used)
 
         double xLength = 2.5;
         double yLength = 1.5;
@@ -100,14 +113,14 @@ public class GridTestInteractive {
 
         Heuristics heuristics = new Heuristics();
         switch (scenario) {
-            case AUTOMATED_FIRST:
+            case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
             default:
                 tec.addComparator(heuristics.highestIDNumber());
                 break;
-            case HUMAN_FIRST:
+            case BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
                 tec.addComparator(heuristics.lowestIDNumber());
                 break;
-            case FIRST_COME:
+            case BASELINE_IDEAL_DRIVER_FIRST_COME:
                 tec.addComparator(heuristics.closest());
                 break;
         }
@@ -124,14 +137,93 @@ public class GridTestInteractive {
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatcher(tec, endTimestamp);
 
-        Missions.loopMissions.put(hum0.getID(), false);
+        Missions.loopMissions.put(hum0.getID(), true);
         Missions.loopMissions.put(aut1.getID(), true);
         Missions.loopMissions.put(aut2.getID(), true);
         Missions.loopMissions.put(aut3.getID(), true);
 
-        Missions.enqueueMissions(hum0, humStart, humFinish, false, true);
+        Missions.enqueueMissions(hum0, humStart, humFinish, false);
         Missions.enqueueMissions(aut1, aut1Start, aut1Finish, false);
         Missions.enqueueMissions(aut2, aut2Start, aut2Finish, false);
         Missions.enqueueMissions(aut3, aut3Start, aut3Finish, false);
+
+        new GatedThread("forcing thread") {
+            @Override
+            public void runCore() {
+                switch (scenario) {
+                    case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
+                    case BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
+                    case BASELINE_IDEAL_DRIVER_FIRST_COME:
+                        return;
+                }
+
+                assert(Forcing.priorityDistance == Double.NEGATIVE_INFINITY);
+                assert(Forcing.stopDistance == Double.NEGATIVE_INFINITY);
+                assert(! Forcing.isGlobalTemporaryStop);
+                assert(Forcing.isResetAfterCurrentCrossroad);
+
+                // Derive information from traits:
+                boolean isStop = scenario == Scenario.DOWN_STOP_GLOBAL_CROSSROAD;
+
+                Forcing.priorityDistance = Double.POSITIVE_INFINITY;
+                // Even on `isStop` (for `isResetAfterCurrentCrossroad` to work).
+
+                if (isStop) {
+                    Forcing.isGlobalTemporaryStop = true;
+                }
+                if (isStop) {
+                    Forcing.stopDistance = Forcing.priorityDistance;
+                }
+
+                // Propagate the information:
+                double[] ysDownwardsForcing = new double[]{humStart.getY() - 4.0};
+
+                // Apply the information:
+                KnobsAfterForcing knobsAfterForcing = null;
+                RobotReport rrAtForcingStart = null;
+                while (true) {
+                    boolean isForcingNow = false;
+                    boolean isResumingNow = false;
+                    boolean isRestoringNow = false;
+
+                    for (double y : ysDownwardsForcing) {
+                        if (hum0.isYPassedDownwards(y)) {
+                            isForcingNow = true;
+                        }
+                    }
+
+                    if (isForcingNow) {
+                        assert ! isResumingNow;
+                        assert ! isRestoringNow;
+                        // Because that's perhaps not fully supported.
+                    }
+
+                    if (isForcingNow) {
+                        knobsAfterForcing = Forcing.forceDriving(hum0.getID());
+                        rrAtForcingStart = hum0.getCurrentRobotReport();
+                    }
+
+                    if (rrAtForcingStart != null) {
+                        if (hum0.getCurrentRobotReport().getPathIndex() < rrAtForcingStart.getPathIndex()) {
+                            // A new mission has started but forcing hasn't stopped. Let's stop it now.
+                            // This is a hack: we should rely not on explicit positions like
+                            // `ysUpwardsRestoringPriorities` (which are sometimes not reached when mission ends)
+                            // but rather on events like "the first crossroad has passed" and "the mission has ended".
+                            // A (slightly) better approach would be to compare mission IDs (that can be stored in RRs).
+                            knobsAfterForcing.resumeRobots();
+                            knobsAfterForcing.restorePriorities();
+                        } else {
+                            double distanceTraveled = hum0.getCurrentRobotReport().getDistanceTraveled() - rrAtForcingStart.getDistanceTraveled();
+                            assert distanceTraveled >= 0; // otherwise, we are in a new mission, but restoring/resuming hasn't happened
+                            if (!knobsAfterForcing.updateForcing(distanceTraveled)) {
+                                rrAtForcingStart = null;
+                            }
+                        }
+                    }
+
+                    GatedThread.sleepWithoutTryCatch(100);
+                }
+            }
+        }.start();
     }
 }

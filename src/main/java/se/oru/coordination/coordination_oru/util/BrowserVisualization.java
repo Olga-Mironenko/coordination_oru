@@ -352,7 +352,7 @@ public class BrowserVisualization implements FleetVisualization {
 					text += ", ";
 				}
 				Mission mission = missions.get(i);
-				text += mission.getPath().length;
+				text += String.format("%d poses", mission.getPath().length);
 			}
 			text += "]";
 			return text;
