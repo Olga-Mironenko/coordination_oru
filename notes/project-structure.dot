@@ -1,4 +1,3 @@
-// TODO: move tec.placeRobot into "a parking episode" (or something like that)
 digraph {
     // Data:
     missions [shape=rect, xlabel="queues"]
@@ -7,11 +6,11 @@ digraph {
     path [shape=rect]
     pose [shape=rect, xlabel="(x, y, angle)"]
     envelopesToTrack [shape=rect, xlabel="list of TEs"]
-    TE [shape=rect, xlabel="(robotID, path, footprint)"]
+    TE [shape=rect, label="TE\n(trajectory envelope)", xlabel="(robotID, path, footprint)"]
     "new TE" [shape=rect]
     "Meta-CSP" [shape=triangle]
     user [shape=triangle]
-    TEC [xlabel="`tec inference`,\nThe Coordinator"]
+    TEC [label="TEC\n(trajectory envelope coordinator)", xlabel="`tec inference`,\nThe Coordinator"]
     allCriticalSections [shape=rect, xlabel="set of CSs"]
     "critical section" [shape=rect, xlabel="(te1[from,to], te2[from,to])"]
     "critical point" [shape=rect, xlabel="`from` of the inferior TE of the CS"]
@@ -20,6 +19,7 @@ digraph {
     state [shape=rect, xlabel="(position, velocity)"]
     "tracker.positionToSlowDown" [shape=rect]
     currentParkingEnvelopes [shape=rect]
+    RSP [label="RSP\n(ReedsSheppCarPlanner)"]
 
     subgraph cluster_main {
         label=<<b>main</b> thread<br/>(the entrypoint of the program)>
