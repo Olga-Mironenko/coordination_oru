@@ -57,6 +57,8 @@ digraph {
     subgraph cluster_TEC {
         label=<<b>TEC</b> thread<br/>(started in setupInferenceCallback)>
 
+        "tracker.getRobotReport" [xlabel=<<i>(robotID, pose, pathIndex, criticalPoint,<br/>statusString, velocity,<br/>elapsedTrackingTime, distanceTraveled)</i>>]
+
         "a scenario" -> TEC [label="starts", constraint=false, style=dashed]
         missionsPool -> TEC [label="gets read in"]
         TEC -> envelopesToTrack [label="1. adds the TE"]

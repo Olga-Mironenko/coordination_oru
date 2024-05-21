@@ -12,15 +12,19 @@ import org.metacsp.utility.logging.MetaCSPLogging;
  *
  */
 public class RobotReport {
-	
+
+	private int robotID = -1;
+
 	private Pose pose = null;
 	private int pathIndex = -1;
-	private double velocity = 0.0;
-	private double distanceTraveled = 0.0;
-	private double elapsedTrackingTime = 0;
-	private int criticalPoint = -1;
-	private int robotID = -1;
+	private int criticalPoint = -1; // the nearest one
+
 	public String statusString = null;
+	private double velocity = 0.0;
+
+	private double elapsedTrackingTime = 0; // seconds
+	private double distanceTraveled = 0.0; // meters in the current mission (path)
+
 
 
 	/**
