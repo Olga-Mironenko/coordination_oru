@@ -578,8 +578,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			ret = cs.te1HigherWeight > cs.te2HigherWeight;
 		else if (this.comparators.size() > 0)
 			ret = (this.comparators.compare(r1atcs, r2atcs) < 0);
-			//No ordering function, decide an ordering based on distance (closest goes first)
 		else
+			//No ordering function, decide an ordering based on distance (closest goes first)
 			ret = ((cs.getTe2Start()-robotReport2.getPathIndex()) > (cs.getTe1Start()-robotReport1.getPathIndex()));
 
 		if (ret && muted.contains(robotReport2.getRobotID())) return false;

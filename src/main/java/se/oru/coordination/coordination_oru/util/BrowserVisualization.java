@@ -335,7 +335,7 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "Forcing since step " + Forcing.forcingSinceTimestep + "<br>";
 		}
 		if (BrowserVisualization.isExtendedText) {
-			text += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
+//			text += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
 			text += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
 		}
 		setOverlayText(text);
