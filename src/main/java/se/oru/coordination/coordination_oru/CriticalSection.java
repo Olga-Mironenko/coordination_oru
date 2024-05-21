@@ -4,6 +4,7 @@ import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.Forcing;
+import se.oru.coordination.coordination_oru.util.HumanControl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -233,6 +234,9 @@ public class CriticalSection {
 		protected double estimateVelocity(int robotID, boolean isInferior) {
 			TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 			double maxVelocity = tec.getRobotMaxVelocity(robotID);
+			if (robotID == HumanControl.idHuman) {
+				maxVelocity = Math.min(maxVelocity, HumanControl.targetVelocityHuman);
+			}
 
 			if (! isInferior) {
 				return maxVelocity;
@@ -244,7 +248,8 @@ public class CriticalSection {
 			double currentVelocity = rr.getVelocity();
 			double delta = Math.abs(futureVelocity - currentVelocity);
 
-			return Math.min(currentVelocity, futureVelocity) + 0.4 * delta;
+ //			return Math.min(currentVelocity, futureVelocity) + 0.4 * delta;
+			return currentVelocity;
 		}
 
 		@Override
