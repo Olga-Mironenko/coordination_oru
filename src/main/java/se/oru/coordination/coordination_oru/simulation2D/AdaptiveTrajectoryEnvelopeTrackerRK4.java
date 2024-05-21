@@ -400,8 +400,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			double dvdt = (1.0f / 6.0f) * (a.getAcceleration()
 					+ 2.0f * (b.getAcceleration() + c.getAcceleration()) + d.getAcceleration());
 
-		    state.setPosition(state.getPosition()+dxdt*deltaTime);
-		    state.setVelocity(Math.max(0, state.getVelocity()+dvdt*deltaTime));
+		    state.setPosition(state.getPosition() + Math.max(0, dxdt) * deltaTime);
+		    state.setVelocity(Math.max(0, state.getVelocity() + dvdt * deltaTime));
 		}
 	}
 
