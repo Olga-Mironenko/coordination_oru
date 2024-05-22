@@ -33,7 +33,7 @@ public abstract class AbstractVehicle {
     private final int ID;
     private final int priorityID;
     private final String type = this.getClass().getSimpleName();
-    private final double maxVelocity;
+    private double maxVelocity;
     private final double maxAcceleration;
     private final double xLength;
     private final double yLength;
@@ -316,6 +316,10 @@ public abstract class AbstractVehicle {
 
     public double getMaxVelocity() {
         return maxVelocity;
+    }
+
+    public void setMaxVelocity(double maxVelocity) {
+        this.maxVelocity = maxVelocity;
     }
 
     public double getMaxAcceleration() {

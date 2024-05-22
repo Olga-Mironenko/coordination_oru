@@ -69,7 +69,7 @@ public class GridTestSimplified {
         final Pose aut3Start = GridMapConstants.row3Left;
         final Pose aut3Finish = GridMapConstants.row3Right;
 
-        final double maxVelocityHum = 10.0;
+        final double maxVelocityHum = 5.0;
         final double maxAccelerationHum = 2.0;
         final double maxVelocityAut = 5.0;
         final double maxAccelerationAut = 2.0;
@@ -79,9 +79,6 @@ public class GridTestSimplified {
         double yLength = 1.5;
         double xLengthInner = 1.5;
         double yLengthInner = 1.0;
-
-        HumanControl.targetVelocityHumanInitial = 2.0;
-        HumanControl.targetVelocityHuman = 2.0;
 
         AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow

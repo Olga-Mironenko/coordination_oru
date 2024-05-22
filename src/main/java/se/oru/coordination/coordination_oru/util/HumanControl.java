@@ -1,18 +1,24 @@
 package se.oru.coordination.coordination_oru.util;
 
+import com.vividsolutions.jts.geom.TopologyException;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.*;
+import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class HumanControl {
     public static boolean isEnabledForBrowser = false;
+
+    @Deprecated
     public static double targetVelocityHumanInitial = Double.POSITIVE_INFINITY; // essentially a limit
+    @Deprecated
     public static double targetVelocityHuman = targetVelocityHumanInitial;
+
     public static int idHuman = 0;
     public static boolean isWorking = false;
 
@@ -87,14 +93,26 @@ public class HumanControl {
             // TODO: sometimes doesn't get called
             // ("hint": try to pause the websocket thread in the debugger)
             int robotID = idHuman;
-            double targetVelocityNew = targetVelocityHuman + delta;
-            if (targetVelocityNew > 0) {
-                targetVelocityHuman = targetVelocityNew;
+            AbstractVehicle vehicleHuman = VehiclesHashMap.getVehicle(idHuman);
+            double maxVelocityOld = vehicleHuman.getMaxVelocity();
+            double maxVelocityNew = Math.max(0, maxVelocityOld + delta);
+            if (maxVelocityNew != maxVelocityOld) {
+                vehicleHuman.setMaxVelocity(maxVelocityNew);
 
+                /* // It sometimes causes an infinite loop inside Meta-CSP.
                 PoseSteering[] currentPath = getCurrentPath(robotID);
                 if (currentPath != null) {
-                    changePath(robotID, currentPath, getReplacementIndex(robotID));
+                    for (int iAttempt = 0; iAttempt < 100; iAttempt++) {
+                        try {
+                            changePath(robotID, currentPath, getReplacementIndex(robotID));
+                        }
+                        catch (Exception exc) {
+                            continue;
+                        }
+                        break;
+                    }
                 }
+                 */
             }
         }
         finally {

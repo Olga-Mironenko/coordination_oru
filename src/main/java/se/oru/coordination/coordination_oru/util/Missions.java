@@ -567,6 +567,8 @@ public class Missions {
 		vehicle.getPlan(start, new Pose[] { finish }, Missions.mapYAMLFilename, false);
 		var pathForward = vehicle.getPath();
 		PoseSteering[] pathBackward = isOneWay ? null : AbstractMotionPlanner.inversePathWithoutFirstAndLastPose(pathForward);
+		// E.g.: pathForward = [a, b, c, d], pathBackward = [c, b], so the whole cycle is [a, b, c, d,  b, c,  a, b, ...]
+		
 		if (isInverse) {
 			assert ! isOneWay;
 			PoseSteering[] pathTotal = (PoseSteering[]) ArrayUtils.addAll(pathForward, pathBackward);

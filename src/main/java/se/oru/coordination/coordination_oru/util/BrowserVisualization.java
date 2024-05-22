@@ -282,7 +282,7 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "Scenario: " + AbstractVehicle.scenarioId + "<br>";
 		}
 
-		if (BrowserVisualization.isExtendedText && Timekeeper.isTimekeeperActive()) {
+		if (false && BrowserVisualization.isExtendedText && Timekeeper.isTimekeeperActive()) {
 			text += String.format("Time: step %d, virt. %.1f s, real %.1f s<br>",
 					Timekeeper.getTimestepsPassed(),
 					Timekeeper.getVirtualMillisPassed() / 1000.0,
@@ -290,8 +290,19 @@ public class BrowserVisualization implements FleetVisualization {
 			);
 		}
 
-		if (BrowserVisualization.isExtendedText && idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
+		if (false && BrowserVisualization.isExtendedText && idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
 			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + " m/s<br>";
+		}
+
+		for (int id : Arrays.asList(HumanControl.idHuman)) {
+			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
+
+			text += String.format("Human V%d: max velocity %.1f m/s; current velocity %.1f m/s; %d forcing events<br>",
+					id,
+					round(TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotMaxVelocity(id)),
+					round(rr.getVelocity()),
+					Forcing.robotIDToNumForcingEvents.getOrDefault(HumanControl.idHuman, 0)
+			);
 		}
 
 		if (HumanControl.status != null) {
@@ -305,7 +316,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 		for (int id : idToVehicle.keySet()) {
 			AbstractVehicle vehicle = idToVehicle.get(id);
-			text += "(Vehicle " + id + ", " + vehicle.getType() + ") ";
+			text += "(V" + id + ", " + vehicle.getType() + ") ";
 
 			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
 			if (rr == null) {
