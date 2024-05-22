@@ -31,7 +31,7 @@ public class GridTestInteractive {
     }
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.HUMAN_FIRST.toString();
+            scenarioString = Scenario.AUTOMATED_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -56,7 +56,7 @@ public class GridTestInteractive {
         final Pose aut3Start = GridMapConstants.row3Left;
         final Pose aut3Finish = GridMapConstants.row3Right;
 
-        final double maxVelocityHum = 5.0;
+        final double maxVelocityHum = 2.0;
         final double maxAccelerationHum = 2.0;
         final double maxVelocityAut = 5.0;
         final double maxAccelerationAut = 2.0;
@@ -121,12 +121,12 @@ public class GridTestInteractive {
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatcher(tec, endTimestamp);
 
-        Missions.loopMissions.put(hum0.getID(), false);
+        Missions.loopMissions.put(hum0.getID(), true); // false
         Missions.loopMissions.put(aut1.getID(), true);
         Missions.loopMissions.put(aut2.getID(), true);
         Missions.loopMissions.put(aut3.getID(), true);
 
-        Missions.enqueueMissions(hum0, humStart, humFinish, false, true);
+        Missions.enqueueMissions(hum0, humStart, humFinish, false); // , true);
         Missions.enqueueMissions(aut1, aut1Start, aut1Finish, false);
         Missions.enqueueMissions(aut2, aut2Start, aut2Finish, false);
         Missions.enqueueMissions(aut3, aut3Start, aut3Finish, false);

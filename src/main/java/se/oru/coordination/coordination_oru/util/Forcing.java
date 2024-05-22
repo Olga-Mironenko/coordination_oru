@@ -2,8 +2,11 @@ package se.oru.coordination.coordination_oru.util;
 
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.CriticalSection;
+import se.oru.coordination.coordination_oru.RobotReport;
+import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 import java.util.*;
@@ -35,6 +38,30 @@ public class Forcing {
 
     public static int forcingSinceTimestep = -1;
 
+    public static void startForcing(int robotID) {
+        priorityDistance = 10;
+        stopDistance = 10;
+
+        AbstractVehicle hum0 = VehiclesHashMap.getVehicle(robotID);
+        RobotReport rrAtForcingStart = hum0.getCurrentRobotReport();
+        KnobsAfterForcing knobsAfterForcing = Forcing.forceDriving(robotID);
+
+        new GatedThread("manual forcing thread") {
+            @Override
+            public void runCore() {
+                while (true) {
+                    double distanceTraveled = hum0.getCurrentRobotReport().getDistanceTraveled() - rrAtForcingStart.getDistanceTraveled();
+
+                    if (!knobsAfterForcing.updateForcing(distanceTraveled)) {
+                        break;
+                    }
+
+                    GatedThread.sleepWithoutTryCatch(100);
+                }
+            }
+        }.start();
+    }
+
     public static KnobsAfterForcing forceDriving(int robotID) {
         forcingSinceTimestep = Timekeeper.getTimestepsPassed();
         robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);
@@ -62,7 +89,7 @@ public class Forcing {
                             continue;
                         }
 
-                        cs.setHigher(robotID, 1);
+                        cs.setHigher(robotID, 1); // TODO: 3
                         criticalSectionsToRestorePrioritiesLater.add(cs);
                     }
                 }
