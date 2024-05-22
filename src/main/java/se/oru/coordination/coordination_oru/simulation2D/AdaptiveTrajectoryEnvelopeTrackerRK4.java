@@ -551,8 +551,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		// If this code has been reached, it means that the robot should have stopped before the intersection
 		// but doesn't manage to do so because of the speed.
-		// So we will stop after the critical point.
 		if (Forcing.isRobotFrozen(robotID)) {
+			// ...So we will stop after the intersection (or all the intersections) related to the critical point.
+			//
 			// Here we find where the critical section ends. In case there are several critical sections
 			// related to the critical point, we use the end of the last critical section.
 			Integer positionToStop = null;

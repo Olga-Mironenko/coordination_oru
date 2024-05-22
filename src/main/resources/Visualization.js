@@ -346,7 +346,7 @@ class Visualization {
 		Object.keys(this.geometries).forEach(function(key,index) {
 			// key: the name of the object key
 			// index: the ordinal position of the key within the object
-			if (key.startsWith("R")) {
+			if (key.startsWith("V")) {
 				var area = viz.calcPolygonArea(viz.geometries[key]);
 				if (area > maxArea) maxArea = area;
 			}
@@ -365,7 +365,7 @@ class Visualization {
 			if (viz.selectedGeoms.has(key)) viz.drawPolygon(viz.geometries[key], viz.geometryColors[key], viz.geometryFilled[key], linewidth);
 			else viz.drawPolygon(viz.geometries[key], viz.geometryColors[key], !viz.geometryFilled[key], linewidth);
 			//var textSize = 0.2;
-			//if (key.startsWith("R")) {
+			//if (key.startsWith("V")) {
 			//	//textSize = Math.sqrt(area)/2;
 			//	textSize = 1.3*Math.sqrt(area);
 			//}
@@ -432,8 +432,8 @@ class Visualization {
 	}
 
 	drawText(text, coord, color, size) {
-		var scale = size/10;
-		this.ctx.font = 'italic ' + size + 'pt Calibri';
+		var scale = size * 3;
+		this.ctx.font = 'italic ' + size + 'pt Times New Roman';
 		//this.ctx.font = 'italic 12pt Calibri';
 		//console.log(size);
 		//var w = this.ctx.measureText(text).width;
