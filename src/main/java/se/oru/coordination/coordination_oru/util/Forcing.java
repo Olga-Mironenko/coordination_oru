@@ -45,6 +45,9 @@ public class Forcing {
         AbstractVehicle hum0 = VehiclesHashMap.getVehicle(robotID);
         RobotReport rrAtForcingStart = hum0.getCurrentRobotReport();
         KnobsAfterForcing knobsAfterForcing = Forcing.forceDriving(robotID);
+        if (knobsAfterForcing == null) {
+            return;
+        }
 
         new GatedThread("manual forcing thread") {
             @Override
@@ -63,6 +66,9 @@ public class Forcing {
     }
 
     public static KnobsAfterForcing forceDriving(int robotID) {
+        if (forcingSinceTimestep != -1) { // another forcing is already in progress
+            return null;
+        }
         forcingSinceTimestep = Timekeeper.getTimestepsPassed();
         robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);
 

@@ -333,7 +333,9 @@ public class GridTest {
 
                     if (isForcingNow) {
                         knobsAfterForcing = Forcing.forceDriving(hum0.getID());
-                        rrAtForcingStart = hum0.getCurrentRobotReport();
+                        if (knobsAfterForcing != null) {
+                            rrAtForcingStart = hum0.getCurrentRobotReport();
+                        }
                     }
 
                     if (isResumingNow) {

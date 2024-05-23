@@ -50,6 +50,7 @@ public class GridTestSimplified {
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
+//        HumanControl.isEnabledForBrowser = true;
 //        BrowserVisualization.isExtendedText = false;
 
         final double workMinutes = 60;
@@ -197,7 +198,9 @@ public class GridTestSimplified {
 
                     if (isForcingNow) {
                         knobsAfterForcing = Forcing.forceDriving(hum0.getID());
-                        rrAtForcingStart = hum0.getCurrentRobotReport();
+                        if (knobsAfterForcing != null) {
+                            rrAtForcingStart = hum0.getCurrentRobotReport();
+                        }
                     }
 
                     if (rrAtForcingStart != null) {
