@@ -40,7 +40,7 @@ public class Forcing {
 
     public static void startForcing(int robotID) {
         priorityDistance = 10;
-        stopDistance = 10;
+//        stopDistance = 10;
 
         AbstractVehicle hum0 = VehiclesHashMap.getVehicle(robotID);
         RobotReport rrAtForcingStart = hum0.getCurrentRobotReport();

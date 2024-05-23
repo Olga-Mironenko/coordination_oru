@@ -10,7 +10,7 @@ digraph {
     "new TE" [shape=rect]
     "Meta-CSP" [shape=triangle]
     user [shape=triangle]
-    TEC [label="TEC\n(trajectory envelope coordinator)", xlabel="`tec inference`,\nThe Coordinator"]
+    TEC [label="TEC\n(TrajectoryEnvelopeCoordinatorSimulation)", xlabel="`tec inference`,\nThe Coordinator"]
     allCriticalSections [shape=rect, xlabel="set of CSs"]
     "critical section" [shape=rect, xlabel="(te1[from,to], te2[from,to])"]
     "critical point" [shape=rect, xlabel="`from` of the inferior TE of the CS"]

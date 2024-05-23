@@ -33,7 +33,6 @@ import com.vividsolutions.jts.geom.util.AffineTransformation;
 import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.RobotReport;
-import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
@@ -290,6 +289,11 @@ public class BrowserVisualization implements FleetVisualization {
 			);
 		}
 
+		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+		text += String.format("Collision events: %d minor, %d major<br>",
+				tec.allCollisionsList.size() - tec.majorCollisionsList.size(),
+				tec.majorCollisionsList.size());
+
 		if (false && BrowserVisualization.isExtendedText && idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
 			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + " m/s<br>";
 		}
@@ -297,12 +301,16 @@ public class BrowserVisualization implements FleetVisualization {
 		for (int id : Arrays.asList(HumanControl.idHuman)) {
 			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
 
-			text += String.format("Human V%d: max velocity %.1f m/s; current velocity %.1f m/s; %d forcing events<br>",
+			text += String.format("Human V%d: max velocity %.1f m/s; current velocity %.1f m/s; %d forcing events",
 					id,
 					round(TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotMaxVelocity(id)),
 					round(rr.getVelocity()),
 					Forcing.robotIDToNumForcingEvents.getOrDefault(HumanControl.idHuman, 0)
 			);
+			if (BrowserVisualization.isExtendedText && Forcing.forcingSinceTimestep != -1) {
+				text += " (forcing is active since step " + Forcing.forcingSinceTimestep + ")";
+			}
+			text += "<br>";
 		}
 
 		if (HumanControl.status != null) {
@@ -342,9 +350,6 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "; " + stringifyMissions(Missions.getMissions(id));
 
 			text += "<br>";
-		}
-		if (Forcing.forcingSinceTimestep != -1) {
-			text += "Forcing since step " + Forcing.forcingSinceTimestep + "<br>";
 		}
 		if (BrowserVisualization.isExtendedText) {
 //			text += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";

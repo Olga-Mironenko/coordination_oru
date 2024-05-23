@@ -160,12 +160,9 @@ public class GridTest {
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
-        Coordinate[] innerFootprint = AbstractVehicle.makeFootprint(xLengthInner, yLengthInner);
         for (AbstractVehicle vehicle : new AbstractVehicle[] { hum0, aut1, aut2, aut3, aut4, aut5 }) {
             if (vehicle != null) {
-                vehicle.innerFootprint = innerFootprint;
-                tec.setFootprint(vehicle.getID(), vehicle.getFootprint());
-                tec.setInnerFootprint(vehicle.getID(), vehicle.innerFootprint);
+                vehicle.registerInTec(tec, xLengthInner, yLengthInner);
             }
         }
 

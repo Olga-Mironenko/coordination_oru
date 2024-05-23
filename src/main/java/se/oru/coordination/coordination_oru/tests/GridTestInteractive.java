@@ -66,6 +66,8 @@ public class GridTestInteractive {
         double yLength = 1.5;
         double xLengthInner = 1.5;
         double yLengthInner = 1.0;
+//        double xLengthInner = 2.4;
+//        double yLengthInner = 1.4;
 
         AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow
@@ -81,12 +83,9 @@ public class GridTestInteractive {
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
-        Coordinate[] innerFootprint = AbstractVehicle.makeFootprint(xLengthInner, yLengthInner);
         for (AbstractVehicle vehicle : new AbstractVehicle[] { hum0, aut1, aut2, aut3 }) {
             if (vehicle != null) {
-                vehicle.innerFootprint = innerFootprint;
-                tec.setFootprint(vehicle.getID(), vehicle.getFootprint());
-                tec.setInnerFootprint(vehicle.getID(), vehicle.innerFootprint);
+                vehicle.registerInTec(tec, xLengthInner, yLengthInner);
             }
         }
 

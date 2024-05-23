@@ -30,10 +30,11 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	protected static final long START_TIME = Calendar.getInstance().getTimeInMillis();
 	protected boolean useInternalCPs = true;
 	
-	protected boolean checkCollisions = false; // TODO
-	protected ArrayList<CollisionEvent> collisionsList = new ArrayList<CollisionEvent>();
+	protected boolean checkCollisions = true; // TODO
+	public ArrayList<CollisionEvent> allCollisionsList = new ArrayList<CollisionEvent>();
+	public ArrayList<CollisionEvent> majorCollisionsList = new ArrayList<CollisionEvent>();
 	protected Thread collisionThread = null;
-	
+
 	protected AtomicInteger totalMsgsLost = new AtomicInteger(0);
 	protected AtomicInteger totalPacketsLost = new AtomicInteger(0);
 	
@@ -373,20 +374,22 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 			ret.add(CONNECTOR_BRANCH + 		"Dependencies ........ " + currentDependencies);
 		}
 		if (checkCollisions) {
-			int numberOfCollisions = 0;
-			synchronized (collisionsList) {
-				numberOfCollisions = collisionsList.size();		
-				ret.add(CONNECTOR_BRANCH + 	"Collisions .......... " + numberOfCollisions + ".");
-				if (numberOfCollisions>0) {
-					for (int cindex = 0; cindex < collisionsList.size()-1; cindex++) {
-						CollisionEvent ce = collisionsList.get(cindex);
-						ret.add(" " + CONNECTOR_BRANCH + " " + ce.toString());
+			for (ArrayList<CollisionEvent> collisionsList : Arrays.asList(allCollisionsList, majorCollisionsList)) {
+				int numberOfCollisions = 0;
+				synchronized (collisionsList) {
+					numberOfCollisions = collisionsList.size();
+					String label = collisionsList == allCollisionsList ? " all " : "major";
+					ret.add(CONNECTOR_BRANCH + "Collisions (" + label + ")... " + numberOfCollisions + ".");
+					if (numberOfCollisions > 0) {
+						for (int cindex = 0; cindex < collisionsList.size() - 1; cindex++) {
+							CollisionEvent ce = collisionsList.get(cindex);
+							ret.add(" " + CONNECTOR_BRANCH + " " + ce.toString());
+						}
+						CollisionEvent ce = collisionsList.get(collisionsList.size() - 1);
+						ret.add(" " + CONNECTOR_LEAF + " " + ce.toString());
 					}
-					CollisionEvent ce = collisionsList.get(collisionsList.size()-1);
-					ret.add(" " + CONNECTOR_LEAF + " " + ce.toString());
 				}
 			}
-			
 		}
 		ret.add(CONNECTOR_BRANCH + 			"Obsolete crit sect .. " + criticalSectionCounter.get() + ".");
 		ret.add(CONNECTOR_BRANCH + 			"Messages sent ....... " + totalMsgsSent.get() + ", lost: " + totalMsgsLost.get() + ", retransmitted: " + totalMsgsReTx.get() + ". Packets lost: " + totalPacketsLost.get() + ", number of replicas: " + numberOfReplicas + ".");
@@ -396,9 +399,18 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	}
 
 	public int getCountCollisionsList() {
-		return collisionsList.size();
+		return allCollisionsList.size();
 	}
-	
+
+	protected int findCSinCollisionsList(CriticalSection cs, ArrayList<CollisionEvent> collisionsList) {
+		for (int i = 0; i < collisionsList.size(); i++) {
+			if (collisionsList.get(i).cs == cs) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	@Override
 	public void onCriticalSectionUpdate() {
 		
@@ -410,68 +422,76 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 				@Override
 				public void runCore() {
 					metaCSPLogger.info("Starting the collision checking thread.");
-					ArrayList<CriticalSection> previousCollidingCS = new ArrayList<CriticalSection>();
-					ArrayList<CriticalSection> newCollidingCS = new ArrayList<CriticalSection>();
 					
 					while(true) {
-						newCollidingCS.clear();
-						
 						//collisions can happen only in critical sections						
 						synchronized (allCriticalSections) {
-							if (allCriticalSections.isEmpty())
-								break; //break the thread if there are no critical sections to control
-							
+//							if (allCriticalSections.isEmpty())
+//								break; //break the thread if there are no critical sections to control
+
 							for (CriticalSection cs : allCriticalSections) {
-								//check if both the robots are inside the critical section
-								
 								//FIXME sample the real pose of the robots (ok in simulation, but not otherwise)
 								RobotReport robotReport1, robotReport2;
 								AbstractTrajectoryEnvelopeTracker tracker1, tracker2;
 								try {
-									synchronized (trackers)	{
+									synchronized (trackers) {
 										tracker1 = trackers.get(cs.getTe1().getRobotID());
 										robotReport1 = tracker1.getRobotReport();
 										tracker2 = trackers.get(cs.getTe2().getRobotID());
 										robotReport2 = tracker2.getRobotReport();
 									}
-								}
-								catch (NullPointerException e) {
+								} catch (NullPointerException e) {
 									continue; //skip this cycle
 								}
-								
-								if ( robotReport1 != null && robotReport2 != null &&
-								(robotReport1.getPathIndex() <= cs.getTe1End()) && (robotReport1.getPathIndex() >= cs.getTe1Start()) && //robot1 is inside
-								(robotReport2.getPathIndex() <= cs.getTe2End()) && (robotReport2.getPathIndex() >= cs.getTe2Start())  	//robot2 is inside
-								) {
+
+								boolean isInside = (
+									robotReport1 != null && robotReport2 != null &&
+									(robotReport1.getPathIndex() <= cs.getTe1End()) && (robotReport1.getPathIndex() >= cs.getTe1Start()) && //robot1 is inside
+									(robotReport2.getPathIndex() <= cs.getTe2End()) && (robotReport2.getPathIndex() >= cs.getTe2Start())    //robot2 is inside
+								);
+								if (!isInside) {
+									continue;
+								}
+
+								for (ArrayList<CollisionEvent> collisionsList : Arrays.asList(allCollisionsList, majorCollisionsList)) {
+									boolean isMajor = collisionsList == majorCollisionsList;
+									//check if both the robots are inside the critical section
+
+									// TODO: This is a hack (`setInnerFootprint` should be called in a proper place).
+									cs.getTe1().setInnerFootprint(tec.getInnerFootprint(cs.getTe1RobotID()));
+									cs.getTe2().setInnerFootprint(tec.getInnerFootprint(cs.getTe2RobotID()));
+
 									//place robot  in pose and get geometry
 									PoseSteering[] path1 = cs.getTe1().getTrajectory().getPoseSteering();
-									Geometry placement1 = cs.getTe1().makeFootprint(path1[robotReport1.getPathIndex()]);
-									
+									Geometry placement1 = isMajor
+										? cs.getTe1().makeInnerFootprint(path1[robotReport1.getPathIndex()])
+										: cs.getTe1().makeFootprint(path1[robotReport1.getPathIndex()]);
+
 									PoseSteering[] path2 = cs.getTe2().getTrajectory().getPoseSteering();
-									Geometry placement2 = cs.getTe2().makeFootprint(path2[robotReport2.getPathIndex()]);
-									
+									Geometry placement2 = isMajor
+										? cs.getTe2().makeInnerFootprint(path2[robotReport2.getPathIndex()])
+										: cs.getTe2().makeFootprint(path2[robotReport2.getPathIndex()]);
+
 									//check intersection
-									if (placement1.intersects(placement2)) {
-										if (!previousCollidingCS.contains(cs)) {
-											metaCSPLogger.info(" * NEW COLLISION *");
-											CollisionEvent ce = new CollisionEvent(Calendar.getInstance().getTimeInMillis(),robotReport1,robotReport2);
-											synchronized (collisionsList) {
-												collisionsList.add(ce);
-											}		
-											newCollidingCS.add(cs);
-										}
+									if (!placement1.intersects(placement2)) {
+										continue;
 									}
-									else if (previousCollidingCS.contains(cs))
-										previousCollidingCS.remove(cs); //remove the ones that are not colliding anymore
+
+									if (findCSinCollisionsList(cs, collisionsList) != -1) {
+										continue;
+									}
+
+									metaCSPLogger.info(" * NEW COLLISION *");
+									CollisionEvent ce = new CollisionEvent(Calendar.getInstance().getTimeInMillis(), robotReport1, robotReport2, cs);
+									collisionsList.add(ce);
 								}
 							}
 						}
-						previousCollidingCS.addAll(newCollidingCS);
 						
 						try { GatedThread.sleep((long)(1000.0/30.0)); }
 						catch (InterruptedException e) { e.printStackTrace(); }
 					}
-					metaCSPLogger.info("Ending the collision checking thread.");
+//					metaCSPLogger.info("Ending the collision checking thread.");
 				}
 					
 			};
