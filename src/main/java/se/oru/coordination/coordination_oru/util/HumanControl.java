@@ -95,7 +95,7 @@ public class HumanControl {
             int robotID = idHuman;
             AbstractVehicle vehicleHuman = VehiclesHashMap.getVehicle(idHuman);
             double maxVelocityOld = vehicleHuman.getMaxVelocity();
-            double maxVelocityNew = Math.max(0, maxVelocityOld + delta);
+            double maxVelocityNew = Math.max(1.0, maxVelocityOld + delta);
             if (maxVelocityNew != maxVelocityOld) {
                 vehicleHuman.setMaxVelocity(maxVelocityNew);
 

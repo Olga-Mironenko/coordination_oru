@@ -339,7 +339,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		//Compute where to slow down (can do forward here, we have the slowdown profile...)
 		while (stateToBe.getPosition() < targetDistance) {
 			var approximation = slowDownProfile.ceilingEntry(stateToBe.getVelocity());
-			assert approximation != null; // otherwise, `slowDownProfile` must contain entries for greater speeds
+			if (approximation == null) {
+//				assert Math.abs(state.getVelocity()) < 0.5; // otherwise, `slowDownProfile` must contain entries for greater speeds
+				return state.getPosition(); // essentially force slowing down
+			}
 
 			double speedApproximate = approximation.getKey();
 			assert speedApproximate >= stateToBe.getVelocity();
