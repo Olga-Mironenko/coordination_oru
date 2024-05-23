@@ -89,7 +89,7 @@ public class Forcing {
                             continue;
                         }
 
-                        cs.setHigher(robotID, 1); // TODO: 3
+                        cs.setHigher(robotID, 3);
                         criticalSectionsToRestorePrioritiesLater.add(cs);
                     }
                 }

@@ -569,7 +569,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 		for (CriticalSection cs : criticalSections) {
 			cs.setHigher(robotID, 2);
-			// So the current robot has greater priority than all others (unless they are in the same situation).
+			// So the current robot gets higher priority.
 		}
 	}
 
