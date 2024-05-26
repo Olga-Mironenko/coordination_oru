@@ -45,7 +45,7 @@ public class GridTestSimplified {
     }
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.DOWN_STOP_GLOBAL_CROSSROAD.toString();
+            scenarioString = Scenario.BASELINE_IDEAL_DRIVER_HUMAN_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);

@@ -45,7 +45,8 @@ public class GridTestInteractive {
         final String YAML_FILE = "maps/map-grid.yaml";
 
         final Pose humStart = GridMapConstants.column2Top;
-        final Pose humFinish = GridMapConstants.column2Bottom;
+//        final Pose humFinish = GridMapConstants.column2Row2;
+        final Pose humFinish = GridMapConstants.row1Right;
 
         final Pose aut1Start = GridMapConstants.row1Left;
         final Pose aut1Finish = GridMapConstants.row1Right;
@@ -120,12 +121,12 @@ public class GridTestInteractive {
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatcher(tec, endTimestamp);
 
-        Missions.loopMissions.put(hum0.getID(), true); // false
+        Missions.loopMissions.put(hum0.getID(), false);
         Missions.loopMissions.put(aut1.getID(), true);
         Missions.loopMissions.put(aut2.getID(), true);
         Missions.loopMissions.put(aut3.getID(), true);
 
-        Missions.enqueueMissions(hum0, humStart, humFinish, false); // , true);
+        Missions.enqueueMissions(hum0, humStart, humFinish, false, true);
         Missions.enqueueMissions(aut1, aut1Start, aut1Finish, false);
         Missions.enqueueMissions(aut2, aut2Start, aut2Finish, false);
         Missions.enqueueMissions(aut3, aut3Start, aut3Finish, false);

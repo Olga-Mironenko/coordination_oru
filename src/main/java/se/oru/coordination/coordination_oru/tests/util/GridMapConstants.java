@@ -43,6 +43,10 @@ public class GridMapConstants extends BaseMapConstants {
     public final static Pose column2Bottom = new Pose(xColumn2, yBottom, thetaLeft); // left is for the robot 0 to look down
     public final static Pose column3Bottom = new Pose(xColumn3, yBottom, thetaUp);
 
+    public final static Pose column2Row1 = new Pose(xColumn2, yRow1, thetaDown);
+    public final static Pose column2Row2 = new Pose(xColumn2, yRow2, thetaDown);
+    public final static Pose column2Row3 = new Pose(xColumn2, yRow3, thetaDown);
+
     public final static Pose row1Left = new Pose(xLeft, yRow1, thetaRight);
     public final static Pose row2Left = new Pose(xLeft, yRow2, thetaRight);
     public final static Pose row3Left = new Pose(xLeft, yRow3, thetaRight);
