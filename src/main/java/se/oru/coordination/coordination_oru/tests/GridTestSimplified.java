@@ -121,7 +121,7 @@ public class GridTestSimplified {
         }
 
         tec.setUseInternalCriticalPoints(false);
-        tec.setYieldIfParking(true);
+        tec.setYieldIfParking(false);
         tec.setBreakDeadlocks(true, false, false);
 
         var viz = new BrowserVisualization();
