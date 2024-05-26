@@ -481,7 +481,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		setCriticalPoint(criticalPointToSet, false);
 	}
 
-	public void setCriticalPoint(int criticalPointToSet, boolean isUnconditionalStop) {
+	public void setCriticalPoint(int criticalPointToSet, boolean isRacingThroughCrossroadAllowed) {
 		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
 		RobotReport rr = getRobotReport();
 		int robotID = rr.getRobotID();
@@ -526,12 +526,12 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			return;
 		}
 
-		if (isUnconditionalStop || criticalPointToSet > rr.getPathIndex()) {
+		if (! isRacingThroughCrossroadAllowed || criticalPointToSet > rr.getPathIndex()) {
 			//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
 			double targetDistance = computeDistance(0, criticalPointToSet);
 			double positionToSlowDownTemporary = computePositionToSlowDown(targetDistance, true);
 
-			if (isUnconditionalStop || positionToSlowDownTemporary > state.getPosition()) {
+			if (! isRacingThroughCrossroadAllowed || positionToSlowDownTemporary > state.getPosition()) {
 				this.setFieldCriticalPoint(criticalPointToSet);
 
 				//assert criticalSectionsReal.size() == 1; // doesn't work when the other robot returns through the same intersection
