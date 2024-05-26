@@ -45,7 +45,7 @@ public class GridTestSimplified {
     }
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.BASELINE_IDEAL_DRIVER_HUMAN_FIRST.toString();
+            scenarioString = Scenario.DOWN_PRIORITY_GLOBAL_CROSSROAD.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -158,6 +158,7 @@ public class GridTestSimplified {
                 assert(Forcing.isResetAfterCurrentCrossroad);
 
                 // Derive information from traits:
+                assert scenario == Scenario.DOWN_PRIORITY_GLOBAL_CROSSROAD || scenario == Scenario.DOWN_STOP_GLOBAL_CROSSROAD;
                 boolean isStop = scenario == Scenario.DOWN_STOP_GLOBAL_CROSSROAD;
 
                 Forcing.priorityDistance = Double.POSITIVE_INFINITY;

@@ -45,8 +45,9 @@ public class GridTestInteractive {
         final String YAML_FILE = "maps/map-grid.yaml";
 
         final Pose humStart = GridMapConstants.column2Top;
+        final Pose humFinish = GridMapConstants.column2Bottom;
 //        final Pose humFinish = GridMapConstants.column2Row2;
-        final Pose humFinish = GridMapConstants.row1Right;
+//        final Pose humFinish = GridMapConstants.row1Right;
 
         final Pose aut1Start = GridMapConstants.row1Left;
         final Pose aut1Finish = GridMapConstants.row1Right;
