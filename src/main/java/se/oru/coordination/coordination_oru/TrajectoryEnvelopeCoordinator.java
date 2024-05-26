@@ -1880,7 +1880,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							waitingTracker = robotTracker2;
 							waitingPoint = getCriticalPoint(waitingTracker.getTrajectoryEnvelope().getRobotID(), cs, drivingCurrentIndex);
 
-							if (!communicatedCPs.containsKey(waitingTracker) && robotReport1.getPathIndex() <= waitingPoint
+							if (!communicatedCPs.containsKey(waitingTracker) && robotReport2.getPathIndex() <= waitingPoint
 									|| communicatedCPs.containsKey(waitingTracker) && communicatedCPs.get(waitingTracker).getFirst() != -1 && communicatedCPs.get(waitingTracker).getFirst() <= waitingPoint) {
 								createAParkingDep = true;
 							}
@@ -1892,7 +1892,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							waitingTracker = robotTracker1;
 							waitingPoint = getCriticalPoint(waitingTracker.getTrajectoryEnvelope().getRobotID(), cs, drivingCurrentIndex);
 
-							if (!communicatedCPs.containsKey(waitingTracker) && robotReport2.getPathIndex() <= waitingPoint
+							if (!communicatedCPs.containsKey(waitingTracker) && robotReport1.getPathIndex() <= waitingPoint
 									|| communicatedCPs.containsKey(waitingTracker) && communicatedCPs.get(waitingTracker).getFirst() != -1 && communicatedCPs.get(waitingTracker).getFirst() <= waitingPoint) {
 								createAParkingDep = true;
 							}
