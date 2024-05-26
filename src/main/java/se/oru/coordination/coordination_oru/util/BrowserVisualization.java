@@ -281,12 +281,24 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "Scenario: " + AbstractVehicle.scenarioId + "<br>";
 		}
 
-		if (false && BrowserVisualization.isExtendedText && Timekeeper.isTimekeeperActive()) {
-			text += String.format("Time: step %d, virt. %.1f s, real %.1f s<br>",
-					Timekeeper.getTimestepsPassed(),
-					Timekeeper.getVirtualMillisPassed() / 1000.0,
-					Timekeeper.getRealMillisPassed() / 1000.0
-			);
+		if (isExtendedText && Timekeeper.isTimekeeperActive()) {
+//			text += String.format("Time: step %d, virt. %.1f s, real %.1f s<br>",
+//					Timekeeper.getTimestepsPassed(),
+//					Timekeeper.getVirtualMillisPassed() / 1000.0,
+//					Timekeeper.getRealMillisPassed() / 1000.0
+//			);
+
+			int time = Timekeeper.getRealMillisPassed() / 1000;
+
+			int s = time % 60;
+			time /= 60;
+
+			int m = time % 60;
+			time /= 60;
+
+			int h = time;
+
+			text += String.format("Time passed: %02d:%02d:%02d<br>", h, m, s);
 		}
 
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
@@ -294,7 +306,7 @@ public class BrowserVisualization implements FleetVisualization {
 				tec.allCollisionsList.size() - tec.majorCollisionsList.size(),
 				tec.majorCollisionsList.size());
 
-		if (false && BrowserVisualization.isExtendedText && idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
+		if (false && isExtendedText && idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
 			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + " m/s<br>";
 		}
 
@@ -307,7 +319,7 @@ public class BrowserVisualization implements FleetVisualization {
 					round(rr.getVelocity()),
 					Forcing.robotIDToNumForcingEvents.getOrDefault(HumanControl.idHuman, 0)
 			);
-			if (BrowserVisualization.isExtendedText && Forcing.forcingSinceTimestep != -1) {
+			if (isExtendedText && Forcing.forcingSinceTimestep != -1) {
 				text += " (forcing is active since step " + Forcing.forcingSinceTimestep + ")";
 			}
 			text += "<br>";
@@ -318,7 +330,7 @@ public class BrowserVisualization implements FleetVisualization {
 		}
 
 		String textEmergencyBreaker = AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
-		if (BrowserVisualization.isExtendedText && textEmergencyBreaker != null) {
+		if (isExtendedText && textEmergencyBreaker != null) {
 			text += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
 		}
 
@@ -338,20 +350,23 @@ public class BrowserVisualization implements FleetVisualization {
 				double velocity = rr.getVelocity();
 				text += "; v=" + round(velocity) + " m/s";
 
-				int numCalls = 0;
-				var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
-				if (numIntegrateCalls.containsKey(id)) {
-					numCalls = numIntegrateCalls.get(id);
+				if (isExtendedText) {
+					int numCalls = 0;
+					var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
+					if (numIntegrateCalls.containsKey(id)) {
+						numCalls = numIntegrateCalls.get(id);
+					}
+					//text += "; numIntegrateCalls: " + numCalls;
+
+					//text += "; traveled " + round(rr.getElapsedTrackingTime()) + " s (virt. time)";
 				}
-				//text += "; numIntegrateCalls: " + numCalls;
-				text += "; traveled " + round(rr.getElapsedTrackingTime()) + " s (virt. time)";
 			}
 
 			text += "; " + stringifyMissions(Missions.getMissions(id));
 
 			text += "<br>";
 		}
-		if (BrowserVisualization.isExtendedText) {
+		if (isExtendedText) {
 //			text += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
 			text += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
 		}
