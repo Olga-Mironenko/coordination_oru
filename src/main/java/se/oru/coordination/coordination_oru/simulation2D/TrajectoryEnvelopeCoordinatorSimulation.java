@@ -444,11 +444,36 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 									continue; //skip this cycle
 								}
 
-								boolean isInside = (
-									robotReport1 != null && robotReport2 != null &&
-									(robotReport1.getPathIndex() <= cs.getTe1End()) && (robotReport1.getPathIndex() >= cs.getTe1Start()) && //robot1 is inside
-									(robotReport2.getPathIndex() <= cs.getTe2End()) && (robotReport2.getPathIndex() >= cs.getTe2Start())    //robot2 is inside
-								);
+								if (robotReport1 == null || robotReport2 == null) {
+									continue;
+								}
+
+								PoseSteering[] path1 = cs.getTe1().getTrajectory().getPoseSteering();
+								PoseSteering[] path2 = cs.getTe2().getTrajectory().getPoseSteering();
+
+								int i1 = robotReport1.getPathIndex();
+								if (i1 == -1) {
+									i1 = robotReport1.getDistanceTraveled() == 0.0 ? 0 : path1.length - 1;
+									// This is because in a dummy tracker:
+									// - cs.getTe1Start() == cs.getTe1End() == 0
+									// - cs.getTe1().getTrajectory().getPoseSteering() has only index 0
+								}
+
+								int i2 = robotReport2.getPathIndex();
+								if (i2 == -1) {
+									i2 = robotReport2.getDistanceTraveled() == 0.0 ? 0 : path2.length - 1;
+								}
+
+								int s1 = cs.getTe1Start();
+								int s2 = cs.getTe2Start();
+
+								int e1 = cs.getTe1End();
+								int e2 = cs.getTe2End();
+
+								boolean isInside1 = s1 <= i1 && i1 <= e1;
+								boolean isInside2 = s2 <= i2 && i2 <= e2;
+
+								boolean isInside = isInside1 && isInside2;
 								if (!isInside) {
 									continue;
 								}
@@ -462,15 +487,13 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 									cs.getTe2().setInnerFootprint(tec.getInnerFootprint(cs.getTe2RobotID()));
 
 									//place robot  in pose and get geometry
-									PoseSteering[] path1 = cs.getTe1().getTrajectory().getPoseSteering();
 									Geometry placement1 = isMajor
-										? cs.getTe1().makeInnerFootprint(path1[robotReport1.getPathIndex()])
-										: cs.getTe1().makeFootprint(path1[robotReport1.getPathIndex()]);
+										? cs.getTe1().makeInnerFootprint(path1[i1])
+										: cs.getTe1().makeFootprint(path1[i1]);
 
-									PoseSteering[] path2 = cs.getTe2().getTrajectory().getPoseSteering();
 									Geometry placement2 = isMajor
-										? cs.getTe2().makeInnerFootprint(path2[robotReport2.getPathIndex()])
-										: cs.getTe2().makeFootprint(path2[robotReport2.getPathIndex()]);
+										? cs.getTe2().makeInnerFootprint(path2[i2])
+										: cs.getTe2().makeFootprint(path2[i2]);
 
 									//check intersection
 									if (!placement1.intersects(placement2)) {
