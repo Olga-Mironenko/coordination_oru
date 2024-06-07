@@ -367,7 +367,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			time += deltaTime;
 		}
 
-		throw new RuntimeException("we should have returned a value in the loop");
+//		throw new RuntimeException("we should have returned a value in the loop");
+//		assert Math.abs(state.getVelocity()) < 0.5;
+		return state.getPosition(); // essentially force slowing down
 	}
 
 	public static void integrateRK4(
@@ -403,8 +405,15 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			double dvdt = (1.0f / 6.0f) * (a.getAcceleration()
 					+ 2.0f * (b.getAcceleration() + c.getAcceleration()) + d.getAcceleration());
 
-		    state.setPosition(state.getPosition() + Math.max(0, dxdt) * deltaTime);
-		    state.setVelocity(Math.max(0, state.getVelocity() + dvdt * deltaTime));
+			double velocityNew = state.getVelocity() + dvdt * deltaTime;
+			velocityNew = Math.max(0.0, Math.min(MAX_VELOCITY, velocityNew));
+			state.setVelocity(velocityNew);
+
+			if (velocityNew != 0.0) {
+				double deltaPosition = Math.max(0, dxdt) * deltaTime;
+				double positionNew = state.getPosition() + deltaPosition;
+				state.setPosition(positionNew);
+			}
 		}
 	}
 

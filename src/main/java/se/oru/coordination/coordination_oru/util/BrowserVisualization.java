@@ -313,10 +313,11 @@ public class BrowserVisualization implements FleetVisualization {
 		for (int id : Arrays.asList(HumanControl.idHuman)) {
 			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
 
-			text += String.format("Human V%d: max velocity %.1f m/s; current velocity %.1f m/s; %d forcing events",
+			text += String.format("Human V%d: max velocity %.1f m/s; current velocity %.1f%s m/s; %d forcing events",
 					id,
-					round(TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotMaxVelocity(id)),
-					round(rr.getVelocity()),
+					TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotMaxVelocity(id),
+					rr.getVelocity(),
+					rr.getVelocity() == 0.0 ? " (exactly zero)" : "",
 					Forcing.robotIDToNumForcingEvents.getOrDefault(HumanControl.idHuman, 0)
 			);
 			if (isExtendedText && Forcing.forcingSinceTimestep != -1) {

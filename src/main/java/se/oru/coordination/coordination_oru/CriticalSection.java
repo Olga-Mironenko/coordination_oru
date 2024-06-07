@@ -248,7 +248,14 @@ public class CriticalSection {
 			double currentVelocity = rr.getVelocity();
 			double delta = Math.abs(futureVelocity - currentVelocity);
 
+			// This formula works for the following case:
+			// - priority: human first
+			// - we are an automated vehicle
+			// - we stop before a crossroad
+			// - the human stops before the crossroad abruptly
+			// - so we should consider to cross the road
  //			return Math.min(currentVelocity, futureVelocity) + 0.4 * delta;
+
 			return currentVelocity;
 		}
 

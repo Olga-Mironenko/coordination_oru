@@ -31,7 +31,7 @@ public class GridTestInteractive {
     }
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.AUTOMATED_FIRST.toString();
+            scenarioString = Scenario.HUMAN_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
