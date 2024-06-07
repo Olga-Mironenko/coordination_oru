@@ -478,7 +478,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	@Override
 	public void setCriticalPoint(int criticalPointToSet) {
-		setCriticalPoint(criticalPointToSet, false);
+		setCriticalPoint(criticalPointToSet, true);
 	}
 
 	public void setCriticalPoint(int criticalPointToSet, boolean isRacingThroughCrossroadAllowed) {
