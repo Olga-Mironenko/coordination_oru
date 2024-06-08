@@ -137,7 +137,7 @@ public abstract class AbstractMotionPlanner {
 		return pathInverse;
 	}
 
-	protected static double inverseYaw(double yaw) {
+	public static double inverseYaw(double yaw) {
 		yaw += Math.PI;
 		if (yaw >= Math.PI) {
 			yaw -= Math.PI * 2;

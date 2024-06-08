@@ -1,6 +1,5 @@
 package se.oru.coordination.coordination_oru.tests;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
@@ -58,17 +57,17 @@ public class GridTestSimplified {
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
-        final Pose humStart = GridMapConstants.column2Top;
-        final Pose humFinish = GridMapConstants.column2Bottom;
+        final Pose humStart = GridMapConstants.column2TopStart;
+        final Pose humFinish = GridMapConstants.column2BottomStart;
 
-        final Pose aut1Start = GridMapConstants.row1Left;
-        final Pose aut1Finish = GridMapConstants.row1Right;
+        final Pose aut1Start = GridMapConstants.row1LeftStart;
+        final Pose aut1Finish = GridMapConstants.row1RightStart;
 
-        final Pose aut2Start = GridMapConstants.row2Left;
-        final Pose aut2Finish = GridMapConstants.row2Right;
+        final Pose aut2Start = GridMapConstants.row2LeftStart;
+        final Pose aut2Finish = GridMapConstants.row2RightStart;
 
-        final Pose aut3Start = GridMapConstants.row3Left;
-        final Pose aut3Finish = GridMapConstants.row3Right;
+        final Pose aut3Start = GridMapConstants.row3LeftStart;
+        final Pose aut3Finish = GridMapConstants.row3RightStart;
 
         final double maxVelocityHum = 5.0;
         final double maxAccelerationHum = 2.0;

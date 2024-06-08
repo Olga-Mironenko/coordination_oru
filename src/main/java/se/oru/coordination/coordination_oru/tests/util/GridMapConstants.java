@@ -2,6 +2,8 @@ package se.oru.coordination.coordination_oru.tests.util;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 
+import static se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner.inverseYaw;
+
 public class GridMapConstants extends BaseMapConstants {
     public final static double xLeft = 4.0;
     public final static double xRight = 56.0;
@@ -35,25 +37,29 @@ public class GridMapConstants extends BaseMapConstants {
         4   V
      */
 
-    public final static Pose column1Top = new Pose(xColumn1, yTop, thetaDown);
-    public final static Pose column2Top = new Pose(xColumn2, yTop, thetaDown);
-    public final static Pose column3Top = new Pose(xColumn3, yTop, thetaDown);
+    public final static Pose column1TopStart = new Pose(xColumn1, yTop, thetaDown);
+    public final static Pose column2TopStart = new Pose(xColumn2, yTop, thetaDown);
+    public final static Pose column3TopStart = new Pose(xColumn3, yTop, thetaDown);
 
-    public final static Pose column1Bottom = new Pose(xColumn1, yBottom, thetaUp);
-    public final static Pose column2Bottom = new Pose(xColumn2, yBottom, thetaLeft); // left is for the robot 0 to look down
-    public final static Pose column3Bottom = new Pose(xColumn3, yBottom, thetaUp);
+    public final static Pose column1BottomStart = new Pose(xColumn1, yBottom, thetaUp);
+    public final static Pose column2BottomStart = new Pose(xColumn2, yBottom, thetaUp);
+    public final static Pose column3BottomStart = new Pose(xColumn3, yBottom, thetaUp);
 
-    public final static Pose column2Row1 = new Pose(xColumn2, yRow1, thetaDown);
-    public final static Pose column2Row2 = new Pose(xColumn2, yRow2, thetaDown);
-    public final static Pose column2Row3 = new Pose(xColumn2, yRow3, thetaDown);
+    public final static Pose column2Row1Down = new Pose(xColumn2, yRow1, thetaDown);
+    public final static Pose column2Row2Down = new Pose(xColumn2, yRow2, thetaDown);
+    public final static Pose column2Row3Down = new Pose(xColumn2, yRow3, thetaDown);
 
-    public final static Pose row1Left = new Pose(xLeft, yRow1, thetaRight);
-    public final static Pose row2Left = new Pose(xLeft, yRow2, thetaRight);
-    public final static Pose row3Left = new Pose(xLeft, yRow3, thetaRight);
+    public final static Pose row1LeftStart = new Pose(xLeft, yRow1, thetaRight);
+    public final static Pose row2LeftStart = new Pose(xLeft, yRow2, thetaRight);
+    public final static Pose row3LeftStart = new Pose(xLeft, yRow3, thetaRight);
 
-    public final static Pose row1Right = new Pose(xRight, yRow1, thetaLeft);
-    public final static Pose row2Right = new Pose(xRight, yRow2, thetaLeft);
-    public final static Pose row3Right = new Pose(xRight, yRow3, thetaLeft);
+    public final static Pose row1RightStart = new Pose(xRight, yRow1, thetaLeft);
+    public final static Pose row2RightStart = new Pose(xRight, yRow2, thetaLeft);
+    public final static Pose row3RightStart = new Pose(xRight, yRow3, thetaLeft);
 
-    public final static Pose centerDownward = new Pose(xColumn2, yRow2, thetaDown);
+    public final static Pose centerDown = new Pose(xColumn2, yRow2, thetaDown);
+
+    public static Pose turnAround(Pose pose) {
+        return new Pose(pose.getX(), pose.getY(), inverseYaw(pose.getTheta()));
+    }
 }

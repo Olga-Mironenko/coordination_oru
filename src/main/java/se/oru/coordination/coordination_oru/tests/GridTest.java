@@ -2,7 +2,6 @@ package se.oru.coordination.coordination_oru.tests;
 
 import java.awt.Color;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 
 import se.oru.coordination.coordination_oru.RobotReport;
@@ -92,23 +91,23 @@ public class GridTest {
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
-        final Pose humStart = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? GridMapConstants.column1Top : GridMapConstants.column2Top;
-        final Pose humFinish = GridMapConstants.column2Bottom;
+        final Pose humStart = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? GridMapConstants.column1TopStart : GridMapConstants.column2TopStart;
+        final Pose humFinish = GridMapConstants.column2BottomStart;
 
-        final Pose aut1Start = GridMapConstants.row1Left;
-        final Pose aut1Finish = GridMapConstants.row1Right;
+        final Pose aut1Start = GridMapConstants.row1LeftStart;
+        final Pose aut1Finish = GridMapConstants.row1RightStart;
 
-        final Pose aut2Start = GridMapConstants.row2Left;
-        final Pose aut2Finish = GridMapConstants.row2Right;
+        final Pose aut2Start = GridMapConstants.row2LeftStart;
+        final Pose aut2Finish = GridMapConstants.row2RightStart;
 
-        final Pose aut3Start = GridMapConstants.row3Left;
-        final Pose aut3Finish = GridMapConstants.row3Right;
+        final Pose aut3Start = GridMapConstants.row3LeftStart;
+        final Pose aut3Finish = GridMapConstants.row3RightStart;
 
-        final Pose aut4Start = GridMapConstants.column1Top;
-        final Pose aut4Finish = GridMapConstants.column1Bottom;
+        final Pose aut4Start = GridMapConstants.column1TopStart;
+        final Pose aut4Finish = GridMapConstants.column1BottomStart;
 
-        final Pose aut5Start = GridMapConstants.row3Left;
-        final Pose aut5Finish = GridMapConstants.row1Right;
+        final Pose aut5Start = GridMapConstants.row3LeftStart;
+        final Pose aut5Finish = GridMapConstants.row1RightStart;
 
         // v = maxVelocityHum = 12 m/s
         // a = -maxAccelerationHum * coefAccelerationToDeceleration = -2 * 3 = -6 m/s^2

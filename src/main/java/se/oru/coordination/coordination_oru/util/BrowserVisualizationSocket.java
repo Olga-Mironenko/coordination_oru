@@ -96,8 +96,8 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         JsonArray array = new JsonParser().parse(message).getAsJsonArray();
         String event = gson.fromJson(array.get(0), String.class);
         if (HumanControl.isEnabledForBrowser && event.equals("click")) {
-            Pose poseOrig = gson.fromJson(array.get(1), Pose.class);
-            Pose pose = new Pose(poseOrig.getX(), poseOrig.getY(), poseOrig.getTheta());
+            Pose poseJson = gson.fromJson(array.get(1), Pose.class);
+            Pose pose = new Pose(poseJson.getX(), poseJson.getY(), poseJson.getTheta());
             HumanControl.moveRobot(HumanControl.idHuman, pose);
         } else if (HumanControl.isEnabledForBrowser && event.equals("keydown")) {
             String code = gson.fromJson(array.get(1), String.class);
