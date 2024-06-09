@@ -25,7 +25,7 @@ public abstract class Demo {
             //HumanControl.isEnabledForBrowser = true;
             GatedThread.enable();
 
-            Timekeeper.timestepsPassedMax = 100;
+//            Timekeeper.timestepsPassedMax = 100;
         }
 
         BrowserVisualization.isStatusText = true;
