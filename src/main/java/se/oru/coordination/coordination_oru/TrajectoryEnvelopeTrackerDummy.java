@@ -108,7 +108,7 @@ public abstract class TrajectoryEnvelopeTrackerDummy extends AbstractTrajectoryE
 			//updateDeadline(this.te, DELTA_FUTURE);
 			onPositionUpdate();
 			try { GatedThread.sleep(trackingPeriodInMillis); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}/*
 		synchronized(th) {
 			try {
@@ -136,7 +136,7 @@ public abstract class TrajectoryEnvelopeTrackerDummy extends AbstractTrajectoryE
 //			}
 //			
 //			try { GatedThread.sleep(trackingPeriodInMillis); }
-//			catch (InterruptedException e) { e.printStackTrace(); }
+//			catch (InterruptedException e) { e.printStackTrace(); return; }
 //		}
 		
 		//Deadline will now be fixed (by superclass) so it is decided that this parking cannot be prolonged

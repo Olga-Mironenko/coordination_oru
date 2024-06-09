@@ -125,13 +125,13 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner19 {
 						if (tec.isFree(rid)) {
 							if (rid == 2 && missionCounter == 0) {
 								try { Thread.sleep(5500); }
-								catch (InterruptedException e) { e.printStackTrace(); }
+								catch (InterruptedException e) { e.printStackTrace(); return; }
 							}
 							tec.addMissions(Missions.getMission(rid, missionCounter++));
 							if (missionCounter == 2) break;
 						}
 						try { Thread.sleep(200); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 				}
 			};

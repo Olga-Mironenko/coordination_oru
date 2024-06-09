@@ -156,7 +156,7 @@ public class Circle {
 							Missions.enqueueMission(m);
 						}
 						try { Thread.sleep(2000); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 				}
 			};

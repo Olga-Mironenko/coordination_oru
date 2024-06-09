@@ -164,14 +164,14 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner3 {
 									long delay = minDelay+rand.nextInt(maxDelay-minDelay);
 									//Sleep for a random delay in [minDelay,maxDelay]
 									try { Thread.sleep(delay); }
-									catch (InterruptedException e) { e.printStackTrace(); }
+									catch (InterruptedException e) { e.printStackTrace(); return; }
 								}
 								iteration++;
 							}
 						}
 						//Sleep for a little (2 sec)
 						try { Thread.sleep(2000); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 				}
 			};

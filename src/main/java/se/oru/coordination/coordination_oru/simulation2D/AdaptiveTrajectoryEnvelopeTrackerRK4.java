@@ -148,7 +148,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		assert th != null; // TODO: remove the while loop
 		while (this.th == null) {
 			try { GatedThread.sleep(10); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
 		this.th.start();
 		if (useInternalCPs) this.startInternalCPThread();
@@ -284,7 +284,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 					}
 
 					try { GatedThread.sleep(trackingPeriodInMillis); }
-					catch (InterruptedException e) { e.printStackTrace(); }
+					catch (InterruptedException e) { e.printStackTrace(); return; }
 				}
 			}
 		};
@@ -439,7 +439,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 				//Sleep for delay in communication
 				try { GatedThread.sleep(delayTx); }
-				catch (InterruptedException e) { e.printStackTrace(); }
+				catch (InterruptedException e) { e.printStackTrace(); return; }
 
 				//if possible (according to packet loss, send
 				synchronized (externalCPCounter)
@@ -798,12 +798,12 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 	}
 
-	private double waitForNextStep(long timeStart) {
+	private Double waitForNextStep(long timeStart) {
 		//Sleep for tracking period
 		int delay = trackingPeriodInMillis;
 		if (NetworkConfiguration.getMaximumTxDelay() > 0) delay += rand.nextInt(NetworkConfiguration.getMaximumTxDelay());
 		try { GatedThread.sleep(delay); }
-		catch (InterruptedException e) { e.printStackTrace(); }
+		catch (InterruptedException e) { e.printStackTrace(); return null; }
 
 		//Advance time to reflect how much we have slept (~ trackingPeriod)
 		long deltaTimeInMillis = GatedThread.isEnabled() ? trackingPeriodInMillis : Calendar.getInstance().getTimeInMillis() - timeStart;
@@ -850,7 +850,11 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			onPositionUpdate();
 			enqueueOneReport();
 
-			deltaTime = waitForNextStep(timeStart);
+			Double delta = waitForNextStep(timeStart);
+			if (delta == null) {
+				return;
+			}
+			deltaTime = delta;
 			elapsedTrackingTime += deltaTime;
 		}
 
@@ -861,7 +865,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		{
 			enqueueOneReport();
 			try { GatedThread.sleep(trackingPeriodInMillis); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
 		// By this moment, a dummy tracker (which reports index=-1) has been started.
 
@@ -870,7 +874,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		while (getCurrentTimeInMillis()-timerStart < WAIT_AMOUNT_AT_END) {
 //			System.out.println("Waiting " + te.getComponent());
 			try { GatedThread.sleep(trackingPeriodInMillis); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
 		metaCSPLogger.info("RK4 tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + myTEID + ")");
 	}

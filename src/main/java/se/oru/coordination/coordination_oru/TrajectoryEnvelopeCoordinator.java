@@ -1211,7 +1211,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					effectiveSleepingTime = Calendar.getInstance().getTimeInMillis();
 					if (CONTROL_PERIOD > 0) {
 						try { GatedThread.sleep(expectedSleepingTime); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 					effectiveSleepingTime = Calendar.getInstance().getTimeInMillis()-effectiveSleepingTime;
 

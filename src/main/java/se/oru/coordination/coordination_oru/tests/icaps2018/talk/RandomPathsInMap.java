@@ -290,7 +290,7 @@ public class RandomPathsInMap {
 						}
 						//Sleep for a little (2 sec)
 						try { Thread.sleep(tec.getControlPeriod()); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 					System.out.println("Robot" + robotID + " is done!");
 				}
@@ -300,7 +300,7 @@ public class RandomPathsInMap {
 			
 			//Sleep for a little before dispatching another mission.
 			try { Thread.sleep(tec.getControlPeriod()); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
 
 

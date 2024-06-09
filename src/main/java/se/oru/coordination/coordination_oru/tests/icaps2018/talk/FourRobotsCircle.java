@@ -137,7 +137,7 @@ public class FourRobotsCircle {
 				while(!tec.addMissions(new Mission(i+1,paths.get((i+iteration)%4)))) {
 					//Sleep for a little (2 sec)
 					try { Thread.sleep(500); }
-					catch (InterruptedException e) { e.printStackTrace(); }
+					catch (InterruptedException e) { e.printStackTrace(); return; }
 				}
 			}			
 			iteration++;

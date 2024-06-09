@@ -144,7 +144,7 @@ public class Experiment1Test1 {
 					usedRobots++;
 					System.out.println("ROBOTS IN USE: " + usedRobots);
 					try { Thread.sleep(durationBeforeIncrement); }
-					catch (InterruptedException e) { e.printStackTrace(); }
+					catch (InterruptedException e) { e.printStackTrace(); return; }
 				}
 				System.out.println("TEST FINISHED!");
 			}
@@ -173,7 +173,7 @@ public class Experiment1Test1 {
 						}
 						//Sleep for a little (2 sec)
 						try { Thread.sleep(2000); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 				}
 			};

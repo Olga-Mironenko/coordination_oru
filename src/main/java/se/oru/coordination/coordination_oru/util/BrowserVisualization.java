@@ -70,7 +70,7 @@ public class BrowserVisualization implements FleetVisualization {
         		while (true) {
         			sendMessages();
         			try { GatedThread.sleep(UPDATE_PERIOD); }
-        			catch (InterruptedException e) { e.printStackTrace(); }
+        			catch (InterruptedException e) { e.printStackTrace(); return; }
         		}
         	}
         };

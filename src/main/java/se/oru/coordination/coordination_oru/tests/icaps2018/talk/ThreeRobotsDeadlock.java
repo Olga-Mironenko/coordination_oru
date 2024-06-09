@@ -157,7 +157,7 @@ public class ThreeRobotsDeadlock {
 				while(!tec.addMissions(m)) {
 					//Sleep for a little (2 sec)
 					try { Thread.sleep(500); }
-					catch (InterruptedException e) { e.printStackTrace(); }
+					catch (InterruptedException e) { e.printStackTrace(); return; }
 				}
 			}			
 			iteration++;

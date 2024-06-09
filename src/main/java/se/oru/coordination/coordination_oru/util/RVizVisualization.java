@@ -179,7 +179,7 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 			try {
 				mRosCore.awaitStart(5, TimeUnit.SECONDS);
 			}
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 			System.out.println("ROS-core started");
 		}
 	}
@@ -242,7 +242,7 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 		if (prefix != null) this.mapFileName = prefix + File.separator + this.mapFileName;
 		while (!ready) {
 			try { GatedThread.sleep(100); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
 		if (mapFileName != null) {
 			try {

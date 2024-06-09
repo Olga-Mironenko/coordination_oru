@@ -43,7 +43,7 @@ public class Timekeeper extends GatedThread {
                 try {
                     Thread.sleep(millisToSleep);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    return;
                 }
             }
         }

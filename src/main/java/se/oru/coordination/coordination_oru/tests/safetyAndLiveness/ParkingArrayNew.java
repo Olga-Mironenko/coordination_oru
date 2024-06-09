@@ -243,14 +243,14 @@ public class ParkingArrayNew {
 						}
 						//Sleep for a little
 						try { Thread.sleep(2000); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 					System.out.println("Robot" + robotID + " is done!");
 				}
 			};
 			t.start();
 			try { Thread.sleep(1000); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
 		
 	}

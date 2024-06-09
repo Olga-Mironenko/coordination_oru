@@ -170,7 +170,7 @@ public class nRobotsDeadlock {
 						}
 						//Sleep for a little
 						try { Thread.sleep(tec.getControlPeriod()); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 					System.out.println("Robot" + robotID + " is done!");
 					synchronized(status) {
@@ -193,7 +193,7 @@ public class nRobotsDeadlock {
 			
 			//Sleep for a little
 			try { Thread.sleep(tec.getControlPeriod()); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
 
 	}

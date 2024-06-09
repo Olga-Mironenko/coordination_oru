@@ -135,7 +135,7 @@ public class RoadMapPlanner extends AbstractMotionPlanner {
 		rmp.setGoals(goal1,goal2);
 
 		try { GatedThread.sleep(2000); }
-		catch (InterruptedException e) { e.printStackTrace(); }
+		catch (InterruptedException e) { e.printStackTrace(); return; }
 
 		if (!rmp.plan()) throw new Error("No plan found!");
 		PoseSteering[] path = rmp.getPath();
@@ -143,7 +143,7 @@ public class RoadMapPlanner extends AbstractMotionPlanner {
 		viz.addPath("path", path, 5, "#ff0000");
 
 		try { GatedThread.sleep(2000); }
-		catch (InterruptedException e) { e.printStackTrace(); }
+		catch (InterruptedException e) { e.printStackTrace(); return; }
 
 		viz.removePath("path", path);
 		

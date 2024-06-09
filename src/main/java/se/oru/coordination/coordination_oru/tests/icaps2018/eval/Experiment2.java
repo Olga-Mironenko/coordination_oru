@@ -226,7 +226,7 @@ public class Experiment2 {
 						}
 						//Sleep for a little (2 sec)
 						try { Thread.sleep(100); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 					System.out.println("Robot" + robotID + " is done!");
 				}

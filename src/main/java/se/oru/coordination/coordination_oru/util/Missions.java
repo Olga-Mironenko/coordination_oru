@@ -1174,7 +1174,7 @@ public class Missions {
 						}
 						//Sleep for a little (sec 2)
 						try { GatedThread.sleep(2000); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 				}
 			};
@@ -1274,7 +1274,7 @@ public class Missions {
 						}
 						//Sleep for a little (sec 2)
 						try { GatedThread.sleep(2000); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 				}
 			};
@@ -1364,7 +1364,7 @@ public class Missions {
 						}
 						//Sleep for a little (0.5 sec)
 						try { GatedThread.sleep(500); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 						if (isStatistics) {
 							updateRobotReports(tec); // Call to update all the robot reports
 							writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename

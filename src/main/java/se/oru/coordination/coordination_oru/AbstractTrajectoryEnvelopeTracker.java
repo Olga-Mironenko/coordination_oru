@@ -431,7 +431,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 						while ((rr = tec.getRobotReport(te.getRobotID())) == null) {
 							metaCSPLogger.info("(waiting for "+te.getComponent()+"'s tracker to come online)");
 							try { GatedThread.sleep(100); }
-							catch (InterruptedException e) { e.printStackTrace(); }
+							catch (InterruptedException e) { e.printStackTrace(); return; }
 						}
 
 						//Get current sequence number from robot report...
@@ -474,7 +474,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 				
 					//Sleep a little...
 					try { GatedThread.sleep(trackingPeriodInMillis); }
-					catch (InterruptedException e) { e.printStackTrace(); }
+					catch (InterruptedException e) { e.printStackTrace(); return; }
 
 				}
 

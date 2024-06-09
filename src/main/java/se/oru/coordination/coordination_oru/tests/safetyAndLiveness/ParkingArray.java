@@ -195,7 +195,7 @@ public class ParkingArray {
 //							}
 //						}
 //						try { Thread.sleep(2000); }
-//						catch (InterruptedException e) { e.printStackTrace(); }
+//						catch (InterruptedException e) { e.printStackTrace(); return; }
 //					}
 					boolean firstTime = true;
 					int totalIterations = 20;
@@ -221,7 +221,7 @@ public class ParkingArray {
 						}
 						//Sleep for a little
 						try { Thread.sleep(100); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 					System.out.println("Robot" + robotID + " is done!");
 				}

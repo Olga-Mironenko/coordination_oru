@@ -853,7 +853,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				metaCSPLogger.info("Waiting thread starts for " + robotID);
 				while (Calendar.getInstance().getTimeInMillis()-startTime < duration) {
 					try { GatedThread.sleep(100); }
-					catch (InterruptedException e) { e.printStackTrace(); }
+					catch (InterruptedException e) { e.printStackTrace(); return; }
 				}
 				metaCSPLogger.info("Waiting thread finishes for " + robotID);
 				synchronized(solver) {
@@ -1474,13 +1474,13 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 						//canStartTracking becomes true when setCriticalPoint is called once
 						while (!trackers.containsKey(myTE.getRobotID()) || !trackers.get(myTE.getRobotID()).canStartTracking()) {
 							try { GatedThread.sleep(100); }
-							catch (InterruptedException e) { e.printStackTrace(); }							
+							catch (InterruptedException e) { e.printStackTrace(); return; }							
 						}
 
 						//						//Sleep for one control period
 						//						//(allows to impose critical points before tracking actually starts)
 						//						try { GatedThread.sleep(CONTROL_PERIOD); }
-						//						catch (InterruptedException e) { e.printStackTrace(); }
+						//						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 
 					@Override
@@ -1821,7 +1821,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 					//Sleep a little...
 					if (CONTROL_PERIOD > 0) {
 						try { GatedThread.sleep(Math.max(0, CONTROL_PERIOD-Calendar.getInstance().getTimeInMillis()+threadLastUpdate)); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 
 					long threadCurrentUpdate = Calendar.getInstance().getTimeInMillis();

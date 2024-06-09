@@ -512,7 +512,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 						}
 						
 						try { GatedThread.sleep((long)(1000.0/30.0)); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 //					metaCSPLogger.info("Ending the collision checking thread.");
 				}

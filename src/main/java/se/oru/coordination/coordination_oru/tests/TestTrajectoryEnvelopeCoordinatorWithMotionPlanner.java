@@ -149,7 +149,7 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner {
 						}
 						//Sleep for a little (2 sec)
 						try { Thread.sleep(2000); }
-						catch (InterruptedException e) { e.printStackTrace(); }
+						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 				}
 			};

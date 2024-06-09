@@ -139,7 +139,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	public void startTracking() {
 		while (this.th == null) {
 			try { Thread.sleep(10); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
 		this.th.start();
 		if (useInternalCPs) this.startInternalCPThread();
@@ -275,7 +275,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 					}
 
 					try { Thread.sleep(trackingPeriodInMillis); }
-					catch (InterruptedException e) { e.printStackTrace(); }
+					catch (InterruptedException e) { e.printStackTrace(); return; }
 				}
 			}
 		};
@@ -371,7 +371,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 				//Sleep for delay in communication
 				try { Thread.sleep(delayTx); }
-				catch (InterruptedException e) { e.printStackTrace(); }
+				catch (InterruptedException e) { e.printStackTrace(); return; }
 
 				//if possible (according to packet loss, send
 				synchronized (externalCPCounter)
@@ -609,7 +609,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			int delay = trackingPeriodInMillis;
 			if (NetworkConfiguration.getMaximumTxDelay() > 0) delay += rand.nextInt(NetworkConfiguration.getMaximumTxDelay());
 			try { Thread.sleep(delay); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 
 			//Advance time to reflect how much we have slept (~ trackingPeriod)
 			long deltaTimeInMillis = Calendar.getInstance().getTimeInMillis()-timeStart;
@@ -622,7 +622,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		{
 			enqueueOneReport();
 			try { Thread.sleep(trackingPeriodInMillis); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
 
 		//persevere with last path point in case listeners didn't catch it!
@@ -630,7 +630,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		while (getCurrentTimeInMillis()-timerStart < WAIT_AMOUNT_AT_END) {
 			//System.out.println("Waiting " + te.getComponent());
 			try { Thread.sleep(trackingPeriodInMillis); }
-			catch (InterruptedException e) { e.printStackTrace(); }
+			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
 		metaCSPLogger.info("RK4 tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + myTEID + ")");
 	}

@@ -154,7 +154,7 @@ public class Prog {
 
                                 try { Thread.sleep(200); 
                                 }
-                                catch (InterruptedException e) { e.printStackTrace(); }
+                                catch (InterruptedException e) { e.printStackTrace(); return; }
                             }
                         }
                 };
