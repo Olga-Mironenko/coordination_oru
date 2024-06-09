@@ -41,15 +41,11 @@ public class Gate {
         isPushed = true;
     }
 
-    public void await() {
+    public void await() throws InterruptedException {
         assert !isAwaited;
 
         print("awaiting");
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        latch.await();
         print("awaited");
 
         isAwaited = true;

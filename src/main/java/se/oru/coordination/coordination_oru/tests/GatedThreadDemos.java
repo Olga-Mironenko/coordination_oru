@@ -15,7 +15,7 @@ class Sleeper {
 }
 
 class DemoPushAwait {
-    public static void run() {
+    public static void run() throws InterruptedException {
         Printer.resetTime();
         Printer.print("started");
 
@@ -27,7 +27,7 @@ class DemoPushAwait {
 
 
 class DemoChild {
-    public static void run() {
+    public static void run() throws InterruptedException {
         Printer.resetTime();
         Printer.print("started");
 
@@ -39,7 +39,11 @@ class DemoChild {
             public void run() {
                 Printer.print("started");
 
-                gateChild.await();
+                try {
+                    gateChild.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
                 Sleeper.sleep(100);
                 gateMain.push();
             }
@@ -94,7 +98,11 @@ class DemoGatekeeper {
             (now is t=306)
          */
 
-        GatedThread.runGatekeeper();
+        try {
+            GatedThread.runGatekeeper();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 

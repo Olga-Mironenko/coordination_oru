@@ -43,7 +43,7 @@ abstract public class GatedThread extends Thread {
     /**
      * If the gated mode is used, this should be called once at the end of the code for the main thread.
      */
-    public static void runGatekeeper() {
+    public static void runGatekeeper() throws InterruptedException {
         if (isGated) {
             gatekeeper.run();
         }
@@ -108,7 +108,11 @@ abstract public class GatedThread extends Thread {
         super.start();
 
         if (isGated) {
-            gateStart.await();
+            try {
+                gateStart.await();
+            } catch (InterruptedException e) {
+                return;
+            }
         }
     }
 
@@ -135,7 +139,11 @@ abstract public class GatedThread extends Thread {
             return;
         }
 
-        gatekeeper.pauseCurrentThread("initial", true, false, gateStart);
+        try {
+            gatekeeper.pauseCurrentThread("initial", true, false, gateStart);
+        } catch (InterruptedException e) {
+            return;
+        }
         Printer.print("ready");
 
         if (gatekeeper.trackDeath) {
@@ -206,7 +214,7 @@ abstract public class GatedThread extends Thread {
      *
      * @see #moveToNextGate()
      */
-    public static void awaitCurrentGate() {
+    public static void awaitCurrentGate() throws InterruptedException {
         if (isGated) {
             gatekeeper.pauseCurrentThread("initial", true, true, null);
         }

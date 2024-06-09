@@ -1,9 +1,11 @@
 package se.oru.coordination.coordination_oru.util.gates;
 
+import java.io.IOException;
 import java.util.Calendar;
 
 public class Timekeeper extends GatedThread {
     static int timestepsPassed = 0;
+    public static Integer timestepsPassedMax = null;
     static final int virtualMillisPerTimestep = 100;
     static int realMillisPassed = 0;
     static boolean hasCreated = false;
@@ -31,6 +33,28 @@ public class Timekeeper extends GatedThread {
         return hasCreated;
     }
 
+    protected void interruptAllThreads() {
+        for (Thread thread : Thread.getAllStackTraces().keySet()) {
+            // TODO: skip the current thread for the further `sleep` before `kill` to work
+            thread.interrupt();
+        }
+
+        /*
+        try {
+            Thread.sleep(5000); // wait for everyone to finish
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+         */
+
+        long pid = ProcessHandle.current().pid();
+        try {
+            Runtime.getRuntime().exec("kill " + pid);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public void runCore() {
         long millisStarted = Calendar.getInstance().getTimeInMillis();
@@ -38,6 +62,12 @@ public class Timekeeper extends GatedThread {
             skipTimesteps(1);
             timestepsPassed++;
             realMillisPassed = (int) (Calendar.getInstance().getTimeInMillis() - millisStarted);
+
+            if (timestepsPassedMax != null && timestepsPassed >= timestepsPassedMax) {
+                assert timestepsPassed == timestepsPassedMax;
+                interruptAllThreads();
+            }
+
             int millisToSleep = isSingleSleep ? getVirtualMillisPassed() - getRealMillisPassed() * 2 : 0;
             if (millisToSleep > 0) {
                 try {

@@ -34,7 +34,7 @@ public class Gatekeeper {
      *                  if no gated thread executes or has gates in the queue, then there'll be no gated thread execution
      *                  anymore.
      */
-    public void pauseCurrentThread(String nameStep, boolean isThreadInitialization, boolean isQueueHead, Gate gateStart) {
+    public void pauseCurrentThread(String nameStep, boolean isThreadInitialization, boolean isQueueHead, Gate gateStart) throws InterruptedException {
         Gate gate = new Gate(Thread.currentThread().getName() + "'s " + nameStep);
         if (isQueueHead) {
             gates.addFirst(gate);
@@ -56,7 +56,7 @@ public class Gatekeeper {
      * <p>
      * Here we execute gated threads registered in the queue (one by one).
      */
-    public void run() {
+    public void run() throws InterruptedException {
         assert gateSelf == null;
 
         while (! gates.isEmpty()) {

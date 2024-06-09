@@ -79,7 +79,12 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
 
     @Override
     public void onWebSocketText(String message) {
-        GatedThread.awaitCurrentGate();
+        try {
+            GatedThread.awaitCurrentGate();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         try {
             onWebSocketTextCore(message);
         }
