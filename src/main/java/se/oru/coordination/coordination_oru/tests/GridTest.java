@@ -92,22 +92,22 @@ public class GridTest {
         final String YAML_FILE = "maps/map-grid.yaml";
 
         final Pose humStart = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? GridMapConstants.column1TopStart : GridMapConstants.column2TopStart;
-        final Pose humFinish = GridMapConstants.column2BottomStart;
+        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
 
         final Pose aut1Start = GridMapConstants.row1LeftStart;
-        final Pose aut1Finish = GridMapConstants.row1RightStart;
+        final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
 
         final Pose aut2Start = GridMapConstants.row2LeftStart;
-        final Pose aut2Finish = GridMapConstants.row2RightStart;
+        final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.row2RightStart);
 
         final Pose aut3Start = GridMapConstants.row3LeftStart;
-        final Pose aut3Finish = GridMapConstants.row3RightStart;
+        final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.row3RightStart);
 
         final Pose aut4Start = GridMapConstants.column1TopStart;
-        final Pose aut4Finish = GridMapConstants.column1BottomStart;
+        final Pose aut4Finish = GridMapConstants.turnAround(GridMapConstants.column1BottomStart);
 
         final Pose aut5Start = GridMapConstants.row3LeftStart;
-        final Pose aut5Finish = GridMapConstants.row1RightStart;
+        final Pose aut5Finish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
 
         // v = maxVelocityHum = 12 m/s
         // a = -maxAccelerationHum * coefAccelerationToDeceleration = -2 * 3 = -6 m/s^2

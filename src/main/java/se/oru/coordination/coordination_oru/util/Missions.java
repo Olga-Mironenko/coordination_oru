@@ -38,6 +38,7 @@ import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
+import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 /**
@@ -564,11 +565,18 @@ public class Missions {
 	}
 
 	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose finish, boolean isInverse, boolean isOneWay) {
-		vehicle.getPlan(start, new Pose[] { finish }, Missions.mapYAMLFilename, false);
+		boolean isFinishTurnedAround = false;
+		ArrayList<Pose> goals = new ArrayList<>();
+		goals.add(finish);
+		if (isFinishTurnedAround) {
+			goals.add(GridMapConstants.turnAround(finish));
+		}
+		vehicle.getPlan(start, goals.toArray(Pose[]::new), Missions.mapYAMLFilename, false);
+
 		var pathForward = vehicle.getPath();
 		PoseSteering[] pathBackward = isOneWay ? null : AbstractMotionPlanner.inversePathWithoutFirstAndLastPose(pathForward);
 		// E.g.: pathForward = [a, b, c, d], pathBackward = [c, b], so the whole cycle is [a, b, c, d,  b, c,  a, b, ...]
-		
+
 		if (isInverse) {
 			assert ! isOneWay;
 			PoseSteering[] pathTotal = (PoseSteering[]) ArrayUtils.addAll(pathForward, pathBackward);
@@ -1146,7 +1154,7 @@ public class Missions {
 										if (tec.addMissions(m)) {
 											//tec.computeCriticalSectionsAndStartTrackingAddedMission();
 											if (mdcs.containsKey(robotID)) mdcs.get(robotID).afterMissionDispatch(m);
-											if (!loopMissions.get(robotID)) {
+											if (!loopMissions.getOrDefault(robotID, true)) {
 												Missions.removeMissions(m);
 												System.out.println("Removed mission " + m);
 												if (concatenatedMissions.get(m) != null) {
@@ -1246,7 +1254,7 @@ public class Missions {
 										if (tec.addMissions(m)) {
 											//tec.computeCriticalSectionsAndStartTrackingAddedMission();
 											if (mdcs.containsKey(robotID)) mdcs.get(robotID).afterMissionDispatch(m);
-											if (!loopMissions.get(robotID)) {
+											if (!loopMissions.getOrDefault(robotID, true)) {
 												Missions.removeMissions(m);
 												System.out.println("Removed mission " + m);
 												if (concatenatedMissions.get(m) != null) {
@@ -1337,7 +1345,7 @@ public class Missions {
 										if (tec.addMissions(m)) {
 											//tec.computeCriticalSectionsAndStartTrackingAddedMission();
 											if (mdcs.containsKey(robotID)) mdcs.get(robotID).afterMissionDispatch(m);
-											if (!loopMissions.getOrDefault(robotID, false)) {
+											if (!loopMissions.getOrDefault(robotID, true)) {
 												Missions.removeMissions(m);
 												System.out.println("Removed mission " + m);
 												if (concatenatedMissions.get(m) != null) {
@@ -1395,7 +1403,7 @@ public class Missions {
 							}
 
 							Missions.dequeueMission(m.getRobotID());
-							if (loopMissions.get(robotID)) {
+							if (loopMissions.getOrDefault(robotID, true)) {
 								Missions.enqueueMission(m);
 							}
 						}
