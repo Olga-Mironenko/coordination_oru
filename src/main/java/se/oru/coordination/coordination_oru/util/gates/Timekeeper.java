@@ -5,9 +5,12 @@ import java.util.Calendar;
 
 public class Timekeeper extends GatedThread {
     static int timestepsPassed = 0;
-    public static Integer timestepsPassedMax = null;
     public static final int virtualMillisPerTimestep = 100;
     static int realMillisPassed = 0;
+
+    public static Integer timestepsPassedMax = null;
+    public static Integer realMillisPassedMax = null;
+
     static boolean hasCreated = false;
     static boolean isSingleSleep = false;
 
@@ -33,12 +36,12 @@ public class Timekeeper extends GatedThread {
         return hasCreated;
     }
 
-    public static void setSecondsPassedMax(int seconds) {
+    public static void setVirtualSecondsPassedMax(int seconds) {
         timestepsPassedMax = seconds * 1000 / virtualMillisPerTimestep;
     }
 
-    public static void setMinutesPassedMax(int minutes) {
-        setSecondsPassedMax(minutes * 60);
+    public static void setVirtualMinutesPassedMax(int minutes) {
+        setVirtualSecondsPassedMax(minutes * 60);
     }
 
     protected void interruptAllThreads() {
@@ -63,6 +66,14 @@ public class Timekeeper extends GatedThread {
         }
     }
 
+    protected static boolean isOver() {
+        if (timestepsPassedMax != null && timestepsPassed >= timestepsPassedMax) {
+            assert timestepsPassed == timestepsPassedMax;
+            return true;
+        }
+        return realMillisPassedMax != null && realMillisPassed >= realMillisPassedMax;
+    }
+
     @Override
     public void runCore() {
         long millisStarted = Calendar.getInstance().getTimeInMillis();
@@ -71,8 +82,7 @@ public class Timekeeper extends GatedThread {
             timestepsPassed++;
             realMillisPassed = (int) (Calendar.getInstance().getTimeInMillis() - millisStarted);
 
-            if (timestepsPassedMax != null && timestepsPassed >= timestepsPassedMax) {
-                assert timestepsPassed == timestepsPassedMax;
+            if (isOver()) {
                 interruptAllThreads();
             }
 

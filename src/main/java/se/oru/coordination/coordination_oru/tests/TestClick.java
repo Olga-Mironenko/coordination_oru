@@ -26,7 +26,10 @@ public class TestClick {
     }
 
     protected static void runDemo() {
-        Timekeeper.setMinutesPassedMax(60);
+//        Timekeeper.setVirtualSecondsPassedMax(15);
+        Timekeeper.setVirtualMinutesPassedMax(60);
+//        Timekeeper.realMillisPassedMax = 10 * 1000;
+
         final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
 
         final Pose mainTunnelLeft = new Pose(4.25,15.35, -Math.PI);

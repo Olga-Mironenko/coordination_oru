@@ -38,7 +38,10 @@ public class GridTestInteractive {
 
         HumanControl.isEnabledForBrowser = true;
 //        BrowserVisualization.isExtendedText = false;
-        Timekeeper.setMinutesPassedMax(60);
+
+//        Timekeeper.setVirtualSecondsPassedMax(15);
+        Timekeeper.setVirtualMinutesPassedMax(60);
+//        Timekeeper.realMillisPassedMax = 10 * 1000;
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
