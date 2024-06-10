@@ -368,8 +368,8 @@ public class BrowserVisualization implements FleetVisualization {
 				}
 			}
 
+			text += "; traveled " + round(vehicle.totalDistance) + " m";
 			text += "; " + stringifyMissions(Missions.getMissions(id));
-
 			text += "<br>";
 		}
 		if (isExtendedText) {

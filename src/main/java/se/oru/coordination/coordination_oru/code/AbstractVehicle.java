@@ -44,7 +44,7 @@ public abstract class AbstractVehicle {
     private Color colorInMotion;
     public RobotReport currentRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, 0.0, -1);
     public RobotReport lastRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, 0.0, -1);
-    private double totalDistance;
+    public double totalDistance;
     private double totalTime;
     private int cycles;
     private double maxWaitingTime;
@@ -217,7 +217,7 @@ public abstract class AbstractVehicle {
 
             bw.write("Cycle distance (m)," + this.pathLength + "\n");
             bw.write("No. of completed cycles," + this.cycles + "\n");
-            bw.write("Total distance travelled (m)," + round(totalDistance) + "\n");
+            bw.write("Total distance traveled (m)," + round(totalDistance) + "\n");
 
             bw.write("No. of stops," + this.stops + "\n");
             bw.write("No. of forcing events," + Forcing.robotIDToNumForcingEvents.getOrDefault(ID, 0) + "\n");
