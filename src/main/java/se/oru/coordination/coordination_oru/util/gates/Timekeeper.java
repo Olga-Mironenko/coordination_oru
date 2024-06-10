@@ -6,7 +6,7 @@ import java.util.Calendar;
 public class Timekeeper extends GatedThread {
     static int timestepsPassed = 0;
     public static Integer timestepsPassedMax = null;
-    static final int virtualMillisPerTimestep = 100;
+    public static final int virtualMillisPerTimestep = 100;
     static int realMillisPassed = 0;
     static boolean hasCreated = false;
     static boolean isSingleSleep = false;
@@ -31,6 +31,14 @@ public class Timekeeper extends GatedThread {
 
     public static boolean isTimekeeperActive() {
         return hasCreated;
+    }
+
+    public static void setSecondsPassedMax(int seconds) {
+        timestepsPassedMax = seconds * 1000 / virtualMillisPerTimestep;
+    }
+
+    public static void setMinutesPassedMax(int minutes) {
+        setSecondsPassedMax(minutes * 60);
     }
 
     protected void interruptAllThreads() {

@@ -12,6 +12,7 @@ import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
 import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 import java.awt.*;
 
@@ -51,9 +52,7 @@ public class GridTestSimplified {
 
 //        HumanControl.isEnabledForBrowser = true;
 //        BrowserVisualization.isExtendedText = false;
-
-        final double workMinutes = 60;
-        final long endTimestamp = System.currentTimeMillis() + Math.round(workMinutes * 60 * 1000);
+        Timekeeper.setSecondsPassedMax(15);
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
@@ -73,7 +72,6 @@ public class GridTestSimplified {
         final double maxAccelerationHum = 2.0;
         final double maxVelocityAut = 5.0;
         final double maxAccelerationAut = 2.0;
-        final int trackingPeriod = 100; // ms (ignored when gated threads are used)
 
         double xLength = 2.5;
         double yLength = 1.5;
@@ -90,7 +88,7 @@ public class GridTestSimplified {
         AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
         AutonomousVehicle aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
 
-        TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 0, 0, trackingPeriod);
+        TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 0, 0);
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
@@ -129,7 +127,7 @@ public class GridTestSimplified {
         tec.setVisualization(viz);
 
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatcher(tec, endTimestamp);
+        Missions.startMissionDispatcher(tec);
 
         Missions.loopMissions.put(hum0.getID(), true);
         Missions.loopMissions.put(aut1.getID(), true);

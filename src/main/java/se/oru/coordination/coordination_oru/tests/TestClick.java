@@ -12,6 +12,7 @@ import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvel
 import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class TestClick {
     public static void main(String[] args) {
@@ -25,8 +26,7 @@ public class TestClick {
     }
 
     protected static void runDemo() {
-        final int loopMinutes = 5;
-        final long loopTime = System.currentTimeMillis() + (loopMinutes * 60 * 1000);
+        Timekeeper.setMinutesPassedMax(60);
         final String YAML_FILE = "maps/mine-map-test.yaml"; // TODO: create OccupancyMap now once (for efficiency)
 
         final Pose mainTunnelLeft = new Pose(4.25,15.35, -Math.PI);
@@ -104,7 +104,7 @@ public class TestClick {
         tec.setVisualization(viz);
 
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatcher(tec, loopTime);
+        Missions.startMissionDispatcher(tec);
         Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
         if (humFinish != null) {

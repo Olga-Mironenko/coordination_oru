@@ -10,6 +10,7 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
 import se.oru.coordination.coordination_oru.util.*;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 import java.awt.*;
 
@@ -37,9 +38,7 @@ public class GridTestInteractive {
 
         HumanControl.isEnabledForBrowser = true;
 //        BrowserVisualization.isExtendedText = false;
-
-        final double workMinutes = 60;
-        final long endTimestamp = System.currentTimeMillis() + Math.round(workMinutes * 60 * 1000);
+        Timekeeper.setMinutesPassedMax(60);
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
@@ -121,7 +120,7 @@ public class GridTestInteractive {
         tec.setVisualization(viz);
 
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatcher(tec, endTimestamp);
+        Missions.startMissionDispatcher(tec);
 
         Missions.loopMissions.put(hum0.getID(), false);
         Missions.loopMissions.put(aut1.getID(), true);

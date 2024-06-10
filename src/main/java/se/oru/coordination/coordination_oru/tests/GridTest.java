@@ -14,6 +14,7 @@ import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
 import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class GridTest {
     enum TraitA { AD, AU }
@@ -81,11 +82,9 @@ public class GridTest {
             scenarioString = Scenario.BASELINE_IDEAL_DRIVER_HUMAN_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
-
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
-        final double loopMinutes = 60;
-        final long loopTime = System.currentTimeMillis() + Math.round(loopMinutes * 60 * 1000);
+        Timekeeper.setMinutesPassedMax(60);
 
         final boolean ishumLoop = true;
 
@@ -197,7 +196,7 @@ public class GridTest {
         tec.setVisualization(viz);
 
         Missions.setMap(YAML_FILE);
-        Missions.startMissionDispatcher(tec, loopTime);
+        Missions.startMissionDispatcher(tec);
         Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
         final boolean isInverse = false;

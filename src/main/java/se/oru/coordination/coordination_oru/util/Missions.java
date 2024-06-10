@@ -1378,7 +1378,11 @@ public class Missions {
 		}
 	}
 
-	public synchronized static void startMissionDispatcher(final TrajectoryEnvelopeCoordinator tec, final long endTimestamp) {
+	public static void startMissionDispatcher(final TrajectoryEnvelopeCoordinator tec) {
+		startMissionDispatcher(tec, null);
+	}
+
+	public synchronized static void startMissionDispatcher(final TrajectoryEnvelopeCoordinator tec, final Long endTimestamp) {
 		for (int robotID : tec.getAllRobotIDs()) {
 			dispatchableRobots.add(robotID);
 //			loopMissions.put(robotID, true);
@@ -1388,7 +1392,7 @@ public class Missions {
 		missionDispatchThread = new GatedThread("missionDispatchThread") {
 			@Override
 			public void runCore() {
-				while (System.currentTimeMillis() < endTimestamp) {
+				while (endTimestamp == null || System.currentTimeMillis() < endTimestamp) {
 					for (int robotID : dispatchableRobots) {
 						if (! Missions.hasMissions(robotID)) {
 							continue;

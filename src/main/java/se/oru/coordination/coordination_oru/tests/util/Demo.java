@@ -24,8 +24,6 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledGlobally = true;
             //HumanControl.isEnabledForBrowser = true;
             GatedThread.enable();
-
-//            Timekeeper.timestepsPassedMax = 100;
         }
 
         BrowserVisualization.isStatusText = true;

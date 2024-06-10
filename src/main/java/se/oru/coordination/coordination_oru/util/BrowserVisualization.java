@@ -272,6 +272,20 @@ public class BrowserVisualization implements FleetVisualization {
 	protected static double round(double value) {
 		return (double) Math.round(value * 10) / 10;
 	}
+
+	protected static String secondsToHMS(int seconds) {
+		int time = seconds;
+
+		int s = time % 60;
+		time /= 60;
+
+		int m = time % 60;
+		time /= 60;
+
+		int h = time;
+
+		return String.format("%d:%02d:%02d", h, m, s);
+	}
 	
 	protected void setStatusText() {
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
@@ -282,23 +296,14 @@ public class BrowserVisualization implements FleetVisualization {
 		}
 
 		if (isExtendedText && Timekeeper.isTimekeeperActive()) {
-//			text += String.format("Time: step %d, virt. %.1f s, real %.1f s<br>",
+//			text += String.format("Time: step %d, sim. %.1f s, real %.1f s<br>",
 //					Timekeeper.getTimestepsPassed(),
 //					Timekeeper.getVirtualMillisPassed() / 1000.0,
 //					Timekeeper.getRealMillisPassed() / 1000.0
 //			);
 
-			int time = Timekeeper.getRealMillisPassed() / 1000;
-
-			int s = time % 60;
-			time /= 60;
-
-			int m = time % 60;
-			time /= 60;
-
-			int h = time;
-
-			text += String.format("Time passed: %02d:%02d:%02d<br>", h, m, s);
+			text += String.format("Time passed (real): %s<br>", secondsToHMS(Timekeeper.getRealMillisPassed() / 1000));
+			text += String.format("Time passed (sim.): %s<br>", secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000));
 		}
 
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
@@ -359,7 +364,7 @@ public class BrowserVisualization implements FleetVisualization {
 					}
 					//text += "; numIntegrateCalls: " + numCalls;
 
-					//text += "; traveled " + round(rr.getElapsedTrackingTime()) + " s (virt. time)";
+					//text += "; traveled " + round(rr.getElapsedTrackingTime()) + " s (sim. time)";
 				}
 			}
 
