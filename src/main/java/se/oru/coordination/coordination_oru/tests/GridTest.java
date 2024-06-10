@@ -123,10 +123,12 @@ public class GridTest {
 
         double distanceToStop = computeDistanceToStop(maxVelocityHum, maxAccelerationHum);
 
-        double xLength = 2.5;
-        double yLength = 1.5;
-        double xLengthInner = 1.5;
-        double yLengthInner = 1.0;
+        double lengthVehicle = 3.0;
+        double widthVehicle = 2.0;
+        SafeDistance safeDistanceHum = new SafeDistance(2, 1, 0.5, 0.5);
+        SafeDistance safeDistanceAut1 = new SafeDistance(1, 1, 0.5, 0.5);
+        SafeDistance safeDistanceAut2 = safeDistanceAut1;
+        SafeDistance safeDistanceAut3 = safeDistanceAut1;
 
         HumanControl.targetVelocityHumanInitial = maxVelocityHum;
         HumanControl.targetVelocityHuman = maxVelocityHum;
@@ -142,10 +144,10 @@ public class GridTest {
         AutonomousVehicle aut5 = null;
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum, xLength, yLength);
-        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
-        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
-        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum);
+        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
+        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
+        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
         //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
         //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
 
@@ -160,11 +162,10 @@ public class GridTest {
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
-        for (AbstractVehicle vehicle : new AbstractVehicle[] { hum0, aut1, aut2, aut3, aut4, aut5 }) {
-            if (vehicle != null) {
-                vehicle.registerInTec(tec, xLengthInner, yLengthInner);
-            }
-        }
+        hum0.registerInTec(tec, lengthVehicle, widthVehicle, safeDistanceHum);
+        aut1.registerInTec(tec, lengthVehicle, widthVehicle, safeDistanceAut1);
+        aut2.registerInTec(tec, lengthVehicle, widthVehicle, safeDistanceAut2);
+        aut3.registerInTec(tec, lengthVehicle, widthVehicle, safeDistanceAut3);
 
         tec.placeRobot(hum0.getID(), humStart);
         if (aut1 != null) tec.placeRobot(aut1.getID(), aut1Start);

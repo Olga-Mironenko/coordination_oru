@@ -37,7 +37,7 @@ public abstract class AbstractVehicle {
     private final double maxAcceleration;
     private final double xLength;
     private final double yLength;
-    private final Coordinate[] footprint;
+    private Coordinate[] footprint;
     public Coordinate[] innerFootprint = null;
     private final double startTime = System.nanoTime();
     private Color color;
@@ -83,7 +83,7 @@ public abstract class AbstractVehicle {
         this.maxAcceleration = maxAcceleration;
         this.xLength = xLength;
         this.yLength = yLength;
-        this.footprint = makeFootprint(xLength, yLength);
+        this.footprint = xLength == 0 && yLength == 0 ? null : makeFootprint(xLength, yLength);
 
         AbstractVehicle existingVehicle = VehiclesHashMap.getVehicle(ID);
         if (existingVehicle != null) {
@@ -103,11 +103,16 @@ public abstract class AbstractVehicle {
     }
 
     public static Coordinate[] makeFootprint(double xLength, double yLength) {
+        return makeFootprint(xLength, xLength, yLength, yLength);
+    }
+
+    public static Coordinate[] makeFootprint(double xLengthFront, double xLengthBack,
+                                             double yLengthLeft, double yLengthRight) {
         return new Coordinate[]{               // FIXME Currently allows four sided vehicles only
-                new Coordinate(-xLength, yLength),        //back left
-                new Coordinate(xLength, yLength),         //back right
-                new Coordinate(xLength, -yLength),        //front right
-                new Coordinate(-xLength, -yLength)        //front left
+                new Coordinate(-xLengthBack, yLengthLeft),         //back left
+                new Coordinate(xLengthFront, yLengthLeft),         //front left
+                new Coordinate(xLengthFront, -yLengthRight),       //front right
+                new Coordinate(-xLengthBack, -yLengthRight)        //back right
         };
     }
 
@@ -128,10 +133,23 @@ public abstract class AbstractVehicle {
     }
 
     public void registerInTec(TrajectoryEnvelopeCoordinatorSimulation tec, double xLengthInner, double yLengthInner) {
-        Coordinate[] innerFootprint = AbstractVehicle.makeFootprint(xLengthInner, yLengthInner);
-        this.innerFootprint = innerFootprint;
-        tec.setFootprint(getID(), getFootprint());
-        tec.setInnerFootprint(getID(), innerFootprint);
+        registerInTec(tec, xLengthInner * 2, yLengthInner * 2, new SafeDistance(0, 0, 0, 0));
+    }
+
+    public void registerInTec(TrajectoryEnvelopeCoordinatorSimulation tec,
+                              double length, double width,
+                              SafeDistance safeDistance) {
+        double xLengthInner = length / 2;
+        double yLengthInner = width / 2;
+
+        this.innerFootprint = AbstractVehicle.makeFootprint(xLengthInner, yLengthInner);
+        this.footprint = AbstractVehicle.makeFootprint(
+            xLengthInner + safeDistance.front, xLengthInner + safeDistance.back,
+            yLengthInner + safeDistance.left, yLengthInner + safeDistance.right
+        );
+
+        tec.setInnerFootprint(getID(), this.innerFootprint);
+        tec.setFootprint(getID(), this.footprint);
     }
 
     /**
