@@ -75,10 +75,10 @@ public class GridTestSimplified {
 
         double lengthVehicle = 3.0;
         double widthVehicle = 2.0;
-        SafeDistance safeDistanceHum = new SafeDistance(2, 1, 0.5, 0.5);
-        SafeDistance safeDistanceAut1 = new SafeDistance(1, 1, 0.5, 0.5);
-        SafeDistance safeDistanceAut2 = safeDistanceAut1;
-        SafeDistance safeDistanceAut3 = safeDistanceAut1;
+        VehicleSize vehicleSizeHum = new VehicleSize(3, 2, 2, 1, 0.5, 0.5);
+        VehicleSize vehicleSizeAut1 = new VehicleSize(3, 2, 1, 1, 0.5, 0.5);
+        VehicleSize vehicleSizeAut2 = vehicleSizeAut1;
+        VehicleSize vehicleSizeAut3 = vehicleSizeAut1;
 
         AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow
@@ -94,10 +94,10 @@ public class GridTestSimplified {
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
-        hum0.registerInTec(tec, lengthVehicle, widthVehicle, safeDistanceHum);
-        aut1.registerInTec(tec, lengthVehicle, widthVehicle, safeDistanceAut1);
-        aut2.registerInTec(tec, lengthVehicle, widthVehicle, safeDistanceAut2);
-        aut3.registerInTec(tec, lengthVehicle, widthVehicle, safeDistanceAut3);
+        hum0.registerInTec(tec, vehicleSizeHum);
+        aut1.registerInTec(tec, vehicleSizeAut1);
+        aut2.registerInTec(tec, vehicleSizeAut2);
+        aut3.registerInTec(tec, vehicleSizeAut3);
 
         tec.placeRobot(hum0.getID(), humStart);
         tec.placeRobot(aut1.getID(), aut1Start);

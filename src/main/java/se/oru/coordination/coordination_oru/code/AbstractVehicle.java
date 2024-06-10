@@ -133,19 +133,18 @@ public abstract class AbstractVehicle {
     }
 
     public void registerInTec(TrajectoryEnvelopeCoordinatorSimulation tec, double xLengthInner, double yLengthInner) {
-        registerInTec(tec, xLengthInner * 2, yLengthInner * 2, new SafeDistance(0, 0, 0, 0));
+        registerInTec(tec, new VehicleSize(xLengthInner * 2, yLengthInner * 2, 0, 0, 0, 0));
     }
 
     public void registerInTec(TrajectoryEnvelopeCoordinatorSimulation tec,
-                              double length, double width,
-                              SafeDistance safeDistance) {
-        double xLengthInner = length / 2;
-        double yLengthInner = width / 2;
+                              VehicleSize vehicleSize) {
+        double xLengthInner = vehicleSize.length / 2;
+        double yLengthInner = vehicleSize.width / 2;
 
         this.innerFootprint = AbstractVehicle.makeFootprint(xLengthInner, yLengthInner);
         this.footprint = AbstractVehicle.makeFootprint(
-            xLengthInner + safeDistance.front, xLengthInner + safeDistance.back,
-            yLengthInner + safeDistance.left, yLengthInner + safeDistance.right
+            xLengthInner + vehicleSize.frontSafeDistance, xLengthInner + vehicleSize.backSafeDistance,
+            yLengthInner + vehicleSize.leftSafeDistance, yLengthInner + vehicleSize.rightSafeDistance
         );
 
         tec.setInnerFootprint(getID(), this.innerFootprint);
