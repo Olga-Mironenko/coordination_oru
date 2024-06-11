@@ -80,13 +80,18 @@ public class Forcing {
         KnobsAfterForcing knobsAfterForcing = new KnobsAfterForcing() {
             @Override
             public boolean updateForcing(double distanceTraveled) {
-                if (isResetAfterCurrentCrossroad && areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsToRestorePrioritiesLater)) {
+                 double priorityDistanceRemaining = Math.max(0, priorityDistance - distanceTraveled);
+                if (
+                        isResetAfterCurrentCrossroad && (
+                                areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsToRestorePrioritiesLater)
+                                        || (priorityDistanceRemaining == 0 && criticalSectionsToRestorePrioritiesLater.isEmpty())
+                        )
+                ) {
                     restorePriorities();
                     resumeRobots();
                     return false;
                 }
 
-                double priorityDistanceRemaining = Math.max(0, priorityDistance - distanceTraveled);
                 if (priorityDistanceRemaining > 0) {
                     final ArrayList<CriticalSection> criticalSectionsForPriority =
                             selectCriticalSections(robotID, tec.allCriticalSections, priorityDistanceRemaining, Integer.MAX_VALUE);

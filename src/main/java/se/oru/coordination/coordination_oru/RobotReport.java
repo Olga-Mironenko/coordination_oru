@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.utility.logging.MetaCSPLogging;
+import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 
 /**
  * A {@link RobotReport} is issued by an {@link AbstractTrajectoryEnvelopeTracker} when requested via
@@ -25,7 +26,7 @@ public class RobotReport {
 	private double elapsedTrackingTime = 0; // seconds
 	private double distanceTraveled = 0.0; // meters in the current mission (path)
 
-
+	private long timeInMillis;
 
 	/**
 	 * Create a {@link RobotReport} with given current state of the robot.
@@ -42,6 +43,7 @@ public class RobotReport {
 		this.pathIndex = pathIndex;
 		this.distanceTraveled = distanceTraveled;
 		this.criticalPoint = criticalPoint;
+		this.timeInMillis = GatedCalendar.getInstance().getTimeInMillis();
 	}
 
 	public RobotReport(int robotID, Pose pose, int pathIndex, double velocity, double distanceTraveled, double elapsedTrackingTime, int criticalPoint) {
