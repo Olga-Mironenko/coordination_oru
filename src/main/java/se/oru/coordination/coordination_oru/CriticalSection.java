@@ -21,6 +21,7 @@ import java.util.function.Function;
  *
  */
 public class CriticalSection {
+	public static boolean isCanPassFirstActive = true;
 
 	private TrajectoryEnvelope te1;
 	private TrajectoryEnvelope te2;
@@ -286,6 +287,10 @@ public class CriticalSection {
 	}
 
 	public boolean canPassFirst(int myID) {
+		if (! isCanPassFirstActive) {
+			return false;
+		}
+
 		boolean isInferior = ! isSuperior(myID);
 		assert isInferior;
 		int otherID = getOtherRobotID(myID);
