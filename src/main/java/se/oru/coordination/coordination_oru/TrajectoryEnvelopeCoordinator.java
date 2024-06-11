@@ -35,6 +35,7 @@ import aima.core.util.datastructure.Pair;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
+import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
@@ -1125,14 +1126,14 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			public void runCore() {
 
 				String fileName = new String(System.getProperty("user.home")+File.separator+"coordinator_stat.txt");
-				initStat(fileName, "Init statistics: @"+Calendar.getInstance().getTimeInMillis() + "\n");
+				initStat(fileName, "Init statistics: @"+ Calendar.getInstance().getTimeInMillis() + "\n");
 				String stat = new String(//"Legend: at each control period\n\t 1. elapsed time to compute critical sections\n\t 2.elapsed time to update dependencies\n\t 3. number of new critical sections\n\t"
 						"elapsedTimeComputeCriticalSections\t elapsedTimeUpdateDependencies\t numberNewCriticalSections\t numberAllCriticalSections\t numberNewAddedMissions \t numberDrivingRobots\t expectedSleepingTime\t effectiveSleepingTime\t printStatisticsTime\t effectiveTc");
 				if (avoidDeadlockGlobally.get()) stat = stat + new String("\t numberReversedPrecedenceOrder\t numberCurrentCycles");
 				stat.concat("\n");
 				writeStat(fileName, stat);
 
-				long threadLastUpdate = Calendar.getInstance().getTimeInMillis();
+				long threadLastUpdate = GatedCalendar.getInstance().getTimeInMillis();
 				long elapsedTimeComputeCriticalSections = -1;
 				long elapsedTimeUpdateDependencies = -1;
 				int numberNewCriticalSections = -1;
@@ -1182,23 +1183,23 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 								numberNewAddedMissions++;
 							}
 							numberNewCriticalSections = allCriticalSections.size();
-							elapsedTimeComputeCriticalSections = Calendar.getInstance().getTimeInMillis();
+							elapsedTimeComputeCriticalSections = GatedCalendar.getInstance().getTimeInMillis();
 							createCriticalSections();
-							elapsedTimeComputeCriticalSections = Calendar.getInstance().getTimeInMillis()-elapsedTimeComputeCriticalSections;
+							elapsedTimeComputeCriticalSections = GatedCalendar.getInstance().getTimeInMillis()-elapsedTimeComputeCriticalSections;
 							numberAllCriticalSections = allCriticalSections.size();
 							numberNewCriticalSections = numberAllCriticalSections-numberNewCriticalSections;
 
 							startTrackingAddedMissions();
 						}
-						elapsedTimeUpdateDependencies = Calendar.getInstance().getTimeInMillis();
+						elapsedTimeUpdateDependencies = GatedCalendar.getInstance().getTimeInMillis();
 						updateDependencies();
-						elapsedTimeUpdateDependencies = Calendar.getInstance().getTimeInMillis()-elapsedTimeUpdateDependencies;
+						elapsedTimeUpdateDependencies = GatedCalendar.getInstance().getTimeInMillis()-elapsedTimeUpdateDependencies;
 						numberAllCriticalSections = allCriticalSections.size();
 
 						if (!quiet) {
-							printStatisticsTime = Calendar.getInstance().getTimeInMillis();
+							printStatisticsTime = GatedCalendar.getInstance().getTimeInMillis();
 							printStatistics();
-							printStatisticsTime = Calendar.getInstance().getTimeInMillis()-printStatisticsTime;
+							printStatisticsTime = GatedCalendar.getInstance().getTimeInMillis()-printStatisticsTime;
 						}
 						if (overlay) overlayStatistics();
 
@@ -1206,17 +1207,17 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					}
 
 					//Sleep a little...
-					//expectedSleepingTime = Math.max(500,CONTROL_PERIOD-Calendar.getInstance().getTimeInMillis()+threadLastUpdate);
+					//expectedSleepingTime = Math.max(500,CONTROL_PERIOD-GatedCalendar.getInstance().getTimeInMillis()+threadLastUpdate);
 					expectedSleepingTime = 500;
-					effectiveSleepingTime = Calendar.getInstance().getTimeInMillis();
+					effectiveSleepingTime = GatedCalendar.getInstance().getTimeInMillis();
 					if (CONTROL_PERIOD > 0) {
 						try { GatedThread.sleep(expectedSleepingTime); }
 						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
-					effectiveSleepingTime = Calendar.getInstance().getTimeInMillis()-effectiveSleepingTime;
+					effectiveSleepingTime = GatedCalendar.getInstance().getTimeInMillis()-effectiveSleepingTime;
 
-					EFFECTIVE_CONTROL_PERIOD = (int)(Calendar.getInstance().getTimeInMillis()-threadLastUpdate);
-					threadLastUpdate = Calendar.getInstance().getTimeInMillis();
+					EFFECTIVE_CONTROL_PERIOD = (int)(GatedCalendar.getInstance().getTimeInMillis()-threadLastUpdate);
+					threadLastUpdate = GatedCalendar.getInstance().getTimeInMillis();
 
 					if (inferenceCallback != null) inferenceCallback.performOperation();
 
@@ -2383,13 +2384,13 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				Dependency dep = currentDependencies.get(robotID);
 				metaCSPLogger.finest("Set critical point " + dep.getWaitingPoint() + " to Robot" + dep.getWaitingRobotID() +".");
 				retransmitt = retransmitt || communicatedCPs.containsKey(tracker) && communicatedCPs.get(tracker).getFirst() == dep.getWaitingPoint() && currentReports.get(robotID).getCriticalPoint() != dep.getWaitingPoint()
-						&& ((int)(Calendar.getInstance().getTimeInMillis()-communicatedCPs.get(tracker).getSecond().longValue()) > maxDelay);
+						&& ((int)(GatedCalendar.getInstance().getTimeInMillis()-communicatedCPs.get(tracker).getSecond().longValue()) > maxDelay);
 				setCriticalPoint(dep.getWaitingRobotID(), dep.getWaitingPoint(), retransmitt);
 
 			}
 			else {
 				retransmitt = retransmitt || communicatedCPs.containsKey(tracker) && communicatedCPs.get(tracker).getFirst() == -1 && currentReports.get(robotID).getCriticalPoint() != -1
-						&& ((int)(Calendar.getInstance().getTimeInMillis()-communicatedCPs.get(tracker).getSecond().longValue()) > maxDelay);
+						&& ((int)(GatedCalendar.getInstance().getTimeInMillis()-communicatedCPs.get(tracker).getSecond().longValue()) > maxDelay);
 				setCriticalPoint(robotID, -1, retransmitt);
 			}
 			forceCriticalPointReTransmission.put(robotID, false);

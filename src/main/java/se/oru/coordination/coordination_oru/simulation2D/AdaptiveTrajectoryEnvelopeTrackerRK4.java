@@ -13,6 +13,7 @@ import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.util.Forcing;
 import se.oru.coordination.coordination_oru.util.HumanControl;
 import se.oru.coordination.coordination_oru.util.Missions;
+import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
@@ -33,7 +34,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	protected double[] curvatureDampening = null;
 	private ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
 	private int numberOfReplicas = 1;
-	private Random rand = new Random(1); //Calendar.getInstance().getTimeInMillis());
+	private Random rand = new Random(1); //GatedCalendar.getInstance().getTimeInMillis());
 	private TreeMap<Double,Double> slowDownProfile = null;
 	private boolean slowingDown = false;
 	private boolean useInternalCPs = true;
@@ -174,15 +175,15 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			if (reportsList.isEmpty()) {
 				if (getRobotReport() != null) {
 					reportsList.add(0, getRobotReport());
-					reportTimeLists.add(0, Calendar.getInstance().getTimeInMillis());
+					reportTimeLists.add(0, GatedCalendar.getInstance().getTimeInMillis());
 				}
 				return;
 			}
 
-			long timeNow = Calendar.getInstance().getTimeInMillis();
+			long timeNow = GatedCalendar.getInstance().getTimeInMillis();
 			final int numberOfReplicasReceiving = this.numberOfReplicas;
 
-			timeNow = Calendar.getInstance().getTimeInMillis();
+			timeNow = GatedCalendar.getInstance().getTimeInMillis();
 			long timeOfArrival = timeNow;
 			if (NetworkConfiguration.getMaximumTxDelay() > 0) {
 				//the real delay
@@ -806,7 +807,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		catch (InterruptedException e) { e.printStackTrace(); return null; }
 
 		//Advance time to reflect how much we have slept (~ trackingPeriod)
-		long deltaTimeInMillis = GatedThread.isEnabled() ? trackingPeriodInMillis : Calendar.getInstance().getTimeInMillis() - timeStart;
+		long deltaTimeInMillis = GatedThread.isEnabled() ? trackingPeriodInMillis : GatedCalendar.getInstance().getTimeInMillis() - timeStart;
 		return deltaTimeInMillis / this.temporalResolution;
 	}
 
@@ -821,7 +822,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		Status status = Status.DRIVING;
 
 		while (true) {
-			long timeStart = Calendar.getInstance().getTimeInMillis();
+			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
 
 			if (emergencyBreaker.isStopped(myRobotID)) {
 				// TODO: just skip the current time step?

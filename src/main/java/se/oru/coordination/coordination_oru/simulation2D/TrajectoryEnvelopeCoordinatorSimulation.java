@@ -22,13 +22,14 @@ import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeCoordinator {
 	public static TrajectoryEnvelopeCoordinatorSimulation tec = null;
 	
-	protected static final long START_TIME = Calendar.getInstance().getTimeInMillis();
+	protected static final long START_TIME = GatedCalendar.getInstance().getTimeInMillis();
 	protected boolean useInternalCPs = true;
 	
 	protected boolean checkCollisions = true; // TODO
@@ -309,7 +310,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	//Method for measuring time in the trajectory envelope coordinator
 	@Override
 	public long getCurrentTimeInMillis() {
-		return Calendar.getInstance().getTimeInMillis()-START_TIME;
+		return GatedCalendar.getInstance().getTimeInMillis()-START_TIME;
 	}
 
 	public String constraintsToGraphviz(Constraint[] constraints) {
@@ -507,7 +508,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 									}
 
 									metaCSPLogger.info(" * NEW COLLISION *");
-									CollisionEvent ce = new CollisionEvent(Calendar.getInstance().getTimeInMillis(), robotReport1, robotReport2, cs);
+									CollisionEvent ce = new CollisionEvent(GatedCalendar.getInstance().getTimeInMillis(), robotReport1, robotReport2, cs);
 									collisionsList.add(ce);
 								}
 							}

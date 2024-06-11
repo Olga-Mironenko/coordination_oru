@@ -18,6 +18,7 @@ import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.TrackingCallback;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.util.Missions;
+import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 
 public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
 
@@ -34,7 +35,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	protected double[] curvatureDampening = null;
 	private ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
 	private int numberOfReplicas = 1;
-	private Random rand = new Random(Calendar.getInstance().getTimeInMillis());
+	private Random rand = new Random(1); // GatedCalendar.getInstance().getTimeInMillis());
 	private TreeMap<Double,Double> slowDownProfile = null;
 	private boolean slowingDown = false;
 	private boolean useInternalCPs = true;
@@ -165,15 +166,15 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			if (reportsList.isEmpty()) {
 				if (getRobotReport() != null) {
 					reportsList.add(0, getRobotReport());
-					reportTimeLists.add(0, Calendar.getInstance().getTimeInMillis());
+					reportTimeLists.add(0, GatedCalendar.getInstance().getTimeInMillis());
 				}
 				return;
 			}
 
-			long timeNow = Calendar.getInstance().getTimeInMillis();
+			long timeNow = GatedCalendar.getInstance().getTimeInMillis();
 			final int numberOfReplicasReceiving = this.numberOfReplicas;
 
-			timeNow = Calendar.getInstance().getTimeInMillis();
+			timeNow = GatedCalendar.getInstance().getTimeInMillis();
 			long timeOfArrival = timeNow;
 			if (NetworkConfiguration.getMaximumTxDelay() > 0) {
 				//the real delay
@@ -586,7 +587,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			}
 
 			//Compute deltaTime
-			long timeStart = Calendar.getInstance().getTimeInMillis();
+			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
 
 			//Update the robot's state via RK4 numerical integration
 			if (!skipIntegration) {
@@ -612,7 +613,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			catch (InterruptedException e) { e.printStackTrace(); return; }
 
 			//Advance time to reflect how much we have slept (~ trackingPeriod)
-			long deltaTimeInMillis = Calendar.getInstance().getTimeInMillis()-timeStart;
+			long deltaTimeInMillis = GatedCalendar.getInstance().getTimeInMillis()-timeStart;
 			deltaTime = deltaTimeInMillis/this.temporalResolution;
 			elapsedTrackingTime += deltaTime;
 		}

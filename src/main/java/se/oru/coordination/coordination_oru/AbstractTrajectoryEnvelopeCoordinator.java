@@ -35,6 +35,7 @@ import aima.core.util.datastructure.Pair;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.util.FleetVisualization;
 import se.oru.coordination.coordination_oru.util.StringUtils;
+import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 /**
@@ -258,7 +259,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 * @return The absolute path of a temporary file which contains a copy of the resource.
 	 */
 	public static String getResourceAsFileName(String resource) {
- 		Random rand = new Random(1); //Calendar.getInstance().getTimeInMillis());
+ 		Random rand = new Random(1); //GatedCalendar.getInstance().getTimeInMillis());
 		ClassLoader classLoader = TrajectoryEnvelopeCoordinator.class.getClassLoader();
 		File source = new File(classLoader.getResource(resource).getFile());
 		File dest = new File("." + 1+rand.nextInt(1000) + ".tempfile");
@@ -470,7 +471,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	}
 
 	protected void setupLogging() {
-		//logDirName = "log-" + Calendar.getInstance().getTimeInMillis();
+		//logDirName = "log-" + GatedCalendar.getInstance().getTimeInMillis();
 		logDirName = "logs";
 		File dir = new File(logDirName);
 		dir.mkdir();
@@ -523,7 +524,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 			if (tracker != null && !muted.contains(robotID) && !(tracker instanceof TrajectoryEnvelopeTrackerDummy)) {
 
 				if (!communicatedCPs.containsKey(tracker) || communicatedCPs.containsKey(tracker) && communicatedCPs.get(tracker).getFirst() != criticalPoint || retransmitt ) {
-					communicatedCPs.put(tracker, new Pair<Integer,Long>(criticalPoint, Calendar.getInstance().getTimeInMillis()));
+					communicatedCPs.put(tracker, new Pair<Integer,Long>(criticalPoint, GatedCalendar.getInstance().getTimeInMillis()));
 					externalCPCounters.replace(tracker,externalCPCounters.get(tracker)+1);
 					if (false && GatedThread.isEnabled()) { // TODO
 						tracker.setCriticalPoint(criticalPoint);
@@ -847,11 +848,11 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 */
 	protected void spawnWaitingThread(final int robotID, final int index, final int duration) {
 		Thread stoppingPointTimer = new GatedThread("stoppingPointTimer") {
-			private long startTime = Calendar.getInstance().getTimeInMillis();
+			private long startTime = GatedCalendar.getInstance().getTimeInMillis();
 			@Override
 			public void runCore() {
 				metaCSPLogger.info("Waiting thread starts for " + robotID);
-				while (Calendar.getInstance().getTimeInMillis()-startTime < duration) {
+				while (GatedCalendar.getInstance().getTimeInMillis()-startTime < duration) {
 					try { GatedThread.sleep(100); }
 					catch (InterruptedException e) { e.printStackTrace(); return; }
 				}
@@ -1460,7 +1461,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				//Note: onStart is triggered only when earliest start of this tracker's envelope is < current time
 				TrackingCallback cb = new TrackingCallback(te) {
 
-					private long lastEnvelopeRefresh = Calendar.getInstance().getTimeInMillis();
+					private long lastEnvelopeRefresh = GatedCalendar.getInstance().getTimeInMillis();
 					private boolean trackingFinished = false;
 
 					@Override
@@ -1553,7 +1554,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 					@Override
 					public String[] onPositionUpdate() {
 						if (viz != null && !trackingFinished && viz.periodicEnvelopeRefreshInMillis() > 0) {
-							long timeNow = Calendar.getInstance().getTimeInMillis();
+							long timeNow = GatedCalendar.getInstance().getTimeInMillis();
 							if (timeNow-lastEnvelopeRefresh > viz.periodicEnvelopeRefreshInMillis()) {
 								viz.addEnvelope(myTE);
 								lastEnvelopeRefresh = timeNow;
@@ -1687,7 +1688,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 					throw new Error("Could not add constraints " + consToAdd);						
 				}
 
-				missionsPool.add(new Pair<TrajectoryEnvelope,Long>(te, Calendar.getInstance().getTimeInMillis()));
+				missionsPool.add(new Pair<TrajectoryEnvelope,Long>(te, GatedCalendar.getInstance().getTimeInMillis()));
 			}
 		}
 
@@ -1796,7 +1797,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 			@Override
 			public void runCore() {
-				long threadLastUpdate = Calendar.getInstance().getTimeInMillis();
+				long threadLastUpdate = GatedCalendar.getInstance().getTimeInMillis();
 				int MAX_ADDED_MISSIONS = 1;
 
 				while (!stopInference) {
@@ -1820,11 +1821,11 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 					//Sleep a little...
 					if (CONTROL_PERIOD > 0) {
-						try { GatedThread.sleep(Math.max(0, CONTROL_PERIOD-Calendar.getInstance().getTimeInMillis()+threadLastUpdate)); }
+						try { GatedThread.sleep(Math.max(0, CONTROL_PERIOD-GatedCalendar.getInstance().getTimeInMillis()+threadLastUpdate)); }
 						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 
-					long threadCurrentUpdate = Calendar.getInstance().getTimeInMillis();
+					long threadCurrentUpdate = GatedCalendar.getInstance().getTimeInMillis();
 					EFFECTIVE_CONTROL_PERIOD = (int)(threadCurrentUpdate-threadLastUpdate);
 					threadLastUpdate = threadCurrentUpdate;
 
