@@ -224,7 +224,7 @@ public abstract class AbstractVehicle {
             bw.write("No. of potential interactions," + TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
             bw.write("Total waiting time (s)," + round(totalWaitingTime) + "\n");
             bw.write("Maximum waiting time (s)," + round(maxWaitingTime) + "\n");
-            bw.write("Total simulation time (s)," + round(totalTime) + "\n");
+            bw.write("Total real time (s)," + round(totalTime) + "\n");
 
             bw.write("Maximum acceleration (m/s^2)," + round(maxAcceleration) + "\n");
             bw.write("Maximum speed (m/s)," + round(maxVelocity) + "\n");

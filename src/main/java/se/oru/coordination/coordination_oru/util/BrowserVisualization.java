@@ -317,6 +317,9 @@ public class BrowserVisualization implements FleetVisualization {
 
 		for (int id : Arrays.asList(HumanControl.idHuman)) {
 			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
+			if (rr == null) {
+				continue;
+			}
 
 			text += String.format("Human V%d: max velocity %.1f m/s; current velocity %.1f%s m/s; %d forcing events",
 					id,

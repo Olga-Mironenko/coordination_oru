@@ -79,20 +79,21 @@ public class GridTest {
 
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.BASELINE_IDEAL_DRIVER_HUMAN_FIRST.toString();
+            scenarioString = Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
 //        Timekeeper.setVirtualSecondsPassedMax(15);
         Timekeeper.setVirtualMinutesPassedMax(60);
-//        Timekeeper.realMillisPassedMax = 10 * 1000;
+//        Timekeeper.realMillisPassedMax = 1000 * 60 * 60; // 1h
 
         final boolean ishumLoop = true;
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
         final Pose humStart = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? GridMapConstants.column1TopStart : GridMapConstants.column2TopStart;
+//        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
         final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
 
         final Pose aut1Start = GridMapConstants.row1LeftStart;
@@ -135,6 +136,7 @@ public class GridTest {
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.SPARS; // too slow
 
+        AutonomousVehicle hum0 = null;
         AutonomousVehicle aut1 = null;
         AutonomousVehicle aut2 = null;
         AutonomousVehicle aut3 = null;
@@ -142,7 +144,7 @@ public class GridTest {
         AutonomousVehicle aut5 = null;
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum);
+//        hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum);
         aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
         aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
         aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
@@ -160,12 +162,12 @@ public class GridTest {
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
-        hum0.registerInTec(tec, vehicleSizeHum);
+        if (hum0 != null) hum0.registerInTec(tec, vehicleSizeHum);
         aut1.registerInTec(tec, vehicleSizeAut1);
         aut2.registerInTec(tec, vehicleSizeAut2);
         aut3.registerInTec(tec, vehicleSizeAut3);
 
-        tec.placeRobot(hum0.getID(), humStart);
+        if (hum0 != null) tec.placeRobot(hum0.getID(), humStart);
         if (aut1 != null) tec.placeRobot(aut1.getID(), aut1Start);
         if (aut2 != null) tec.placeRobot(aut2.getID(), aut2Start);
         if (aut3 != null) tec.placeRobot(aut3.getID(), aut3Start);
@@ -198,16 +200,17 @@ public class GridTest {
 
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatcher(tec);
-        Missions.loopMissions.put(hum0.getID(), ishumLoop);
+        if (hum0 != null) Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
         final boolean isInverse = false;
-        Missions.enqueueMissions(hum0, humStart, humFinish, isInverse);
+        if (hum0 != null) Missions.enqueueMissions(hum0, humStart, humFinish, isInverse);
         if (aut1 != null) Missions.enqueueMissions(aut1, aut1Start, aut1Finish, isInverse);
         if (aut2 != null) Missions.enqueueMissions(aut2, aut2Start, aut2Finish, isInverse);
         if (aut3 != null) Missions.enqueueMissions(aut3, aut3Start, aut3Finish, isInverse);
         if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isInverse);
         if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isInverse);
 
+        final AutonomousVehicle hum0Final = hum0;
         new GatedThread("forcing thread") {
             @Override
             public void runCore() {
@@ -217,6 +220,9 @@ public class GridTest {
                     case BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
                     case BASELINE_IDEAL_DRIVER_FIRST_COME:
                         return;
+                }
+                if (hum0Final == null) {
+                    return;
                 }
 
                 TraitA traitA = TraitA.valueOf("A" + scenario.toString().charAt(2));
@@ -289,34 +295,34 @@ public class GridTest {
                     boolean isRestoringNow = false;
 
                     for (double y : ysDownwardsForcing) {
-                        if (hum0.isYPassedDownwards(y)) {
+                        if (hum0Final.isYPassedDownwards(y)) {
                             isForcingNow = true;
                         }
                     }
                     for (double y : ysUpwardsForcing) {
-                        if (hum0.isYPassedUpwards(y)) {
+                        if (hum0Final.isYPassedUpwards(y)) {
                             isForcingNow = true;
                         }
                     }
 
                     for (double y : ysDownwardsResumingRobots) {
-                        if (hum0.isYPassedDownwards(y)) {
+                        if (hum0Final.isYPassedDownwards(y)) {
                             isResumingNow = true;
                         }
                     }
                     for (double y : ysUpwardsResumingRobots) {
-                        if (hum0.isYPassedUpwards(y)) {
+                        if (hum0Final.isYPassedUpwards(y)) {
                             isResumingNow = true;
                         }
                     }
 
                     for (double y : ysDownwardsRestoringPriorities) {
-                        if (hum0.isYPassedDownwards(y)) {
+                        if (hum0Final.isYPassedDownwards(y)) {
                             isRestoringNow = true;
                         }
                     }
                     for (double y : ysUpwardsRestoringPriorities) {
-                        if (hum0.isYPassedUpwards(y)) {
+                        if (hum0Final.isYPassedUpwards(y)) {
                             isRestoringNow = true;
                         }
                     }
@@ -328,9 +334,9 @@ public class GridTest {
                     }
 
                     if (isForcingNow) {
-                        knobsAfterForcing = Forcing.forceDriving(hum0.getID());
+                        knobsAfterForcing = Forcing.forceDriving(hum0Final.getID());
                         if (knobsAfterForcing != null) {
-                            rrAtForcingStart = hum0.getCurrentRobotReport();
+                            rrAtForcingStart = hum0Final.getCurrentRobotReport();
                         }
                     }
 
@@ -347,7 +353,7 @@ public class GridTest {
                     }
 
                     if (rrAtForcingStart != null) {
-                        if (hum0.getCurrentRobotReport().getPathIndex() < rrAtForcingStart.getPathIndex()) {
+                        if (hum0Final.getCurrentRobotReport().getPathIndex() < rrAtForcingStart.getPathIndex()) {
                             // A new mission has started but forcing hasn't stopped. Let's stop it now.
                             // This is a hack: we should rely not on explicit positions like
                             // `ysUpwardsRestoringPriorities` (which are sometimes not reached when mission ends)
@@ -356,7 +362,7 @@ public class GridTest {
                             knobsAfterForcing.resumeRobots();
                             knobsAfterForcing.restorePriorities();
                         } else {
-                            double distanceTraveled = hum0.getCurrentRobotReport().getDistanceTraveled() - rrAtForcingStart.getDistanceTraveled();
+                            double distanceTraveled = hum0Final.getCurrentRobotReport().getDistanceTraveled() - rrAtForcingStart.getDistanceTraveled();
                             assert distanceTraveled >= 0; // otherwise, we are in a new mission, but restoring/resuming hasn't happened
                             if (!knobsAfterForcing.updateForcing(distanceTraveled)) {
                                 rrAtForcingStart = null;
