@@ -72,8 +72,8 @@ public class GridTestSimplified {
         final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.row3RightStart);
 
         final double maxVelocityHum = 5.0;
-        final double maxAccelerationHum = 2.0;
-        final double maxAccelerationAut = 2.0;
+        final double maxAccelerationHum = 0.3;
+        final double maxAccelerationAut = 0.3;
 
         double lengthVehicle = 3.0;
         double widthVehicle = 2.0;

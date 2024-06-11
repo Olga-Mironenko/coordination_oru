@@ -62,8 +62,8 @@ public class GridTestInteractive {
         final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.row3RightStart);
 
         final double maxVelocityHum = 2.0;
-        final double maxAccelerationHum = 2.0;
-        final double maxAccelerationAut = 2.0;
+        final double maxAccelerationHum = 0.3;
+        final double maxAccelerationAut = 0.3;
 
         double lengthVehicle = 3.0;
         double widthVehicle = 2.0;
@@ -78,9 +78,9 @@ public class GridTestInteractive {
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum);
-        AutonomousVehicle aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, 3, maxAccelerationAut);
+        AutonomousVehicle aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, 5, maxAccelerationAut);
         AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, 5, maxAccelerationAut);
-        AutonomousVehicle aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, 7, maxAccelerationAut);
+        AutonomousVehicle aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, 5, maxAccelerationAut);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 0, 0);
         tec.setupSolver(0, 100000000);

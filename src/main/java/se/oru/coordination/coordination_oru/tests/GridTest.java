@@ -88,8 +88,8 @@ public class GridTest {
 
         CriticalSection.isCanPassFirstActive = false;
 
-        Timekeeper.setVirtualSecondsPassedMax(20 * 60 + 6);
-//        Timekeeper.setVirtualMinutesPassedMax(60);
+//        Timekeeper.setVirtualSecondsPassedMax(20 * 60 + 6);
+        Timekeeper.setVirtualMinutesPassedMax(60);
 //        Timekeeper.realMillisPassedMax = 1000 * 60 * 60; // 1h
 
         final boolean ishumLoop = true;
@@ -121,13 +121,13 @@ public class GridTest {
         // avg. speed (while stopping): vAvg = maxVelocityHum / 2 = 6 m/s
         // => distanceToStop = timeToStop * vAvg = 12 m
         final double maxVelocityHum = 5.0;
-        final double maxAccelerationHum = 2.0; // closer to 0.5 in reality
-        final double maxAccelerationAut = 2.0;
+        final double maxAccelerationHum = 0.3;
+        final double maxAccelerationAut = 0.3;
         final int trackingPeriod = 100; // ms
 
         double distanceToStop = computeDistanceToStop(maxVelocityHum, maxAccelerationHum);
 
-        VehicleSize vehicleSizeHum = new VehicleSize(3, 2, 1, 1, 0.5, 0.5);
+        VehicleSize vehicleSizeHum = new VehicleSize(3, 2, 2, 1, 0.5, 0.5);
         VehicleSize vehicleSizeAut1 = new VehicleSize(3, 2, 1, 1, 0.5, 0.5);
         VehicleSize vehicleSizeAut2 = vehicleSizeAut1;
         VehicleSize vehicleSizeAut3 = vehicleSizeAut1;
