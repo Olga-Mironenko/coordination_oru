@@ -35,6 +35,8 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	protected boolean checkCollisions = true; // TODO
 	public ArrayList<CollisionEvent> allCollisionsList = new ArrayList<CollisionEvent>();
 	public ArrayList<CollisionEvent> majorCollisionsList = new ArrayList<CollisionEvent>();
+	public HashMap<Integer, List<CollisionEvent>> robotIDToAllCollisions = new HashMap<>();
+	public HashMap<Integer, List<CollisionEvent>> robotIDToMajorCollisions = new HashMap<>();
 	protected Thread collisionThread = null;
 
 	protected AtomicInteger totalMsgsLost = new AtomicInteger(0);
@@ -509,7 +511,18 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 
 									metaCSPLogger.info(" * NEW COLLISION *");
 									CollisionEvent ce = new CollisionEvent(GatedCalendar.getInstance().getTimeInMillis(), robotReport1, robotReport2, cs);
+
 									collisionsList.add(ce);
+
+									HashMap<Integer, List<CollisionEvent>> robotIDToCollisions = isMajor ? robotIDToMajorCollisions : robotIDToAllCollisions;
+									for (int robotID : Arrays.asList(cs.getTe1RobotID(), cs.getTe2RobotID())) {
+										if (! robotIDToCollisions.containsKey(robotID)) {
+											robotIDToCollisions.put(robotID, new ArrayList<CollisionEvent>());
+										}
+										List<CollisionEvent> collisions = robotIDToCollisions.get(robotID);
+
+										collisions.add(ce);
+									}
 								}
 							}
 						}

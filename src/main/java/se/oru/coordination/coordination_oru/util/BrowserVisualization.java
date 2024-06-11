@@ -372,6 +372,12 @@ public class BrowserVisualization implements FleetVisualization {
 			}
 
 			text += "; traveled " + round(vehicle.totalDistance) + " m";
+
+			int numAllCollisions = tec.robotIDToAllCollisions.getOrDefault(id, new ArrayList<>()).size();
+			int numMajorCollisions = tec.robotIDToMajorCollisions.getOrDefault(id, new ArrayList<>()).size();
+			int numMinorCollisions = numAllCollisions - numMajorCollisions;
+			text += String.format("; collision events: %d minor, %d major", numMinorCollisions, numMajorCollisions);
+
 			text += "; " + stringifyMissions(Missions.getMissions(id));
 			text += "<br>";
 		}
