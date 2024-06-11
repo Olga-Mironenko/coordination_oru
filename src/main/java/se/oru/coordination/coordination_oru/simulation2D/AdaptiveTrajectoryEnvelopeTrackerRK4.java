@@ -23,7 +23,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	public static double coefAccelerationToDeceleration = 3.0;
 
-	protected static final long WAIT_AMOUNT_AT_END = 3000;
+	protected static final long WAIT_AMOUNT_AT_END = 0;
 	protected static final double EPSILON = 0.01;
 	protected double overallDistance = 0.0;
 	protected double totalDistance = 0.0;
