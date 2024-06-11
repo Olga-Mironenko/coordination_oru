@@ -81,7 +81,7 @@ public class GridTest {
 
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.BASELINE_IDEAL_DRIVER_HUMAN_FIRST.toString();
+            scenarioString = Scenario.S_UP1C.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -122,13 +122,12 @@ public class GridTest {
         // => distanceToStop = timeToStop * vAvg = 12 m
         final double maxVelocityHum = 5.0;
         final double maxAccelerationHum = 2.0; // closer to 0.5 in reality
-        final double maxVelocityAut = 5.0;
         final double maxAccelerationAut = 2.0;
         final int trackingPeriod = 100; // ms
 
         double distanceToStop = computeDistanceToStop(maxVelocityHum, maxAccelerationHum);
 
-        VehicleSize vehicleSizeHum = new VehicleSize(3, 2, 2, 1, 0.5, 0.5);
+        VehicleSize vehicleSizeHum = new VehicleSize(3, 2, 1, 1, 0.5, 0.5);
         VehicleSize vehicleSizeAut1 = new VehicleSize(3, 2, 1, 1, 0.5, 0.5);
         VehicleSize vehicleSizeAut2 = vehicleSizeAut1;
         VehicleSize vehicleSizeAut3 = vehicleSizeAut1;
@@ -151,9 +150,9 @@ public class GridTest {
         if (scenario != Scenario.BASELINE_AUTOMATED_ONLY) {
             hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum);
         }
-        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
-        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
-        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
+        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, 3, maxAccelerationAut);
+        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, 5, maxAccelerationAut);
+        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, 7, maxAccelerationAut);
         //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
         //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
 
