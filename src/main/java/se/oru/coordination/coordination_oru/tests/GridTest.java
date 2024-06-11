@@ -26,9 +26,10 @@ public class GridTest {
     enum Scenario {
         BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1,
 
-        BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST, // DONE
-        BASELINE_IDEAL_DRIVER_HUMAN_FIRST, // DONE
-        BASELINE_IDEAL_DRIVER_FIRST_COME, // DONE
+        BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST,
+        BASELINE_AUTOMATED_ONLY,
+        BASELINE_IDEAL_DRIVER_HUMAN_FIRST,
+        BASELINE_IDEAL_DRIVER_FIRST_COME,
 
         S_DP1C, S_DP1M, S_DP2C, S_DP2M, S_DP3C, S_DP3M, S_DPGC, S_DPGM,
         S_DS1C, S_DS1M, S_DS2C, S_DS2M, S_DS3C, S_DS3M, S_DSGC, S_DSGM,
@@ -79,7 +80,7 @@ public class GridTest {
 
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST.toString();
+            scenarioString = Scenario.BASELINE_IDEAL_DRIVER_HUMAN_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -144,7 +145,9 @@ public class GridTest {
         AutonomousVehicle aut5 = null;
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
-//        hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum);
+        if (scenario != Scenario.BASELINE_AUTOMATED_ONLY) {
+            hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum);
+        }
         aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
         aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
         aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut);
@@ -178,6 +181,7 @@ public class GridTest {
         switch (scenario) {
             case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1:
             case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
+            case BASELINE_AUTOMATED_ONLY:
             default:
                 tec.addComparator(heuristics.highestIDNumber());
                 break;
@@ -217,6 +221,7 @@ public class GridTest {
                 switch (scenario) {
                     case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1:
                     case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
+                    case BASELINE_AUTOMATED_ONLY:
                     case BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
                     case BASELINE_IDEAL_DRIVER_FIRST_COME:
                         return;
