@@ -13,6 +13,7 @@ import java.util.*;
 
 public class Forcing {
     public static TreeMap<Integer, Integer> robotIDToNumForcingEvents = new TreeMap<>();
+    public static TreeMap<Integer, Integer> robotIDToNumUselessForcingEvents = new TreeMap<>();
 
     /**
      * Each time a robot does forcing, it increases counters for all affected robots.
@@ -80,16 +81,20 @@ public class Forcing {
         KnobsAfterForcing knobsAfterForcing = new KnobsAfterForcing() {
             @Override
             public boolean updateForcing(double distanceTraveled) {
-                 double priorityDistanceRemaining = Math.max(0, priorityDistance - distanceTraveled);
-                if (
-                        isResetAfterCurrentCrossroad && (
-                                areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsToRestorePrioritiesLater)
-                                        || (priorityDistanceRemaining == 0 && criticalSectionsToRestorePrioritiesLater.isEmpty())
-                        )
-                ) {
-                    restorePriorities();
-                    resumeRobots();
-                    return false;
+                double priorityDistanceRemaining = Math.max(0, priorityDistance - distanceTraveled);
+                double stopDistanceRemaining = Math.max(0, stopDistance - distanceTraveled);
+                boolean isDone = priorityDistanceRemaining == 0 && (! isGlobalTemporaryStop && stopDistanceRemaining == 0);
+
+                if (isResetAfterCurrentCrossroad && isDone) {
+                    boolean isEmpty = criticalSectionsToRestorePrioritiesLater.isEmpty() && robotsToResumeLater.isEmpty();
+                    if (isEmpty || areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsToRestorePrioritiesLater)) {
+                        if (isEmpty) {
+                            robotIDToNumUselessForcingEvents.put(robotID, robotIDToNumUselessForcingEvents.getOrDefault(robotID, 0) + 1);
+                        }
+                        restorePriorities();
+                        resumeRobots();
+                        return false;
+                    }
                 }
 
                 if (priorityDistanceRemaining > 0) {
@@ -110,7 +115,6 @@ public class Forcing {
                     robotsToStop.addAll(VehiclesHashMap.getList().keySet());
                     robotsToStop.remove(robotID);
                 } else {
-                    double stopDistanceRemaining = Math.max(0, stopDistance - distanceTraveled);
                     if (stopDistanceRemaining > 0) {
                         final ArrayList<CriticalSection> criticalSectionsForStop =
                                 selectCriticalSections(robotID, tec.allCriticalSections, stopDistanceRemaining, Integer.MAX_VALUE);

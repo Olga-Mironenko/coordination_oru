@@ -321,12 +321,15 @@ public class BrowserVisualization implements FleetVisualization {
 				continue;
 			}
 
-			text += String.format("Human V%d: max velocity %.1f m/s; current velocity %.1f%s m/s; %d forcing events",
+			int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(HumanControl.idHuman, 0);
+			int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(HumanControl.idHuman, 0);
+			text += String.format("Human V%d: max velocity %.1f m/s; current velocity %.1f%s m/s; %d violations, %d forcing events",
 					id,
 					TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotMaxVelocity(id),
 					rr.getVelocity(),
 					rr.getVelocity() == 0.0 ? " (exactly zero)" : "",
-					Forcing.robotIDToNumForcingEvents.getOrDefault(HumanControl.idHuman, 0)
+					numForcings - numUselessForcings,
+					numForcings
 			);
 			if (isExtendedText && Forcing.forcingSinceTimestep != -1) {
 				text += " (forcing is active since step " + Forcing.forcingSinceTimestep + ")";
