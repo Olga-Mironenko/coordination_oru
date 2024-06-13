@@ -21,11 +21,11 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	public static double coefDeltaTimeForSlowDown = 0.1;
 
-	public static double coefAccelerationToDeceleration = 1.5;
+	public static double coefAccelerationToDeceleration = 1.7;
 	/**
 	 * https://www.researchgate.net/publication/233954314_Study_of_Deceleration_Behaviour_of_Different_Vehicle_Types:
 	 * - mean acceleration of trucks: ~0.3 s
-	 * - mean deceleration of trucks: ~0.45 s
+	 * - mean deceleration of trucks: ~0.51 s
 	 */
 
 	protected static final long WAIT_AMOUNT_AT_END = 0;

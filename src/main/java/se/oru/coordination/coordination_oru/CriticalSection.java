@@ -278,11 +278,13 @@ public class CriticalSection {
 
 		DistanceEstimation estimationInferior = new DistanceEstimation(getInferior(), true);
 		DistanceEstimation estimationSuperior = new DistanceEstimation(getSuperior(), false);
-		ret += String.format(
-				" (inferior %d %s make %s before superior %d makes %s)",
-				getInferior(), canPassFirst(getInferior()) ? "will" : "will not", estimationInferior,
-				getSuperior(), estimationSuperior
-		);
+ 		if (isCanPassFirstActive) {
+			ret += String.format(
+					" (inferior %d %s make %s before superior %d makes %s)",
+					getInferior(), canPassFirst(getInferior()) ? "will" : "will not", estimationInferior,
+					getSuperior(), estimationSuperior
+			);
+		}
 		return ret;
 	}
 
