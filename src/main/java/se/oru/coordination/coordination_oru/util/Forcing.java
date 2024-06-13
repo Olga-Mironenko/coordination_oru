@@ -30,7 +30,9 @@ public class Forcing {
 
     // Distances between the current robot and intersections to check:
     public static double priorityDistance = Double.NEGATIVE_INFINITY; // change the priority of that intersection?
+    public static double priorityDistanceMin = Double.NEGATIVE_INFINITY;
     public static double stopDistance = Double.NEGATIVE_INFINITY; // stop the other robot of that intersection?
+    public static double stopDistanceMin = Double.NEGATIVE_INFINITY;
 
     public static boolean isGlobalTemporaryStop = false;
     public static boolean isResetAfterCurrentCrossroad = true;
@@ -99,7 +101,13 @@ public class Forcing {
 
                 if (priorityDistanceRemaining > 0) {
                     final ArrayList<CriticalSection> criticalSectionsForPriority =
-                            selectCriticalSections(robotID, tec.allCriticalSections, priorityDistanceRemaining, Integer.MAX_VALUE);
+                            selectCriticalSections(
+                                    robotID,
+                                    tec.allCriticalSections,
+                                    Math.max(0, priorityDistanceMin - distanceTraveled),
+                                    priorityDistanceRemaining,
+                                    Integer.MAX_VALUE
+                            );
                     for (CriticalSection cs : criticalSectionsForPriority) {
                         if (criticalSectionsToRestorePrioritiesLater.contains(cs)) {
                             continue;
@@ -117,7 +125,13 @@ public class Forcing {
                 } else {
                     if (stopDistanceRemaining > 0) {
                         final ArrayList<CriticalSection> criticalSectionsForStop =
-                                selectCriticalSections(robotID, tec.allCriticalSections, stopDistanceRemaining, Integer.MAX_VALUE);
+                                selectCriticalSections(
+                                        robotID,
+                                        tec.allCriticalSections,
+                                        Math.max(0, stopDistanceMin - distanceTraveled),
+                                        stopDistanceRemaining,
+                                        Integer.MAX_VALUE
+                                );
 
                         for (CriticalSection cs : criticalSectionsForStop) {
                             int robotToStop;
@@ -178,8 +192,11 @@ public class Forcing {
     protected static ArrayList<CriticalSection> selectCriticalSections(
             int robotID,
             HashSet<CriticalSection> allCriticalSections,
+            double minDistance,
             double maxDistance,
             int maxCount) {
+        assert minDistance <= maxDistance;
+
         assert maxCount >= 0;
         if (maxCount == 0) {
             return new ArrayList<>();
@@ -224,6 +241,10 @@ public class Forcing {
             }
             if (distance > maxDistance) {
                 break;
+            }
+
+            if (distance < minDistance) {
+                continue;
             }
 
             criticalSectionsSelected.add(cs);

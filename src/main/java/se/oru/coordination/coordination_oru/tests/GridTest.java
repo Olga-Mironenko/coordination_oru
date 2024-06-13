@@ -18,7 +18,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class GridTest {
-    enum TraitA { AD, AU }
+    enum TraitA { AD, A3, AU }
     enum TraitB { BP, BS }
 
     enum TraitC { C1, C2, C3, CG }
@@ -33,19 +33,30 @@ public class GridTest {
         BASELINE_IDEAL_DRIVER_FIRST_COME,
 
         S_DP1C, S_DP1M, S_DP2C, S_DP2M, S_DP3C, S_DP3M, S_DPGC, S_DPGM,
+        S_3P1C,
         S_DS1C, S_DS1M, S_DS2C, S_DS2M, S_DS3C, S_DS3M, S_DSGC, S_DSGM,
         S_UP1C, S_UP1M, S_UP2C, S_UP2M, S_UP3C, S_UP3M, S_UPGC, S_UPGM,
         S_US1C, S_US1M, S_US2C, S_US2M, S_US3C, S_US3M, S_USGC, S_USGM,
         /**
+         *
+         * Crossroads:
+         *
+         *      v   ^
+         *     1D  1U
+         *     2D  2U
+         *     3D  3U
+         *      v   ^
+         *
          * Variations of forcing:
          * - (A) where forcing happens:
-         *   D) first downwards
-         *   U) both first downwards and first upwards
+         *   D) before crossroad 1D
+         *   U) before crossroads 1D, 3U
+         *   3) before crossroad 3D
          * - (B) which reaction to forcing:
          *   P) priority change
          *   S) stops
          * - (C) who is affected:
-         *   1) the robot before the first crossroad
+         *   1) the robot before the first (the nearest) crossroad
          *   2) the robots before the first and second crossroads
          *   3) the robots before all three crossroads
          *   G) all robots regardless of their positions (globally)
@@ -81,7 +92,7 @@ public class GridTest {
 
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.S_UP1C.toString();
+            scenarioString = Scenario.S_3P1C.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -238,12 +249,13 @@ public class GridTest {
                 TraitD traitD = TraitD.valueOf("D" + scenario.toString().charAt(5));
 
                 assert(Forcing.priorityDistance == Double.NEGATIVE_INFINITY);
+                assert(Forcing.priorityDistanceMin == Double.NEGATIVE_INFINITY);
                 assert(Forcing.stopDistance == Double.NEGATIVE_INFINITY);
+                assert(Forcing.stopDistanceMin == Double.NEGATIVE_INFINITY);
                 assert(! Forcing.isGlobalTemporaryStop);
                 assert(Forcing.isResetAfterCurrentCrossroad);
 
                 // Derive information from traits:
-                boolean isUpwards = traitA == TraitA.AU;
                 boolean isStop = traitB == TraitB.BS;
 
                 switch (traitC) {
@@ -272,23 +284,43 @@ public class GridTest {
                 boolean isManualRestoring = traitD == TraitD.DM;
 
                 // Propagate the information:
-                double[] ysDownwardsForcing = new double[]{humStart.getY() - 4.0};
+                double[] ysDownwardsForcing = new double[]{};
                 double[] ysDownwardsResumingRobots = new double[]{};
                 double[] ysDownwardsRestoringPriorities = new double[]{};
 
-                double[] ysUpwardsForcing = new double[]{humFinish.getY() + 4.0};
+                double[] ysUpwardsForcing = new double[]{};
                 double[] ysUpwardsResumingRobots = new double[]{};
                 double[] ysUpwardsRestoringPriorities = new double[]{};
 
-                if (isManualRestoring) {
-                    Forcing.isResetAfterCurrentCrossroad = false;
-                    ysDownwardsRestoringPriorities = ysDownwardsResumingRobots = new double[]{humFinish.getY()};
-                    ysUpwardsRestoringPriorities = ysUpwardsResumingRobots = new double[]{humStart.getY()};
+                switch (traitA) {
+                    case AD:
+                        ysDownwardsForcing = new double[]{humStart.getY() - 4.0};
+                        break;
+                    case AU:
+                        ysDownwardsForcing = new double[]{humStart.getY() - 4.0};
+                        ysUpwardsForcing = new double[]{humFinish.getY() + 4.0};
+                        break;
+                    case A3:
+                        ysDownwardsForcing = new double[]{22.5};
+                        break;
                 }
 
-                if (!isUpwards) {
-                    ysUpwardsForcing = ysUpwardsRestoringPriorities = ysUpwardsResumingRobots = new double[] {};
+                if (isManualRestoring) {
+                    Forcing.isResetAfterCurrentCrossroad = false;
+                    switch (traitA) {
+                        case AD:
+                            ysDownwardsRestoringPriorities = ysDownwardsResumingRobots = new double[]{humFinish.getY()};
+                            break;
+                        case AU:
+                            ysDownwardsRestoringPriorities = ysDownwardsResumingRobots = new double[]{humFinish.getY()};
+                            ysUpwardsRestoringPriorities = ysUpwardsResumingRobots = new double[]{humStart.getY()};
+                            break;
+                        case A3:
+                            ysDownwardsRestoringPriorities = ysDownwardsResumingRobots = new double[]{humFinish.getY()};
+                            break;
+                    }
                 }
+
                 if (!isStop) {
                     ysDownwardsResumingRobots = ysUpwardsResumingRobots = new double[] {};
                 }
