@@ -39,14 +39,16 @@ public class AutonomousVehicle extends AbstractVehicle {
     public void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
         String filenameCache = null;
         PoseSteering[] path = null;
-        if (goals.length == 1) {
-            Pose goal = goals[0];
-            String base = poseToString(initial) + "_" + poseToString(goal) + "_" + planningAlgorithm + (inversePath ? "_inv" : "");
 
-            filenameCache = "paths/" + FilenameUtils.getBaseName(map) + "/" + base + ".path";
-            if (new File(filenameCache).isFile()) {
-                path = Missions.loadPathFromFile(filenameCache);
-            }
+        String base = poseToString(initial);
+        for (Pose goal : goals) {
+            base += "_" + poseToString(goal);
+        }
+        base += "_" + planningAlgorithm + (inversePath ? "_inv" : "");
+
+        filenameCache = "paths/" + FilenameUtils.getBaseName(map) + "/" + base + ".path";
+        if (new File(filenameCache).isFile()) {
+            path = Missions.loadPathFromFile(filenameCache);
         }
 
         if (path == null) {

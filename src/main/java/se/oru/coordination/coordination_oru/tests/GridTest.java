@@ -91,8 +91,10 @@ public class GridTest {
     }
 
     protected static void runDemo(String scenarioString) {
+        boolean isCrossMode = false;
+
         if (scenarioString == null) {
-            scenarioString = Scenario.S_3P1C.toString();
+            scenarioString = Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -100,31 +102,32 @@ public class GridTest {
         CriticalSection.isCanPassFirstActive = false;
 
 //        Timekeeper.setVirtualSecondsPassedMax(20 * 60 + 6);
-        Timekeeper.setVirtualMinutesPassedMax(60);
+        Timekeeper.setVirtualMinutesPassedMax(300);
 //        Timekeeper.realMillisPassedMax = 1000 * 60 * 60; // 1h
 
         final boolean ishumLoop = true;
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
-        final Pose humStart = scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? GridMapConstants.column1TopStart : GridMapConstants.column2TopStart;
+        final Pose humStart = isCrossMode ? GridMapConstants.row1LeftStart : scenario == Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1 ? GridMapConstants.column1TopStart : GridMapConstants.column2TopStart;
 //        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
-        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
+        final Pose humMiddle = isCrossMode ? GridMapConstants.column3Row1Down : null;
+        final Pose humFinish = GridMapConstants.turnAround(isCrossMode ? GridMapConstants.row3RightStart : GridMapConstants.column2BottomStart);
 
-        final Pose aut1Start = GridMapConstants.row1LeftStart;
-        final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
+        final Pose aut1Start = isCrossMode ? GridMapConstants.column2TopStart : GridMapConstants.row1LeftStart;
+        final Pose aut1Finish = GridMapConstants.turnAround(isCrossMode ? GridMapConstants.column2BottomStart : GridMapConstants.row1RightStart);
 
         final Pose aut2Start = GridMapConstants.row2LeftStart;
         final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.row2RightStart);
 
-        final Pose aut3Start = GridMapConstants.row3LeftStart;
-        final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.row3RightStart);
+        final Pose aut3Start = isCrossMode ? null : GridMapConstants.row3LeftStart;
+        final Pose aut3Finish = isCrossMode ? null : GridMapConstants.turnAround(GridMapConstants.row3RightStart);
 
-        final Pose aut4Start = GridMapConstants.column1TopStart;
-        final Pose aut4Finish = GridMapConstants.turnAround(GridMapConstants.column1BottomStart);
+        final Pose aut4Start = null;
+        final Pose aut4Finish = null;
 
-        final Pose aut5Start = GridMapConstants.row3LeftStart;
-        final Pose aut5Finish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
+        final Pose aut5Start = null;
+        final Pose aut5Finish = null;
 
         // v = maxVelocityHum = 12 m/s
         // a = -maxAccelerationHum * coefAccelerationToDeceleration = -2 * 3 = -6 m/s^2
@@ -161,9 +164,11 @@ public class GridTest {
         if (scenario != Scenario.BASELINE_AUTOMATED_ONLY) {
             hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum);
         }
-        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, 2, maxAccelerationAut);
-        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, 3, maxAccelerationAut);
-        aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, 4, maxAccelerationAut);
+        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, isCrossMode ? 5 : 2, maxAccelerationAut);
+        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, isCrossMode ? 5 : 3, maxAccelerationAut);
+        if (aut3Start != null) {
+            aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, isCrossMode ? 5 : 4, maxAccelerationAut);
+        }
         //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
         //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
 
@@ -179,9 +184,9 @@ public class GridTest {
         tec.startInference();
 
         if (hum0 != null) hum0.registerInTec(tec, vehicleSizeHum);
-        aut1.registerInTec(tec, vehicleSizeAut1);
-        aut2.registerInTec(tec, vehicleSizeAut2);
-        aut3.registerInTec(tec, vehicleSizeAut3);
+        if (aut1 != null) aut1.registerInTec(tec, vehicleSizeAut1);
+        if (aut2 != null) aut2.registerInTec(tec, vehicleSizeAut2);
+        if (aut3 != null) aut3.registerInTec(tec, vehicleSizeAut3);
 
         if (hum0 != null) tec.placeRobot(hum0.getID(), humStart);
         if (aut1 != null) tec.placeRobot(aut1.getID(), aut1Start);
@@ -220,7 +225,7 @@ public class GridTest {
         if (hum0 != null) Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
         final boolean isInverse = false;
-        if (hum0 != null) Missions.enqueueMissions(hum0, humStart, humFinish, isInverse);
+        if (hum0 != null) Missions.enqueueMissions(hum0, humStart, humMiddle, humFinish, isInverse);
         if (aut1 != null) Missions.enqueueMissions(aut1, aut1Start, aut1Finish, isInverse);
         if (aut2 != null) Missions.enqueueMissions(aut2, aut2Start, aut2Finish, isInverse);
         if (aut3 != null) Missions.enqueueMissions(aut3, aut3Start, aut3Finish, isInverse);

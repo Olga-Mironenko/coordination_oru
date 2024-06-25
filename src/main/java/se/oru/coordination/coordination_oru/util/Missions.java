@@ -564,9 +564,12 @@ public class Missions {
 		missions.get(m.getRobotID()).add(m);
 	}
 
-	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose finish, boolean isInverse, boolean isOneWay) {
+	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose middle, Pose finish, boolean isInverse, boolean isOneWay) {
 		boolean isFinishTurnedAround = false;
 		ArrayList<Pose> goals = new ArrayList<>();
+		if (middle != null) {
+			goals.add(middle);
+		}
 		goals.add(finish);
 		if (isFinishTurnedAround) {
 			goals.add(GridMapConstants.turnAround(finish));
@@ -615,7 +618,11 @@ public class Missions {
 	}
 
 	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose finish, boolean isInverse) {
-		enqueueMissions(vehicle, start, finish, isInverse, false);
+		enqueueMissions(vehicle, start, null, finish, isInverse, false);
+	}
+
+	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose middle, Pose finish, boolean isInverse) {
+		enqueueMissions(vehicle, start, middle, finish, isInverse, false);
 	}
 
 	/**
