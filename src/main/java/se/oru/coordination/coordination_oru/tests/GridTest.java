@@ -18,7 +18,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class GridTest {
-    enum TraitA { AD, A3, AU }
+    enum TraitA { AD, A3, AU, A_DOWN_EVERYWHERE }
     enum TraitB { BP, BS }
 
     enum TraitC { C1, C2, C3, CG }
@@ -31,6 +31,7 @@ public class GridTest {
         BASELINE_AUTOMATED_ONLY,
         BASELINE_IDEAL_DRIVER_HUMAN_FIRST,
         BASELINE_IDEAL_DRIVER_FIRST_COME,
+        FIRST_COME_FORCING_DOWN_EVERYWHERE,
 
         S_DP1C, S_DP1M, S_DP2C, S_DP2M, S_DP3C, S_DP3M, S_DPGC, S_DPGM,
         S_3P1C,
@@ -94,7 +95,7 @@ public class GridTest {
         boolean isCrossMode = false;
 
         if (scenarioString == null) {
-            scenarioString = Scenario.BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST.toString();
+            scenarioString = Scenario.S_US3M.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -207,6 +208,7 @@ public class GridTest {
                 tec.addComparator(heuristics.lowestIDNumber());
                 break;
             case BASELINE_IDEAL_DRIVER_FIRST_COME:
+            case FIRST_COME_FORCING_DOWN_EVERYWHERE:
                 tec.addComparator(heuristics.closest());
                 break;
         }
@@ -248,10 +250,10 @@ public class GridTest {
                     return;
                 }
 
-                TraitA traitA = TraitA.valueOf("A" + scenario.toString().charAt(2));
-                TraitB traitB = TraitB.valueOf("B" + scenario.toString().charAt(3));
-                TraitC traitC = TraitC.valueOf("C" + scenario.toString().charAt(4));
-                TraitD traitD = TraitD.valueOf("D" + scenario.toString().charAt(5));
+                TraitA traitA = scenario == Scenario.FIRST_COME_FORCING_DOWN_EVERYWHERE ? TraitA.A_DOWN_EVERYWHERE : TraitA.valueOf("A" + scenario.toString().charAt(2));
+                TraitB traitB = scenario == Scenario.FIRST_COME_FORCING_DOWN_EVERYWHERE ? TraitB.BP : TraitB.valueOf("B" + scenario.toString().charAt(3));
+                TraitC traitC = scenario == Scenario.FIRST_COME_FORCING_DOWN_EVERYWHERE ? TraitC.C1 : TraitC.valueOf("C" + scenario.toString().charAt(4));
+                TraitD traitD = scenario == Scenario.FIRST_COME_FORCING_DOWN_EVERYWHERE ? TraitD.DC : TraitD.valueOf("D" + scenario.toString().charAt(5));
 
                 assert(Forcing.priorityDistance == Double.NEGATIVE_INFINITY);
                 assert(Forcing.priorityDistanceMin == Double.NEGATIVE_INFINITY);
@@ -289,24 +291,30 @@ public class GridTest {
                 boolean isManualRestoring = traitD == TraitD.DM;
 
                 // Propagate the information:
-                double[] ysDownwardsForcing = new double[]{};
-                double[] ysDownwardsResumingRobots = new double[]{};
-                double[] ysDownwardsRestoringPriorities = new double[]{};
-
-                double[] ysUpwardsForcing = new double[]{};
-                double[] ysUpwardsResumingRobots = new double[]{};
-                double[] ysUpwardsRestoringPriorities = new double[]{};
+                Checkpoint[] checkpointsForcing = new Checkpoint[]{};
+                Checkpoint[] checkpointsResumingRobots = new Checkpoint[]{};
+                Checkpoint[] checkpointsRestoringPriorities = new Checkpoint[]{};
 
                 switch (traitA) {
                     case AD:
-                        ysDownwardsForcing = new double[]{humStart.getY() - 4.0};
+                        checkpointsForcing = new Checkpoint[]{
+                                new Checkpoint(humStart.getY() - 4.0, false, false),
+                        };
                         break;
                     case AU:
-                        ysDownwardsForcing = new double[]{humStart.getY() - 4.0};
-                        ysUpwardsForcing = new double[]{humFinish.getY() + 4.0};
+                        checkpointsForcing = new Checkpoint[]{
+                                new Checkpoint(humStart.getY() - 4.0, false, false),
+                                new Checkpoint(humFinish.getY() + 4.0, false, true),
+                        };
                         break;
                     case A3:
-                        ysDownwardsForcing = new double[]{22.5};
+                        checkpointsForcing = new Checkpoint[]{
+                                new Checkpoint(22.5, false, false),
+                        };
+                        break;
+                    case A_DOWN_EVERYWHERE:
+                        assert isCrossMode;
+                        // TODO
                         break;
                 }
 
@@ -314,20 +322,22 @@ public class GridTest {
                     Forcing.isResetAfterCurrentCrossroad = false;
                     switch (traitA) {
                         case AD:
-                            ysDownwardsRestoringPriorities = ysDownwardsResumingRobots = new double[]{humFinish.getY()};
+                        case A3:
+                            checkpointsRestoringPriorities = checkpointsResumingRobots = new Checkpoint[]{
+                                    new Checkpoint(humFinish.getY(), false, false),
+                            };
                             break;
                         case AU:
-                            ysDownwardsRestoringPriorities = ysDownwardsResumingRobots = new double[]{humFinish.getY()};
-                            ysUpwardsRestoringPriorities = ysUpwardsResumingRobots = new double[]{humStart.getY()};
-                            break;
-                        case A3:
-                            ysDownwardsRestoringPriorities = ysDownwardsResumingRobots = new double[]{humFinish.getY()};
+                            checkpointsRestoringPriorities = checkpointsResumingRobots = new Checkpoint[]{
+                                    new Checkpoint(humFinish.getY(), false, false),
+                                    new Checkpoint(humStart.getY(), false, true),
+                            };
                             break;
                     }
                 }
 
                 if (!isStop) {
-                    ysDownwardsResumingRobots = ysUpwardsResumingRobots = new double[] {};
+                    checkpointsRestoringPriorities = checkpointsResumingRobots = new Checkpoint[] {};
                 }
 
                 // Apply the information:
@@ -338,35 +348,20 @@ public class GridTest {
                     boolean isResumingNow = false;
                     boolean isRestoringNow = false;
 
-                    for (double y : ysDownwardsForcing) {
-                        if (hum0Final.isYPassedDownwards(y)) {
-                            isForcingNow = true;
-                        }
-                    }
-                    for (double y : ysUpwardsForcing) {
-                        if (hum0Final.isYPassedUpwards(y)) {
+                    for (Checkpoint c : checkpointsForcing) {
+                        if (c.isPassed(hum0Final)) {
                             isForcingNow = true;
                         }
                     }
 
-                    for (double y : ysDownwardsResumingRobots) {
-                        if (hum0Final.isYPassedDownwards(y)) {
-                            isResumingNow = true;
-                        }
-                    }
-                    for (double y : ysUpwardsResumingRobots) {
-                        if (hum0Final.isYPassedUpwards(y)) {
+                    for (Checkpoint c : checkpointsResumingRobots) {
+                        if (c.isPassed(hum0Final)) {
                             isResumingNow = true;
                         }
                     }
 
-                    for (double y : ysDownwardsRestoringPriorities) {
-                        if (hum0Final.isYPassedDownwards(y)) {
-                            isRestoringNow = true;
-                        }
-                    }
-                    for (double y : ysUpwardsRestoringPriorities) {
-                        if (hum0Final.isYPassedUpwards(y)) {
+                    for (Checkpoint c : checkpointsRestoringPriorities) {
+                        if (c.isPassed(hum0Final)) {
                             isRestoringNow = true;
                         }
                     }
