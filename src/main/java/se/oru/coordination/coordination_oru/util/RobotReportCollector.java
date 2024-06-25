@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru.util;
 
 import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
+import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -39,7 +40,7 @@ public class RobotReportCollector {
      */
     public void handleRobotReports(TrajectoryEnvelopeCoordinator tec, String folderName, long intervalInSeconds, long terminationInMinutes) {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
+        AtomicLong startTime = new AtomicLong(GatedCalendar.getInstance().getTimeInMillis());
 
         // Convert interval and termination times to milliseconds
         long intervalInMillis = TimeUnit.SECONDS.toMillis(intervalInSeconds);
@@ -65,7 +66,7 @@ public class RobotReportCollector {
                 List<AbstractTrajectoryEnvelopeTracker> trackers = new ArrayList<>(tec.trackers.values());
 
                 // Check if the elapsed time exceeds the specified termination time, and if so, shut down the executor
-                long elapsedTime = System.currentTimeMillis() - startTime.get();
+                long elapsedTime = GatedCalendar.getInstance().getTimeInMillis() - startTime.get();
                 if (elapsedTime >= terminationInMillis) {
                     executor.shutdown();
                     return;

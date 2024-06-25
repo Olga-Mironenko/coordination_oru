@@ -7,6 +7,7 @@ import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.Forcing;
+import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 
 import java.awt.*;
 import java.io.BufferedWriter;
@@ -39,7 +40,7 @@ public abstract class AbstractVehicle {
     private final double yLength;
     private Coordinate[] footprint;
     public Coordinate[] innerFootprint = null;
-    private final double startTime = System.nanoTime();
+    private final double startTime = GatedCalendar.getInstance().getTimeInMillis();
     private Color color;
     private Color colorInMotion;
     public RobotReport currentRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, 0.0, -1);
@@ -171,7 +172,7 @@ public abstract class AbstractVehicle {
         if ((this.currentRobotReport.getPathIndex() == -1) && (this.lastRobotReport.getPathIndex() != -1))
             this.cycles++;
 
-        double totalTimeNew = round(System.nanoTime() - startTime) / 1_000_000_000;
+        double totalTimeNew = (GatedCalendar.getInstance().getTimeInMillis() - startTime) / 1000;
         double delta = totalTimeNew - totalTime;
         this.totalTime = totalTimeNew;
 
