@@ -66,6 +66,21 @@ public class Heuristics {
         return (o1, o2) -> o2.getRobotReport().getRobotID() - o1.getRobotReport().getRobotID();
     }
 
+    private static boolean isHuman(RobotAtCriticalSection robotAtCriticalSection) {
+        AbstractVehicle vehicle = VehiclesHashMap.getVehicle(robotAtCriticalSection.getRobotReport().getRobotID());
+        return vehicle instanceof HumanDrivenVehicle;
+    }
+
+    public Comparator<RobotAtCriticalSection> humanFirst() {
+        heuristicName = "HUMAN_FIRST";
+        return (o1, o2) -> (isHuman(o2) ? 1 : 0) - (isHuman(o1) ? 1 : 0);
+    }
+
+    public Comparator<RobotAtCriticalSection> automatedFirst() {
+        heuristicName = "AUTOMATED_FIRST";
+        return (o1, o2) -> (isHuman(o2) ? 0 : 1) - (isHuman(o1) ? 0 : 1);
+    }
+
     /**
      * Returns a comparator for determining the order based on the robot with the highest precedence value.
      *

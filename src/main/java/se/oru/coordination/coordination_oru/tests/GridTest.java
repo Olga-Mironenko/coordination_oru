@@ -18,7 +18,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class GridTest {
-    enum TraitA { AD, A3, AU, A_DOWN_EVERYWHERE }
+    enum TraitA { AD, A3, AU, A_DOWN_EVERYWHERE, A_DOWN_UP_EVERYWHERE }
     enum TraitB { BP, BS }
 
     enum TraitC { C1, C2, C3, CG }
@@ -31,7 +31,11 @@ public class GridTest {
         BASELINE_AUTOMATED_ONLY,
         BASELINE_IDEAL_DRIVER_HUMAN_FIRST,
         BASELINE_IDEAL_DRIVER_FIRST_COME,
-        FIRST_COME_FORCING_DOWN_EVERYWHERE,
+
+        CROSS_FIRST_COME_FORCING_DOWN_EVERYWHERE,
+        CROSS_AUTOMATED_FIRST_FORCING_DOWN_EVERYWHERE,
+        CROSS_FIRST_COME_FORCING_DOWN_UP_EVERYWHERE,
+        CROSS_AUTOMATED_FIRST_FORCING_DOWN_UP_EVERYWHERE,
 
         S_DP1C, S_DP1M, S_DP2C, S_DP2M, S_DP3C, S_DP3M, S_DPGC, S_DPGM,
         S_3P1C,
@@ -92,10 +96,11 @@ public class GridTest {
     }
 
     protected static void runDemo(String scenarioString) {
-        boolean isCrossMode = false;
+        // Settings
+        boolean isCrossMode = true;
 
         if (scenarioString == null) {
-            scenarioString = Scenario.S_US3M.toString();
+            scenarioString = Scenario.CROSS_AUTOMATED_FIRST_FORCING_DOWN_EVERYWHERE.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -164,6 +169,8 @@ public class GridTest {
         // TODO: `maxAcceleration` passed here is not used by `tec`.
         if (scenario != Scenario.BASELINE_AUTOMATED_ONLY) {
             hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum);
+        } else if (isCrossMode) {
+            hum0 = new AutonomousVehicle(0, 0, Color.YELLOW, Color.YELLOW, isCrossMode ? 5 : 2, maxAccelerationAut);
         }
         aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, isCrossMode ? 5 : 2, maxAccelerationAut);
         aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, isCrossMode ? 5 : 3, maxAccelerationAut);
@@ -200,15 +207,20 @@ public class GridTest {
         switch (scenario) {
             case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST_COL1:
             case BASELINE_IDEAL_DRIVER_AUTOMATED_FIRST:
-            case BASELINE_AUTOMATED_ONLY:
+            case CROSS_AUTOMATED_FIRST_FORCING_DOWN_EVERYWHERE:
+            case CROSS_AUTOMATED_FIRST_FORCING_DOWN_UP_EVERYWHERE:
             default:
-                tec.addComparator(heuristics.highestIDNumber());
+                tec.addComparator(heuristics.automatedFirst());
+                tec.addComparator(heuristics.closest());
                 break;
             case BASELINE_IDEAL_DRIVER_HUMAN_FIRST:
-                tec.addComparator(heuristics.lowestIDNumber());
+                tec.addComparator(heuristics.humanFirst());
+                tec.addComparator(heuristics.closest());
                 break;
             case BASELINE_IDEAL_DRIVER_FIRST_COME:
-            case FIRST_COME_FORCING_DOWN_EVERYWHERE:
+            case BASELINE_AUTOMATED_ONLY:
+            case CROSS_FIRST_COME_FORCING_DOWN_EVERYWHERE:
+            case CROSS_FIRST_COME_FORCING_DOWN_UP_EVERYWHERE:
                 tec.addComparator(heuristics.closest());
                 break;
         }
@@ -250,10 +262,32 @@ public class GridTest {
                     return;
                 }
 
-                TraitA traitA = scenario == Scenario.FIRST_COME_FORCING_DOWN_EVERYWHERE ? TraitA.A_DOWN_EVERYWHERE : TraitA.valueOf("A" + scenario.toString().charAt(2));
-                TraitB traitB = scenario == Scenario.FIRST_COME_FORCING_DOWN_EVERYWHERE ? TraitB.BP : TraitB.valueOf("B" + scenario.toString().charAt(3));
-                TraitC traitC = scenario == Scenario.FIRST_COME_FORCING_DOWN_EVERYWHERE ? TraitC.C1 : TraitC.valueOf("C" + scenario.toString().charAt(4));
-                TraitD traitD = scenario == Scenario.FIRST_COME_FORCING_DOWN_EVERYWHERE ? TraitD.DC : TraitD.valueOf("D" + scenario.toString().charAt(5));
+                TraitA traitA;
+                TraitB traitB;
+                TraitC traitC;
+                TraitD traitD;
+                switch (scenario) {
+                    case CROSS_FIRST_COME_FORCING_DOWN_EVERYWHERE:
+                    case CROSS_AUTOMATED_FIRST_FORCING_DOWN_EVERYWHERE:
+                        traitA = TraitA.A_DOWN_EVERYWHERE;
+                        traitB = TraitB.BP;
+                        traitC = TraitC.C1;
+                        traitD = TraitD.DC;
+                        break;
+                    case CROSS_FIRST_COME_FORCING_DOWN_UP_EVERYWHERE:
+                    case CROSS_AUTOMATED_FIRST_FORCING_DOWN_UP_EVERYWHERE:
+                        traitA = TraitA.A_DOWN_UP_EVERYWHERE;
+                        traitB = TraitB.BP;
+                        traitC = TraitC.C1;
+                        traitD = TraitD.DC;
+                        break;
+                    default:
+                        traitA = TraitA.valueOf("A" + scenario.toString().charAt(2));
+                        traitB = TraitB.valueOf("B" + scenario.toString().charAt(3));
+                        traitC = TraitC.valueOf("C" + scenario.toString().charAt(4));
+                        traitD = TraitD.valueOf("D" + scenario.toString().charAt(5));
+                        break;
+                }
 
                 assert(Forcing.priorityDistance == Double.NEGATIVE_INFINITY);
                 assert(Forcing.priorityDistanceMin == Double.NEGATIVE_INFINITY);
@@ -297,24 +331,39 @@ public class GridTest {
 
                 switch (traitA) {
                     case AD:
+                        assert ! isCrossMode;
                         checkpointsForcing = new Checkpoint[]{
                                 new Checkpoint(humStart.getY() - 4.0, false, false),
                         };
                         break;
                     case AU:
+                        assert ! isCrossMode;
                         checkpointsForcing = new Checkpoint[]{
                                 new Checkpoint(humStart.getY() - 4.0, false, false),
                                 new Checkpoint(humFinish.getY() + 4.0, false, true),
                         };
                         break;
                     case A3:
+                        assert ! isCrossMode;
                         checkpointsForcing = new Checkpoint[]{
                                 new Checkpoint(22.5, false, false),
                         };
                         break;
                     case A_DOWN_EVERYWHERE:
                         assert isCrossMode;
-                        // TODO
+                        checkpointsForcing = new Checkpoint[]{
+                                new Checkpoint(25.95 - vehicleSizeHum.length, true, true),
+                                new Checkpoint(34.05 + vehicleSizeHum.length, false, false),
+                        };
+                        break;
+                    case A_DOWN_UP_EVERYWHERE:
+                        assert isCrossMode;
+                        checkpointsForcing = new Checkpoint[]{
+                                new Checkpoint(25.95 - vehicleSizeHum.length, true, true),
+                                new Checkpoint(34.05 + vehicleSizeHum.length, false, false),
+                                new Checkpoint(25.76 - vehicleSizeHum.length, false, true),
+                                new Checkpoint(33.95 + vehicleSizeHum.length, true, false),
+                        };
                         break;
                 }
 
