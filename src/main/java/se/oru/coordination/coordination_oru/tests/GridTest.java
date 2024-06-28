@@ -100,7 +100,7 @@ public class GridTest {
         boolean isCrossMode = true;
 
         if (scenarioString == null) {
-            scenarioString = Scenario.CROSS_AUTOMATED_FIRST_FORCING_DOWN_EVERYWHERE.toString();
+            scenarioString = Scenario.CROSS_FIRST_COME_FORCING_DOWN_UP_EVERYWHERE.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -108,7 +108,7 @@ public class GridTest {
         CriticalSection.isCanPassFirstActive = false;
 
 //        Timekeeper.setVirtualSecondsPassedMax(20 * 60 + 6);
-        Timekeeper.setVirtualMinutesPassedMax(300);
+        Timekeeper.setVirtualMinutesPassedMax(60);
 //        Timekeeper.realMillisPassedMax = 1000 * 60 * 60; // 1h
 
         final boolean ishumLoop = true;
@@ -140,7 +140,7 @@ public class GridTest {
         // => timeToStop = 2 s (-6 m/s^2 * 2 s = -12 m/s)
         // avg. speed (while stopping): vAvg = maxVelocityHum / 2 = 6 m/s
         // => distanceToStop = timeToStop * vAvg = 12 m
-        final double maxVelocityHum = 5.0;
+        final double maxVelocityHum = 5;
         final double maxAccelerationHum = 0.3;
         final double maxAccelerationAut = 0.3;
         final int trackingPeriod = 100; // ms
@@ -166,16 +166,19 @@ public class GridTest {
         AutonomousVehicle aut4 = null;
         AutonomousVehicle aut5 = null;
 
+        Color colorHum = Color.ORANGE;
+        Color colorAut = Color.BLUE; // light blue: new Color(147, 187, 230)
+
         // TODO: `maxAcceleration` passed here is not used by `tec`.
         if (scenario != Scenario.BASELINE_AUTOMATED_ONLY) {
-            hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHum, maxAccelerationHum);
+            hum0 = new HumanDrivenVehicle(0, colorHum, colorHum, maxVelocityHum, maxAccelerationHum);
         } else if (isCrossMode) {
-            hum0 = new AutonomousVehicle(0, 0, Color.YELLOW, Color.YELLOW, isCrossMode ? 5 : 2, maxAccelerationAut);
+            hum0 = new AutonomousVehicle(0, 0, colorAut, colorAut, isCrossMode ? maxVelocityHum : 2, maxAccelerationAut);
         }
-        aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, isCrossMode ? 5 : 2, maxAccelerationAut);
-        aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, isCrossMode ? 5 : 3, maxAccelerationAut);
+        aut1 = new AutonomousVehicle(1, 0, colorAut, colorAut, isCrossMode ? 5 : 2, maxAccelerationAut);
+        aut2 = new AutonomousVehicle(2, 0, colorAut, colorAut, isCrossMode ? 5 : 3, maxAccelerationAut);
         if (aut3Start != null) {
-            aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, isCrossMode ? 5 : 4, maxAccelerationAut);
+            aut3 = new AutonomousVehicle(3, 0, colorAut, colorAut, isCrossMode ? 5 : 4, maxAccelerationAut);
         }
         //aut4 = new AutonomousVehicle(4, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);
         //aut5 = new AutonomousVehicle(5, 0, Color.YELLOW, Color.YELLOW, maxVelocityAut, maxAccelerationAut, xLength, yLength);

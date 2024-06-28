@@ -30,6 +30,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 
+import se.oru.coordination.coordination_oru.CollisionEvent;
 import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.RobotReport;
@@ -48,6 +49,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 	public static boolean isStatusText = false;
 	public static boolean isExtendedText = false;
+	public static boolean isCollisionInfo = false;
 
 	public BrowserVisualization() {
 		this("localhost", 30);
@@ -273,16 +275,16 @@ public class BrowserVisualization implements FleetVisualization {
 		return (double) Math.round(value * 10) / 10;
 	}
 
-	protected static String secondsToHMS(int seconds) {
-		int time = seconds;
+	public static String secondsToHMS(long seconds) {
+		long time = seconds;
 
-		int s = time % 60;
+		long s = time % 60;
 		time /= 60;
 
-		int m = time % 60;
+		long m = time % 60;
 		time /= 60;
 
-		int h = time;
+		long h = time;
 
 		return String.format("%d:%02d:%02d", h, m, s);
 	}
@@ -302,6 +304,7 @@ public class BrowserVisualization implements FleetVisualization {
 //					Timekeeper.getRealMillisPassed() / 1000.0
 //			);
 
+			text += String.format("Current datetime: %s<br>", java.time.LocalDateTime.now().toString().replace('T', ' '));
 			text += String.format("Time passed (real): %s<br>", secondsToHMS(Timekeeper.getRealMillisPassed() / 1000));
 			text += String.format("Time passed (sim.): %s<br>", secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000));
 		}
@@ -376,13 +379,24 @@ public class BrowserVisualization implements FleetVisualization {
 
 			text += "; traveled " + round(vehicle.totalDistance) + " m";
 
-			int numAllCollisions = tec.robotIDToAllCollisions.getOrDefault(id, new ArrayList<>()).size();
-			int numMajorCollisions = tec.robotIDToMajorCollisions.getOrDefault(id, new ArrayList<>()).size();
-			int numMinorCollisions = numAllCollisions - numMajorCollisions;
-			text += String.format("; collision events: %d minor, %d major", numMinorCollisions, numMajorCollisions);
+			List<CollisionEvent> allCollisions = tec.robotIDToAllCollisions.getOrDefault(id, new ArrayList<>());
+			List<CollisionEvent> minorCollisions = tec.robotIDToMinorCollisions.getOrDefault(id, new ArrayList<>());
+			List<CollisionEvent> majorCollisions = tec.robotIDToMajorCollisions.getOrDefault(id, new ArrayList<>());
+
+			assert allCollisions.size() == minorCollisions.size() + majorCollisions.size();
+
+			text += String.format("; collision events: %d minor, %d major", minorCollisions.size(), majorCollisions.size());
 
 			text += "; " + stringifyMissions(Missions.getMissions(id));
 			text += "<br>";
+
+			if (isCollisionInfo) {
+				if (allCollisions.size() != 0) {
+					for (CollisionEvent ce : allCollisions) {
+						text += "- " + ce.toCompactString(rr.getRobotID()) + "<br>";
+					}
+				}
+			}
 		}
 		if (isExtendedText) {
 //			text += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";

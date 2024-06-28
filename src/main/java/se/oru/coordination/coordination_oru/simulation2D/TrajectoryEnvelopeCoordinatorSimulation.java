@@ -36,6 +36,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	public ArrayList<CollisionEvent> allCollisionsList = new ArrayList<CollisionEvent>();
 	public ArrayList<CollisionEvent> majorCollisionsList = new ArrayList<CollisionEvent>();
 	public HashMap<Integer, List<CollisionEvent>> robotIDToAllCollisions = new HashMap<>();
+	public HashMap<Integer, List<CollisionEvent>> robotIDToMinorCollisions = new HashMap<>();
 	public HashMap<Integer, List<CollisionEvent>> robotIDToMajorCollisions = new HashMap<>();
 	protected Thread collisionThread = null;
 
@@ -407,7 +408,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 		return allCollisionsList.size();
 	}
 
-	protected int findCSinCollisionsList(CriticalSection cs, ArrayList<CollisionEvent> collisionsList) {
+	protected int findCSinCollisionsList(CriticalSection cs, List<CollisionEvent> collisionsList) {
 		for (int i = 0; i < collisionsList.size(); i++) {
 			if (collisionsList.get(i).cs == cs) {
 				return i;
@@ -510,18 +511,32 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 									}
 
 									metaCSPLogger.info(" * NEW COLLISION *");
-									CollisionEvent ce = new CollisionEvent(GatedCalendar.getInstance().getTimeInMillis(), robotReport1, robotReport2, cs);
+									CollisionEvent ce = new CollisionEvent(GatedCalendar.getInstance().getTimeInMillis(), robotReport1, robotReport2, cs, isMajor);
 
 									collisionsList.add(ce);
 
 									HashMap<Integer, List<CollisionEvent>> robotIDToCollisions = isMajor ? robotIDToMajorCollisions : robotIDToAllCollisions;
 									for (int robotID : Arrays.asList(cs.getTe1RobotID(), cs.getTe2RobotID())) {
+										// Prepare a list of collisions:
 										if (! robotIDToCollisions.containsKey(robotID)) {
-											robotIDToCollisions.put(robotID, new ArrayList<CollisionEvent>());
+											robotIDToCollisions.put(robotID, new ArrayList<>());
+											if (! isMajor) {
+												robotIDToMinorCollisions.put(robotID, new ArrayList<>());
+											}
 										}
-										List<CollisionEvent> collisions = robotIDToCollisions.get(robotID);
 
-										collisions.add(ce);
+										// Add the collision:
+										robotIDToCollisions.get(robotID).add(ce);
+										if (! isMajor) {
+											robotIDToMinorCollisions.get(robotID).add(ce);
+										}
+
+										if (isMajor) {
+											// Remove the corresponding minor collision:
+											int index = findCSinCollisionsList(cs, robotIDToMinorCollisions.get(robotID));
+											assert index != -1;
+											robotIDToMinorCollisions.get(robotID).remove(index);
+										}
 									}
 								}
 							}
