@@ -533,9 +533,17 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 
 										if (isMajor) {
 											// Remove the corresponding minor collision:
-											int index = findCSinCollisionsList(cs, robotIDToMinorCollisions.get(robotID));
-											assert index != -1;
-											robotIDToMinorCollisions.get(robotID).remove(index);
+											int indexMinor = findCSinCollisionsList(cs, robotIDToMinorCollisions.get(robotID));
+											assert indexMinor != -1;
+											robotIDToMinorCollisions.get(robotID).remove(indexMinor);
+
+											// Change the type of the corresponding minor collision:
+											int indexAdd = findCSinCollisionsList(cs, robotIDToAllCollisions.get(robotID));
+											assert indexAdd != -1;
+											CollisionEvent ceAll = robotIDToAllCollisions.get(robotID).get(indexAdd);
+											if (! ceAll.isMajor) {
+												ceAll.isMajor = true;
+											}
 										}
 									}
 								}

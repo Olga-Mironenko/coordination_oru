@@ -390,7 +390,7 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "; " + stringifyMissions(Missions.getMissions(id));
 			text += "<br>";
 
-			if (isCollisionInfo) {
+			if (isCollisionInfo && id != HumanControl.idHuman) {
 				if (allCollisions.size() != 0) {
 					for (CollisionEvent ce : allCollisions) {
 						text += "- " + ce.toCompactString(rr.getRobotID()) + "<br>";

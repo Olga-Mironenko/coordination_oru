@@ -191,6 +191,7 @@ public class GridTest {
         AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 0, 0, trackingPeriod);
+        tec.robotIDToParkingDuration.put(0, -10000); // -1000 means a random value in the range 0..1000 ms
         tec.setupSolver(0, 100000000);
         tec.startInference();
 

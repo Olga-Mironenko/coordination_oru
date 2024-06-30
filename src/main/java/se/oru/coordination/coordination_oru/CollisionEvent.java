@@ -60,10 +60,10 @@ public class CollisionEvent {
 		int index;
 		if (reports[0].getRobotID() == robotID) {
 			assert reports[1].getRobotID() != robotID;
-			index = 0;
+			index = 1;
 		} else {
 			assert reports[1].getRobotID() == robotID;
-			index = 1;
+			index = 0;
 		}
 
 		return String.format("%s collision @ %s: %s",

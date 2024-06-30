@@ -66,7 +66,10 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	//Force printing of (c) and license upon class loading
 	static { printLicense(); }
 
-	public static final int PARKING_DURATION = 3000;
+	public HashMap<Integer, Integer> robotIDToParkingDuration = new HashMap<>();
+	public int DEFAULT_PARKING_DURATION = 0;
+	protected Random randomForParking = new Random(1);
+
 	protected static final int DEFAULT_STOPPING_TIME = 5000;
 	protected int DEFAULT_ROBOT_TRACKING_PERIOD = 30;
 	protected int CONTROL_PERIOD;
@@ -663,6 +666,14 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		this.placeRobot(robotID, null, parking, null);
 	}
 
+	public int getParkingDuration(int robotID) {
+		int duration = robotIDToParkingDuration.getOrDefault(robotID, DEFAULT_PARKING_DURATION);
+		if (duration >= 0) {
+			return duration;
+		}
+		return randomForParking.nextInt(-duration);
+	}
+
 	/**
 	 * Place a robot with a given ID in a given {@link Pose} of a given {@link TrajectoryEnvelope},
 	 * labeled with a given string.
@@ -683,7 +694,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 			long time = getCurrentTimeInMillis();
 
 			//Can provide null parking or null currentPose, but not both
-			if (parking == null) parking = solver.createParkingEnvelope(robotID, PARKING_DURATION, currentPose, location, getFootprint(robotID));
+			if (parking == null) parking = solver.createParkingEnvelope(robotID, getParkingDuration(robotID), currentPose, location, getFootprint(robotID));
 			else currentPose = parking.getTrajectory().getPose()[0];
 
 			this.isDriving.put(robotID,false);
@@ -1444,7 +1455,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				}
 				final TrajectoryEnvelope startParking = startParkingTracker.getTrajectoryEnvelope();
 				//Create end parking envelope
-				final TrajectoryEnvelope endParking = solver.createParkingEnvelope(te.getRobotID(), PARKING_DURATION, te.getTrajectory().getPose()[te.getTrajectory().getPose().length-1], "whatever", getFootprint(te.getRobotID()));
+				final TrajectoryEnvelope endParking = solver.createParkingEnvelope(te.getRobotID(), getParkingDuration(te.getRobotID()), te.getTrajectory().getPose()[te.getTrajectory().getPose().length-1], "whatever", getFootprint(te.getRobotID()));
 
 				//Driving meets final parking
 				AllenIntervalConstraint meets1 = new AllenIntervalConstraint(AllenIntervalConstraint.Type.Meets);
