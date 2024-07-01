@@ -100,7 +100,7 @@ public class GridTest {
         boolean isCrossMode = true;
 
         if (scenarioString == null) {
-            scenarioString = Scenario.CROSS_FIRST_COME_FORCING_DOWN_UP_EVERYWHERE.toString();
+            scenarioString = Scenario.CROSS_AUTOMATED_FIRST_FORCING_DOWN_UP_EVERYWHERE.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);

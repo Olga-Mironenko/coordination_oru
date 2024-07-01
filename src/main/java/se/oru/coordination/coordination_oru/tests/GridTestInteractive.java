@@ -29,7 +29,7 @@ public class GridTestInteractive {
     }
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.AUTOMATED_FIRST.toString();
+            scenarioString = Scenario.HUMAN_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -77,7 +77,7 @@ public class GridTestInteractive {
 //        AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.SPARS; // too slow
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.BLUE, Color.BLUE, maxVelocityHum, maxAccelerationHum);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.ORANGE, Color.ORANGE, maxVelocityHum, maxAccelerationHum);
         AutonomousVehicle aut1 = new AutonomousVehicle(1, 0, Color.BLUE, Color.BLUE, 5, maxAccelerationAut);
         AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.BLUE, Color.BLUE, 5, maxAccelerationAut);
         AutonomousVehicle aut3 = new AutonomousVehicle(3, 0, Color.BLUE, Color.BLUE, 5, maxAccelerationAut);

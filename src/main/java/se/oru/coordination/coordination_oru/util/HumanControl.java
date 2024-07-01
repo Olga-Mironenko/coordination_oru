@@ -8,6 +8,7 @@ import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
@@ -98,6 +99,12 @@ public class HumanControl {
             double maxVelocityNew = Math.max(0.0, maxVelocityOld + delta);
             if (maxVelocityNew != maxVelocityOld) {
                 vehicleHuman.setMaxVelocity(maxVelocityNew);
+
+                AbstractTrajectoryEnvelopeTracker tracker = TrajectoryEnvelopeCoordinatorSimulation.tec.trackers.get(idHuman);
+                if (! (tracker instanceof TrajectoryEnvelopeTrackerDummy)) {
+                    assert tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4;
+                    ((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).onTrajectoryEnvelopeUpdate();
+                }
 
                 /* // It sometimes causes an infinite loop inside Meta-CSP.
                 PoseSteering[] currentPath = getCurrentPath(robotID);

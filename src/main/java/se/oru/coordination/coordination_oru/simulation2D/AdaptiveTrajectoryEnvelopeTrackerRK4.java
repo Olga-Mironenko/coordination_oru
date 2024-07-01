@@ -130,7 +130,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	@Override
-	protected void onTrajectoryEnvelopeUpdate() {
+	public void onTrajectoryEnvelopeUpdate() {
 		synchronized(reportsList) { //FIXME not ok, all the mutex should be changed
 			this.totalDistance = this.computeDistance(0, traj.getPose().length-1);
 			this.overallDistance = totalDistance;
