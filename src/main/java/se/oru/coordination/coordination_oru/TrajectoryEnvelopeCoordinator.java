@@ -1077,13 +1077,32 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			metaCSPLogger.info("Attempting to re-plan path of Robot" + robotID + " (with obstacles for robots " + otherRobotIDs.toString() + ", from " + 
 					currentWaitingPose + ", to " + currentWaitingGoal + ")...");
 			AbstractMotionPlanner mp = null;
-			if (this.motionPlanners.containsKey(robotID)) mp = this.motionPlanners.get(robotID);
+			if (this.motionPlanners.containsKey(robotID)) mp = this.motionPlanners.get(robotID).getCopy(false);
 			else {
 				metaCSPLogger.severe("Motion planner is not initialized for Robot" + robotID + ", cannot replan");
 				continue;
 			}
 			synchronized (mp) {
-				PoseSteering[] newPath = doReplanning(mp, currentWaitingPose, currentWaitingGoal, obstacles);
+				PoseSteering[] newPath = null;
+//				for (double shift = 0; shift < 2 * Math.PI; shift += Math.PI / 2) {
+//					Pose start = new Pose(currentWaitingPose.getX() - 1, currentWaitingPose.getY(), currentWaitingPose.getTheta() + shift);
+//					newPath = doReplanning(mp, start, currentWaitingGoal, obstacles);
+//					if (newPath != null) {
+//						break;
+//					}
+//				}
+				for (int dy : List.of(0, -1, 1)) {
+					for (int dx : List.of(0, -1, 1)) {
+						Pose start = new Pose(currentWaitingPose.getX() + dx, currentWaitingPose.getY() + dy, currentWaitingPose.getTheta());
+						newPath = doReplanning(mp, start, currentWaitingGoal, obstacles);
+						if (newPath != null) {
+							break;
+						}
+					}
+					if (newPath != null) {
+						break;
+					}
+				}
 				replanningTrialsCounter.incrementAndGet();
 				if (newPath != null && newPath.length > 0) {
 					PoseSteering[] newCompletePath = new PoseSteering[newPath.length+currentWaitingIndex];

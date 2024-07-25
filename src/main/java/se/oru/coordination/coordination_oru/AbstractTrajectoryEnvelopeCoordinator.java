@@ -891,7 +891,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		return this.getRobotReport(robotID).getPathIndex() == -1;
 	}
 
-	protected Geometry[] getObstaclesInCriticalPoints(int ... robotIDs) {
+	public Geometry[] getObstaclesInCriticalPoints(int ... robotIDs) {
 		//Compute one obstacle per given robot, placed in the robot's waiting pose
 		ArrayList<Geometry> ret = new ArrayList<Geometry>();
 		for (int robotID : robotIDs) {

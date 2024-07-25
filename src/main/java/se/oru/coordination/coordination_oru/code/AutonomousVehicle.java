@@ -15,7 +15,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class AutonomousVehicle extends AbstractVehicle {
-    public static boolean isPathCachingEnabled = false;
+    public static boolean isPathCachingEnabled = true;
     public static ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect;
 
     public AutonomousVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
@@ -70,6 +70,18 @@ public class AutonomousVehicle extends AbstractVehicle {
         if (path == null) {
             var rsp = makePlanner(map, getFootprint());
             TrajectoryEnvelopeCoordinatorSimulation.tec.setMotionPlanner(this.getID(), rsp);
+//
+//            HashSet<Integer> otherRobotIDs = new HashSet<Integer>();
+//            for (int otherRobotID : VehiclesHashMap.getList().keySet()) {
+//                if (otherRobotID != getID()) {
+//                    otherRobotIDs.add(otherRobotID);
+//                }
+//            }
+//            if (!otherRobotIDs.isEmpty()) {
+//                TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+//                rsp.addObstacles(tec.getObstaclesInCriticalPoints(ArrayUtils.toPrimitive(otherRobotIDs.toArray(new Integer[otherRobotIDs.size()]))));
+//            }
+
 
             PoseSteering[] pathFwd;
             PoseSteering[] pathInv;
