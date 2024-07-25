@@ -1,10 +1,12 @@
 package se.oru.coordination.coordination_oru.code;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.NoPathFoundError;
 
@@ -13,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class AutonomousVehicle extends AbstractVehicle {
+    public static boolean isPathCachingEnabled = false;
     public static ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect;
 
     public AutonomousVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
@@ -35,6 +38,17 @@ public class AutonomousVehicle extends AbstractVehicle {
         super(vehicleNumber, 1, Color.YELLOW, null, 5, 2, 0.5, 0.5);
     }
 
+    public static ReedsSheppCarPlanner makePlanner(String map, Coordinate[] footprint) {
+        var rsp = new ReedsSheppCarPlanner(planningAlgorithm);
+        rsp.setMap(map);
+        rsp.setRadius(0.01);
+        rsp.setPlanningTimeInSecs(60);
+        rsp.setFootprint(footprint);
+        rsp.setTurningRadius(0.01);
+        rsp.setDistanceBetweenPathPoints(0.1);
+        return rsp;
+    }
+
     @Override
     public void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
         String filenameCache = null;
@@ -46,19 +60,16 @@ public class AutonomousVehicle extends AbstractVehicle {
         }
         base += "_" + planningAlgorithm + (inversePath ? "_inv" : "");
 
-        filenameCache = "paths/" + FilenameUtils.getBaseName(map) + "/" + base + ".path";
-        if (new File(filenameCache).isFile()) {
-            path = Missions.loadPathFromFile(filenameCache);
+        if (isPathCachingEnabled) {
+            filenameCache = "paths/" + FilenameUtils.getBaseName(map) + "/" + base + ".path";
+            if (new File(filenameCache).isFile()) {
+                path = Missions.loadPathFromFile(filenameCache);
+            }
         }
 
         if (path == null) {
-            var rsp = new ReedsSheppCarPlanner(planningAlgorithm);
-            rsp.setMap(map);
-            rsp.setRadius(0.01);
-            rsp.setPlanningTimeInSecs(60);
-            rsp.setFootprint(super.getFootprint());
-            rsp.setTurningRadius(0.01);
-            rsp.setDistanceBetweenPathPoints(0.1);
+            var rsp = makePlanner(map, getFootprint());
+            TrajectoryEnvelopeCoordinatorSimulation.tec.setMotionPlanner(this.getID(), rsp);
 
             PoseSteering[] pathFwd;
             PoseSteering[] pathInv;
@@ -101,7 +112,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         rsp.setMap(map);
         rsp.setRadius(radius);
         rsp.setPlanningTimeInSecs(planningTime);
-        rsp.setFootprint(super.getFootprint());
+        rsp.setFootprint(getFootprint());
         rsp.setTurningRadius(turningRadius);
         rsp.setDistanceBetweenPathPoints(distanceBetweenPathPoints);
 

@@ -52,6 +52,8 @@ import static se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelo
  */
 public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEnvelopeCoordinator {
 
+	public static boolean isCheckingStoppingPoints = false;
+
 	//@note: currentOrdersGraph and currentCyclesList should be synchronized with allCriticalSection variable.
 	protected SimpleDirectedWeightedGraph<Integer,DefaultWeightedEdge> currentOrdersGraph = new SimpleDirectedWeightedGraph<Integer,DefaultWeightedEdge>(DefaultWeightedEdge.class);
 	protected HashMap<Pair<Integer,Integer>, HashSet<ArrayList<Integer>>> currentCyclesList = new HashMap<Pair<Integer,Integer>, HashSet<ArrayList<Integer>>>();
@@ -1026,7 +1028,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	 * @param robotsAsObstacles The set of robots to consider as additional obstacles while re-planning (only if they have a critical point).
 	 * @param useStaticReplan <code>true</code> iff all robotsToReplan should yield in their current critical point before starting the re-plan.
 	 */
-	protected boolean rePlanPath(Set<Integer> robotsToReplan, Set<Integer> robotsAsObstacles) {
+	public boolean rePlanPath(Set<Integer> robotsToReplan, Set<Integer> robotsAsObstacles) {
 		boolean ret = false;
 
 		for (int robotID : robotsToReplan) {
@@ -1041,7 +1043,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			synchronized (getCurrentDependencies()) {
 				HashMap<Integer, Dependency> currentDeps = getCurrentDependencies();
 				Dependency dep = null;
-				if (robotsToReplan.size() == 1) {
+				if (isCheckingStoppingPoints && robotsToReplan.size() == 1) {
 					synchronized(replanningStoppingPoints) {
 						if (!replanningStoppingPoints.containsKey(robotID)) {
 							metaCSPLogger.info("Invalid replan " + robotID + " ... ");

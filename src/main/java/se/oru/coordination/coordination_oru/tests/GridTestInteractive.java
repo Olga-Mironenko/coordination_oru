@@ -29,7 +29,7 @@ public class GridTestInteractive {
     }
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.HUMAN_FIRST.toString();
+            scenarioString = Scenario.FIRST_COME.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -47,13 +47,13 @@ public class GridTestInteractive {
 
 //        final Pose humStart = GridMapConstants.column2Top;
 //        final Pose humStart = GridMapConstants.column2Row1;
-        final Pose humStart = GridMapConstants.column1TopStart;
+        final Pose humStart = GridMapConstants.column1Row1Down;
 //        final Pose humFinish = GridMapConstants.column2Bottom;
 //        final Pose humFinish = GridMapConstants.column2Row2;
-        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
+        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.column2Row1Down);
 
-        final Pose aut1Start = GridMapConstants.row1LeftStart;
-        final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
+        final Pose aut1Start = GridMapConstants.row1RightStart;
+        final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.row1LeftStart);
 
         final Pose aut2Start = GridMapConstants.row2LeftStart;
         final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.row2RightStart);
@@ -77,7 +77,7 @@ public class GridTestInteractive {
 //        AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.SPARS; // too slow
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.ORANGE, Color.ORANGE, maxVelocityHum, maxAccelerationHum);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.BLUE, Color.BLUE, maxVelocityHum, maxAccelerationHum);
         AutonomousVehicle aut1 = new AutonomousVehicle(1, 0, Color.BLUE, Color.BLUE, 5, maxAccelerationAut);
         AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.BLUE, Color.BLUE, 5, maxAccelerationAut);
         AutonomousVehicle aut3 = new AutonomousVehicle(3, 0, Color.BLUE, Color.BLUE, 5, maxAccelerationAut);

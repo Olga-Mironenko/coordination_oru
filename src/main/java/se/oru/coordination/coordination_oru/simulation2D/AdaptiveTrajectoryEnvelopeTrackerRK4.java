@@ -18,6 +18,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
 	public static boolean isEnabledGlobally = false;
+	public static boolean isReplanningNearParkedVehicle = true;
 
 	public static double coefDeltaTimeForSlowDown = 0.1;
 
@@ -849,6 +850,17 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			//Update the robot's state via RK4 numerical integration
 			if (status == Status.DRIVING) { // TODO: skip if `deltaTime == 0.0`
 				updateState(deltaTime, vehicle.getMaxVelocity(), vehicle.getMaxAcceleration());
+			} else if (status == Status.STOPPED_AT_CP && isReplanningNearParkedVehicle) {
+				CriticalSection cs = getFirstOfCurrentCriticalSections();
+				assert cs != null;
+				int otherID = cs.getSuperior();
+				if (tec.getTracker(otherID) instanceof TrajectoryEnvelopeTrackerDummy) {
+					boolean result = ((TrajectoryEnvelopeCoordinator) tec).rePlanPath(
+							new HashSet<>(Arrays.asList(myRobotID)),
+							new HashSet<>(Arrays.asList(otherID))
+					);
+					System.out.println(result);
+				}
 			}
 
 			latestStatusForVisualization = status;

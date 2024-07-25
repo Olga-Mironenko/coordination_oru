@@ -1,5 +1,8 @@
 package se.oru.coordination.coordination_oru.motionplanning.ompl;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
@@ -23,6 +26,7 @@ import se.oru.coordination.coordination_oru.util.GeometrySmoother.SmootherContro
 public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	
 	public static enum PLANNING_ALGORITHM { RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT }; 
+	public static boolean isDumpingToDot = false;
 
 	private double robotRadius = 1.0;
 	private PointerByReference path = null;
@@ -144,6 +148,17 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 				double res = om.getResolution();
 				double mapOriginX = om.getMapOrigin().x;
 				double mapOriginY = om.getMapOrigin().y;
+				if (isDumpingToDot) {
+					try (BufferedWriter writer = new BufferedWriter(new FileWriter("circles.dot", false))) {
+						writer.write("graph {\n");
+						for (int iNode = 0; iNode < numCoords; iNode++) {
+							writer.write(String.format("  i%d [pos=\"%.2f,%.2f!\"]\n", iNode, xCoords[iNode], yCoords[iNode]));
+						}
+						writer.write("}\n");
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}
 				if (!INSTANCE.plan_multiple_circles(occ, w, h, res, mapOriginX, mapOriginY, robotRadius, xCoords, yCoords, numCoords, start_.getX(), start_.getY(), start_.getTheta(), goal_.getX(), goal_.getY(), goal_.getTheta(), path, pathLength, distanceBetweenPathPoints, turningRadius, planningTimeInSecs, algo.ordinal())) return false;
 			}
 			else {

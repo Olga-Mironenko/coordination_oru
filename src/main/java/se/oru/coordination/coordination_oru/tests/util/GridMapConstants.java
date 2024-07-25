@@ -45,6 +45,7 @@ public class GridMapConstants extends BaseMapConstants {
     public final static Pose column2BottomStart = new Pose(xColumn2, yBottom, thetaUp);
     public final static Pose column3BottomStart = new Pose(xColumn3, yBottom, thetaUp);
 
+    public final static Pose column1Row1Down = new Pose(xColumn1, yRow1, thetaDown);
     public final static Pose column2Row1Down = new Pose(xColumn2, yRow1, thetaDown);
     public final static Pose column2Row2Down = new Pose(xColumn2, yRow2, thetaDown);
     public final static Pose column2Row3Down = new Pose(xColumn2, yRow3, thetaDown);
