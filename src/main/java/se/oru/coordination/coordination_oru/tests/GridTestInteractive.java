@@ -29,7 +29,7 @@ public class GridTestInteractive {
     }
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.FIRST_COME.toString();
+            scenarioString = Scenario.AUTOMATED_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -45,7 +45,7 @@ public class GridTestInteractive {
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
-        final Pose humStart = GridMapConstants.column1TopStart;
+        final Pose humStart = GridMapConstants.column1Row1Down;
 //        final Pose humStart = GridMapConstants.column2Row1;
 //        final Pose humStart = GridMapConstants.column3Row1Down;
 //        final Pose humFinish = GridMapConstants.column2Bottom;
@@ -59,6 +59,12 @@ public class GridTestInteractive {
 //        );
 
         final Pose aut1Start = GridMapConstants.row1LeftStart;
+//        final Pose aut1Start = GridMapConstants.turnAround(
+//                GridMapConstants.shiftX(
+//                        GridMapConstants.row1LeftStart,
+//                        -1.35
+//                )
+//        );
         final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
 
         final Pose aut2Start = GridMapConstants.row2LeftStart;
@@ -67,7 +73,7 @@ public class GridTestInteractive {
         final Pose aut3Start = GridMapConstants.row3LeftStart;
         final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.row3RightStart);
 
-        final double maxVelocityHum = 5.0;
+        final double maxVelocityHum = 3.0;
         final double maxAccelerationHum = 0.3;
         final double maxAccelerationAut = 0.3;
 

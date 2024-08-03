@@ -4,6 +4,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import org.apache.commons.io.FileUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
+import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.Forcing;
@@ -150,6 +151,17 @@ public abstract class AbstractVehicle {
 
         tec.setInnerFootprint(getID(), this.innerFootprint);
         tec.setFootprint(getID(), this.footprint);
+
+        tec.setForwardModel(
+                this.getID(),
+                new ConstantAccelerationForwardModel(
+                        this.getMaxAcceleration(),
+                        this.getMaxVelocity(),
+                        tec.getTemporalResolution(),
+                        tec.getControlPeriod(),
+                        tec.getRobotTrackingPeriodInMillis(this.getID())
+                )
+        );
     }
 
     /**

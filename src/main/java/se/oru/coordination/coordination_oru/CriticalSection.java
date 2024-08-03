@@ -276,9 +276,9 @@ public class CriticalSection {
 		ret += robot1 + makeStars(te1HigherWeight) + " [" + getTe1Start() + ";" + getTe1End() + "], ";
 		ret += robot2 + makeStars(te2HigherWeight) + " [" + getTe2Start() + ";" + getTe2End() + "]";
 
-		DistanceEstimation estimationInferior = new DistanceEstimation(getInferior(), true);
-		DistanceEstimation estimationSuperior = new DistanceEstimation(getSuperior(), false);
- 		if (isCanPassFirstActive) {
+		if (isCanPassFirstActive) {
+			DistanceEstimation estimationInferior = new DistanceEstimation(getInferior(), true);
+			DistanceEstimation estimationSuperior = new DistanceEstimation(getSuperior(), false);
 			ret += String.format(
 					" (inferior %d %s make %s before superior %d makes %s)",
 					getInferior(), canPassFirst(getInferior()) ? "will" : "will not", estimationInferior,

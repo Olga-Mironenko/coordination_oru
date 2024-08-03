@@ -585,8 +585,10 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			//No ordering function, decide an ordering based on distance (closest goes first)
 			ret = ((cs.getTe2Start()-robotReport2.getPathIndex()) > (cs.getTe1Start()-robotReport1.getPathIndex()));
 
-		if (ret && muted.contains(robotReport2.getRobotID())) return false;
-		if (!ret && muted.contains(robotReport1.getRobotID())) return true;
+		if (ret && muted.contains(robotReport2.getRobotID()))
+			return false;
+		if (!ret && muted.contains(robotReport1.getRobotID()))
+			return true;
 
 		return ret;
 	}
@@ -1832,7 +1834,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							int duration = stoppingTimes.get(robotID).get(i);
 							if (robotReport.getPathIndex() <= stoppingPoint) {
 								Dependency dep = new Dependency(robotTracker.getTrajectoryEnvelope(), null, stoppingPoint, 0);
-								if (!currentDeps.containsKey(robotID)) currentDeps.put(robotID, new HashSet<Dependency>());
+								if (!currentDeps.containsKey(robotID))
+									currentDeps.put(robotID, new HashSet<Dependency>());
 								if (!currentDeps.get(robotID).add(dep)) {
 									metaCSPLogger.severe("<<<<<<<<< Add dependency fails (1). Dep: " + dep);
 								}
@@ -1847,7 +1850,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					synchronized(replanningStoppingPoints) {
 						if (replanningStoppingPoints.containsKey(robotID)) 	{
 							//We should enforce the last robot stopping point while it is involved in a re-plan.
-							if (!currentDeps.containsKey(robotID)) currentDeps.put(robotID, new HashSet<Dependency>());
+							if (!currentDeps.containsKey(robotID))
+								currentDeps.put(robotID, new HashSet<Dependency>());
 							currentDeps.get(robotID).add(replanningStoppingPoints.get(robotID));
 							metaCSPLogger.info("Add Locking dependency to Robot" + robotID + ". Dep: " + replanningStoppingPoints.get(robotID));
 						}
@@ -1923,7 +1927,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						if (createAParkingDep) {
 							int drivingCSEnd = drivingTracker.getTrajectoryEnvelope().getRobotID() == cs.getTe1().getRobotID() ? cs.getTe1End() : cs.getTe2End();
 							metaCSPLogger.finest("Robot" + drivingTracker.getTrajectoryEnvelope().getRobotID() + " is parked, so Robot" + waitingTracker.getTrajectoryEnvelope().getRobotID() + " will have to wait");
-							if (!currentDeps.containsKey(waitingTracker.getTrajectoryEnvelope().getRobotID())) currentDeps.put(waitingTracker.getTrajectoryEnvelope().getRobotID(), new HashSet<Dependency>());
+							if (!currentDeps.containsKey(waitingTracker.getTrajectoryEnvelope().getRobotID()))
+								currentDeps.put(waitingTracker.getTrajectoryEnvelope().getRobotID(), new HashSet<Dependency>());
 							Dependency dep = new Dependency(waitingTracker.getTrajectoryEnvelope(), drivingTracker.getTrajectoryEnvelope(), waitingPoint, drivingCSEnd);
 							if (!currentDeps.get(waitingTracker.getTrajectoryEnvelope().getRobotID()).add(dep)) {
 								metaCSPLogger.severe("<<<<<<<<< Add dependency fails (2). Dep: " + dep);
@@ -2125,7 +2130,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						if (waitingPoint >= 0) {
 							//Make new dependency
 							int drivingCSEnd =  drivingTracker.getTrajectoryEnvelope().getRobotID() == cs.getTe1().getRobotID() ? cs.getTe1End() : cs.getTe2End();
-							if (!currentDeps.containsKey(waitingTracker.getTrajectoryEnvelope().getRobotID())) currentDeps.put(waitingTracker.getTrajectoryEnvelope().getRobotID(), new HashSet<Dependency>());
+							if (!currentDeps.containsKey(waitingTracker.getTrajectoryEnvelope().getRobotID()))
+								currentDeps.put(waitingTracker.getTrajectoryEnvelope().getRobotID(), new HashSet<Dependency>());
 							Dependency dep = new Dependency(waitingTracker.getTrajectoryEnvelope(), drivingTracker.getTrajectoryEnvelope(), waitingPoint, drivingCSEnd);
 							if (!currentDeps.get(waitingTracker.getTrajectoryEnvelope().getRobotID()).add(dep)) {
 								metaCSPLogger.severe("<<<<<<<<< Add dependency fails (4). Dep: " + dep);
@@ -2351,7 +2357,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 								//update the maps
 								if (!currentDeps.get(depOld.getWaitingRobotID()).remove(depOld)) metaCSPLogger.severe("<<<<<<<< Error in removing dep: " + depOld);
 								if (currentDeps.get(depOld.getWaitingRobotID()).isEmpty()) currentDeps.remove(depOld.getWaitingRobotID());
-								if (!currentDeps.containsKey(waitingTracker.getTrajectoryEnvelope().getRobotID())) currentDeps.put(waitingTracker.getTrajectoryEnvelope().getRobotID(), new HashSet<Dependency>());
+								if (!currentDeps.containsKey(waitingTracker.getTrajectoryEnvelope().getRobotID()))
+									currentDeps.put(waitingTracker.getTrajectoryEnvelope().getRobotID(), new HashSet<Dependency>());
 								if (!currentDeps.get(waitingTracker.getTrajectoryEnvelope().getRobotID()).add(depNew)) {
 									metaCSPLogger.severe("<<<<<<<<< Add dependency fails (11). Dep: " + depNew);
 								}
