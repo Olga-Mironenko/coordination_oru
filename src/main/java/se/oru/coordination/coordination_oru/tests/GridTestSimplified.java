@@ -48,8 +48,6 @@ public class GridTestSimplified {
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
-        CriticalSection.isCanPassFirstActive = false;
-
 //        HumanControl.isEnabledForBrowser = true;
 //        BrowserVisualization.isExtendedText = false;
 

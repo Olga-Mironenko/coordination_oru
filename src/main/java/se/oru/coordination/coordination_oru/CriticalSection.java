@@ -305,10 +305,10 @@ public class CriticalSection {
 
 	public boolean is1Before2() {
 		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-		return tec.getOrderOfCriticalSection(
-				this,
+		return tec.getOrder(
 				tec.getRobotReport(getTe1RobotID()),
-				tec.getRobotReport(getTe2RobotID())
+				tec.getRobotReport(getTe2RobotID()),
+				this
 		);
 	}
 

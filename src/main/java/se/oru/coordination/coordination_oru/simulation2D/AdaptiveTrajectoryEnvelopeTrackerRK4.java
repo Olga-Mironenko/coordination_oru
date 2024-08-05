@@ -19,6 +19,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
 	public static boolean isEnabledGlobally = false;
 	public static boolean isReplanningNearParkedVehicle = false;
+	public static boolean isRacingThroughCrossroadAllowed = false;
 
 	public static double coefDeltaTimeForSlowDown = 0.1;
 
@@ -492,12 +493,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	}
 
-	@Override
 	public void setCriticalPoint(int criticalPointToSet) {
-		setCriticalPoint(criticalPointToSet, true);
-	}
-
-	public void setCriticalPoint(int criticalPointToSet, boolean isRacingThroughCrossroadAllowed) {
 		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
 		RobotReport rr = getRobotReport();
 		int robotID = rr.getRobotID();
@@ -717,6 +713,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	private void checkIfCanPassFirst() {
+		if (! CriticalSection.isCanPassFirstActive) {
+			return;
+		}
+
 		// Forget about a CS if the robot can pass first there:
 		CriticalSection criticalSection = getFirstOfCurrentCriticalSections();
 		if (criticalSection == null) {
@@ -854,7 +854,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				CriticalSection cs = getFirstOfCurrentCriticalSections();
 				//assert cs != null; // this may happen when the CS has just been removed
 				if (cs != null) {
-					int otherID = cs.getSuperior();
+					int otherID = cs.getSuperior(); // TODO: read the corresponding dependency
 					if (tec.getTracker(otherID) instanceof TrajectoryEnvelopeTrackerDummy) {
 						boolean result = ((TrajectoryEnvelopeCoordinator) tec).rePlanPath(
 								new HashSet<>(Arrays.asList(myRobotID)),

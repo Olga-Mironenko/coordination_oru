@@ -105,8 +105,6 @@ public class GridTest {
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
-        CriticalSection.isCanPassFirstActive = false;
-
 //        Timekeeper.setVirtualSecondsPassedMax(20 * 60 + 6);
         Timekeeper.setVirtualMinutesPassedMax(60);
 //        Timekeeper.realMillisPassedMax = 1000 * 60 * 60; // 1h

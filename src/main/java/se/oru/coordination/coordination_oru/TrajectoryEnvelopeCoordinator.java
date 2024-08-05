@@ -83,8 +83,6 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	//Set if inferring precedence constraints
 	protected boolean fake = false;
 
-	public static int timestepOfLastCallOfGetOrderOfCriticalSection = -1;
-
 	/**
 	 * Get whether there is a robot in a blocked situation (waiting for a parked robot).
 	 * @return <code>true</code> iff a robot is waiting for another robot that is parked.
@@ -569,8 +567,24 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 	//returns true if robot1 should go before robot2
 	//returns false if robot2 should go before robot1
-	public boolean getOrderOfCriticalSection(CriticalSection cs, RobotReport robotReport1, RobotReport robotReport2) {
-		timestepOfLastCallOfGetOrderOfCriticalSection = Timekeeper.getTimestepsPassed();
+	protected boolean getOrder(RobotReport robotReport1, RobotReport robotReport2, CriticalSection cs) {
+		//If both can stop before entering, use ordering function (or closest if no ordering function)
+		metaCSPLogger.finest("Both robots can stop at " + cs);
+
+		if (yieldIfParking) {
+			boolean robot1ParksInCS = cs.getTe1End() == cs.getTe1().getPathLength()-1;
+			boolean robot2ParksInCS = cs.getTe2End() == cs.getTe2().getPathLength()-1;
+			if (robot1ParksInCS && !robot2ParksInCS) {
+				metaCSPLogger.finest("Robot" + cs.getTe1().getRobotID() + " will park in " + cs + ", letting Robot" + cs.getTe2().getRobotID() + " go first");
+				return false;
+			}
+			else if (!robot1ParksInCS && robot2ParksInCS) {
+				metaCSPLogger.finest("Robot" + cs.getTe2().getRobotID() + " will park in " + cs + ", letting Robot" + cs.getTe1().getRobotID() + " go first");
+				return true;
+			}
+			else if (robot1ParksInCS && robot2ParksInCS)
+				metaCSPLogger.finest("Both Robot" + cs.getTe1().getRobotID() + " and Robot" + cs.getTe2().getRobotID() + " will park in " + cs + ". Decide according to the heuristic.");
+		}
 
 		RobotAtCriticalSection r1atcs = new RobotAtCriticalSection(robotReport1, cs);
 		RobotAtCriticalSection r2atcs = new RobotAtCriticalSection(robotReport2, cs);
@@ -591,31 +605,6 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			return true;
 
 		return ret;
-	}
-
-	//returns true if robot1 should go before robot2
-	//returns false if robot2 should go before robot1
-	protected boolean getOrder(AbstractTrajectoryEnvelopeTracker robotTracker1, RobotReport robotReport1, AbstractTrajectoryEnvelopeTracker robotTracker2, RobotReport robotReport2, CriticalSection cs) {
-
-		//If both can stop before entering, use ordering function (or closest if no ordering function)
-		metaCSPLogger.finest("Both robots can stop at " + cs);
-
-		if (yieldIfParking) {
-			boolean robot1ParksInCS = cs.getTe1End() == cs.getTe1().getPathLength()-1;
-			boolean robot2ParksInCS = cs.getTe2End() == cs.getTe2().getPathLength()-1;
-			if (robot1ParksInCS && !robot2ParksInCS) {
-				metaCSPLogger.finest("Robot" + cs.getTe1().getRobotID() + " will park in " + cs + ", letting Robot" + cs.getTe2().getRobotID() + " go first");
-				return false;
-			}
-			else if (!robot1ParksInCS && robot2ParksInCS) {
-				metaCSPLogger.finest("Robot" + cs.getTe2().getRobotID() + " will park in " + cs + ", letting Robot" + cs.getTe1().getRobotID() + " go first");
-				return true;
-			}
-			else if (robot1ParksInCS && robot2ParksInCS)
-				metaCSPLogger.finest("Both Robot" + cs.getTe1().getRobotID() + " and Robot" + cs.getTe2().getRobotID() + " will park in " + cs + ". Decide according to the heuristic.");
-		}
-
-		return getOrderOfCriticalSection(cs, robotReport1, robotReport2);
 	}
 
 	@Override
@@ -782,7 +771,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						if (canStopRobot1 && canStopRobot2) {
 
 							//If robot 1 has priority over robot 2
-							if (getOrder(robotTracker1, robotReport1, robotTracker2, robotReport2, cs)) {
+							if (getOrder(robotReport1, robotReport2, cs)) {
 								drivingCurrentIndex = robotReport1.getPathIndex();
 								drivingTracker = robotTracker1;
 								waitingTracker = robotTracker2;
@@ -2200,7 +2189,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					AbstractTrajectoryEnvelopeTracker robotTracker2 = trackers.get(cs.getTe2().getRobotID());
 					RobotReport robotReport2 = currentReports.get(cs.getTe2().getRobotID());
 
-					boolean robot2Yields = getOrder(robotTracker1, robotReport1, robotTracker2, robotReport2, cs);
+					boolean robot2Yields = getOrder(robotReport1, robotReport2, cs);
 					//true if robot1 should go before robot2, false vice versa
 					boolean robot2YieldsOld = CSToDepsOrder.get(cs).getFirst() == robotReport2.getRobotID();
 
