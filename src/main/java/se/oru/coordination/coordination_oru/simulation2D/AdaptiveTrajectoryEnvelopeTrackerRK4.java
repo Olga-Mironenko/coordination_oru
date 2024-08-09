@@ -817,6 +817,22 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return deltaTimeInMillis / this.temporalResolution;
 	}
 
+	public boolean tryToReplanNearParkedVehicle(int myRobotID) {
+		CriticalSection cs = getFirstOfCurrentCriticalSections();
+		//assert cs != null; // this may happen when the CS has just been removed
+		if (cs == null) {
+			return false;
+		}
+
+		int superiorID = cs.getSuperior();
+		if (myRobotID != superiorID && tec.getTracker(superiorID) instanceof TrajectoryEnvelopeTrackerDummy) {
+			PoseSteering[] psa = te.getTrajectory().getPoseSteering();
+			HumanControl.moveRobot(myRobotID, psa[psa.length - 1].getPose(), new int[] {superiorID});
+			return true;
+		}
+		return false;
+	}
+
 	@Override
 	public void run() {
 		this.elapsedTrackingTime = 0.0;
@@ -826,6 +842,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(myRobotID);
 		int myTEID = te.getID();
 		Status status = Status.DRIVING;
+		boolean isTryingToReplanNearParkedVehicleOK = true;
 
 		while (true) {
 			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
@@ -839,6 +856,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			}
 
 			if (status == Status.DRIVING) {
+				isTryingToReplanNearParkedVehicleOK = true;
 				checkIfCanPassFirst();
 			}
 
@@ -850,15 +868,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			//Update the robot's state via RK4 numerical integration
 			if (status == Status.DRIVING) { // TODO: skip if `deltaTime == 0.0`
 				updateState(deltaTime, vehicle.getMaxVelocity(), vehicle.getMaxAcceleration());
-			} else if (status == Status.STOPPED_AT_CP && isReplanningNearParkedVehicle) {
-				CriticalSection cs = getFirstOfCurrentCriticalSections();
-				//assert cs != null; // this may happen when the CS has just been removed
-				if (cs != null) {
-					int superiorID = cs.getSuperior();
-					if (myRobotID != superiorID && tec.getTracker(superiorID) instanceof TrajectoryEnvelopeTrackerDummy) {
-						PoseSteering[] psa = te.getTrajectory().getPoseSteering();
-						HumanControl.moveRobot(myRobotID, psa[psa.length - 1].getPose(), new int[] {superiorID});
-					}
+			} else if (status == Status.STOPPED_AT_CP && isReplanningNearParkedVehicle && isTryingToReplanNearParkedVehicleOK) {
+				if (tryToReplanNearParkedVehicle(myRobotID)) {
+					isTryingToReplanNearParkedVehicleOK = false;
 				}
 			}
 

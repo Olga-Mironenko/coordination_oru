@@ -50,9 +50,9 @@ public class GridTestInteractive {
 //        final Pose humFinish = GridMapConstants.column2Row2;
 
         final Pose humStart = GridMapConstants.column1Row1Down;
-        final Pose humFinish = GridMapConstants.column2Row1Right;
+//        final Pose humFinish = GridMapConstants.column2Row1Right;
 
-//        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
+        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
 //        final Pose humFinish = GridMapConstants.turnAround(
 //                GridMapConstants.between(
 //                        GridMapConstants.column2Row1Down,
