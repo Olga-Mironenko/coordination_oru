@@ -125,6 +125,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	
 	@Override
 	public boolean doPlanning() {
+		this.pathPS = null;
 		ArrayList<PoseSteering> finalPath = new ArrayList<PoseSteering>();  
 		for (int i = 0; i < this.goal.length; i++) {
 			Pose start_ = null;

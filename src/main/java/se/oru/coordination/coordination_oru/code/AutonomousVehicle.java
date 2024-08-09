@@ -17,8 +17,9 @@ import java.io.IOException;
 import java.util.List;
 
 public class AutonomousVehicle extends AbstractVehicle {
-    public static boolean isPathCachingEnabled = true;
+    public static boolean isPathCachingEnabled = false;
     public static ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect;
+    private ReedsSheppCarPlanner planner;
 
     public AutonomousVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
         super(id, priorityID, color, colorInMotion, maxVelocity, maxAcceleration, xLength, yLength);
@@ -40,15 +41,19 @@ public class AutonomousVehicle extends AbstractVehicle {
         super(vehicleNumber, 1, Color.YELLOW, null, 5, 2, 0.5, 0.5);
     }
 
-    public static ReedsSheppCarPlanner makePlanner(String map, Coordinate[] footprint) {
-        var rsp = new ReedsSheppCarPlanner(planningAlgorithm);
-        rsp.setMap(map);
-        rsp.setRadius(0.01);
-        rsp.setPlanningTimeInSecs(60);
-        rsp.setFootprint(footprint);
-        rsp.setTurningRadius(0.01);
-        rsp.setDistanceBetweenPathPoints(0.1);
-        return rsp;
+    public ReedsSheppCarPlanner makePlanner(String map, Coordinate[] footprint) {
+//        if (true) {
+        if (planner == null) {
+            var rsp = new ReedsSheppCarPlanner(planningAlgorithm);
+            rsp.setMap(map);
+            rsp.setRadius(0.01);
+            rsp.setPlanningTimeInSecs(60);
+            rsp.setFootprint(footprint);
+            rsp.setTurningRadius(0.01);
+            rsp.setDistanceBetweenPathPoints(0.1);
+            planner = rsp;
+        }
+        return planner;
     }
 
     @Override
@@ -97,6 +102,9 @@ public class AutonomousVehicle extends AbstractVehicle {
                 if (isFound) {
                     break;
                 }
+            }
+            if (robotIDsObstacles.length > 0) {
+                rsp.clearObstacles();
             }
             if (! isFound) {
                 throw new NoPathFoundError();
