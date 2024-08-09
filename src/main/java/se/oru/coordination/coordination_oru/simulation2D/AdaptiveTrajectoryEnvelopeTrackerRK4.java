@@ -854,13 +854,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				CriticalSection cs = getFirstOfCurrentCriticalSections();
 				//assert cs != null; // this may happen when the CS has just been removed
 				if (cs != null) {
-					int otherID = cs.getSuperior(); // TODO: read the corresponding dependency
-					if (tec.getTracker(otherID) instanceof TrajectoryEnvelopeTrackerDummy) {
-						boolean result = ((TrajectoryEnvelopeCoordinator) tec).rePlanPath(
-								new HashSet<>(Arrays.asList(myRobotID)),
-								new HashSet<>(Arrays.asList(otherID))
-						);
-						System.out.println(result);
+					int superiorID = cs.getSuperior();
+					if (myRobotID != superiorID && tec.getTracker(superiorID) instanceof TrajectoryEnvelopeTrackerDummy) {
+						PoseSteering[] psa = te.getTrajectory().getPoseSteering();
+						HumanControl.moveRobot(myRobotID, psa[psa.length - 1].getPose(), new int[] {superiorID});
 					}
 				}
 			}

@@ -7,10 +7,10 @@ import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
+import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class HumanControl {
     public static boolean isEnabledForBrowser = false;
@@ -30,6 +30,10 @@ public class HumanControl {
     // TODO: crashes on large initial velocity
 
     public static void moveRobot(int robotID, Pose goal) {
+        moveRobot(robotID, goal, new int[0]);
+    }
+
+    public static void moveRobot(int robotID, Pose goal, int[] robotIDsObstacles) {
         if (isWorking) {
             return;
         }
@@ -49,7 +53,7 @@ public class HumanControl {
 
             try {
                 status = String.format("%s: finding...", statusPrefix);
-                vehicle.getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false);
+                ((AutonomousVehicle) vehicle).getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false, robotIDsObstacles);
             }
             catch (NoPathFoundError error) {
                 status = String.format("%s: failed to find", statusPrefix);

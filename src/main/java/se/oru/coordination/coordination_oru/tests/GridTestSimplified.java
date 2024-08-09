@@ -57,8 +57,8 @@ public class GridTestSimplified {
 
         final String YAML_FILE = "maps/map-grid.yaml";
 
-        final Pose humStart = GridMapConstants.column2TopStart;
-        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
+        final Pose humStart = GridMapConstants.column1Row1Down;
+        final Pose humFinish = GridMapConstants.column2Row1Right;
 
         final Pose aut1Start = GridMapConstants.row1LeftStart;
         final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);

@@ -1,6 +1,7 @@
 package se.oru.coordination.coordination_oru.code;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
@@ -13,6 +14,7 @@ import se.oru.coordination.coordination_oru.util.NoPathFoundError;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class AutonomousVehicle extends AbstractVehicle {
     public static boolean isPathCachingEnabled = true;
@@ -51,6 +53,10 @@ public class AutonomousVehicle extends AbstractVehicle {
 
     @Override
     public void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
+        getPlan(initial, goals, map, inversePath, new int[0]);
+    }
+
+    public void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath, int[] robotIDsObstacles) {
         String filenameCache = null;
         PoseSteering[] path = null;
 
@@ -60,7 +66,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         }
         base += "_" + planningAlgorithm + (inversePath ? "_inv" : "");
 
-        if (isPathCachingEnabled) {
+        if (isPathCachingEnabled && robotIDsObstacles.length == 0) {
             filenameCache = "paths/" + FilenameUtils.getBaseName(map) + "/" + base + ".path";
             if (new File(filenameCache).isFile()) {
                 path = Missions.loadPathFromFile(filenameCache);
@@ -70,26 +76,34 @@ public class AutonomousVehicle extends AbstractVehicle {
         if (path == null) {
             var rsp = makePlanner(map, getFootprint());
             TrajectoryEnvelopeCoordinatorSimulation.tec.setMotionPlanner(this.getID(), rsp);
-//
-//            HashSet<Integer> otherRobotIDs = new HashSet<Integer>();
-//            for (int otherRobotID : VehiclesHashMap.getList().keySet()) {
-//                if (otherRobotID != getID()) {
-//                    otherRobotIDs.add(otherRobotID);
-//                }
-//            }
-//            if (!otherRobotIDs.isEmpty()) {
-//                TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-//                rsp.addObstacles(tec.getObstaclesInCriticalPoints(ArrayUtils.toPrimitive(otherRobotIDs.toArray(new Integer[otherRobotIDs.size()]))));
-//            }
 
+            if (robotIDsObstacles.length > 0) {
+                Geometry[] obstacles = TrajectoryEnvelopeCoordinatorSimulation.tec.getObstaclesInCriticalPoints(robotIDsObstacles);
+                rsp.addObstacles(obstacles);
+            }
 
-            PoseSteering[] pathFwd;
+            boolean isFound = false;
+            for (int dy : java.util.List.of(0, -1, 1)) {
+                for (int dx : List.of(0, -1, 1)) {
+                    Pose start = new Pose(initial.getX() + dx, initial.getY() + dy, initial.getTheta());
+                    rsp.setStart(start);
+                    rsp.setGoals(goals);
+                    rsp.plan();
+                    if (rsp.getPath() != null) {
+                        isFound = true;
+                        break;
+                    }
+                }
+                if (isFound) {
+                    break;
+                }
+            }
+            if (! isFound) {
+                throw new NoPathFoundError();
+            }
+
+            PoseSteering[] pathFwd = rsp.getPath();
             PoseSteering[] pathInv;
-            rsp.setStart(initial);
-            rsp.setGoals(goals);
-            rsp.plan();
-            if (rsp.getPath() == null) throw new NoPathFoundError();
-            pathFwd = rsp.getPath();
             if (inversePath) {
                 pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
                 path = (PoseSteering[]) ArrayUtils.addAll(pathFwd, pathInv);

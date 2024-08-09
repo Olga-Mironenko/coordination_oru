@@ -28,7 +28,7 @@ public abstract class Demo {
             BrowserVisualization.isExtendedText = true;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = false;
             CriticalSection.isCanPassFirstActive = true;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReplanningNearParkedVehicle = false;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReplanningNearParkedVehicle = true;
         }
 
         BrowserVisualization.isStatusText = true;
