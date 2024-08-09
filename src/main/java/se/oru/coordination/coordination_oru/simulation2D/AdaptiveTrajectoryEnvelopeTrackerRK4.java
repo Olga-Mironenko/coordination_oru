@@ -493,6 +493,28 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	}
 
+	public HashSet<CriticalSection> getCriticalSectionsForRobot(int criticalPointToSet) {
+		RobotReport rr = getRobotReport();
+		int robotID = rr.getRobotID();
+
+		HashSet<CriticalSection> criticalSections = new HashSet<>();
+		for (CriticalSection cs : tec.allCriticalSections) {
+			Integer start = cs.getStart(robotID);
+			if (start == null) {
+				continue;
+			}
+			Integer end = cs.getEnd(robotID);
+			assert end != null;
+
+			final int margin = AbstractTrajectoryEnvelopeCoordinator.TRAILING_PATH_POINTS;
+
+			if (start - margin <= criticalPointToSet && criticalPointToSet <= end + margin) {
+				criticalSections.add(cs);
+			}
+		}
+		return criticalSections;
+	}
+
 	public void setCriticalPoint(int criticalPointToSet) {
 		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
 		RobotReport rr = getRobotReport();
@@ -517,21 +539,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		//A new intermediate index to stop at has been given
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-		HashSet<CriticalSection> criticalSections = new HashSet<>();
-		for (CriticalSection cs : tec.allCriticalSections) {
-			Integer start = cs.getStart(robotID);
-			if (start == null) {
-				continue;
-			}
-			Integer end = cs.getEnd(robotID);
-			assert end != null;
-
-			final int margin = AbstractTrajectoryEnvelopeCoordinator.TRAILING_PATH_POINTS;
-
-			if (start - margin <= criticalPointToSet && criticalPointToSet <= end + margin) {
-				criticalSections.add(cs);
-			}
-		}
+		HashSet<CriticalSection> criticalSections = getCriticalSectionsForRobot(criticalPointToSet);
 
 		//assert ! criticalSections.isEmpty();
 		if (criticalSections.isEmpty()) {
@@ -548,7 +556,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 				//assert criticalSectionsReal.size() == 1; // doesn't work when the other robot returns through the same intersection
 				//this.criticalSection = criticalSectionsReal.iterator().next();
-				this.criticalSections = CriticalSection.sortCriticalSections(criticalSections);
 				// If there are several CSes that are close to each other
 				// (contained in `criticalSectionsReal` or related to different calls of `setCriticalPoint`),
 				// then they can be combined into a single artificial `this.criticalSection`.
@@ -679,21 +686,15 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		if (criticalPoint == -1) {
 			return null;
 		}
-		return criticalSections;
+		return CriticalSection.sortCriticalSections(getCriticalSectionsForRobot(criticalPoint));
 	}
 
 	private CriticalSection getFirstOfCurrentCriticalSections() {
-		if (getCriticalSections() == null) {
+		ArrayList<CriticalSection> criticalSections = getCriticalSections();
+		if (criticalSections == null || criticalSections.size() == 0) {
 			return null;
 		}
-
-		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-		for (CriticalSection cs : getCriticalSections()) {
-			if (tec.allCriticalSections.contains(cs)) {
-				return cs;
-			}
-		}
-		return null;
+		return criticalSections.get(0);
 	}
 
 	private boolean checkFreezing() {
@@ -855,19 +856,18 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				break;
 			}
 
-			if (status == Status.DRIVING) {
-				isTryingToReplanNearParkedVehicleOK = true;
-				checkIfCanPassFirst();
-			}
-
 			status = checkIfStopped(status);
 			if (status == Status.FULL_STOP) {
 				break;
 			}
 
-			//Update the robot's state via RK4 numerical integration
 			if (status == Status.DRIVING) { // TODO: skip if `deltaTime == 0.0`
+				checkIfCanPassFirst();
+				isTryingToReplanNearParkedVehicleOK = true;
+
+				//Update the robot's state via RK4 numerical integration
 				updateState(deltaTime, vehicle.getMaxVelocity(), vehicle.getMaxAcceleration());
+
 			} else if (status == Status.STOPPED_AT_CP && isReplanningNearParkedVehicle && isTryingToReplanNearParkedVehicleOK) {
 				if (tryToReplanNearParkedVehicle(myRobotID)) {
 					isTryingToReplanNearParkedVehicleOK = false;
