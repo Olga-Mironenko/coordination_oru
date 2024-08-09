@@ -437,7 +437,7 @@ public class BrowserVisualization implements FleetVisualization {
 		} else {
 			text += "<br>";
 			for (CriticalSection cs : criticalSections) {
-				text += "- " + cs.toStringForVisualization() + "<br>";
+				text += "- " + cs.toString(true) + "<br>";
 			}
 		}
 		return text;

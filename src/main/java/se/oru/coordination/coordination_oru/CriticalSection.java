@@ -187,7 +187,8 @@ public class CriticalSection {
 
 	@Override
 	public String toString() {
-		return toStringForVisualization();
+		// Note: Passing `true` may lead to infinite recursion.
+		return toString(false);
 	}
 
 	class DistanceEstimation {
@@ -269,14 +270,14 @@ public class CriticalSection {
 		}
 	}
 
-	public String toStringForVisualization() {
+	public String toString(boolean isExtra) {
 		String ret = "";
 		String robot1 = getTe1() == null ? "null" : String.valueOf(getTe1().getRobotID());
 		String robot2 = getTe2() == null ? "null" : String.valueOf(getTe2().getRobotID());
 		ret += robot1 + makeStars(te1HigherWeight) + " [" + getTe1Start() + ";" + getTe1End() + "], ";
 		ret += robot2 + makeStars(te2HigherWeight) + " [" + getTe2Start() + ";" + getTe2End() + "]";
 
-		if (isCanPassFirstActive) {
+		if (isExtra && isCanPassFirstActive) {
 			DistanceEstimation estimationInferior = new DistanceEstimation(getInferior(), true);
 			DistanceEstimation estimationSuperior = new DistanceEstimation(getSuperior(), false);
 			ret += String.format(
@@ -305,6 +306,17 @@ public class CriticalSection {
 
 	public boolean is1Before2() {
 		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+
+		Dependency dep1 = tec.getCurrentDependencies().get(getTe1RobotID());
+		if (dep1 != null) {
+			return dep1.getDrivingRobotID() == getTe1RobotID();
+		}
+
+		Dependency dep2 = tec.getCurrentDependencies().get(getTe2RobotID());
+		if (dep2 != null) {
+			return dep2.getDrivingRobotID() == getTe1RobotID();
+		}
+
 		return tec.getOrder(
 				tec.getRobotReport(getTe1RobotID()),
 				tec.getRobotReport(getTe2RobotID()),
