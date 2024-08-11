@@ -212,10 +212,22 @@ public abstract class AbstractMotionPlanner {
 		boolean ret = doPlanning();
 		
 		if (!verifyPlanning) return ret;
-		
+
 		PoseSteering[] path = getPath();
 		if (path == null) {
 			metaCSPLogger.info("Path planner could not find a plan");
+			return false;
+		}
+
+		if (path.length == 0) {
+			return false;
+		}
+
+		if (! path[0].getPose().equals(this.start)) {
+			return false;
+		}
+		assert this.goal != null && this.goal.length > 0;
+		if (! path[path.length - 1].getPose().equals(this.goal[this.goal.length - 1])) {
 			return false;
 		}
 

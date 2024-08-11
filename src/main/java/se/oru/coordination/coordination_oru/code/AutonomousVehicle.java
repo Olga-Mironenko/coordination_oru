@@ -47,7 +47,7 @@ public class AutonomousVehicle extends AbstractVehicle {
             var rsp = new ReedsSheppCarPlanner(planningAlgorithm);
             rsp.setMap(map);
             rsp.setRadius(0.01);
-            rsp.setPlanningTimeInSecs(60);
+            rsp.setPlanningTimeInSecs(15);
             rsp.setFootprint(footprint);
             rsp.setTurningRadius(0.01);
             rsp.setDistanceBetweenPathPoints(0.1);
@@ -93,8 +93,7 @@ public class AutonomousVehicle extends AbstractVehicle {
                     Pose start = new Pose(initial.getX() + dx, initial.getY() + dy, initial.getTheta());
                     rsp.setStart(start);
                     rsp.setGoals(goals);
-                    rsp.plan();
-                    if (rsp.getPath() != null) {
+                    if (rsp.plan()) {
                         isFound = true;
                         break;
                     }
