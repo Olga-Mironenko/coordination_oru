@@ -52,6 +52,8 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 		ret.setFootprint(this.footprintCoords);
 		ret.setPlanningTimeInSecs(planningTimeInSecs);
 		if (this.om != null) ret.om = new OccupancyMap(this.om, copyObstacles);
+		ret.noMap = noMap;
+		// TODO: also copy `start`, etc.?
 		return ret;
 	}
 	

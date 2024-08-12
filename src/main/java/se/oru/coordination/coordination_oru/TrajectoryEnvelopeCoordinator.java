@@ -314,19 +314,24 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	 * such that a deadlock will occur (non-live state).
 	 */
 	public boolean isDeadlocked() {
+		if (GatedThread.isEnabled()) {
+			this.isDeadlocked = false;
+		}
 		synchronized(solver) {
 			SimpleDirectedGraph<Integer,Dependency> g = depsToGraph(currentDependencies);
 			List<List<Integer>> nonliveCycles = findSimpleNonliveCycles(g);
 			for (List<Integer> cycle : nonliveCycles) {
 				//Check if all robots in the cycle are waiting at their current critical point.
 				this.isDeadlocked = true;
-				for (int i = 0; i < cycle.size(); i++) {
-					int robotID = cycle.get(i);
-					AbstractTrajectoryEnvelopeTracker tracker = trackers.get(robotID);
-					RobotReport rr = tracker.getLastRobotReport();
-					if (!(communicatedCPs.containsKey(tracker) && communicatedCPs.get(tracker).getFirst() == rr.getCriticalPoint() && rr.getCriticalPoint() == rr.getPathIndex())) {
-						this.isDeadlocked = false;
-						break;
+				if (! GatedThread.isEnabled()) {
+					for (int i = 0; i < cycle.size(); i++) {
+						int robotID = cycle.get(i);
+						AbstractTrajectoryEnvelopeTracker tracker = trackers.get(robotID);
+						RobotReport rr = tracker.getLastRobotReport();
+						if (!(communicatedCPs.containsKey(tracker) && communicatedCPs.get(tracker).getFirst() == rr.getCriticalPoint() && rr.getCriticalPoint() == rr.getPathIndex())) {
+							this.isDeadlocked = false;
+							break;
+						}
 					}
 				}
 				if (this.isDeadlocked) {
@@ -972,11 +977,15 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 		synchronized (replanningStoppingPoints) {
 			if (setMaxCPDependencies(robotsToReplan)) {
 				metaCSPLogger.info("Will re-plan for one of the following deadlocked robots: " + robotsToReplan + " (" + allConnectedRobots + ")...");
-				new GatedThread("spawnReplanning") {
-					public void runCore() {
-						rePlanPath(robotsToReplan, allConnectedRobots);
-					}
-				}.start();
+				if (GatedThread.isEnabled()) {
+					rePlanPath(robotsToReplan, allConnectedRobots);
+				} else {
+					new GatedThread("spawnReplanning") {
+						public void runCore() {
+							rePlanPath(robotsToReplan, allConnectedRobots);
+						}
+					}.start();
+				}
 				return true;
 
 			}
@@ -1068,7 +1077,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			metaCSPLogger.info("Attempting to re-plan path of Robot" + robotID + " (with obstacles for robots " + otherRobotIDs.toString() + ", from " + 
 					currentWaitingPose + ", to " + currentWaitingGoal + ")...");
 			AbstractMotionPlanner mp = null;
-			if (this.motionPlanners.containsKey(robotID)) mp = this.motionPlanners.get(robotID).getCopy(false);
+			if (this.motionPlanners.containsKey(robotID)) mp = this.motionPlanners.get(robotID);
 			else {
 				metaCSPLogger.severe("Motion planner is not initialized for Robot" + robotID + ", cannot replan");
 				continue;
@@ -2372,11 +2381,13 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				currentDependencies.clear();
 				currentDependencies.putAll(closestDeps);
 
-				//The global strategy builds upon the assumption that robots do not start from critical section. 
-				//If this is not the case, them pre-loading may bring to nonlive cycles. 
-				//To handle this case, switch to a local strategy whenever a robot is starting from a critical section and cannot
-				//exit from it.
-				for (int robotID : askForReplan) replanEnvelope(robotID, true);
+				if (! GatedThread.isEnabled() || ! this.isDeadlocked) {
+					//The global strategy builds upon the assumption that robots do not start from critical section.
+					//If this is not the case, them pre-loading may bring to nonlive cycles.
+					//To handle this case, switch to a local strategy whenever a robot is starting from a critical section and cannot
+					//exit from it.
+					for (int robotID : askForReplan) replanEnvelope(robotID, true);
+				}
 
 				//send revised dependencies
 				for (int robotID : robotIDs) sendCriticalPoint(robotID, currentReports);

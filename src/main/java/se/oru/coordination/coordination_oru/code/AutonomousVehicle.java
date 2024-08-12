@@ -95,8 +95,11 @@ public class AutonomousVehicle extends AbstractVehicle {
              ^
              (dx=-1)
              */
-            for (int dy : java.util.List.of(0, -1, 1)) {
-                for (int dx : List.of(0, -1, 1)) {
+            for (int dy : robotIDsObstacles.length == 0 ? java.util.List.of(0) : java.util.List.of(0, -1, 1)) {
+                for (int dx : robotIDsObstacles.length == 0 ? java.util.List.of(0) : List.of(0, -1, 1)) {
+                    if (dy != 0 && dx != 0) {
+                        continue;
+                    }
                     Pose start = new Pose(initial.getX() + dx, initial.getY() + dy, initial.getTheta());
                     rsp.setStart(start);
                     rsp.setGoals(goals);

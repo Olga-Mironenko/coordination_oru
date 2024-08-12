@@ -157,11 +157,15 @@ public class GridTestInteractive {
                 while (true) {
                     int millis = Timekeeper.getVirtualMillisPassed();
                     if (millis >= 50 * 1000) {
-                        boolean isOk = HumanControl.moveRobot(
-                                hum0.getID(),
-                                GridMapConstants.turnAround(GridMapConstants.column3Row2Down)
-                        );
-//                        assert ! isOk;
+                        while (true) {
+                            boolean isOk = HumanControl.moveRobot(
+                                    hum0.getID(),
+                                    GridMapConstants.turnAround(GridMapConstants.column3Row2Down)
+                            );
+                            if (isOk) {
+                                break;
+                            }
+                        }
 
                         break;
                     }
