@@ -37,7 +37,6 @@ import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
-import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 import static se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation.tec;
 
@@ -77,6 +76,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	protected boolean staticReplan = false;
 	protected boolean isBlocked = false;
 	protected boolean isDeadlocked = false;
+	protected HashMap<Integer, Integer> robotToReplanningTrials = new HashMap<>();
 
 	protected Callback deadlockedCallback = null;
 
@@ -2381,12 +2381,18 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				currentDependencies.clear();
 				currentDependencies.putAll(closestDeps);
 
-				if (! GatedThread.isEnabled() || ! this.isDeadlocked) {
-					//The global strategy builds upon the assumption that robots do not start from critical section.
-					//If this is not the case, them pre-loading may bring to nonlive cycles.
-					//To handle this case, switch to a local strategy whenever a robot is starting from a critical section and cannot
-					//exit from it.
-					for (int robotID : askForReplan) replanEnvelope(robotID, true);
+				//The global strategy builds upon the assumption that robots do not start from critical section.
+				//If this is not the case, them pre-loading may bring to nonlive cycles.
+				//To handle this case, switch to a local strategy whenever a robot is starting from a critical section and cannot
+				//exit from it.
+				for (int robotID : askForReplan) {
+					int trials = robotToReplanningTrials.getOrDefault(robotID, 0);
+					if (trials < 5) {
+						replanEnvelope(robotID, true);
+						if (GatedThread.isEnabled()) {
+							robotToReplanningTrials.put(robotID, trials + 1);
+						}
+					}
 				}
 
 				//send revised dependencies
@@ -2394,6 +2400,10 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 				//Check if the robots are in deadlocks
 				isDeadlocked();
+
+				if (! this.isDeadlocked) {
+					robotToReplanningTrials.clear();
+				}
 			}
 
 		}//end synchronized(solver)
