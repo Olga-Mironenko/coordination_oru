@@ -1,5 +1,6 @@
 package se.oru.coordination.coordination_oru.motionplanning;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public abstract class AbstractMotionPlanner {
 	protected OccupancyMap om = null;
 	protected boolean noMap = true;
 	protected boolean checkGoalPose = true;
+	protected boolean isFastOverlapChecking = false;
 	
 	protected PoseSteering[] pathPS = null;
 
@@ -267,16 +269,38 @@ public abstract class AbstractMotionPlanner {
 		GeometricShapeDomain dom = (GeometricShapeDomain)te.getEnvelopeVariable().getDomain();
 		Geometry geom = dom.getGeometry();
 
-		BufferedImage bimgPath = this.om.makeImageOfGeometry(geom);
-		assert bimgPath != null;
+		OccupancyMap omPath = new OccupancyMap(this.om, this.om.makeImageOfGeometry(geom));
 
-		BitSet bitsetPath = this.om.bimgToBitSet(bimgPath);
-		BitSet bitsetMap = this.om.getBitSet();
+		boolean isOverlap = false;
+		if (isFastOverlapChecking) {
+			isOverlap = omPath.getBitSet().intersects(om.getBitSet());
+		} else {
+			BufferedImage bimg = om.makeImage();
+			int numPixelsPath = 0;
+			int numPixelsCommon = 0;
+			for (int y = 0; y < bimg.getHeight(); y++) {
+				for (int x = 0; x < bimg.getWidth(); x++) {
+					if (!omPath.isOccupied(x, y)) {
+						if (om.isOccupied(x, y)) {
+							bimg.setRGB(x, y, Color.DARK_GRAY.getRGB());
+						}
+					} else {
+						numPixelsPath++;
+						if (!om.isOccupied(x, y)) {
+							bimg.setRGB(x, y, Color.GREEN.getRGB());
+						} else {
+							numPixelsCommon++;
+							bimg.setRGB(x, y, Color.RED.getRGB());
+						}
+					}
+				}
+			}
+			isOverlap = (double) numPixelsCommon / numPixelsPath > 0.05; // TODO: use only numPixelsPath?
+		}
 
-		boolean isIntersection = bitsetPath.intersects(bitsetMap);
-		return ! isIntersection;
+		return ! isOverlap;
 	}
-		
+
 	public static boolean deleteDir(File dir) {
 	    if (dir.isDirectory()) {
 	        String[] children = dir.list();

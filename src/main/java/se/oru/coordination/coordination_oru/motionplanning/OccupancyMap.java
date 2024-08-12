@@ -76,7 +76,7 @@ public class OccupancyMap {
 		this.bimg_original = deepCopy(this.bimg);
 	}
 
-	private BufferedImage makeImage() {
+	public BufferedImage makeImage() {
 		BufferedImage img = new BufferedImage(this.mapWidth, this.mapHeight, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g2 = img.createGraphics();
 		g2.setPaint(Color.white);
@@ -98,26 +98,41 @@ public class OccupancyMap {
 	public OccupancyMap(double width, double height, double resolution) {
 		this(width, height, resolution, 0., 0.);
 	}
-	
-	/**
-	 * Create a new occupancy map that is identical to a given occupancy map.
-	 * @param om The occupancy map to copy.
-	 * @param copyObstacles <code>true</code> whether obstacles of the given map should be copied in the new map.
-	 */
-	public OccupancyMap(OccupancyMap om, boolean copyObstacles) {
+
+
+	private void copyFields(OccupancyMap om) {
 		if (om == null) throw new Error("Null occupancy map passed as parameter.");
 		this.mapWidth = om.mapWidth;
 		this.mapHeight= om.mapHeight;
 		this.mapOrigin = new Coordinate(om.mapOrigin.x, om.mapOrigin.y);
 		this.threshold = om.threshold;
 		this.mapResolution = om.mapResolution;
+	}
+
+	/**
+	 * Create a new occupancy map that is identical to a given occupancy map.
+	 * @param om The occupancy map to copy.
+	 * @param copyObstacles <code>true</code> whether obstacles of the given map should be copied in the new map.
+	 */
+	public OccupancyMap(OccupancyMap om, boolean copyObstacles) {
+		this.copyFields(om);
+
 		if (copyObstacles) {
 			this.obstacles = new ArrayList<Geometry>(om.obstacles);
 			this.bimg = deepCopy(om.bimg);
 		}
 		else this.bimg = deepCopy(om.bimg_original);
+
 		this.createOccupancyMap();
 		this.bimg_original = deepCopy(om.bimg_original);
+	}
+
+	public OccupancyMap(OccupancyMap om, BufferedImage bimg) {
+		this.copyFields(om);
+
+		this.bimg = bimg;
+		this.createOccupancyMap();
+		this.bimg_original = bimg;
 	}
 	
 	/**
