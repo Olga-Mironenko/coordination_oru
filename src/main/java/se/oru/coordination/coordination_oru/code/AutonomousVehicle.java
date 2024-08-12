@@ -88,6 +88,13 @@ public class AutonomousVehicle extends AbstractVehicle {
             }
 
             boolean isFound = false;
+            /*
+             8 7 9 (dy=1)
+             2 1 3 (dy=0)
+             5 4 6 (dy=-1)
+             ^
+             (dx=-1)
+             */
             for (int dy : java.util.List.of(0, -1, 1)) {
                 for (int dx : List.of(0, -1, 1)) {
                     Pose start = new Pose(initial.getX() + dx, initial.getY() + dy, initial.getTheta());

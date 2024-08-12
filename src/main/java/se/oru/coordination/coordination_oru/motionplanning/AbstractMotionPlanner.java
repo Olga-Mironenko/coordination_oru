@@ -1,12 +1,16 @@
 package se.oru.coordination.coordination_oru.motionplanning;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.logging.Logger;
 
+import org.metacsp.multi.spatial.DE9IM.GeometricShapeDomain;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
+import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import org.metacsp.utility.logging.MetaCSPLogging;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -14,6 +18,8 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 
+import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.Missions;
 
 public abstract class AbstractMotionPlanner {
@@ -146,11 +152,13 @@ public abstract class AbstractMotionPlanner {
 	}
 	
 	public synchronized void addObstacles(Geometry geom, Pose ... poses) {
+		assert this.om != null;
 		if (this.om == null) this.om = new OccupancyMap(1000, 1000, 1);
 		this.om.addObstacles(geom, poses);
 	}
 	
 	public synchronized void addObstacles(Geometry ... geom) {
+		assert this.om != null;
 		if (this.om == null) this.om = new OccupancyMap(1000, 1000, 1);
 		this.om.addObstacles(geom);
 	}
@@ -244,8 +252,29 @@ public abstract class AbstractMotionPlanner {
 				}
 			}
 		}
+
+		if (! checkWallOverlap(path)) {
+			return false;
+		}
 	
 		return ret;
+	}
+
+	private boolean checkWallOverlap(PoseSteering[] path) {
+		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+		TrajectoryEnvelope te = tec.pathToTE(-1, path, this.footprintCoords);
+
+		GeometricShapeDomain dom = (GeometricShapeDomain)te.getEnvelopeVariable().getDomain();
+		Geometry geom = dom.getGeometry();
+
+		BufferedImage bimgPath = this.om.makeImageOfGeometry(geom);
+		assert bimgPath != null;
+
+		BitSet bitsetPath = this.om.bimgToBitSet(bimgPath);
+		BitSet bitsetMap = this.om.getBitSet();
+
+		boolean isIntersection = bitsetPath.intersects(bitsetMap);
+		return ! isIntersection;
 	}
 		
 	public static boolean deleteDir(File dir) {

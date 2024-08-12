@@ -1597,6 +1597,12 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		}
 	}
 
+	public TrajectoryEnvelope pathToTE(int robotID, PoseSteering[] path, Coordinate[] robotFootprint) {
+		return solver.createEnvelopeNoParking(
+				robotID, path, "Driving", robotFootprint
+		);
+	}
+
 	/**
 	 * Add one or more missions for one or more robots. If more than one mission is specified for
 	 * a robot <code>r</code>, then all the robot's missions are concatenated.
@@ -1641,8 +1647,9 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				}
 
 				//Create a big overall driving envelope
-				TrajectoryEnvelope te = null;
-				te = solver.createEnvelopeNoParking(robotID, overallPath.toArray(new PoseSteering[overallPath.size()]), "Driving", getFootprint(robotID));
+				TrajectoryEnvelope te = pathToTE(
+						robotID, overallPath.toArray(new PoseSteering[overallPath.size()]), getFootprint(robotID)
+				);
 
 				//Add mission stopping points
 				synchronized(stoppingPoints) {

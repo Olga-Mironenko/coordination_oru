@@ -70,14 +70,23 @@ public class OccupancyMap {
 		this.mapWidth = (int)(width/resolution);
 		this.mapHeight= (int)(height/resolution);
 		this.mapOrigin = new Coordinate(mapOriginX, mapOriginY);
-		bimg = new BufferedImage(this.mapWidth, this.mapHeight, BufferedImage.TYPE_INT_RGB);
-		Graphics2D g2 = bimg.createGraphics();
-		g2.setPaint(Color.white);
-		g2.fillRect(0, 0, this.mapWidth, this.mapHeight);
-		g2.dispose();
+		bimg = makeImage();
 		//--
 		this.createOccupancyMap();
 		this.bimg_original = deepCopy(this.bimg);
+	}
+
+	private BufferedImage makeImage() {
+		BufferedImage img = new BufferedImage(this.mapWidth, this.mapHeight, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g2 = img.createGraphics();
+		g2.setPaint(Color.white);
+		g2.fillRect(0, 0, this.mapWidth, this.mapHeight);
+		g2.dispose();
+		return img;
+	}
+
+	public BitSet getBitSet() {
+		return occupancyMapLinearBits;
 	}
 	
 	/**
@@ -149,6 +158,7 @@ public class OccupancyMap {
 	public void clearObstacles() {
 		this.bimg = deepCopy(this.bimg_original);
 		this.obstacles.clear();
+		this.createOccupancyMap();
 	}
 	
 	/**
@@ -169,18 +179,35 @@ public class OccupancyMap {
 		ShapeWriter writer = new ShapeWriter();
 		g2.setPaint(Color.black);
 		for (Geometry g : obstacles) {
-			AffineTransformation at = new AffineTransformation();
-			at.translate(-mapOrigin.x, -mapOrigin.y);
-			at.scale(1.0/mapResolution, -1.0/mapResolution);
-			at.translate(0, bimg.getHeight());
-			Geometry scaledGeom = at.transform(g);
-			Shape shape = writer.toShape(scaledGeom);
-			//System.out.println("Shape: " + shape.getBounds2D());
-			g2.fill(shape);
+			addGeometry(bimg, g2, writer, g);
 			this.obstacles.add(g);
 		}
 		g2.dispose();
 		this.createOccupancyMap();
+	}
+
+	private void addGeometry(BufferedImage img, Graphics2D g2, ShapeWriter writer, Geometry g) {
+		AffineTransformation at = new AffineTransformation();
+		at.translate(-mapOrigin.x, -mapOrigin.y);
+		at.scale(1.0/mapResolution, -1.0/mapResolution);
+		at.translate(0, img.getHeight());
+		Geometry scaledGeom = at.transform(g);
+		Shape shape = writer.toShape(scaledGeom);
+		//System.out.println("Shape: " + shape.getBounds2D());
+		g2.fill(shape);
+	}
+
+	public BufferedImage makeImageOfGeometry(Geometry g) {
+		BufferedImage img = makeImage();
+
+		Graphics2D g2 = img.createGraphics();
+		ShapeWriter writer = new ShapeWriter();
+		g2.setPaint(Color.black);
+
+		addGeometry(img, g2, writer, g);
+
+		g2.dispose();
+		return img;
 	}
 	
 	/**
@@ -413,14 +440,19 @@ public class OccupancyMap {
 	}
 
 	private void createOccupancyMap() {
-		this.occupancyMapLinearBits = new BitSet();
+		this.occupancyMapLinearBits = bimgToBitSet(bimg);
+	}
+
+	public BitSet bimgToBitSet(BufferedImage bimg) {
+		BitSet bs = new BitSet();
 		for(int y=0; y < bimg.getHeight(); y++){
 			for(int x=0; x < bimg.getWidth(); x++){
 				Color c = new Color(bimg.getRGB(x,y));
-				this.occupancyMapLinearBits.set(y*mapWidth+x, c.getRed()/255.0 < this.threshold ? true : false);
+				bs.set(y*mapWidth+x, c.getRed()/255.0 < this.threshold);
 			}
 		}
-		this.occupancyMapLinearBits.set(bimg.getHeight()*bimg.getWidth(), true);
+		//bs.set(bimg.getHeight()*bimg.getWidth(), true); // TODO: where is it needed?
+		return bs;
 	}
 
 	private void readMap(String mapYAMLFile) {

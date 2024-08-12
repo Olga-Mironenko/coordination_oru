@@ -29,13 +29,13 @@ public class HumanControl {
     // TODO: crashes on click and then (immediately) keypress
     // TODO: crashes on large initial velocity
 
-    public static void moveRobot(int robotID, Pose goal) {
-        moveRobot(robotID, goal, new int[0]);
+    public static boolean moveRobot(int robotID, Pose goal) {
+        return moveRobot(robotID, goal, new int[0]);
     }
 
-    public static void moveRobot(int robotID, Pose goal, int[] robotIDsObstacles) {
+    public static boolean moveRobot(int robotID, Pose goal, int[] robotIDsObstacles) {
         if (isWorking) {
-            return;
+            return false;
         }
         isWorking = true;
         try {
@@ -58,7 +58,7 @@ public class HumanControl {
             catch (NoPathFoundError error) {
                 status = String.format("%s: failed to find", statusPrefix);
                 isWorking = false;
-                return;
+                return false;
             }
 
             assert tec.getRobotReport(robotID).toString().equals(rr.toString());
@@ -83,6 +83,7 @@ public class HumanControl {
         } finally {
             isWorking = false;
         }
+        return true;
     }
 
     // 0.1->1.1: OK

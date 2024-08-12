@@ -1,13 +1,13 @@
 package se.oru.coordination.coordination_oru.tests;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
-import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.code.*;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
 import se.oru.coordination.coordination_oru.util.*;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 import java.awt.*;
@@ -53,7 +53,7 @@ public class GridTestInteractive {
  //        final Pose humStart = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
 //        final Pose humFinish = GridMapConstants.column2Row1Right;
         final Pose humFinish = GridMapConstants.turnAround(
-                GridMapConstants.shiftX(GridMapConstants.column1Row1Down, 1.5)
+                GridMapConstants.shiftX(GridMapConstants.column3Row1Down, 2.5)
         );
 
 //        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
@@ -150,5 +150,25 @@ public class GridTestInteractive {
         Missions.enqueueMissions(aut1, aut1Start, aut1Finish, false);
         Missions.enqueueMissions(aut2, aut2Start, aut2Finish, false);
         Missions.enqueueMissions(aut3, aut3Start, aut3Finish, false);
+
+        new GatedThread("clicking thread") {
+            @Override
+            public void runCore() {
+                while (true) {
+                    int millis = Timekeeper.getVirtualMillisPassed();
+                    if (millis >= 50 * 1000) {
+                        boolean isOk = HumanControl.moveRobot(
+                                hum0.getID(),
+                                GridMapConstants.turnAround(GridMapConstants.column3Row2Down)
+                        );
+//                        assert ! isOk;
+
+                        break;
+                    }
+
+                    GatedThread.sleepWithoutTryCatch(100);
+                }
+            }
+        }.start();
     }
 }
