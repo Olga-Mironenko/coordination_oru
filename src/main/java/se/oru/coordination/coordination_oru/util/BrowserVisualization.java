@@ -310,9 +310,12 @@ public class BrowserVisualization implements FleetVisualization {
 		}
 
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-		text += String.format("Collision events: %d minor, %d major<br>",
+
+		text += String.format(
+				"Collision events: <b>%d</b> minor, <b>%d</b> major<br>",
 				tec.allCollisionsList.size() - tec.majorCollisionsList.size(),
-				tec.majorCollisionsList.size());
+				tec.majorCollisionsList.size()
+		);
 
 		if (false && isExtendedText && idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
 			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + " m/s<br>";
@@ -326,7 +329,9 @@ public class BrowserVisualization implements FleetVisualization {
 
 			int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(HumanControl.idHuman, 0);
 			int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(HumanControl.idHuman, 0);
-			text += String.format("Human V%d: max velocity %.1f m/s; current velocity %.1f%s m/s; %d violations, %d forcing events",
+			text += String.format(
+					"Human V%d: max velocity <b>%.1f</b> m/s; current velocity <b>%.1f</b>%s m/s" +
+					"; <b>%d</b> violations, <b>%d</b> forcing events",
 					id,
 					TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotMaxVelocity(id),
 					rr.getVelocity(),
@@ -363,7 +368,7 @@ public class BrowserVisualization implements FleetVisualization {
 				text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
 
 				double velocity = rr.getVelocity();
-				text += "; v=" + round(velocity) + " m/s";
+				text += String.format("; v=<b>%.1f</b> m/s (max: %.1f m/s)", velocity, vehicle.getMaxVelocity());
 
 				if (isExtendedText) {
 					int numCalls = 0;
@@ -377,7 +382,7 @@ public class BrowserVisualization implements FleetVisualization {
 				}
 			}
 
-			text += "; traveled " + round(vehicle.totalDistance) + " m";
+			text += String.format("; traveled %.1f m", vehicle.totalDistance);
 
 			List<CollisionEvent> allCollisions = tec.robotIDToAllCollisions.getOrDefault(id, new ArrayList<>());
 			List<CollisionEvent> minorCollisions = tec.robotIDToMinorCollisions.getOrDefault(id, new ArrayList<>());
@@ -385,7 +390,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 			assert allCollisions.size() == minorCollisions.size() + majorCollisions.size();
 
-			text += String.format("; collision events: %d minor, %d major", minorCollisions.size(), majorCollisions.size());
+			text += String.format("; collision events: <b>%d</b> minor, <b>%d</b> major", minorCollisions.size(), majorCollisions.size());
 
 			text += "; " + stringifyMissions(Missions.getMissions(id));
 			text += "<br>";
