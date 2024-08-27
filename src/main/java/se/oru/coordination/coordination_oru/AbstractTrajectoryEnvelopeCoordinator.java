@@ -891,7 +891,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		return this.getRobotReport(robotID).getPathIndex() == -1;
 	}
 
-	public Geometry[] getObstaclesInCriticalPoints(int ... robotIDs) {
+	public Geometry[] getObstacles(boolean isInCriticalPoints, int ... robotIDs) {
 		//Compute one obstacle per given robot, placed in the robot's waiting pose
 		ArrayList<Geometry> ret = new ArrayList<Geometry>();
 		for (int robotID : robotIDs) {
@@ -900,7 +900,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				tracker = trackers.get(robotID);
 			}
 			Geometry currentFP = null;
-			if (tracker instanceof TrajectoryEnvelopeTrackerDummy) { // the robot is parked
+			if (! isInCriticalPoints || tracker instanceof TrajectoryEnvelopeTrackerDummy) {
 				Pose currentPose = this.getRobotReport(robotID).getPose();
 				currentFP = makeObstacles(robotID, currentPose)[0];
 			}

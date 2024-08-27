@@ -1070,7 +1070,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				if (robotsAsObstacles.size() > 0) {
 					otherRobotIDs = new HashSet<Integer>();
 					for (int otherRobotID : robotsAsObstacles) if (otherRobotID != robotID) otherRobotIDs.add(otherRobotID);
-					if (!otherRobotIDs.isEmpty()) obstacles = getObstaclesInCriticalPoints(ArrayUtils.toPrimitive(otherRobotIDs.toArray(new Integer[otherRobotIDs.size()])));
+					if (!otherRobotIDs.isEmpty()) obstacles = getObstacles(true, ArrayUtils.toPrimitive(otherRobotIDs.toArray(new Integer[otherRobotIDs.size()])));
 				}
 			}
 

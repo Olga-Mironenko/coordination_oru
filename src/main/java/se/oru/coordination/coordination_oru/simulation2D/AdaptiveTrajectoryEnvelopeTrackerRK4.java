@@ -9,16 +9,20 @@ import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 
 import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
+import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.util.Forcing;
 import se.oru.coordination.coordination_oru.util.HumanControl;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
 	public static boolean isEnabledGlobally = false;
-	public static boolean isReplanningNearParkedVehicle = false;
+	public static boolean isReroutingNearParkedVehicle = false;
+	public static boolean isReroutingNearSlowVehicleForHuman = false;
+	public static boolean isReroutingNearSlowVehicleForNonHuman = false;
 	public static boolean isRacingThroughCrossroadAllowed = false;
 
 	public static double coefDeltaTimeForSlowDown = 0.1;
@@ -49,10 +53,12 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	protected ArrayList<Long> reportTimeLists = new ArrayList<Long>();
 
 	private HashMap<Integer,Integer> userCPReplacements = null;
-
 	public static EmergencyBreaker emergencyBreaker = new EmergencyBreaker(false, false);
-
 	public Status latestStatusForVisualization;
+
+	private Deque<Integer> queueStopEvents = new LinkedList<>();
+	private int millisStopEvents = 3000;
+	private int countStopEvents = 20;
 
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
@@ -515,7 +521,49 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return criticalSections;
 	}
 
-	public void setCriticalPoint(int criticalPointToSet) {
+	private boolean areThereTooManyStopEventsRecently() {
+		int millisMin = Timekeeper.getVirtualMillisPassed() - millisStopEvents;
+		while (! queueStopEvents.isEmpty()) {
+			Integer first = queueStopEvents.peek();
+			if (first < millisMin) {
+				queueStopEvents.remove();
+			} else {
+				break;
+			}
+		}
+
+		assert queueStopEvents.isEmpty() || queueStopEvents.peek() >= millisMin;
+		return queueStopEvents.size() >= countStopEvents;
+	}
+
+	private void rerouteBecauseOfSlowVehicleIfNeeded(int robotID, int criticalPointToSet) {
+		if (this.criticalPoint == criticalPointToSet || criticalPointToSet == -1) {
+			return;
+		}
+		// Otherwise, this is a stop event.
+
+		if (VehiclesHashMap.getVehicle(robotID) instanceof HumanDrivenVehicle) {
+			if (! isReroutingNearSlowVehicleForHuman) {
+				return;
+			}
+		} else {
+			if (! isReroutingNearSlowVehicleForNonHuman) {
+				return;
+			}
+		}
+
+		if (! queueStopEvents.isEmpty() && queueStopEvents.peekLast() == Timekeeper.getVirtualMillisPassed()) {
+			return;
+		}
+
+		queueStopEvents.add(Timekeeper.getVirtualMillisPassed());
+		if (areThereTooManyStopEventsRecently()) {
+			tryToReplanNearVehicle(robotID, false);
+			queueStopEvents.clear(); // don't try to reroute again in the nearest future
+		}
+	}
+
+	public synchronized void setCriticalPoint(int criticalPointToSet) {
 		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
 		RobotReport rr = getRobotReport();
 		int robotID = rr.getRobotID();
@@ -527,6 +575,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			return;
 		}
 		*/
+
+		rerouteBecauseOfSlowVehicleIfNeeded(robotID, criticalPointToSet);
 
 		if (criticalPointToSet == -1) {
 			//The critical point has been reset, go to the end
@@ -818,7 +868,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return deltaTimeInMillis / this.temporalResolution;
 	}
 
-	public boolean tryToReplanNearParkedVehicle(int myRobotID) {
+	public boolean tryToReplanNearVehicle(int myRobotID, boolean mustBeParked) {
 		CriticalSection cs = getFirstOfCurrentCriticalSections();
 		//assert cs != null; // this may happen when the CS has just been removed
 		if (cs == null) {
@@ -826,12 +876,17 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 
 		int superiorID = cs.getSuperior();
-		if (myRobotID != superiorID && tec.getTracker(superiorID) instanceof TrajectoryEnvelopeTrackerDummy) {
-			PoseSteering[] psa = te.getTrajectory().getPoseSteering();
-			HumanControl.moveRobot(myRobotID, psa[psa.length - 1].getPose(), new int[] {superiorID});
-			return true;
+		if (myRobotID == superiorID) {
+			return false;
 		}
-		return false;
+
+		if (mustBeParked && ! (tec.getTracker(superiorID) instanceof TrajectoryEnvelopeTrackerDummy)) {
+			return false;
+		}
+
+		PoseSteering[] psa = te.getTrajectory().getPoseSteering();
+		HumanControl.moveRobot(myRobotID, psa[psa.length - 1].getPose(), new int[] {superiorID});
+		return true;
 	}
 
 	@Override
@@ -843,7 +898,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(myRobotID);
 		int myTEID = te.getID();
 		Status status = Status.DRIVING;
-		boolean isTryingToReplanNearParkedVehicleOK = true;
+		boolean isReroutingNearParkedVehicleOK = true;
 
 		while (true) {
 			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
@@ -863,14 +918,16 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 			if (status == Status.DRIVING) { // TODO: skip if `deltaTime == 0.0`
 				checkIfCanPassFirst();
-				isTryingToReplanNearParkedVehicleOK = true;
+				isReroutingNearParkedVehicleOK = true;
 
 				//Update the robot's state via RK4 numerical integration
 				updateState(deltaTime, vehicle.getMaxVelocity(), vehicle.getMaxAcceleration());
 
-			} else if (status == Status.STOPPED_AT_CP && isReplanningNearParkedVehicle && isTryingToReplanNearParkedVehicleOK) {
-				if (tryToReplanNearParkedVehicle(myRobotID)) {
-					isTryingToReplanNearParkedVehicleOK = false;
+			} else if (status == Status.STOPPED_AT_CP) {
+				if (isReroutingNearParkedVehicle && isReroutingNearParkedVehicleOK) {
+					if (tryToReplanNearVehicle(myRobotID, true)) {
+						isReroutingNearParkedVehicleOK = false;
+					}
 				}
 			}
 

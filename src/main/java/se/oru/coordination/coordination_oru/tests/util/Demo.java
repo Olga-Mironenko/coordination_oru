@@ -3,7 +3,6 @@ package se.oru.coordination.coordination_oru.tests.util;
 import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
-import se.oru.coordination.coordination_oru.util.HumanControl;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.Printer;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
@@ -28,7 +27,9 @@ public abstract class Demo {
             BrowserVisualization.isExtendedText = true;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = false;
             CriticalSection.isCanPassFirstActive = true;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReplanningNearParkedVehicle = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicle = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
         }
 
         BrowserVisualization.isStatusText = true;

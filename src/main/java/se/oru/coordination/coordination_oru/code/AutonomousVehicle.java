@@ -83,7 +83,7 @@ public class AutonomousVehicle extends AbstractVehicle {
             TrajectoryEnvelopeCoordinatorSimulation.tec.setMotionPlanner(this.getID(), rsp);
 
             if (robotIDsObstacles.length > 0) {
-                Geometry[] obstacles = TrajectoryEnvelopeCoordinatorSimulation.tec.getObstaclesInCriticalPoints(robotIDsObstacles);
+                Geometry[] obstacles = TrajectoryEnvelopeCoordinatorSimulation.tec.getObstacles(false, robotIDsObstacles);
                 rsp.addObstacles(obstacles);
             }
 

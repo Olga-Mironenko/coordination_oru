@@ -73,8 +73,8 @@ public class GridTestInteractive {
 //        );
         final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
 
-        final Pose aut2Start = GridMapConstants.row2LeftStart;
-        final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.row2RightStart);
+        final Pose aut2Start = GridMapConstants.row2RightStart;
+        final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.row2LeftStart);
 
         final Pose aut3Start = GridMapConstants.row3LeftStart;
         final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.row3RightStart);
@@ -97,6 +97,7 @@ public class GridTestInteractive {
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.ORANGE, Color.ORANGE, maxVelocityHum, maxAccelerationHum);
+//        AutonomousVehicle hum0 = new AutonomousVehicle(0, 0, Color.BLUE, Color.BLUE, maxVelocityHum, maxAccelerationHum);
         AutonomousVehicle aut1 = new AutonomousVehicle(1, 0, Color.BLUE, Color.BLUE, 5, maxAccelerationAut);
         AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.BLUE, Color.BLUE, 5, maxAccelerationAut);
         AutonomousVehicle aut3 = new AutonomousVehicle(3, 0, Color.BLUE, Color.BLUE, 5, maxAccelerationAut);
@@ -119,10 +120,10 @@ public class GridTestInteractive {
         switch (scenario) {
             case AUTOMATED_FIRST:
             default:
-                tec.addComparator(heuristics.highestIDNumber());
+                tec.addComparator(heuristics.automatedFirst());
                 break;
             case HUMAN_FIRST:
-                tec.addComparator(heuristics.lowestIDNumber());
+                tec.addComparator(heuristics.humanFirst());
                 break;
             case FIRST_COME:
                 tec.addComparator(heuristics.closest());
@@ -157,15 +158,16 @@ public class GridTestInteractive {
                 while (true) {
                     int millis = Timekeeper.getVirtualMillisPassed();
                     if (millis >= 50 * 1000) {
-                        while (true) {
-                            boolean isOk = HumanControl.moveRobot(
-                                    hum0.getID(),
-                                    GridMapConstants.turnAround(GridMapConstants.column3Row2Down)
-                            );
-                            if (isOk) {
-                                break;
-                            }
-                        }
+                        // Artificial rerouting (imitation of a click):
+//                        while (true) {
+//                            boolean isOk = HumanControl.moveRobot(
+//                                    hum0.getID(),
+//                                    GridMapConstants.turnAround(GridMapConstants.column3Row2Down)
+//                            );
+//                            if (isOk) {
+//                                break;
+//                            }
+//                        }
 
                         break;
                     }
