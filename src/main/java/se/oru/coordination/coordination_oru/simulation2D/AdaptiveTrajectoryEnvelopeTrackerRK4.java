@@ -536,13 +536,14 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return queueStopEvents.size() >= countStopEvents;
 	}
 
-	private void rerouteBecauseOfSlowVehicleIfNeeded(int robotID, int criticalPointToSet) {
+	private void rerouteBecauseOfSlowVehicleIfNeeded(int robotID, int criticalPointToSet, Set<CriticalSection> criticalSections) {
 		if (this.criticalPoint == criticalPointToSet || criticalPointToSet == -1) {
 			return;
 		}
 		// Otherwise, this is a stop event.
 
-		if (VehiclesHashMap.getVehicle(robotID) instanceof HumanDrivenVehicle) {
+		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(robotID);
+		if (vehicle instanceof HumanDrivenVehicle) {
 			if (! isReroutingNearSlowVehicleForHuman) {
 				return;
 			}
@@ -553,6 +554,17 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 
 		if (! queueStopEvents.isEmpty() && queueStopEvents.peekLast() == Timekeeper.getVirtualMillisPassed()) {
+			return;
+		}
+
+		if (criticalSections.size() != 1) {
+			return;
+		}
+
+		CriticalSection cs = criticalSections.iterator().next();
+		int otherID = cs.getOtherRobotID(robotID);
+		AbstractVehicle otherVehicle = VehiclesHashMap.getVehicle(otherID);
+		if (! (otherVehicle instanceof HumanDrivenVehicle) && otherVehicle.getMaxVelocity() >= vehicle.getMaxVelocity()) {
 			return;
 		}
 
@@ -576,8 +588,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 		*/
 
-		rerouteBecauseOfSlowVehicleIfNeeded(robotID, criticalPointToSet);
-
 		if (criticalPointToSet == -1) {
 			//The critical point has been reset, go to the end
 			this.setFieldCriticalPoint(-1);
@@ -589,12 +599,14 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		//A new intermediate index to stop at has been given
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-		HashSet<CriticalSection> criticalSections = getCriticalSectionsForRobot(criticalPointToSet);
+		Set<CriticalSection> criticalSections = getCriticalSectionsForRobot(criticalPointToSet);
 
 		//assert ! criticalSections.isEmpty();
 		if (criticalSections.isEmpty()) {
 			return;
 		}
+
+		rerouteBecauseOfSlowVehicleIfNeeded(robotID, criticalPointToSet, criticalSections);
 
 		if (! isRacingThroughCrossroadAllowed || criticalPointToSet > rr.getPathIndex()) {
 			//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP

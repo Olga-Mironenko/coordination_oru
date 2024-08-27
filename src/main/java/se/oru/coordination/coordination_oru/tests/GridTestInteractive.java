@@ -53,7 +53,7 @@ public class GridTestInteractive {
  //        final Pose humStart = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
 //        final Pose humFinish = GridMapConstants.column2Row1Right;
         final Pose humFinish = GridMapConstants.turnAround(
-                GridMapConstants.shiftX(GridMapConstants.column3Row1Down, 2.5)
+                GridMapConstants.shiftX(GridMapConstants.column3Row1Down, -4)
         );
 
 //        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
@@ -73,8 +73,8 @@ public class GridTestInteractive {
 //        );
         final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
 
-        final Pose aut2Start = GridMapConstants.row2RightStart;
-        final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.row2LeftStart);
+        final Pose aut2Start = GridMapConstants.row2LeftStart;
+        final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.row2RightStart);
 
         final Pose aut3Start = GridMapConstants.row3LeftStart;
         final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.row3RightStart);
