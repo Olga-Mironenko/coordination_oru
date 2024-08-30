@@ -66,7 +66,7 @@ public class GridSimple {
 
         final int maxVelocity = 4;
 
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocity, 2, 1.5, 1.5);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, 0, Color.GREEN, Color.BLUE, maxVelocity, 2, 1.5, 1.5);
     //    AutonomousVehicle aut1 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
     //    AutonomousVehicle aut2 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
         AutonomousVehicle aut3 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);

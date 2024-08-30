@@ -72,7 +72,7 @@ public class TestClick {
         HumanControl.targetVelocityHumanInitial = 3;
         HumanControl.targetVelocityHuman = 3;
 
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.BLUE, maxVelocityHuman, 2, 0.5, 0.5);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, 0, Color.GREEN, Color.BLUE, maxVelocityHuman, 2, 0.5, 0.5);
         AutonomousVehicle aut1 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 0.5, 0.5);
         AutonomousVehicle aut2 = new AutonomousVehicle(0, Color.RED, Color.RED, maxVelocity, 2, 0.5, 0.5);
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15

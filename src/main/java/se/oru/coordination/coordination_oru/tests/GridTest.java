@@ -169,7 +169,7 @@ public class GridTest {
 
         // TODO: `maxAcceleration` passed here is not used by `tec`.
         if (scenario != Scenario.BASELINE_AUTOMATED_ONLY) {
-            hum0 = new HumanDrivenVehicle(0, colorHum, colorHum, maxVelocityHum, maxAccelerationHum);
+            hum0 = new HumanDrivenVehicle(0, 0, colorHum, colorHum, maxVelocityHum, maxAccelerationHum);
         } else if (isCrossMode) {
             hum0 = new AutonomousVehicle(0, 0, colorAut, colorAut, isCrossMode ? maxVelocityHum : 2, maxAccelerationAut);
         }

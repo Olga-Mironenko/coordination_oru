@@ -163,7 +163,7 @@ public class ProductionLine {
         tec.setupSolver(0, 100000000);
         tec.startInference();
 
-        hum0 = new HumanDrivenVehicle(0, Color.GREEN, Color.GREEN, maxVelocity, maxAcceleration, xLengthHumanOuter, yLengthHumanOuter);
+        hum0 = new HumanDrivenVehicle(0, 0, Color.GREEN, Color.GREEN, maxVelocity, maxAcceleration, xLengthHumanOuter, yLengthHumanOuter);
         aut1 = new AutonomousVehicle(1, 0, Color.YELLOW, Color.YELLOW, maxVelocity * 2, maxAcceleration * 2, xLengthSmallOuter, yLengthSmallOuter);
         aut2 = new AutonomousVehicle(2, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
         aut3 = new AutonomousVehicle(3, 0, Color.YELLOW, Color.YELLOW, maxVelocity, maxAcceleration, xLengthSmallOuter, yLengthSmallOuter);
