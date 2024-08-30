@@ -117,6 +117,7 @@ public abstract class AbstractVehicle {
                 new Coordinate(xLengthFront, -yLengthRight),       //front right
                 new Coordinate(-xLengthBack, -yLengthRight)        //back right
         };
+        // length=3, safeDistance=1 -> fullLength=3+1*2=5, x=-2.5..2.5
     }
 
     @Override
@@ -141,7 +142,9 @@ public abstract class AbstractVehicle {
 
     public void registerInTec(TrajectoryEnvelopeCoordinatorSimulation tec,
                               VehicleSize vehicleSize) {
-        double xLengthInner = vehicleSize.length / 2;
+        // E.g.: vehicleSize = {length: 3, frontSafeDistance: 1, backSafeDistance: 1}:
+        double xLengthInner = vehicleSize.length / 2; // -> inner footprint: x = -1.5 .. 1.5
+        // total length: 3 + 1*2 = 5 -> (outer) footprint (computed below): x = -2.5 .. 2.5
         double yLengthInner = vehicleSize.width / 2;
 
         this.innerFootprint = AbstractVehicle.makeFootprint(xLengthInner, yLengthInner);

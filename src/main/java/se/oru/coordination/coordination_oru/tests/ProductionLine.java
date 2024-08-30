@@ -140,7 +140,7 @@ public class ProductionLine {
 
         double xLengthHumanOuter = 3.0;
         double yLengthHumanOuter = 2.5;
-        double xLengthHumanInner = 2.0;
+        double xLengthHumanInner = 2.0; // -2..2 -> length=4
         double yLengthHumanInner = 2.0;
 
         HumanControl.targetVelocityHumanInitial = maxVelocity;
