@@ -140,7 +140,7 @@ public class GridHardest {
                             throw new RuntimeException(e);
                         }
                     }
-                    HumanControl.changeTargetVelocityHuman(1);
+                    HumanControl.changeTargetVelocity(0, 1);
                 }
             }.start();
         }
@@ -153,10 +153,9 @@ public class GridHardest {
                     GatedThread.skipTimesteps(100);
                     HumanControl.moveRobot(hum0.getID(), column2Bottom);
                     GatedThread.skipTimesteps(10);
-                    HumanControl.changeTargetVelocityHuman(1); // requires emergency break
+                    HumanControl.changeTargetVelocity(0, 1); // requires emergency break
                 }
             }.start();
         }
     }
 }
-

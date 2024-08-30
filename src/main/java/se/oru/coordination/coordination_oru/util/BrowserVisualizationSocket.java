@@ -97,13 +97,15 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         super.onWebSocketText(message);
         System.out.println("Received TEXT message: " + message);
 
+        int robotID = 0; // the ID should eventually be given through the message
+
         Gson gson = new Gson();
         JsonArray array = new JsonParser().parse(message).getAsJsonArray();
         String event = gson.fromJson(array.get(0), String.class);
         if (HumanControl.isEnabledForBrowser && event.equals("click")) {
             Pose poseJson = gson.fromJson(array.get(1), Pose.class);
             Pose pose = new Pose(poseJson.getX(), poseJson.getY(), poseJson.getTheta());
-            HumanControl.moveRobot(HumanControl.idHuman, pose);
+            HumanControl.moveRobot(robotID, pose);
         } else if (HumanControl.isEnabledForBrowser && event.equals("keydown")) {
             String code = gson.fromJson(array.get(1), String.class);
             System.out.println("keydown: code=" + code);
@@ -113,12 +115,12 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
             } else if (code.equals("ArrowLeft")) {
                 delta = -1.0;
             } else if (code.equals("Space")) {
-                Forcing.startForcing(HumanControl.idHuman);
+                Forcing.startForcing(robotID);
             } else {
                 System.out.println("Unknown keydown code: " + code);
             }
             if (delta != null) {
-                HumanControl.changeTargetVelocityHuman(delta);
+                HumanControl.changeTargetVelocity(robotID, delta);
             }
 	    } else {
             System.out.println("Unknown event: " + event);

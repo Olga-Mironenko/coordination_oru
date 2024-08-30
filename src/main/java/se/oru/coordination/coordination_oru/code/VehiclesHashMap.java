@@ -31,6 +31,10 @@ public class VehiclesHashMap {
         return instance.getList().get(key);
     }
 
+    public static boolean isHuman(int key) {
+        return getVehicle(key) instanceof HumanDrivenVehicle;
+    }
+
     public synchronized static HashMap<Integer, AbstractVehicle> getList() {
         return list;
     }

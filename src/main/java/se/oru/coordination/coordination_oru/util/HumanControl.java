@@ -1,6 +1,5 @@
 package se.oru.coordination.coordination_oru.util;
 
-import com.vividsolutions.jts.geom.TopologyException;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 
@@ -20,7 +19,6 @@ public class HumanControl {
     @Deprecated
     public static double targetVelocityHuman = targetVelocityHumanInitial;
 
-    public static int idHuman = 0;
     public static boolean isWorking = false;
 
     public static String status = null;
@@ -90,7 +88,7 @@ public class HumanControl {
     // 0.1->1.1->0.1: OK
     // 0.1->1.1->2.1: breaks
     // 0.1->1.1->0.1->1.1: breaks
-    public static void changeTargetVelocityHuman(double delta) {
+    public static void changeTargetVelocity(int robotID, double delta) {
         if (isWorking) {
             return;
         }
@@ -98,14 +96,13 @@ public class HumanControl {
         try {
             // TODO: sometimes doesn't get called
             // ("hint": try to pause the websocket thread in the debugger)
-            int robotID = idHuman;
-            AbstractVehicle vehicleHuman = VehiclesHashMap.getVehicle(idHuman);
+            AbstractVehicle vehicleHuman = VehiclesHashMap.getVehicle(robotID);
             double maxVelocityOld = vehicleHuman.getMaxVelocity();
             double maxVelocityNew = Math.max(0.0, maxVelocityOld + delta);
             if (maxVelocityNew != maxVelocityOld) {
                 vehicleHuman.setMaxVelocity(maxVelocityNew);
 
-                AbstractTrajectoryEnvelopeTracker tracker = TrajectoryEnvelopeCoordinatorSimulation.tec.trackers.get(idHuman);
+                AbstractTrajectoryEnvelopeTracker tracker = TrajectoryEnvelopeCoordinatorSimulation.tec.trackers.get(robotID);
                 if (! (tracker instanceof TrajectoryEnvelopeTrackerDummy)) {
                     assert tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4;
                     ((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).onTrajectoryEnvelopeUpdate();

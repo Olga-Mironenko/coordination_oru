@@ -317,18 +317,22 @@ public class BrowserVisualization implements FleetVisualization {
 				tec.majorCollisionsList.size()
 		);
 
-		if (false && isExtendedText && idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
-			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + " m/s<br>";
-		}
+//		if (false && isExtendedText && idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
+//			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + " m/s<br>";
+//		}
 
-		for (int id : Arrays.asList(HumanControl.idHuman)) {
+		for (int id : new TreeSet<>(VehiclesHashMap.getList().keySet())) {
+			if (! VehiclesHashMap.isHuman(id)) {
+				continue;
+			}
+
 			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
 			if (rr == null) {
 				continue;
 			}
 
-			int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(HumanControl.idHuman, 0);
-			int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(HumanControl.idHuman, 0);
+			int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(id, 0);
+			int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(id, 0);
 			text += String.format(
 					"Human V%d: max velocity <b>%.1f</b> m/s; current velocity <b>%.1f</b>%s m/s" +
 					"; <b>%d</b> violations, <b>%d</b> forcing events",
@@ -374,7 +378,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 				text += String.format("; collision events: <b>%d</b> minor, <b>%d</b> major", minorCollisions.size(), majorCollisions.size());
 
-				if (isCollisionInfo && id != HumanControl.idHuman) {
+				if (isCollisionInfo && ! VehiclesHashMap.isHuman(id)) {
 					if (allCollisions.size() != 0) {
 						for (CollisionEvent ce : allCollisions) {
 							text += "- " + ce.toCompactString(rr.getRobotID()) + "<br>";
@@ -432,12 +436,12 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 
 	protected static String stringifyCriticalSections(HashSet<CriticalSection> allCriticalSections) {
-		Integer robotID = null; // MissionUtils.idHuman;
+		Integer robotID = null;
 
 		ArrayList<CriticalSection> criticalSections =
 				robotID == null
 				? CriticalSection.sortCriticalSections(allCriticalSections)
-				: CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, HumanControl.idHuman);
+				: CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, robotID);
 
 		String text = "Critical sections" + (robotID == null ? "" : " for " + robotID) + ":";
 		if (criticalSections.isEmpty()) {

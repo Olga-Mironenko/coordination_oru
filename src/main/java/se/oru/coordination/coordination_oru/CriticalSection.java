@@ -1,6 +1,7 @@
 package se.oru.coordination.coordination_oru;
 
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
+import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.Forcing;
@@ -236,7 +237,7 @@ public class CriticalSection {
 		protected double estimateVelocity(int robotID, boolean isInferior) {
 			TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 			double maxVelocity = tec.getRobotMaxVelocity(robotID);
-			if (robotID == HumanControl.idHuman) {
+			if (VehiclesHashMap.isHuman(robotID)) {
 				maxVelocity = Math.min(maxVelocity, HumanControl.targetVelocityHuman);
 			}
 
