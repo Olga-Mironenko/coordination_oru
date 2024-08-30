@@ -362,13 +362,33 @@ public class BrowserVisualization implements FleetVisualization {
 			if (rr == null) {
 				text += "no robot report";
 			} else {
-				text += String.format("i=%d (CP=%d, %s)",
-						rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
-				);
-				text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
 
 				double velocity = rr.getVelocity();
-				text += String.format("; v=<b>%.1f</b> m/s (max: %.1f m/s)", velocity, vehicle.getMaxVelocity());
+				text += String.format("v=<b>%.1f</b> m/s (max: %.1f m/s)", velocity, vehicle.getMaxVelocity());
+
+				List<CollisionEvent> allCollisions = tec.robotIDToAllCollisions.getOrDefault(id, new ArrayList<>());
+				List<CollisionEvent> minorCollisions = tec.robotIDToMinorCollisions.getOrDefault(id, new ArrayList<>());
+				List<CollisionEvent> majorCollisions = tec.robotIDToMajorCollisions.getOrDefault(id, new ArrayList<>());
+
+				assert allCollisions.size() == minorCollisions.size() + majorCollisions.size();
+
+				text += String.format("; collision events: <b>%d</b> minor, <b>%d</b> major", minorCollisions.size(), majorCollisions.size());
+
+				if (isCollisionInfo && id != HumanControl.idHuman) {
+					if (allCollisions.size() != 0) {
+						for (CollisionEvent ce : allCollisions) {
+							text += "- " + ce.toCompactString(rr.getRobotID()) + "<br>";
+						}
+					}
+				}
+
+				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
+
+				text += String.format("; i=%d (CP=%d, %s)",
+						rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
+				);
+
+				text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
 
 				if (isExtendedText) {
 					int numCalls = 0;
@@ -382,26 +402,9 @@ public class BrowserVisualization implements FleetVisualization {
 				}
 			}
 
-			text += String.format("; traveled %.1f m", vehicle.totalDistance);
-
-			List<CollisionEvent> allCollisions = tec.robotIDToAllCollisions.getOrDefault(id, new ArrayList<>());
-			List<CollisionEvent> minorCollisions = tec.robotIDToMinorCollisions.getOrDefault(id, new ArrayList<>());
-			List<CollisionEvent> majorCollisions = tec.robotIDToMajorCollisions.getOrDefault(id, new ArrayList<>());
-
-			assert allCollisions.size() == minorCollisions.size() + majorCollisions.size();
-
-			text += String.format("; collision events: <b>%d</b> minor, <b>%d</b> major", minorCollisions.size(), majorCollisions.size());
-
 			text += "; " + stringifyMissions(Missions.getMissions(id));
 			text += "<br>";
 
-			if (isCollisionInfo && id != HumanControl.idHuman) {
-				if (allCollisions.size() != 0) {
-					for (CollisionEvent ce : allCollisions) {
-						text += "- " + ce.toCompactString(rr.getRobotID()) + "<br>";
-					}
-				}
-			}
 		}
 		if (isExtendedText) {
 //			text += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
