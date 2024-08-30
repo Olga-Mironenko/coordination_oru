@@ -237,9 +237,6 @@ public class CriticalSection {
 		protected double estimateVelocity(int robotID, boolean isInferior) {
 			TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 			double maxVelocity = tec.getRobotMaxVelocity(robotID);
-			if (VehiclesHashMap.isHuman(robotID)) {
-				maxVelocity = Math.min(maxVelocity, HumanControl.targetVelocityHuman);
-			}
 
 			if (! isInferior) {
 				return maxVelocity;

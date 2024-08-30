@@ -68,9 +68,6 @@ public class GridReturn {
         double xLengthInner = 1.5;
         double yLengthInner = 1.0;
 
-        HumanControl.targetVelocityHumanInitial = maxVelocity;
-        HumanControl.targetVelocityHuman = maxVelocity;
-
         AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.SPARS; // too slow

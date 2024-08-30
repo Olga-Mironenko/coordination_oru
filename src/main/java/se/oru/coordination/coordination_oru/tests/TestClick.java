@@ -68,9 +68,7 @@ public class TestClick {
 
         HumanControl.isEnabledForBrowser = true;
         final int maxVelocity = 4;
-        final int maxVelocityHuman = 10;
-        HumanControl.targetVelocityHumanInitial = 3;
-        HumanControl.targetVelocityHuman = 3;
+        final int maxVelocityHuman = 3;
 
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, 0, Color.GREEN, Color.BLUE, maxVelocityHuman, 2, 0.5, 0.5);
         AutonomousVehicle aut1 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 0.5, 0.5);
@@ -132,7 +130,7 @@ public class TestClick {
                             throw new RuntimeException(e);
                         }
                     }
-                    HumanControl.changeTargetVelocity(0, 1);
+                    HumanControl.changeMaxVelocity(0, 1);
                 }
             }.start();
         }
@@ -145,7 +143,7 @@ public class TestClick {
                     GatedThread.skipTimesteps(100);
                     HumanControl.moveRobot(hum0.getID(), drawPoint20_bottom);
                     GatedThread.skipTimesteps(10);
-                    HumanControl.changeTargetVelocity(0, 1); // requires emergency break
+                    HumanControl.changeMaxVelocity(0, 1); // requires emergency break
                 }
             }.start();
         }

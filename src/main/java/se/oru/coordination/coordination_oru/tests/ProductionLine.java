@@ -143,9 +143,6 @@ public class ProductionLine {
         double xLengthHumanInner = 2.0; // -2..2 -> length=4
         double yLengthHumanInner = 2.0;
 
-        HumanControl.targetVelocityHumanInitial = maxVelocity;
-        HumanControl.targetVelocityHuman = maxVelocity;
-
         AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow
         //AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.SPARS; // too slow

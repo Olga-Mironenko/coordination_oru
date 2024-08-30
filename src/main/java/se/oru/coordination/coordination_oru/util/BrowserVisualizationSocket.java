@@ -120,7 +120,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
                 System.out.println("Unknown keydown code: " + code);
             }
             if (delta != null) {
-                HumanControl.changeTargetVelocity(robotID, delta);
+                HumanControl.changeMaxVelocity(robotID, delta);
             }
 	    } else {
             System.out.println("Unknown event: " + event);

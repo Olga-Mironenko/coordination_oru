@@ -395,12 +395,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		double MAX_DECELERATION = MAX_ACCELERATION * coefAccelerationToDeceleration;
 
-		// Use `targetVelocity`:
 		if (VehiclesHashMap.isHuman(robotID)) {
-			MAX_VELOCITY = Math.min(MAX_VELOCITY, HumanControl.targetVelocityHuman); // MAX_ACCELERATION or 0
-			// maxAcc=2:  actual surplus 0.066
-			// maxAcc=10: actual surplus 0.333
-			// => 0.0333 per each maxAcc unit
+			// maxAcc=2:  actual (observed) surplus 0.066 (during tests)
+			// maxAcc=10: actual (observed) surplus 0.333 (during tests)
+			// => 0.0333 per each maxAcc unit (a linear function)
 			if (! slowDown && state.getVelocity() > MAX_VELOCITY + MAX_ACCELERATION * 0.034) {
 				slowDown = true; // -MAX_ACCELERATION
 			}

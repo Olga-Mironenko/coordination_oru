@@ -65,8 +65,9 @@ public class GridHard {
         final Pose aut5Finish = row3Right;
 
         final int maxVelocity = 4;
+        final int maxVelocityHum = 10;
 
-        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, 0, Color.GREEN, Color.BLUE, maxVelocity, 2, 1.5, 1.5);
+        AutonomousVehicle hum0 = new HumanDrivenVehicle(0, 0, Color.GREEN, Color.BLUE, maxVelocityHum, 2, 1.5, 1.5);
         AutonomousVehicle aut1 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
         AutonomousVehicle aut2 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
         AutonomousVehicle aut3 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
@@ -112,7 +113,6 @@ public class GridHard {
         Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
         if (humFinish != null) {
-            HumanControl.targetVelocityHuman = 10;
             hum0.getPlan(humStart, new Pose[] { humFinish }, YAML_FILE, ishumReturn);
             Missions.enqueueMission(new Mission(hum0.getID(), hum0.getPath()));
         }
@@ -140,7 +140,7 @@ public class GridHard {
                             throw new RuntimeException(e);
                         }
                     }
-                    HumanControl.changeTargetVelocity(0, 1);
+                    HumanControl.changeMaxVelocity(0, 1);
                 }
             }.start();
         }
@@ -153,7 +153,7 @@ public class GridHard {
                     GatedThread.skipTimesteps(100);
                     HumanControl.moveRobot(hum0.getID(), column2Bottom);
                     GatedThread.skipTimesteps(10);
-                    HumanControl.changeTargetVelocity(0, 1); // requires emergency break
+                    HumanControl.changeMaxVelocity(0, 1); // requires emergency break
                 }
             }.start();
         }

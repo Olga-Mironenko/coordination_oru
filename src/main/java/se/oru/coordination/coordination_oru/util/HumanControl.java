@@ -14,11 +14,6 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 public class HumanControl {
     public static boolean isEnabledForBrowser = false;
 
-    @Deprecated
-    public static double targetVelocityHumanInitial = Double.POSITIVE_INFINITY; // essentially a limit
-    @Deprecated
-    public static double targetVelocityHuman = targetVelocityHumanInitial;
-
     public static boolean isWorking = false;
 
     public static String status = null;
@@ -68,7 +63,6 @@ public class HumanControl {
 
             PoseSteering[] currentPath = getCurrentPath(robotID);
             if (currentPath == null || rr.getPathIndex() == -1) {
-                targetVelocityHuman = targetVelocityHumanInitial; // TODO: move the code to the dummy tracker or somewhere
                 Missions.enqueueMission(new Mission(robotID, newPath));
             } else {
                 int replacementIndex = getReplacementIndex(robotID);
@@ -88,7 +82,7 @@ public class HumanControl {
     // 0.1->1.1->0.1: OK
     // 0.1->1.1->2.1: breaks
     // 0.1->1.1->0.1->1.1: breaks
-    public static void changeTargetVelocity(int robotID, double delta) {
+    public static void changeMaxVelocity(int robotID, double delta) {
         if (isWorking) {
             return;
         }
