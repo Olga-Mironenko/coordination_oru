@@ -415,9 +415,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			Derivative c = Derivative.evaluate(state, time, deltaTime/2.0, b, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR,MAX_ACCELERATION, MAX_DECELERATION);
 			Derivative d = Derivative.evaluate(state, time, deltaTime, c, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION, MAX_DECELERATION);
 
-			double dxdt = (1.0f / 6.0f) * ( a.getVelocity() + 2.0f*(b.getVelocity() + c.getVelocity()) + d.getVelocity() );
-			double dvdt = (1.0f / 6.0f) * (a.getAcceleration()
-					+ 2.0f * (b.getAcceleration() + c.getAcceleration()) + d.getAcceleration());
+			double dxdt = (1.0 / 6.0) * ( a.getVelocity() + 2.0*(b.getVelocity() + c.getVelocity()) + d.getVelocity() );
+			double dvdt = (1.0 / 6.0) * (a.getAcceleration()
+					+ 2.0 * (b.getAcceleration() + c.getAcceleration()) + d.getAcceleration());
 
 			double velocityNew = state.getVelocity() + dvdt * deltaTime;
 			velocityNew = Math.max(0.0, Math.min(MAX_VELOCITY, velocityNew));
