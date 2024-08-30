@@ -853,9 +853,14 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return Status.STOPPED_AT_CP;
 	}
 
-	private void updateState(double deltaTime, double maxVelocity, double maxAcceleration) {
+	private void updateState(double deltaTime, AbstractVehicle vehicle) {
+		double maxVelocity = vehicle.getMaxVelocity();
+		double maxAcceleration = vehicle.getMaxAcceleration();
+
 		slowingDown = state.getPosition() >= positionToSlowDown || checkFreezing();
 		double dampening = getCurvatureDampening(getRobotReport().getPathIndex(), false);
+
+		double positionOld = state.getPosition();
 
 		// Prefer to stop earlier than to cross over.
 		State stateTemp = new State(state.getPosition(), state.getVelocity());
@@ -866,6 +871,11 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		} else {
 			state = stateTemp;
 		}
+
+		double positionNew = state.getPosition();
+		double deltaPosition = positionNew - positionOld;
+		assert deltaPosition >= 0;
+		vehicle.totalDistance += deltaPosition;
 	}
 
 	private Double waitForNextStep(long timeStart) {
@@ -933,7 +943,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				isReroutingNearParkedVehicleOK = true;
 
 				//Update the robot's state via RK4 numerical integration
-				updateState(deltaTime, vehicle.getMaxVelocity(), vehicle.getMaxAcceleration());
+				updateState(deltaTime, vehicle);
 
 			} else if (status == Status.STOPPED_AT_CP) {
 				if (isReroutingNearParkedVehicle && isReroutingNearParkedVehicleOK) {

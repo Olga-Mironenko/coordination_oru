@@ -98,8 +98,8 @@ public class RobotReport {
 	}
 
 	/**
-	 * Get the distance traveled so far along the current current path.
-	 * @return The distance traveled so far along the current current path.
+	 * Get the distance traveled so far along the current path.
+	 * @return The distance traveled so far along the current path.
 	 */
 	public double getDistanceTraveled() {
 		return distanceTraveled;

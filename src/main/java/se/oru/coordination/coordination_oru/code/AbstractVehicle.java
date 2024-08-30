@@ -86,6 +86,7 @@ public abstract class AbstractVehicle {
         this.xLength = xLength;
         this.yLength = yLength;
         this.footprint = xLength == 0 && yLength == 0 ? null : makeFootprint(xLength, yLength);
+        this.totalDistance = 0;
 
         AbstractVehicle existingVehicle = VehiclesHashMap.getVehicle(ID);
         if (existingVehicle != null) {
@@ -187,8 +188,6 @@ public abstract class AbstractVehicle {
         double totalTimeNew = (GatedCalendar.getInstance().getTimeInMillis() - startTime) / 1000;
         double delta = totalTimeNew - totalTime;
         this.totalTime = totalTimeNew;
-
-        this.totalDistance = (pathLength * cycles + currentRobotReport.getDistanceTraveled());
 
         if (! isStopped(this.currentRobotReport)) {
             this.currentWaitingTime = 0;
@@ -332,7 +331,6 @@ public abstract class AbstractVehicle {
             pathLength += deltaS;
         }
         pathLength = round(pathLength * 10.0) / 10.0;
-        VehiclesHashMap.getVehicle(this.getID()).pathLength = pathLength;
     }
 
     public PoseSteering[] getPath() {
