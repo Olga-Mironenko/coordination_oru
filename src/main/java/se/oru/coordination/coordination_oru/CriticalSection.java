@@ -1,5 +1,6 @@
 package se.oru.coordination.coordination_oru;
 
+import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
@@ -197,7 +198,7 @@ public class CriticalSection {
 		int goalIndex;
 		int deltaIndexes;
 		double distance;
-		double velocity;
+		double velocity = Double.NaN;
 		double time;
 
 		/**
@@ -213,11 +214,16 @@ public class CriticalSection {
 			RobotReport rr = tec.getRobotReport(robotID);
 
 			currentIndex = rr.getPathIndex();
-			goalIndex = currentIndex == -1 ? -1 : isInferior ? getEnd(robotID) : getStart(robotID);
+			goalIndex = currentIndex == -1 ? -1 : (isInferior ? getEnd(robotID) + 1 : getStart(robotID));
 			deltaIndexes = Math.max(0, goalIndex - currentIndex);
 
-			distance = deltaIndexes == 0 ? 0.0 :
-					TrajectoryEnvelopeTrackerRK4.computeDistance(tec.trackers.get(robotID).traj, currentIndex, goalIndex);
+			Trajectory traj = tec.trackers.get(robotID).traj;
+			distance =
+					deltaIndexes == 0
+							? 0.0
+							: goalIndex == traj.getPoseSteering().length
+							? Double.POSITIVE_INFINITY
+							: TrajectoryEnvelopeTrackerRK4.computeDistance(traj, currentIndex, goalIndex);
 			if (distance == 0.0) {
 				time = 0.0;
 			} else {
@@ -242,10 +248,11 @@ public class CriticalSection {
 				return maxVelocity;
 			}
 
-			double futureVelocity = Forcing.isRobotFrozen(robotID) ? 0 : maxVelocity;
-
 			RobotReport rr = tec.getRobotReport(robotID);
 			double currentVelocity = rr.getVelocity();
+
+			/*
+			double futureVelocity = Forcing.isRobotFrozen(robotID) ? 0 : maxVelocity;
 			double delta = Math.abs(futureVelocity - currentVelocity);
 
 			// This formula works for the following case:
@@ -255,6 +262,7 @@ public class CriticalSection {
 			// - the human stops before the crossroad abruptly
 			// - so we should consider to cross the road
  //			return Math.min(currentVelocity, futureVelocity) + 0.4 * delta;
+			 */
 
 			return currentVelocity;
 		}

@@ -147,9 +147,14 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	}
 
 	public static double computeDistance(Trajectory traj, int startIndex, int endIndex) {
+		// startIndex=6, endIndex=9:
+		// ret += dist(6, 7)
+		// ret += dist(7, 8)
+		// ret += dist(8, 9)
 		double ret = 0.0;
-		for (int i = startIndex; i < Math.min(endIndex,traj.getPoseSteering().length-1); i++) {
-			ret += traj.getPose()[i].distanceTo(traj.getPose()[i+1]);
+		assert endIndex <= traj.getPoseSteering().length - 1;
+		for (int i = startIndex; i < endIndex; i++) {
+			ret += traj.getPose()[i].distanceTo(traj.getPose()[i + 1]);
 		}
 		return ret;
 	}
@@ -633,6 +638,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 			try { Thread.sleep(trackingPeriodInMillis); }
 			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
+
 		metaCSPLogger.info("RK4 tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + myTEID + ")");
 	}
 

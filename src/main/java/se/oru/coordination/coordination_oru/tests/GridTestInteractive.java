@@ -29,7 +29,7 @@ public class GridTestInteractive {
     }
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.HUMAN_FIRST.toString();
+            scenarioString = Scenario.AUTOMATED_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -53,7 +53,7 @@ public class GridTestInteractive {
  //        final Pose humStart = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
 //        final Pose humFinish = GridMapConstants.column2Row1Right;
         final Pose humFinish = GridMapConstants.turnAround(
-                GridMapConstants.shiftY(GridMapConstants.column2Row3Down, 4)
+                GridMapConstants.shiftY(GridMapConstants.column2Row1Down, 0)
         );
 
 //        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);

@@ -34,6 +34,7 @@ public class Heuristics {
             RobotReport robotReport2 = o2.getRobotReport();
             return ((cs.getTe1Start() - robotReport1.getPathIndex()) - (cs.getTe2Start() - robotReport2.getPathIndex()));
         };
+        // <0: o1 < o2 (earlier)
     }
 
     /**
