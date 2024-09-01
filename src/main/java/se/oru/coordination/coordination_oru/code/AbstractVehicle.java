@@ -36,6 +36,7 @@ public abstract class AbstractVehicle {
     private final int priorityID;
     private final String type = this.getClass().getSimpleName();
     private double maxVelocity;
+    private final double maxVelocityOriginal;
     private final double maxAcceleration;
     private final double xLength;
     private final double yLength;
@@ -82,6 +83,7 @@ public abstract class AbstractVehicle {
         this.color = color;
         this.colorInMotion = colorInMotion;
         this.maxVelocity = maxVelocity;
+        this.maxVelocityOriginal = maxVelocity;
         this.maxAcceleration = maxAcceleration;
         this.xLength = xLength;
         this.yLength = yLength;
@@ -351,6 +353,10 @@ public abstract class AbstractVehicle {
 
     public void setMaxVelocity(double maxVelocity) {
         this.maxVelocity = maxVelocity;
+    }
+
+    public void resetMaxVelocity() {
+        this.maxVelocity = this.maxVelocityOriginal;
     }
 
     public double getMaxAcceleration() {

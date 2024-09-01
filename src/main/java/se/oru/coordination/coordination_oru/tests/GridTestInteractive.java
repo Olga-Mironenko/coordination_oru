@@ -29,7 +29,7 @@ public class GridTestInteractive {
     }
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = Scenario.AUTOMATED_FIRST.toString();
+            scenarioString = Scenario.HUMAN_FIRST.toString();
         }
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
@@ -49,11 +49,11 @@ public class GridTestInteractive {
 //        final Pose humFinish = GridMapConstants.column2Bottom;
 //        final Pose humFinish = GridMapConstants.column2Row2;
 
-        final Pose humStart = GridMapConstants.column1Row1Down;
+        final Pose humStart = GridMapConstants.column2TopStart;
  //        final Pose humStart = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
 //        final Pose humFinish = GridMapConstants.column2Row1Right;
         final Pose humFinish = GridMapConstants.turnAround(
-                GridMapConstants.shiftX(GridMapConstants.column3Row1Down, -4)
+                GridMapConstants.shiftY(GridMapConstants.column2Row3Down, 4)
         );
 
 //        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
@@ -80,7 +80,7 @@ public class GridTestInteractive {
         final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.row3RightStart);
 
         final double maxVelocityHum = 3.0;
-        final double maxAccelerationHum = 0.3;
+        final double maxAccelerationHum = 2.0;
         final double maxAccelerationAut = 0.3;
 
         double lengthVehicle = 3.0;

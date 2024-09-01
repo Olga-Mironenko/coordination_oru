@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru;
 
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelopeSolver;
+import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 /**
@@ -46,7 +47,9 @@ public abstract class TrajectoryEnvelopeTrackerDummy extends AbstractTrajectoryE
 	protected void onTrajectoryEnvelopeUpdate() { }
 	
 	@Override
-	public void startTracking() { }
+	public void startTracking() {
+		VehiclesHashMap.getVehicle(this.te.getRobotID()).resetMaxVelocity();
+	}
 	
 	@Override
 	public void setCriticalPoint(int criticalPointToSet) { }

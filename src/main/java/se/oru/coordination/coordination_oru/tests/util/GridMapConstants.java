@@ -73,6 +73,10 @@ public class GridMapConstants extends BaseMapConstants {
         return new Pose(pose.getX() + dx, pose.getY(), pose.getTheta());
     }
 
+    public static Pose shiftY(Pose pose, double dy) {
+        return new Pose(pose.getX(), pose.getY() + dy, pose.getTheta());
+    }
+
     public static Pose between(Pose pose1, Pose pose2) {
         return new Pose(
                 (pose1.getX() + pose2.getX()) / 2,
