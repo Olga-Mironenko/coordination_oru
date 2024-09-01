@@ -25,11 +25,17 @@ public abstract class Demo {
 
             //HumanControl.isEnabledForBrowser = true;
             BrowserVisualization.isExtendedText = true;
+
             AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = false;
             CriticalSection.isCanPassFirstActive = true;
+
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicle = true;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
+
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousMode = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.deltaMaxVelocityCautious = -2.0;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.minMaxVelocityCautious = 1.0;
         }
 
         BrowserVisualization.isStatusText = true;

@@ -11,6 +11,7 @@ import se.oru.coordination.coordination_oru.util.HumanControl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -313,14 +314,16 @@ public class CriticalSection {
 	public boolean is1Before2() {
 		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-		Dependency dep1 = tec.getCurrentDependencies().get(getTe1RobotID());
-		if (dep1 != null) {
-			return dep1.getDrivingRobotID() == getTe1RobotID();
-		}
-
-		Dependency dep2 = tec.getCurrentDependencies().get(getTe2RobotID());
-		if (dep2 != null) {
-			return dep2.getDrivingRobotID() == getTe1RobotID();
+		for (int id : List.of(getTe1RobotID(), getTe2RobotID())) {
+			Dependency dep = tec.getCurrentDependencies().get(id);
+			if (dep != null) {
+				if (dep.getDrivingRobotID() == getTe1RobotID() && dep.getWaitingRobotID() == getTe2RobotID()) {
+					return true;
+				}
+				if (dep.getDrivingRobotID() == getTe2RobotID() && dep.getWaitingRobotID() == getTe1RobotID()) {
+					return false;
+				}
+			}
 		}
 
 		return tec.getOrder(

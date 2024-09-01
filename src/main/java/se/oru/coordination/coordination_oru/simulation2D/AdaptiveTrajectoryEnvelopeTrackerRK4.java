@@ -25,13 +25,18 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public static boolean isReroutingNearSlowVehicleForNonHuman = false;
 	public static boolean isRacingThroughCrossroadAllowed = false;
 
+	public static boolean isCautiousMode = false;
+	public static double deltaMaxVelocityCautious = 0.0;
+	public static double minMaxVelocityCautious = 0.0;
+
 	public static double coefDeltaTimeForSlowDown = 0.1;
 
 	public static double coefAccelerationToDeceleration = 1.7;
 	/**
-	 * https://www.researchgate.net/publication/233954314_Study_of_Deceleration_Behaviour_of_Different_Vehicle_Types:
-	 * - mean acceleration of trucks: ~0.3 s
-	 * - mean deceleration of trucks: ~0.51 s
+	 * https://www.sciencedirect.com/science/article/pii/S2352146517307937:
+	 * - mean acceleration of trucks: ~0.3 m/s^2
+	 * https://www.researchgate.net/publication/233954314_Study_of_Deceleration_Behaviour_of_Different_Vehicle_Types: (TODO: one more link)
+	 * - mean deceleration of trucks: ~0.51 m/s^2
 	 */
 
 	protected static final long WAIT_AMOUNT_AT_END = 0;
@@ -497,7 +502,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	}
 
-	public HashSet<CriticalSection> getCriticalSectionsForRobot(int criticalPointToSet) {
+	public HashSet<CriticalSection> getCriticalSectionsForRobot(Integer criticalPointToConsider) {
 		RobotReport rr = getRobotReport();
 		int robotID = rr.getRobotID();
 
@@ -512,7 +517,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 			final int margin = AbstractTrajectoryEnvelopeCoordinator.TRAILING_PATH_POINTS;
 
-			if (start - margin <= criticalPointToSet && criticalPointToSet <= end + margin) {
+			if (
+					criticalPointToConsider == null ||
+							start - margin <= criticalPointToConsider && criticalPointToConsider <= end + margin
+			) {
 				criticalSections.add(cs);
 			}
 		}
@@ -742,19 +750,34 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		this.numberOfReplicas = Math.max(1, (int)Math.ceil(coordinationNumberOfReplicas*(double)trackingPeriodInMillis/coordinationPeriodInMillis));
 	}
 
-	private ArrayList<CriticalSection> getCriticalSections() {
+	private ArrayList<CriticalSection> getCriticalSectionsOfInferior() {
 		if (criticalPoint == -1) {
 			return null;
 		}
 		return CriticalSection.sortCriticalSections(getCriticalSectionsForRobot(criticalPoint));
 	}
 
-	private CriticalSection getFirstOfCurrentCriticalSections() {
-		ArrayList<CriticalSection> criticalSections = getCriticalSections();
+	private CriticalSection getFirstOfCriticalSectionsOfInferior() {
+		ArrayList<CriticalSection> criticalSections = getCriticalSectionsOfInferior();
 		if (criticalSections == null || criticalSections.size() == 0) {
 			return null;
 		}
 		return criticalSections.get(0);
+	}
+
+	private boolean isCautiousSituation() {
+		int myRobotID = te.getRobotID();
+		if (VehiclesHashMap.isHuman(myRobotID)) {
+			return false;
+		}
+
+		HashSet<CriticalSection> criticalSections = getCriticalSectionsForRobot(null); // all
+		for (CriticalSection cs : criticalSections) {
+			if (cs.isSuperior(myRobotID) && VehiclesHashMap.isHuman(cs.getInferior())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean checkFreezing() {
@@ -779,7 +802,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 
 		// Forget about a CS if the robot can pass first there:
-		CriticalSection criticalSection = getFirstOfCurrentCriticalSections();
+		CriticalSection criticalSection = getFirstOfCriticalSectionsOfInferior();
 		if (criticalSection == null) {
 			return;
 		}
@@ -853,6 +876,13 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	private void updateState(double deltaTime, AbstractVehicle vehicle) {
 		double maxVelocity = vehicle.getMaxVelocity();
+		if (isCautiousMode && isCautiousSituation()) {
+			maxVelocity += deltaMaxVelocityCautious;
+			if (maxVelocity < minMaxVelocityCautious) {
+				maxVelocity = minMaxVelocityCautious;
+			}
+		}
+
 		double maxAcceleration = vehicle.getMaxAcceleration();
 
 		slowingDown = state.getPosition() >= positionToSlowDown || checkFreezing();
@@ -889,7 +919,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	public boolean tryToReplanNearVehicle(int myRobotID, boolean mustBeParked) {
-		CriticalSection cs = getFirstOfCurrentCriticalSections();
+		CriticalSection cs = getFirstOfCriticalSectionsOfInferior();
 		//assert cs != null; // this may happen when the CS has just been removed
 		if (cs == null) {
 			return false;
