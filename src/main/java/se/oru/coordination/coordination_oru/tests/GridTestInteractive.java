@@ -41,7 +41,7 @@ public class GridTestInteractive {
         Timekeeper.setVirtualMinutesPassedMax(60);
 //        Timekeeper.realMillisPassedMax = 10 * 1000;
 
-        final String YAML_FILE = "maps/map-grid.yaml";
+        final String YAML_FILE = "maps/map-grid-gradient.yaml";
 
 //        final Pose humStart = GridMapConstants.column1Row1Down;
 //        final Pose humStart = GridMapConstants.column2Row1;
@@ -71,13 +71,13 @@ public class GridTestInteractive {
 //                        -1.35
 //                )
 //        );
-        final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
+        final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.column2Row1Down);
 
         final Pose aut2Start = GridMapConstants.row2LeftStart;
-        final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.row2RightStart);
+        final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.column2Row2Down);
 
         final Pose aut3Start = GridMapConstants.row3LeftStart;
-        final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.row3RightStart);
+        final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.column2Row3Down);
 
         final double maxVelocityHum = 3.0;
         final double maxAccelerationHum = 2.0;

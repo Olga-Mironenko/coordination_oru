@@ -26,7 +26,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public static boolean isReroutingNearSlowVehicleForNonHuman = false;
 	public static boolean isRacingThroughCrossroadAllowed = false;
 
-	public static boolean isCautiousMode = false;
+	public static boolean isCautiousModeAllowed = false;
 	public static double deltaMaxVelocityCautious = 0.0;
 	public static double minMaxVelocityCautious = 0.0;
 
@@ -852,8 +852,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		assert continueToStay;
 		if (criticalPoint == -1) { // The end of mission.
 			//set state to final position, just in case it didn't quite get there (it's certainly close enough)
+			assert Math.abs(this.state.getPosition() - totalDistance) <= 0.5;
 			this.state = new State(totalDistance, 0.0);
-			onPositionUpdate();
 			return Status.FULL_STOP;
 		}
 
@@ -877,13 +877,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	private void updateState(double deltaTime, AbstractVehicle vehicle) {
 		double maxVelocity = vehicle.getMaxVelocity();
-		if (isCautiousMode && isCautiousSituation()) {
-			maxVelocity += deltaMaxVelocityCautious;
-			if (maxVelocity < minMaxVelocityCautious) {
-				maxVelocity = minMaxVelocityCautious;
-			}
-		}
-
 		double maxAcceleration = vehicle.getMaxAcceleration();
 
 		slowingDown = state.getPosition() >= positionToSlowDown || checkFreezing();
@@ -954,9 +947,41 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				VehiclesHashMap.isHuman(myRobotID) ?
 						isReroutingNearParkedVehicleForHuman :
 						isReroutingNearParkedVehicleForNonHuman;
+		boolean isCautious = false;
+		Double maxVelocityBeforeCautious = null;
 
 		while (true) {
 			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
+
+			if (isCautiousModeAllowed && myRobotID != 2) {
+				if (! isCautious) {
+					if (isCautiousSituation()) {
+						isCautious = true;
+
+						assert deltaMaxVelocityCautious <= 0;
+						// if max velocity isn't to be increased, then it's OK to keep the same `slowDownProfile`
+
+						assert maxVelocityBeforeCautious == null;
+						maxVelocityBeforeCautious = vehicle.getMaxVelocity();
+						vehicle.setMaxVelocity(Math.max(
+								minMaxVelocityCautious,
+								vehicle.getMaxVelocity() + deltaMaxVelocityCautious
+						));
+
+						setCriticalPoint(criticalPoint); // to re-run `computePositionToSlowDown`
+					}
+				} else {
+					if (! isCautiousSituation()) {
+						isCautious = false;
+
+						assert maxVelocityBeforeCautious != null;
+						vehicle.setMaxVelocity(maxVelocityBeforeCautious);
+						maxVelocityBeforeCautious = null;
+
+						setCriticalPoint(criticalPoint); // to re-run `computePositionToSlowDown`
+					}
+				}
+			}
 
 			if (emergencyBreaker.isStopped(myRobotID)) {
 				// TODO: just skip the current time step?
@@ -1000,6 +1025,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 
 		assert status == Status.FULL_STOP;
+		onPositionUpdate();
 
 		//continue transmitting until the coordinator will be informed of having reached the last position.
 		while (tec.getRobotReport(te.getRobotID()).getPathIndex() != -1)
