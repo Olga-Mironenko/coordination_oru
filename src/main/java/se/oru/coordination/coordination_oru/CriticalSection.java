@@ -263,6 +263,7 @@ public class CriticalSection {
 			// - the human stops before the crossroad abruptly
 			// - so we should consider to cross the road
  //			return Math.min(currentVelocity, futureVelocity) + 0.4 * delta;
+ 			// v=2, max=12 -> 2 + 0.4 * 10 = 6
 			 */
 
 			return currentVelocity;

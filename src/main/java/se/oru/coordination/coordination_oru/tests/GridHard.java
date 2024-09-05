@@ -133,13 +133,7 @@ public class GridHard {
             new GatedThread("change velocity") {
                 @Override
                 public void runCore() {
-                    for (int i = 0; i < 10; i++) {
-                        try {
-                            GatedThread.sleep(i);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+                    GatedThread.skipTimesteps(10);
                     HumanControl.changeMaxVelocity(0, 1);
                 }
             }.start();
@@ -150,10 +144,6 @@ public class GridHard {
             new GatedThread("new mission") {
                 @Override
                 public void runCore() {
-                    GatedThread.skipTimesteps(100);
-                    HumanControl.moveRobot(hum0.getID(), column2Bottom);
-                    GatedThread.skipTimesteps(10);
-                    HumanControl.changeMaxVelocity(0, 1); // requires emergency break
                 }
             }.start();
         }

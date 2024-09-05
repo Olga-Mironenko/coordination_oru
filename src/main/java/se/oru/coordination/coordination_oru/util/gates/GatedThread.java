@@ -173,7 +173,9 @@ abstract public class GatedThread extends Thread {
     public static void sleep(long millis) throws InterruptedException {
         if (isGated) {
             if (! Timekeeper.isSingleSleep) {
-                Thread.sleep(millisArtificialSleep); // TODO: This is for the browser to catch up.
+                if (millisArtificialSleep != 0) {
+                    Thread.sleep(millisArtificialSleep); // TODO: This is for the browser to catch up.
+                }
             }
             // At this point, the child is going to transfer control to another child through the gatekeeper.
             gatekeeper.pauseCurrentThread("sleep(" + millis + ")", false, false,null);
