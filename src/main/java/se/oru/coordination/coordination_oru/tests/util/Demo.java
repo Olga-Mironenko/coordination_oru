@@ -29,7 +29,8 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = false;
             CriticalSection.isCanPassFirstActive = false;
 
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicle = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForHuman = false;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = true;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
 

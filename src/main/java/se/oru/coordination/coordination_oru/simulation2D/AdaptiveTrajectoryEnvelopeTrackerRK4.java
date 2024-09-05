@@ -20,7 +20,8 @@ import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnvelopeTracker implements Runnable {
 	public static boolean isEnabledGlobally = false;
-	public static boolean isReroutingNearParkedVehicle = false;
+	public static boolean isReroutingNearParkedVehicleForHuman = false;
+	public static boolean isReroutingNearParkedVehicleForNonHuman = false;
 	public static boolean isReroutingNearSlowVehicleForHuman = false;
 	public static boolean isReroutingNearSlowVehicleForNonHuman = false;
 	public static boolean isRacingThroughCrossroadAllowed = false;
@@ -949,6 +950,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		int myTEID = te.getID();
 		Status status = Status.DRIVING;
 		boolean isReroutingNearParkedVehicleOK = true;
+		boolean isReroutingNearParkedVehicle =
+				VehiclesHashMap.isHuman(myRobotID) ?
+						isReroutingNearParkedVehicleForHuman :
+						isReroutingNearParkedVehicleForNonHuman;
 
 		while (true) {
 			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
