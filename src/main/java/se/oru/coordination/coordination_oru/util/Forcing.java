@@ -202,17 +202,21 @@ public class Forcing {
             return new ArrayList<>();
         }
 
-        ArrayList<CriticalSection> criticalSectionsSorted =
-                CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, robotID);
-        ArrayList<CriticalSection> criticalSectionsSelected = new ArrayList<>();
-
         if (maxDistance == Double.NEGATIVE_INFINITY) {
-            return criticalSectionsSelected;
+            return new ArrayList<>();
         }
         assert maxDistance >= 0.0;
 
         PoseSteering[] currentPath = HumanControl.getCurrentPath(robotID);
         int indexCurrent = HumanControl.getPathIndex(robotID);
+        if (indexCurrent == -1) {
+            return new ArrayList<>();
+        }
+
+        final ArrayList<CriticalSection> criticalSectionsSorted =
+                CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, robotID);
+        ArrayList<CriticalSection> criticalSectionsSelected = new ArrayList<>();
+
         double distance = 0.0;
 
         for (CriticalSection cs : criticalSectionsSorted) {
