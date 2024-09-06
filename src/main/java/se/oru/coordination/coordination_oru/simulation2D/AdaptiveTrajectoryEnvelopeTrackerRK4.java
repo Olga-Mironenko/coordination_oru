@@ -66,6 +66,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	private int millisStopEvents = 3000;
 	private int countStopEvents = 20;
 
+	private boolean isCautious = false;
+	private Double maxVelocityBeforeCautious = null;
+
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
 	}
@@ -781,6 +784,36 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return false;
 	}
 
+	void maintainCautiousMode(AbstractVehicle vehicle) {
+		if (! isCautious) {
+			if (isCautiousSituation()) {
+				isCautious = true;
+
+				assert deltaMaxVelocityCautious <= 0;
+				// if max velocity isn't to be increased, then it's OK to keep the same `slowDownProfile`
+
+				assert maxVelocityBeforeCautious == null;
+				maxVelocityBeforeCautious = vehicle.getMaxVelocity();
+				vehicle.setMaxVelocity(Math.max(
+						minMaxVelocityCautious,
+						vehicle.getMaxVelocity() + deltaMaxVelocityCautious
+				));
+
+				setCriticalPoint(criticalPoint); // to re-run `computePositionToSlowDown`
+			}
+		} else {
+			if (! isCautiousSituation()) {
+				isCautious = false;
+
+				assert maxVelocityBeforeCautious != null;
+				vehicle.setMaxVelocity(maxVelocityBeforeCautious);
+				maxVelocityBeforeCautious = null;
+
+				setCriticalPoint(criticalPoint); // to re-run `computePositionToSlowDown`
+			}
+		}
+	}
+
 	private boolean checkFreezing() {
 		int myRobotID = te.getRobotID();
 
@@ -947,40 +980,12 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				VehiclesHashMap.isHuman(myRobotID) ?
 						isReroutingNearParkedVehicleForHuman :
 						isReroutingNearParkedVehicleForNonHuman;
-		boolean isCautious = false;
-		Double maxVelocityBeforeCautious = null;
 
 		while (true) {
 			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
 
-			if (isCautiousModeAllowed && myRobotID != 2) {
-				if (! isCautious) {
-					if (isCautiousSituation()) {
-						isCautious = true;
-
-						assert deltaMaxVelocityCautious <= 0;
-						// if max velocity isn't to be increased, then it's OK to keep the same `slowDownProfile`
-
-						assert maxVelocityBeforeCautious == null;
-						maxVelocityBeforeCautious = vehicle.getMaxVelocity();
-						vehicle.setMaxVelocity(Math.max(
-								minMaxVelocityCautious,
-								vehicle.getMaxVelocity() + deltaMaxVelocityCautious
-						));
-
-						setCriticalPoint(criticalPoint); // to re-run `computePositionToSlowDown`
-					}
-				} else {
-					if (! isCautiousSituation()) {
-						isCautious = false;
-
-						assert maxVelocityBeforeCautious != null;
-						vehicle.setMaxVelocity(maxVelocityBeforeCautious);
-						maxVelocityBeforeCautious = null;
-
-						setCriticalPoint(criticalPoint); // to re-run `computePositionToSlowDown`
-					}
-				}
+			if (isCautiousModeAllowed) {
+				maintainCautiousMode(vehicle);
 			}
 
 			if (emergencyBreaker.isStopped(myRobotID)) {
