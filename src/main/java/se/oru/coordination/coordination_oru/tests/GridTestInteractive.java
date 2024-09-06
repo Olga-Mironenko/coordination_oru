@@ -135,7 +135,6 @@ public class GridTestInteractive {
         tec.setBreakDeadlocks(true, false, false);
 
         var viz = new BrowserVisualization();
-        viz.setMap(YAML_FILE);
         viz.setInitialTransform(7.0, 5.0, 5.0);
         tec.setVisualization(viz);
 
@@ -157,6 +156,11 @@ public class GridTestInteractive {
             public void runCore() {
                 while (true) {
                     int millis = Timekeeper.getVirtualMillisPassed();
+
+                    if (millis >= 5 * 1000) {
+                        BrowserVisualizationSocket.sendMapToAll();
+                    }
+
                     if (millis >= 50 * 1000) {
                         // Artificial rerouting (imitation of a click):
 //                        while (true) {

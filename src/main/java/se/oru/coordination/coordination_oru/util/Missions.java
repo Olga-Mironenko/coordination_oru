@@ -58,12 +58,6 @@ public class Missions {
 	protected static HashMap<Mission,ArrayList<Mission>> concatenatedMissions = new HashMap<Mission, ArrayList<Mission>>();
 	//protected static String pathPrefix = "";
 	protected static SimpleDirectedWeightedGraph<String, DefaultWeightedEdge> graph = new SimpleDirectedWeightedGraph<String, DefaultWeightedEdge>(DefaultWeightedEdge.class);
-	protected static String mapYAMLFilename = null;
-	protected static String mapYAML = null;
-	protected static String mapImageFilename = null;
-	protected static BufferedImage map = null;
-	protected static double mapResolution = -1;
-	protected static Coordinate mapOrigin = null;
 	public static boolean isStatistics = false;
 
 	protected static double minPathDistance = -1;
@@ -71,7 +65,8 @@ public class Missions {
 	protected static Thread missionDispatchThread = null;
 	protected static HashSet<Integer> dispatchableRobots = new HashSet<Integer>();
 	public static HashMap<Integer,Boolean> loopMissions = new HashMap<Integer,Boolean>();
-	
+	private static DynamicMap dynamicMap = null;
+
 	/**
 	 * Set the minimum acceptable distance between path poses. This is used to re-sample paths
 	 * when they are loaded from file or when the method {@link #resamplePathsInRoadMap()} is called.
@@ -157,13 +152,17 @@ public class Missions {
 		
 		return ret.toArray(new String[ret.size()]);
 	}
-	
+
+	public static DynamicMap getDynamicMap() {
+		return Missions.dynamicMap;
+	}
+
 	/**
 	 * Get the image of the current map, if set.
 	 * @return The image of the current map, <code>null</code> if no map is known.
 	 */
 	public static BufferedImage getMap() {
-		return Missions.map;
+		return Missions.dynamicMap.mapImage;
 	}
 	
 	/**
@@ -171,7 +170,7 @@ public class Missions {
 	 * @return The resolution of the current map, <code>0</code> if no map is known.
 	 */
 	public static double getMapResolution() {
-		return Missions.mapResolution;
+		return Missions.dynamicMap.resolution;
 	}
 
 	/**
@@ -179,11 +178,11 @@ public class Missions {
 	 * @return The origin of the current map, <code>null</code> if no map is known.
 	 */
 	public static Coordinate getMapOrigin() {
-		return Missions.mapOrigin;
+		return Missions.dynamicMap.origin;
 	}
 
 	public static String getMapYAMLFilename() {
-		return Missions.mapYAMLFilename;
+		return Missions.dynamicMap.filenameYAML;
 	}
 
 	/**
@@ -191,7 +190,7 @@ public class Missions {
 	 * @return The YAML file of the current map, <code>null</code> if no map is known.
 	 */
 	public static String getMapYAML() {
-		return Missions.mapYAML;
+		return Missions.dynamicMap.textYAML;
 	}
 	
 	/**
@@ -199,19 +198,19 @@ public class Missions {
 	 * @param fileName The name of the image/YAML files to save.
 	 */
 	public static void saveMap(String fileName) {
-		if (Missions.map == null) throw new Error("Cannot save map as no map is known");
+		if (Missions.dynamicMap.mapImage == null) throw new Error("Cannot save map as no map is known");
 		File imageFilename = new File(fileName+".png");
 		String yamlFilename = fileName + ".yaml";
-		Missions.mapYAML = "\nimage: " + imageFilename;
-		Missions.mapYAML += "\nresolution: " + Missions.mapResolution;
-		Missions.mapYAML += "\norigin: [" + Missions.mapOrigin.x + ", " + Missions.mapOrigin.y + ", 0]";
+		Missions.dynamicMap.textYAML = "\nimage: " + imageFilename;
+		Missions.dynamicMap.textYAML += "\nresolution: " + Missions.dynamicMap.resolution;
+		Missions.dynamicMap.textYAML += "\norigin: [" + Missions.dynamicMap.origin.x + ", " + Missions.dynamicMap.origin.y + ", 0]";
 		//TODO: make these static members of Missions and load them as well
-		Missions.mapYAML +=  "\nnegate: 0";
-		Missions.mapYAML += "\noccupied_thresh: 0.3";
+		Missions.dynamicMap.textYAML +=  "\nnegate: 0";
+		Missions.dynamicMap.textYAML += "\noccupied_thresh: 0.3";
 		try { 
-			ImageIO.write(Missions.map, "png", imageFilename);
+			ImageIO.write(Missions.dynamicMap.mapImage, "png", imageFilename);
 			PrintWriter writer = new PrintWriter(yamlFilename);
-			writer.println(Missions.mapYAML);
+			writer.println(Missions.dynamicMap.textYAML);
 			writer.close();
 		}
 		catch (IOException e) { e.printStackTrace(); }
@@ -235,8 +234,8 @@ public class Missions {
 	            if (oneFileName.endsWith(".json")) json = new String(dataBytes);
 	            else {
 	            	ByteArrayInputStream bais = new ByteArrayInputStream(dataBytes);
-	            	Missions.map = ImageIO.read(bais);
-	            	//Missions.mapImageFilename = oneFileName;
+	            	Missions.dynamicMap.mapImage = ImageIO.read(bais);
+	            	//Missions.dynamicMap.mapImageFilename = oneFileName;
 	            }
 	            zipEntry = zis.getNextEntry();
 	        }
@@ -279,10 +278,10 @@ public class Missions {
 			this.missionsJSON = Missions.getJSONString(Missions.missions);
             this.pathsJSON = Missions.getJSONString(Missions.paths);
             this.locationsJSON = Missions.getJSONString(Missions.locations);
-            this.mapImageFilenameJSON = Missions.getJSONString(Missions.mapImageFilename);
-            this.mapYAMLJSON = Missions.getJSONString(Missions.mapYAML);
-            this.mapOriginJSON = Missions.getJSONString(Missions.mapOrigin);
-            this.mapResolutionJSON = Missions.getJSONString(Missions.mapResolution);
+            this.mapImageFilenameJSON = Missions.getJSONString(Missions.dynamicMap.imageFilename);
+            this.mapYAMLJSON = Missions.getJSONString(Missions.dynamicMap.textYAML);
+            this.mapOriginJSON = Missions.getJSONString(Missions.dynamicMap.origin);
+            this.mapResolutionJSON = Missions.getJSONString(Missions.dynamicMap.resolution);
 		}
 	}
 	
@@ -304,13 +303,13 @@ public class Missions {
             writer.close();
             
             //Create map files if the map is only in memory for some reason...
-            if (Missions.map != null && (Missions.mapImageFilename == null || Missions.mapYAML == null)) {
+            if (Missions.dynamicMap.mapImage != null && (Missions.dynamicMap.imageFilename == null || Missions.dynamicMap.textYAML == null)) {
             	Missions.saveMap(scenarioName);
             	Missions.setMap(scenarioName+".yaml");
             }
             
-            if (Missions.mapImageFilename != null) {
-            	makeZipFile(Missions.mapImageFilename,jsonFilename,zipFilename);
+            if (Missions.dynamicMap.imageFilename != null) {
+            	makeZipFile(Missions.dynamicMap.imageFilename,jsonFilename,zipFilename);
             }
             else {
             	metaCSPLogger.info("Saving scenario without map because no map is known - use setMap() method to set one if you want to save the map along with the scenario.");
@@ -343,11 +342,11 @@ public class Missions {
 		Missions.locations = (HashMap<String,Pose>) parseJSONString(collectionType, sc.locationsJSON);
 		collectionType = new TypeToken<HashMap<String,PoseSteering[]>>(){}.getType();
 		Missions.paths = (HashMap<String,PoseSteering[]>) parseJSONString(collectionType, sc.pathsJSON);
-		Missions.mapImageFilename = (String)parseJSONString(String.class, sc.mapImageFilenameJSON);
-		//Missions.map = ImageIO.read(new File(Missions.mapImageFilename));
-		Missions.mapYAML = (String)parseJSONString(String.class, sc.mapYAMLJSON);
-		Missions.mapResolution = (Double)parseJSONString(Double.TYPE, sc.mapResolutionJSON);
-		Missions.mapOrigin = (Coordinate)parseJSONString(Coordinate.class, sc.mapOriginJSON);
+		Missions.dynamicMap.imageFilename = (String)parseJSONString(String.class, sc.mapImageFilenameJSON);
+		//Missions.dynamicMap.map = ImageIO.read(new File(Missions.dynamicMap.mapImageFilename));
+		Missions.dynamicMap.textYAML = (String)parseJSONString(String.class, sc.mapYAMLJSON);
+		Missions.dynamicMap.resolution = (Double)parseJSONString(Double.TYPE, sc.mapResolutionJSON);
+		Missions.dynamicMap.origin = (Coordinate)parseJSONString(Coordinate.class, sc.mapOriginJSON);
 		Missions.buildGraph();		
 	}
 	
@@ -367,30 +366,7 @@ public class Missions {
 	 * @param mapYAMLFile A file containing the description of the current map and a pointer to its image.
 	 */
 	public static void setMap(String mapYAMLFile) {
-		try {
-			Missions.mapYAMLFilename = mapYAMLFile;
-			File file = new File(mapYAMLFile);
-			BufferedReader br = new BufferedReader(new FileReader(file));
-			String st;
-			Missions.mapYAML = "";
-			while((st=br.readLine()) != null){
-				if (!st.trim().startsWith("#") && !st.trim().isEmpty()) {
-					Missions.mapYAML += st+"\n";
-					String key = st.substring(0, st.indexOf(":")).trim();
-					String value = st.substring(st.indexOf(":")+1).trim();
-					if (key.equals("image")) Missions.mapImageFilename = file.getParentFile()+File.separator+value;
-					else if (key.equals("resolution")) Missions.mapResolution = Double.parseDouble(value);
-					else if (key.equals("origin")) {
-						String x = value.substring(1, value.indexOf(",")).trim();
-						String y = value.substring(value.indexOf(",")+1, value.indexOf(",", value.indexOf(",")+1)).trim();
-						Missions.mapOrigin = new Coordinate(Double.parseDouble(x),Double.parseDouble(y));
-					}
-				}
-			}
-			br.close();
-			Missions.map = ImageIO.read(new File(Missions.mapImageFilename));
-		}
-		catch (IOException e) { e.printStackTrace(); }
+		Missions.dynamicMap = new DynamicMap(mapYAMLFile);
 	}
 	
 	/**
@@ -574,7 +550,7 @@ public class Missions {
 		if (isFinishTurnedAround) {
 			goals.add(GridMapConstants.turnAround(finish));
 		}
-		vehicle.getPlan(start, goals.toArray(Pose[]::new), Missions.mapYAMLFilename, false);
+		vehicle.getPlan(start, goals.toArray(Pose[]::new), Missions.dynamicMap.filenameYAML, false);
 
 		var pathForward = vehicle.getPath();
 		PoseSteering[] pathBackward = isOneWay ? null : AbstractMotionPlanner.inversePathWithoutFirstAndLastPose(pathForward);

@@ -23,6 +23,7 @@ import com.vividsolutions.jts.awt.ShapeWriter;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
+import se.oru.coordination.coordination_oru.util.DynamicMap;
 
 public class OccupancyMap {
 
@@ -471,50 +472,14 @@ public class OccupancyMap {
 	}
 
 	private void readMap(String mapYAMLFile) {
-		try {
-			File file = new File(mapYAMLFile);
-			BufferedReader br = new BufferedReader(new FileReader(file));
-			String st;
-			while((st=br.readLine()) != null){
-				if (!st.trim().startsWith("#") && !st.trim().isEmpty()) {
-					String key = st.substring(0, st.indexOf(":")).trim();
-					String value = st.substring(st.indexOf(":")+1).trim();
-					if (key.equals("image")) this.loadImage(file.getParentFile()+File.separator+value);
-					else if (key.equals("resolution")) this.mapResolution = Double.parseDouble(value);
-					else if (key.equals("occupied_thresh")) this.threshold = Double.parseDouble(value);
-					else if (key.equals("origin")) {
-						String x = value.substring(1, value.indexOf(",")).trim();
-						String y = value.substring(value.indexOf(",")+1, value.indexOf(",", value.indexOf(",")+1)).trim();
-						this.mapOrigin = new Coordinate(Double.parseDouble(x),Double.parseDouble(y));
-					}
-				}
-			}
-			br.close();
-		}
-		catch (IOException e) { e.printStackTrace(); }
+		DynamicMap dynamicMap = new DynamicMap(mapYAMLFile);
+
+		this.bimg = dynamicMap.mapImage;
+		this.mapWidth = this.bimg.getWidth();
+		this.mapHeight = this.bimg.getHeight();
+
+		this.mapResolution = dynamicMap.resolution;
+		this.threshold = dynamicMap.threshold;
+		this.mapOrigin = dynamicMap.origin;
 	}
-
-	private void loadImage(String imageFilename) {
-		try {
-			this.bimg = ImageIO.read(new File(imageFilename));
-
-			for(int y=0; y < this.bimg.getHeight(); y++){
-				for(int x=0; x < this.bimg.getWidth(); x++){
-					Color color = new Color(this.bimg.getRGB(x,y));
-					int graylevel = (color.getRed() + color.getGreen() + color.getBlue()) / 3;
-					int r = graylevel;
-					int g = graylevel;
-					int b = graylevel;
-					int rgb = 0xff000000 | (r << 16) | (g << 8) | b;
-					this.bimg.setRGB(x, y, rgb);
-				}
-			}
-
-			this.mapWidth = this.bimg.getWidth();
-			this.mapHeight = this.bimg.getHeight();
-
-		}
-		catch (IOException e) { e.printStackTrace(); }
-	}
-
 }

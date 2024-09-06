@@ -591,64 +591,12 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 
 	public void setMap(BufferedImage mapImage, double resolution, Coordinate origin) {
-		BrowserVisualizationSocket.map = mapImage;
-		BrowserVisualizationSocket.resolution = resolution;
-		BrowserVisualizationSocket.origin = origin;
+		BrowserVisualizationSocket.dynamicMap = new DynamicMap(mapImage, resolution, origin);
 	}
 	
 	@Override
     public void setMap(String mapYAMLFile) {
-		try {
-			File file = new File(mapYAMLFile);
-			BufferedReader br = new BufferedReader(new FileReader(file));
-			String imageFileName = null;
-			String st;
-			//FIXME Handle map origin
-			//Coordinate bottomLeftOrigin = null;
-			while((st=br.readLine()) != null){ 
-				if (!st.trim().startsWith("#") && !st.trim().isEmpty()) {
-					String key = st.substring(0, st.indexOf(":")).trim();
-					String value = st.substring(st.indexOf(":")+1).trim();
-					if (key.equals("image")) imageFileName = file.getParentFile()+File.separator+value;
-					else if (key.equals("resolution")) BrowserVisualizationSocket.resolution = Double.parseDouble(value);
-					else if (key.equals("origin")) {
-						String x = value.substring(1, value.indexOf(",")).trim();
-						String y = value.substring(value.indexOf(",")+1, value.indexOf(",", value.indexOf(",")+1)).trim();
-						BrowserVisualizationSocket.origin = new Coordinate(Double.parseDouble(x),Double.parseDouble(y));
-						//bottomLeftOrigin = new Coordinate(Double.parseDouble(x),Double.parseDouble(y));
-					}
-				}
-			}
-			br.close();
-			BrowserVisualizationSocket.map = ImageIO.read(new File(imageFileName));
-			//BrowserVisualizationSocket.origin = new Coordinate(bottomLeftOrigin.x, BrowserVisualizationSocket.map.getHeight()*BrowserVisualizationSocket.resolution-bottomLeftOrigin.y);
-		}
-		catch (IOException e) { e.printStackTrace(); }
-	}
-	
-	public void setMapYAML(String mapYAMLSpec, String pathPrefix) {
-		try {
-			String imageFileName = "";
-			if (pathPrefix != null) imageFileName = pathPrefix+File.separator;
-			for (String st : mapYAMLSpec.split("\n")) { 
-				if (!st.trim().startsWith("#") && !st.trim().isEmpty()) {
-					String key = st.substring(0, st.indexOf(":")).trim();
-					String value = st.substring(st.indexOf(":")+1).trim();
-					if (key.equals("image")) imageFileName += value;
-					else if (key.equals("resolution")) BrowserVisualizationSocket.resolution = Double.parseDouble(value);
-					else if (key.equals("origin")) {
-						String x = value.substring(1, value.indexOf(",")).trim();
-						String y = value.substring(value.indexOf(",")+1, value.indexOf(",", value.indexOf(",")+1)).trim();
-						BrowserVisualizationSocket.origin = new Coordinate(Double.parseDouble(x),Double.parseDouble(y));
-						//bottomLeftOrigin = new Coordinate(Double.parseDouble(x),Double.parseDouble(y));
-					}
-				}
-			}
-			System.out.println(imageFileName);
-			BrowserVisualizationSocket.map = ImageIO.read(new File(imageFileName));
-			//BrowserVisualizationSocket.origin = new Coordinate(bottomLeftOrigin.x, BrowserVisualizationSocket.map.getHeight()*BrowserVisualizationSocket.resolution-bottomLeftOrigin.y);
-		}
-		catch (IOException e) { e.printStackTrace(); }
+		BrowserVisualizationSocket.dynamicMap = new DynamicMap(mapYAMLFile);
 	}
 	
 	@Override
