@@ -6,9 +6,7 @@ import java.awt.Shape;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -49,10 +47,11 @@ public class OccupancyMap {
 		deleteDir(new File(TEMP_MAP_DIR));
 		new File(TEMP_MAP_DIR).mkdir();
 	}
-	
+
+	private DynamicMap dynamicMap = null;
 	private int mapWidth, mapHeight;
 	private BitSet occupancyMapLinearBits = null;
-	private double threshold = 0.3;
+	private double threshold = 0.5;
 	private double mapResolution = 0.1;
 	private Coordinate mapOrigin = new Coordinate(0.,0.);
 	private BufferedImage bimg = null;
@@ -373,25 +372,6 @@ public class OccupancyMap {
 	}
 
 	/**
-	 * Get the coordinates in pixel space corresponding to a given {@link Coordinate} in the workspace.
-	 * @param coord A {@link Coordinate} within the workspace.
-	 * @return The coordinates in pixel space corresponding to the given {@link Coordinate} in the workspace.
-	 */
-	public int[] toPixels(Coordinate coord) {
-		return new int[] { (int)((coord.x-this.mapOrigin.x)/this.mapResolution), this.mapHeight-((int)((coord.y-this.mapOrigin.y)/this.mapResolution)) };
-	}
-
-	/**
-	 * Get the {@link Coordinate}s in workspace corresponding to given coordinates in pixel space.
-	 * @param x The x coordinate of the pixel in the occupancy map.
-	 * @param y The y coordinate of the pixel in the occupancy map.
-	 * @return The {@link Coordinate}s in workspace corresponding to given coordinates in pixel space.
-	 */
-	public Coordinate toWorldCoordiantes(int x, int y) {
-		return new Coordinate(this.mapOrigin.x+(x+0.5)*this.mapResolution, this.mapOrigin.y+(this.mapHeight-y+0.5)*this.mapResolution);
-	}
-
-	/**
 	 * Get the width of this occupancy map in pixels.
 	 * @return The width of this occupancy map in pixels.
 	 */
@@ -451,7 +431,7 @@ public class OccupancyMap {
 	 * @return <code>true</code> iff the given {@link Coordinate} in the workspace is occupied.
 	 */
 	public boolean isOccupied(Coordinate coord) {
-		int[] pixel = toPixels(coord);
+		int[] pixel = dynamicMap.toPixels(coord);
 		return this.isOccupied(pixel[0], pixel[1]);
 	}
 
@@ -464,7 +444,7 @@ public class OccupancyMap {
 		for(int y=0; y < bimg.getHeight(); y++){
 			for(int x=0; x < bimg.getWidth(); x++){
 				Color c = new Color(bimg.getRGB(x,y));
-				bs.set(y*mapWidth+x, c.getRed()/255.0 < this.threshold);
+				bs.set(y*mapWidth+x, c.getRed() < this.threshold * 255);
 			}
 		}
 		//bs.set(bimg.getHeight()*bimg.getWidth(), true); // TODO: where is it needed?
@@ -472,14 +452,18 @@ public class OccupancyMap {
 	}
 
 	private void readMap(String mapYAMLFile) {
-		DynamicMap dynamicMap = new DynamicMap(mapYAMLFile);
+		this.dynamicMap = new DynamicMap(mapYAMLFile);
 
-		this.bimg = dynamicMap.mapImage;
+		this.bimg = dynamicMap.mapImageBlackAndWhite;
 		this.mapWidth = this.bimg.getWidth();
 		this.mapHeight = this.bimg.getHeight();
 
 		this.mapResolution = dynamicMap.resolution;
-		this.threshold = dynamicMap.threshold;
 		this.mapOrigin = dynamicMap.origin;
+		this.threshold = 0.5;
+	}
+
+	public DynamicMap getDynamicMap() {
+		return dynamicMap;
 	}
 }

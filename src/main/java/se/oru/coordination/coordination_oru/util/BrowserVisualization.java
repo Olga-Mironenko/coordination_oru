@@ -590,12 +590,8 @@ public class BrowserVisualization implements FleetVisualization {
 		return ret;
 	}
 
-	public void setMap(BufferedImage mapImage, double resolution, Coordinate origin) {
-		BrowserVisualizationSocket.dynamicMap = new DynamicMap(mapImage, resolution, origin);
-	}
-	
 	@Override
-    public void setMap(String mapYAMLFile) {
+	public void setMap(String mapYAMLFile) {
 		BrowserVisualizationSocket.dynamicMap = new DynamicMap(mapYAMLFile);
 	}
 	
@@ -603,5 +599,4 @@ public class BrowserVisualization implements FleetVisualization {
 	public int periodicEnvelopeRefreshInMillis() {
 		return 1000;
 	}
-
 }

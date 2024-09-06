@@ -162,7 +162,7 @@ public class Missions {
 	 * @return The image of the current map, <code>null</code> if no map is known.
 	 */
 	public static BufferedImage getMap() {
-		return Missions.dynamicMap.mapImage;
+		return Missions.dynamicMap.mapImageBlackAndWhite;
 	}
 	
 	/**
@@ -198,7 +198,7 @@ public class Missions {
 	 * @param fileName The name of the image/YAML files to save.
 	 */
 	public static void saveMap(String fileName) {
-		if (Missions.dynamicMap.mapImage == null) throw new Error("Cannot save map as no map is known");
+		if (Missions.dynamicMap.mapImageBlackAndWhite == null) throw new Error("Cannot save map as no map is known");
 		File imageFilename = new File(fileName+".png");
 		String yamlFilename = fileName + ".yaml";
 		Missions.dynamicMap.textYAML = "\nimage: " + imageFilename;
@@ -208,7 +208,7 @@ public class Missions {
 		Missions.dynamicMap.textYAML +=  "\nnegate: 0";
 		Missions.dynamicMap.textYAML += "\noccupied_thresh: 0.3";
 		try { 
-			ImageIO.write(Missions.dynamicMap.mapImage, "png", imageFilename);
+			ImageIO.write(Missions.dynamicMap.mapImageBlackAndWhite, "png", imageFilename);
 			PrintWriter writer = new PrintWriter(yamlFilename);
 			writer.println(Missions.dynamicMap.textYAML);
 			writer.close();
@@ -234,7 +234,7 @@ public class Missions {
 	            if (oneFileName.endsWith(".json")) json = new String(dataBytes);
 	            else {
 	            	ByteArrayInputStream bais = new ByteArrayInputStream(dataBytes);
-	            	Missions.dynamicMap.mapImage = ImageIO.read(bais);
+	            	Missions.dynamicMap.mapImageBlackAndWhite = ImageIO.read(bais);
 	            	//Missions.dynamicMap.mapImageFilename = oneFileName;
 	            }
 	            zipEntry = zis.getNextEntry();
@@ -303,7 +303,7 @@ public class Missions {
             writer.close();
             
             //Create map files if the map is only in memory for some reason...
-            if (Missions.dynamicMap.mapImage != null && (Missions.dynamicMap.imageFilename == null || Missions.dynamicMap.textYAML == null)) {
+            if (Missions.dynamicMap.mapImageBlackAndWhite != null && (Missions.dynamicMap.imageFilename == null || Missions.dynamicMap.textYAML == null)) {
             	Missions.saveMap(scenarioName);
             	Missions.setMap(scenarioName+".yaml");
             }

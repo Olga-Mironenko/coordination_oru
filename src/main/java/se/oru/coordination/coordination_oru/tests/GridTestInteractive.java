@@ -159,6 +159,10 @@ public class GridTestInteractive {
 
                     if (millis >= 5 * 1000) {
                         BrowserVisualizationSocket.sendMapToAll();
+                        Missions.getDynamicMap().cleanCircle(
+                                GridMapConstants.shiftX(GridMapConstants.column3Row1Down, 5).getPosition(),
+                                5
+                        );
                     }
 
                     if (millis >= 50 * 1000) {

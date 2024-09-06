@@ -14,6 +14,7 @@ import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
+import se.oru.coordination.coordination_oru.util.BrowserVisualizationSocket;
 import se.oru.coordination.coordination_oru.util.Missions;
 
 public class ScenarioLoading {
@@ -69,7 +70,7 @@ public class ScenarioLoading {
 		}
 		
 		BrowserVisualization viz = new BrowserVisualization();
-		if (Missions.getMap() != null) viz.setMap(Missions.getMap(), Missions.getMapResolution(), Missions.getMapOrigin());
+		if (Missions.getMap() != null) BrowserVisualizationSocket.dynamicMap = Missions.getDynamicMap();
 		viz.setInitialTransform(20.0, 9.0, 2.0);
 		tec.setVisualization(viz);
 

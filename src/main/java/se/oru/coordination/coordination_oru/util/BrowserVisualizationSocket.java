@@ -48,7 +48,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
 
                 System.out.println("Sending map to newly connected client...");
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(dmap.mapImage, "png", baos);
+                ImageIO.write(dmap.mapImageBlackAndWhite, "png", baos);
                 baos.flush();
                 byte[] imageInBytes = baos.toByteArray();
                 baos.close();
