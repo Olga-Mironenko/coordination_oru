@@ -563,7 +563,6 @@ public class Missions {
 		  - A -> B, B -> A
 		  - ...
 		*/
-
 		boolean isFinishTurnedAround = false;
 		ArrayList<Pose> goals = new ArrayList<>();
 		if (blueprint.middle != null) {
@@ -582,17 +581,22 @@ public class Missions {
 						: AbstractMotionPlanner.inversePathWithoutFirstAndLastPose(pathForward);
 		// E.g.: pathForward = [a, b, c, d], pathBackward = [c, b], so the whole cycle is [a, b, c, d,  b, c,  a, b, ...]
 
+		int robotID = blueprint.vehicle.getID();
+		
 		if (blueprint.direction == MissionBlueprint.Direction.FORWARD_BACKWARD_SINGLE_MISSION) {
 			assert ! blueprint.isToCleanForward;
 
 			PoseSteering[] pathTotal = (PoseSteering[]) ArrayUtils.addAll(pathForward, pathBackward);
-			Missions.enqueueMission(new Mission(blueprint.vehicle.getID(), pathTotal));
+			Missions.enqueueMission(new Mission(robotID, pathTotal));
 		} else {
-			final int[] i = {5};
-			Mission missionForward = new Mission(blueprint.vehicle.getID(), pathForward) {
-				@Override
-				public void onFinish() {
-					if (blueprint.isToCleanForward) {
+			Mission missionForward;
+			if (! blueprint.isToCleanForward) {
+				missionForward = new Mission(robotID, pathForward);
+			} else {
+				assert ! Missions.loopMissions.getOrDefault(robotID, false);
+				missionForward = new Mission(robotID, pathForward) {
+					@Override
+					public void onFinish() {
 						Missions.getDynamicMap().cleanCircle(
 								blueprint.finish.getPosition(),
 								blueprint.radiusClean
@@ -608,12 +612,12 @@ public class Missions {
 						);
 						enqueueMissions(blueprint);
 					}
-				}
-			};
+				};
+			}
 			Missions.enqueueMission(missionForward);
 
 			if (blueprint.direction == MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS) {
-				Mission missionBackward = new Mission(blueprint.vehicle.getID(), pathBackward);
+				Mission missionBackward = new Mission(robotID, pathBackward);
 				Missions.enqueueMission(missionBackward);
 			}
 		}

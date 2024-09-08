@@ -142,23 +142,25 @@ public class GridTestInteractive {
         Missions.startMissionDispatcher(tec);
 
         Missions.loopMissions.put(hum0.getID(), false);
-        Missions.loopMissions.put(aut1.getID(), false); // TODO: synchronize `loop` with `setIsToCleanForward` automatically
-        Missions.loopMissions.put(aut2.getID(), true);
-        Missions.loopMissions.put(aut3.getID(), false);
-
         Missions.enqueueMissions(
                 new MissionBlueprint(hum0, humStart, humFinish)
         );
+
+        Missions.loopMissions.put(aut1.getID(), false);
         Missions.enqueueMissions(
                 new MissionBlueprint(aut1, aut1Start, aut1Finish).setDirection(
                         MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
                 ).setIsToCleanForward(true).setRadiusClean(5).setDxClean(2)
         );
+
+        Missions.loopMissions.put(aut2.getID(), true);
         Missions.enqueueMissions(
                 new MissionBlueprint(aut2, aut2Start, aut2Finish).setDirection(
                         MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
                 )
         );
+
+        Missions.loopMissions.put(aut3.getID(), false);
         Missions.enqueueMissions(
                 new MissionBlueprint(aut3, aut3Start, aut3Finish).setDirection(
                         MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
