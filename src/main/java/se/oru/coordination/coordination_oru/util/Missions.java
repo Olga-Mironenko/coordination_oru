@@ -34,6 +34,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import se.oru.coordination.coordination_oru.Mission;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
+import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
@@ -1643,4 +1644,12 @@ public class Missions {
 		return graph.edgeSet();
 	}
 
+	public static void onDynamicMapUpdate() {
+		for (AbstractVehicle vehicle : VehiclesHashMap.getList().values()) {
+			assert vehicle instanceof AutonomousVehicle;
+			((AutonomousVehicle) vehicle).setMapForPlanner(Missions.getDynamicMap());
+		}
+
+		BrowserVisualizationSocket.sendMapToAll();
+	}
 }

@@ -21,6 +21,7 @@ import com.vividsolutions.jts.geom.util.AffineTransformation;
 
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.DynamicMap;
 import se.oru.coordination.coordination_oru.util.Missions;
 
 public abstract class AbstractMotionPlanner {
@@ -108,10 +109,13 @@ public abstract class AbstractMotionPlanner {
 		this.setGoals(locs);
 	}
 
-		
 	public void setMap(String mapYAMLFile) {
+		setMap(new DynamicMap(mapYAMLFile));
+	}
+
+	public void setMap(DynamicMap dynamicMap) {
 		this.noMap = false;
-		this.om = new OccupancyMap(mapYAMLFile);
+		this.om = new OccupancyMap(dynamicMap);
 	}
 		
 	public PoseSteering[] getPath() {

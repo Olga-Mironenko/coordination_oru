@@ -20,11 +20,7 @@ class Visualization {
 		//Default for scaling text (if not user defined)
 		this.fontScale = -1;
 
-		this.currentTextScale = this.originalScale;		
-		this.matrix = Matrix.from( 1, 0, 0, 1, 0, 0 );
-		this.matrix.scale(1,-1);
-		this.matrix.translate(0,-this.canvas.height);
-		
+		this.currentTextScale = this.originalScale;
 		this.resizeCanvasToUserSpec();
 
 		this.ctrlOverlay = document.getElementById("ctrl_overlay"); 
@@ -72,7 +68,7 @@ class Visualization {
 		// Create a dummy canvas context to use as a source for the original fillText function
 		this.ctx.fillText.dummyCtx = document.createElement('canvas').getContext('2d');
 		
-		this.map = [];
+		this.map = null;
 		this.mapResolution = 1.0;
 		this.mapOrigin = { x : 0, y : 0 };
 		this.footprintSize = 1;
@@ -122,7 +118,7 @@ class Visualization {
 	setMap(bytes) {
 		var image = new Image();
 		image.src = 'data:image/png;base64,'+this.encode(bytes);
-		this.map.push(image);
+		this.map = image;
 	}
 
 	ctrlOverlayOn() {
@@ -326,14 +322,14 @@ class Visualization {
 		this.clearCanvas();
 
 		//Draw map if necessary
-		if (this.map.length > 0) {
-			var mapW = this.map[0].width*this.mapResolution;
-			var mapH = this.map[0].height*this.mapResolution;
+		if (this.map != null) {
+			var mapW = this.map.width*this.mapResolution;
+			var mapH = this.map.height*this.mapResolution;
 			this.ctx.save();
 			this.ctx.scale(1,-1);
 			this.ctx.translate(0,-mapH);
 			this.ctx.globalAlpha = 0.4; // makes white tunnels gray
-			this.ctx.drawImage(this.map[0],this.mapOrigin.x,this.mapOrigin.y,mapW,mapH);
+			this.ctx.drawImage(this.map,this.mapOrigin.x,this.mapOrigin.y,mapW,mapH);
 			this.ctx.globalAlpha = 1.0;
 			this.ctx.restore();
 		}
@@ -386,8 +382,13 @@ class Visualization {
 	}
 
 	resizeCanvasToUserSpec() {
+		this.matrix = Matrix.from( 1, 0, 0, 1, 0, 0 );
+		this.matrix.scale(1,-1);
+		this.matrix.translate(0,-this.canvas.height);
+
 		this.matrix.translate(this.originalTranslate.x*this.originalScale, this.originalTranslate.y*this.originalScale);
 		this.matrix.scale(this.originalScale,this.originalScale);		
+
 		this.matrix.applyToContext(this.ctx);
 	}
 

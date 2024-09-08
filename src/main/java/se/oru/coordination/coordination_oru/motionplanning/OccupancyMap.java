@@ -145,8 +145,20 @@ public class OccupancyMap {
 	 * @param yamlFile The YAML file to construct the occupancy map from.
 	 */
 	public OccupancyMap(String yamlFile) {
-		this.readMap(yamlFile);
-		//--
+		this(new DynamicMap(yamlFile));
+	}
+
+	public OccupancyMap(DynamicMap dynamicMap) {
+		this.dynamicMap = dynamicMap;
+
+		this.bimg = dynamicMap.mapImageBlackAndWhite;
+		this.mapWidth = this.bimg.getWidth();
+		this.mapHeight = this.bimg.getHeight();
+
+		this.mapResolution = dynamicMap.resolution;
+		this.mapOrigin = dynamicMap.origin;
+		this.threshold = 0.5;
+
 		this.createOccupancyMap();
 		this.bimg_original = deepCopy(this.bimg);
 	}
@@ -449,18 +461,6 @@ public class OccupancyMap {
 		}
 		//bs.set(bimg.getHeight()*bimg.getWidth(), true); // TODO: where is it needed?
 		return bs;
-	}
-
-	private void readMap(String mapYAMLFile) {
-		this.dynamicMap = new DynamicMap(mapYAMLFile);
-
-		this.bimg = dynamicMap.mapImageBlackAndWhite;
-		this.mapWidth = this.bimg.getWidth();
-		this.mapHeight = this.bimg.getHeight();
-
-		this.mapResolution = dynamicMap.resolution;
-		this.mapOrigin = dynamicMap.origin;
-		this.threshold = 0.5;
 	}
 
 	public DynamicMap getDynamicMap() {

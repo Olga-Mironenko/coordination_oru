@@ -8,6 +8,7 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.DynamicMap;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.NoPathFoundError;
 
@@ -19,7 +20,7 @@ import java.util.List;
 public class AutonomousVehicle extends AbstractVehicle {
     public static boolean isPathCachingEnabled = false;
     public static ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect;
-    private ReedsSheppCarPlanner planner;
+    private ReedsSheppCarPlanner rsp;
 
     public AutonomousVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
         super(id, priorityID, color, colorInMotion, maxVelocity, maxAcceleration, xLength, yLength);
@@ -43,17 +44,21 @@ public class AutonomousVehicle extends AbstractVehicle {
 
     public ReedsSheppCarPlanner makePlanner(String map, Coordinate[] footprint) {
 //        if (true) {
-        if (planner == null) {
-            var rsp = new ReedsSheppCarPlanner(planningAlgorithm);
-            rsp.setMap(map);
+        if (rsp == null) {
+            rsp = new ReedsSheppCarPlanner(planningAlgorithm);
             rsp.setRadius(0.01);
             rsp.setPlanningTimeInSecs(15);
             rsp.setFootprint(footprint);
             rsp.setTurningRadius(0.01);
             rsp.setDistanceBetweenPathPoints(0.1);
-            planner = rsp;
+            setMapForPlanner(Missions.getDynamicMap());
         }
-        return planner;
+        return rsp;
+    }
+
+    public void setMapForPlanner(DynamicMap dynamicMap) {
+        assert rsp != null;
+        rsp.setMap(dynamicMap);
     }
 
     @Override

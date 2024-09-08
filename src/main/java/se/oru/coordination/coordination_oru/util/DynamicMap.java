@@ -19,7 +19,7 @@ public class DynamicMap {
 
     public BufferedImage mapImageGrayscale = null;
     public BufferedImage mapImageBlackAndWhite = null; // only two colors
-    public double resolution = -1;
+    public double resolution = -1; // meters/pixel
     public double threshold = 0.3;
     public Coordinate origin = null;
 
@@ -92,19 +92,40 @@ public class DynamicMap {
 
             mapImageGrayscale = ImageIO.read(new File(imageFilename));
             grayscaleImage(mapImageGrayscale);
-
-            mapImageBlackAndWhite = deepCopy(mapImageGrayscale);
-            thresholdImage(mapImageBlackAndWhite, threshold); // TODO
+            syncMapImageBlackAndWhite();
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException();
         }
     }
 
-    public DynamicMap(BufferedImage mapImageBlackAndWhite, double resolution, Coordinate origin) {
-        this.mapImageBlackAndWhite = mapImageBlackAndWhite;
-        this.resolution = resolution;
-        this.origin = origin;
+    private void syncMapImageBlackAndWhite() {
+        mapImageBlackAndWhite = deepCopy(mapImageGrayscale);
+        thresholdImage(mapImageBlackAndWhite, threshold);
+    }
+
+    public static void makeCircleWhite(BufferedImage bimg, int iCenter, int jCenter, int radius) {
+        final int rgbBlack = 0xff000000;
+        final int rgbWhite = 0xffffffff;
+        for (int i = 0; i < bimg.getWidth(); i++) {
+            for (int j = 0; j < bimg.getHeight(); j++) {
+                if ((i - iCenter) * (i - iCenter) + (j - jCenter) * (j - jCenter) <= radius * radius) {
+                    if (bimg.getRGB(i, j) != rgbBlack) {
+                        bimg.setRGB(i, j, rgbWhite);
+                    }
+                }
+            }
+        }
+    }
+
+    public void cleanCircle(int iCenter, int jCenter, int radius) {
+        makeCircleWhite(mapImageGrayscale, iCenter, jCenter, radius);
+        syncMapImageBlackAndWhite();
+    }
+
+    public void cleanCircle(Coordinate center, double radiusMeters) {
+        int[] pixel = this.toPixels(center);
+        cleanCircle(pixel[0], pixel[1], (int) Math.round(radiusMeters / resolution));
     }
 
     /**
@@ -132,10 +153,5 @@ public class DynamicMap {
                 origin.x + (x + 0.5) * resolution,
                 origin.y + (mapImageBlackAndWhite.getHeight() - y + 0.5) * resolution
         );
-    }
-
-    public void cleanCircle(Coordinate center, double radius) {
-        int[] pixel = this.toPixels(center);
-        // TODO
     }
 }

@@ -56,26 +56,6 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
                 rep.sendBytes(bb);
             }
             catch(IOException e) { e.printStackTrace(); }
-        }
-    }
-
-    public static void sendMapToAll() {
-        for (RemoteEndpoint rep : BrowserVisualizationSocket.ENDPOINTS) {
-            sendMap(rep);
-        }
-    }
-
-    @Override
-    public void onWebSocketConnect(Session sess) {
-        super.onWebSocketConnect(sess);
-        System.out.println("Socket Connected: " + sess);
-        synchronized (ENDPOINTS) {
-            RemoteEndpoint rep = super.getRemote();
-            ENDPOINTS.add(rep);
-
-            //Send map and map parameters if present
-
-            sendMap(rep);
 
             if (BrowserVisualizationSocket.initialTranslation != null) {
                 try {
@@ -96,6 +76,26 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
                 rep.sendString(setFontScaleString);
             }
             catch(IOException e) { e.printStackTrace(); }
+        }
+    }
+
+    public static void sendMapToAll() {
+        for (RemoteEndpoint rep : BrowserVisualizationSocket.ENDPOINTS) {
+            sendMap(rep);
+        }
+    }
+
+    @Override
+    public void onWebSocketConnect(Session sess) {
+        super.onWebSocketConnect(sess);
+        System.out.println("Socket Connected: " + sess);
+        synchronized (ENDPOINTS) {
+            RemoteEndpoint rep = super.getRemote();
+            ENDPOINTS.add(rep);
+
+            //Send map and map parameters if present
+
+            sendMap(rep);
         }
     }
 
