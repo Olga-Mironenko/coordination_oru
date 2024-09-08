@@ -37,7 +37,13 @@ public class DynamicMap {
         for (int y = 0; y < bimg.getHeight(); y++) {
             for (int x = 0; x < bimg.getWidth(); x++) {
                 Color color = new Color(bimg.getRGB(x, y));
-                int graylevel = (color.getRed() + color.getGreen() + color.getBlue()) / 3;
+
+                int sum = color.getRed() + color.getGreen() + color.getBlue();
+                int graylevel = sum / 3;
+                if (sum != 0 && graylevel == 0) {
+                    graylevel = 1; // because of `makeCircleWhite`
+                }
+
                 int r = graylevel;
                 int g = graylevel;
                 int b = graylevel;
