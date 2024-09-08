@@ -151,25 +151,29 @@ public class GridTestInteractive {
         Missions.enqueueMissions(aut2, aut2Start, aut2Finish, false);
         Missions.enqueueMissions(aut3, aut3Start, aut3Finish, false);
 
+        /*
         new GatedThread("cleanCircle thread") {
             @Override
             public void runCore() {
                 while (true) {
                     int millis = Timekeeper.getVirtualMillisPassed();
 
-                    if (millis >= 5 * 1000) {
-                        Missions.getDynamicMap().cleanCircle(
-                                GridMapConstants.shiftX(GridMapConstants.column3Row1Down, 5).getPosition(),
-                                5
-                        );
-                        Missions.onDynamicMapUpdate();
-                        break;
+                    for (int i = 1; i <= 15; i += 1) {
+                        if (i * 1000 <= millis && millis < i * 1000 + 100) {
+                            Missions.getDynamicMap().cleanCircle(
+                                    GridMapConstants.shiftX(GridMapConstants.column3Row1Down, i).getPosition(),
+                                    4
+                            );
+                            Missions.onDynamicMapUpdate();
+                            break;
+                        }
                     }
 
                     GatedThread.sleepWithoutTryCatch(100);
                 }
             }
         }.start();
+         */
 
         new GatedThread("clicking thread") {
             @Override

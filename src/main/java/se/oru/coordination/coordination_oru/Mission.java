@@ -249,4 +249,6 @@ public class Mission implements Comparable<Mission> {
 	public void setToPose(Pose toPose) {
 		this.toPose = toPose;
 	}
+
+	public void onFinish() {}
 }

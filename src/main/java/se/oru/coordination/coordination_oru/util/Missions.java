@@ -562,9 +562,25 @@ public class Missions {
 			PoseSteering[] pathTotal = (PoseSteering[]) ArrayUtils.addAll(pathForward, pathBackward);
 			Missions.enqueueMission(new Mission(vehicle.getID(), pathTotal));
 		} else {
-			Missions.enqueueMission(new Mission(vehicle.getID(), pathForward));
+			final int[] i = {5};
+			Mission missionForward = new Mission(vehicle.getID(), pathForward) {
+				@Override
+				public void onFinish() {
+					if (vehicle.getID() == 1) {
+						Missions.getDynamicMap().cleanCircle(
+								GridMapConstants.shiftX(GridMapConstants.column3Row1Down, i[0]).getPosition(),
+								4
+						);
+						Missions.onDynamicMapUpdate();
+						i[0] += 5;
+					}
+				}
+			};
+			Missions.enqueueMission(missionForward);
+
 			if (! isOneWay) {
-				Missions.enqueueMission(new Mission(vehicle.getID(), pathBackward));
+				Mission missionBackward = new Mission(vehicle.getID(), pathBackward);
+				Missions.enqueueMission(missionBackward);
 			}
 		}
 

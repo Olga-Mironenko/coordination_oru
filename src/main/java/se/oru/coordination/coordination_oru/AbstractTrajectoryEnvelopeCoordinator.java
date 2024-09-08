@@ -33,6 +33,7 @@ import com.vividsolutions.jts.geom.util.AffineTransformation;
 
 import aima.core.util.datastructure.Pair;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.FleetVisualization;
 import se.oru.coordination.coordination_oru.util.StringUtils;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
@@ -99,7 +100,9 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 			return te1.getSecond() < te2.getSecond() ? 1 : -1; 
 		}
 	});
-	protected ArrayList<TrajectoryEnvelope> envelopesToTrack = new ArrayList<TrajectoryEnvelope>();
+	protected ArrayList<TrajectoryEnvelope> envelopesToTrack = new ArrayList<>();
+	protected HashMap<TrajectoryEnvelope, Mission> teToMission = new HashMap<>();
+
 	protected ArrayList<TrajectoryEnvelope> currentParkingEnvelopes = new ArrayList<TrajectoryEnvelope>();
 	public HashSet<CriticalSection> allCriticalSections = new HashSet<CriticalSection>();
 	public int numCriticalSectionsCreated = 0;
@@ -1531,6 +1534,12 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 							//remove critical sections in which this robot is involved
 							cleanUpRobotCS(myTE.getRobotID(), -1);
 
+							Mission mission = teToMission.get(myTE);
+							if (mission != null) {
+								mission.onFinish();
+								teToMission.remove(te);
+							}
+
 							//clean up the old parking envelope
 							cleanUp(startParking);
 							currentParkingEnvelopes.remove(startParking);
@@ -1622,7 +1631,8 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 		HashMap<Integer,ArrayList<Mission>> robotsToMissions = new HashMap<Integer,ArrayList<Mission>>();
 		for (Mission m : missions) {
-			if (robotsToMissions.get(m.getRobotID()) == null) robotsToMissions.put(m.getRobotID(), new ArrayList<Mission>());
+			if (robotsToMissions.get(m.getRobotID()) == null)
+				robotsToMissions.put(m.getRobotID(), new ArrayList<Mission>());
 			robotsToMissions.get(m.getRobotID()).add(m);
 		}
 
@@ -1631,8 +1641,10 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 			if (!isFree(robotID)) return false;
 		}
 
-		for (Entry<Integer,ArrayList<Mission>> e : robotsToMissions.entrySet()) {
+		for (Entry<Integer, ArrayList<Mission>> e : robotsToMissions.entrySet()) {
 			int robotID = e.getKey();
+			ArrayList<Mission> missionsRobot = e.getValue();
+
 			synchronized (solver) {
 				//Get start parking tracker and envelope
 				TrajectoryEnvelopeTrackerDummy startParkingTracker = (TrajectoryEnvelopeTrackerDummy)trackers.get(robotID);
@@ -1640,7 +1652,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				ArrayList<Constraint> consToAdd = new ArrayList<Constraint>();
 				//				String finalDestLocation = "";
 				ArrayList<PoseSteering> overallPath = new ArrayList<PoseSteering>();
-				for (Mission m : e.getValue()) {						
+				for (Mission m : missionsRobot) {
 					for (PoseSteering ps : m.getPath()) {
 						overallPath.add(ps);
 					}
@@ -1650,6 +1662,10 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				TrajectoryEnvelope te = pathToTE(
 						robotID, overallPath.toArray(new PoseSteering[overallPath.size()]), getFootprint(robotID)
 				);
+
+				TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+				assert ! missionsRobot.isEmpty();
+				tec.teToMission.put(te, missionsRobot.get(missionsRobot.size() - 1));
 
 				//Add mission stopping points
 				synchronized(stoppingPoints) {
