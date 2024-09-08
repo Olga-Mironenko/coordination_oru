@@ -4,6 +4,7 @@ import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 
 public class MissionBlueprint {
+
     public enum Direction {
         FORWARD_ONLY,
         FORWARD_BACKWARD_SINGLE_MISSION,
@@ -16,7 +17,11 @@ public class MissionBlueprint {
     public Pose finish;
 
     public Direction direction = Direction.FORWARD_ONLY;
+
     public boolean isToCleanForward = false;
+    public double radiusClean = 0.0;
+    public double dxClean = 0.0;
+    public double dyClean = 0.0;
 
     public MissionBlueprint(AutonomousVehicle vehicle, Pose start, Pose finish) {
         this.vehicle = vehicle;
@@ -36,6 +41,21 @@ public class MissionBlueprint {
 
     public MissionBlueprint setIsToCleanForward(boolean isToCleanForward) {
         this.isToCleanForward = isToCleanForward;
+        return this;
+    }
+
+    public MissionBlueprint setRadiusClean(double radiusClean) {
+        this.radiusClean = radiusClean;
+        return this;
+    }
+
+    public MissionBlueprint setDxClean(double dxClean) {
+        this.dxClean = dxClean;
+        return this;
+    }
+
+    public MissionBlueprint setDyClean(double dyClean) {
+        this.dyClean = dyClean;
         return this;
     }
 }

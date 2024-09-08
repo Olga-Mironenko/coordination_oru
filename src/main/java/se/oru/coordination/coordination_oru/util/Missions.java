@@ -594,11 +594,19 @@ public class Missions {
 				public void onFinish() {
 					if (blueprint.isToCleanForward) {
 						Missions.getDynamicMap().cleanCircle(
-								GridMapConstants.shiftX(GridMapConstants.column3Row1Down, i[0]).getPosition(),
-								4
+								blueprint.finish.getPosition(),
+								blueprint.radiusClean
 						);
 						Missions.onDynamicMapUpdate();
-						i[0] += 5;
+
+						blueprint.finish = GridMapConstants.shiftY(
+								GridMapConstants.shiftX(
+										blueprint.finish,
+										blueprint.dxClean
+								),
+								blueprint.dyClean
+						);
+						enqueueMissions(blueprint);
 					}
 				}
 			};

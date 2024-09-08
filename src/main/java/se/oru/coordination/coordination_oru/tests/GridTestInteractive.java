@@ -71,13 +71,13 @@ public class GridTestInteractive {
 //                        -1.35
 //                )
 //        );
-        final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.column2Row1Down);
+        final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.column3Row1Down);
 
         final Pose aut2Start = GridMapConstants.row2LeftStart;
-        final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.column2Row2Down);
+        final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.column3Row2Down);
 
         final Pose aut3Start = GridMapConstants.row3LeftStart;
-        final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.column2Row3Down);
+        final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.column3Row3Down);
 
         final double maxVelocityHum = 3.0;
         final double maxAccelerationHum = 2.0;
@@ -98,9 +98,9 @@ public class GridTestInteractive {
         // TODO: `maxAcceleration` passed here is not used by `tec`.
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, 0, Color.ORANGE, Color.ORANGE, maxVelocityHum, maxAccelerationHum);
 //        AutonomousVehicle hum0 = new AutonomousVehicle(0, 0, Color.BLUE, Color.BLUE, maxVelocityHum, maxAccelerationHum);
-        AutonomousVehicle aut1 = new AutonomousVehicle(1, 0, Color.BLUE, Color.BLUE, 3, maxAccelerationAut);
-        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.BLUE, Color.BLUE, 3, maxAccelerationAut);
-        AutonomousVehicle aut3 = new AutonomousVehicle(3, 0, Color.BLUE, Color.BLUE, 3, maxAccelerationAut);
+        AutonomousVehicle aut1 = new AutonomousVehicle(1, 0, Color.BLUE, Color.BLUE, 10, maxAccelerationAut);
+        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.BLUE, Color.BLUE, 10, maxAccelerationAut);
+        AutonomousVehicle aut3 = new AutonomousVehicle(3, 0, Color.BLUE, Color.BLUE, 10, maxAccelerationAut);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 0, 0);
         tec.setupSolver(0, 100000000);
@@ -142,9 +142,9 @@ public class GridTestInteractive {
         Missions.startMissionDispatcher(tec);
 
         Missions.loopMissions.put(hum0.getID(), false);
-        Missions.loopMissions.put(aut1.getID(), true);
+        Missions.loopMissions.put(aut1.getID(), false); // TODO: synchronize `loop` with `setIsToCleanForward` automatically
         Missions.loopMissions.put(aut2.getID(), true);
-        Missions.loopMissions.put(aut3.getID(), true);
+        Missions.loopMissions.put(aut3.getID(), false);
 
         Missions.enqueueMissions(
                 new MissionBlueprint(hum0, humStart, humFinish)
@@ -152,7 +152,7 @@ public class GridTestInteractive {
         Missions.enqueueMissions(
                 new MissionBlueprint(aut1, aut1Start, aut1Finish).setDirection(
                         MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
-                ).setIsToCleanForward(true)
+                ).setIsToCleanForward(true).setRadiusClean(5).setDxClean(2)
         );
         Missions.enqueueMissions(
                 new MissionBlueprint(aut2, aut2Start, aut2Finish).setDirection(
@@ -162,7 +162,7 @@ public class GridTestInteractive {
         Missions.enqueueMissions(
                 new MissionBlueprint(aut3, aut3Start, aut3Finish).setDirection(
                         MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
-                )
+                ).setIsToCleanForward(true).setRadiusClean(5).setDxClean(1)
         );
 
         /*

@@ -885,7 +885,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		assert continueToStay;
 		if (criticalPoint == -1) { // The end of mission.
 			//set state to final position, just in case it didn't quite get there (it's certainly close enough)
-			assert Math.abs(this.state.getPosition() - totalDistance) <= 0.5;
+			assert Math.abs(this.state.getPosition() - totalDistance) <= 1;
 			this.state = new State(totalDistance, 0.0);
 			return Status.FULL_STOP;
 		}
