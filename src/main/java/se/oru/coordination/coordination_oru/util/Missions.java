@@ -603,13 +603,16 @@ public class Missions {
 						);
 						Missions.onDynamicMapUpdate();
 
-						blueprint.finish = GridMapConstants.shiftY(
-								GridMapConstants.shiftX(
-										blueprint.finish,
-										blueprint.dxClean
-								),
-								blueprint.dyClean
+						double x = Math.min(
+								blueprint.xMaxClean,
+								blueprint.finish.getX() + blueprint.dxClean
 						);
+						double y = Math.min(
+								blueprint.yMaxClean,
+								blueprint.finish.getY() + blueprint.dyClean
+						);
+						blueprint.finish = new Pose(x, y, blueprint.finish.getTheta());
+
 						enqueueMissions(blueprint);
 					}
 				};

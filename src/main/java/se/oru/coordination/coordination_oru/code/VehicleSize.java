@@ -17,5 +17,20 @@ public class VehicleSize {
         this.rightSafeDistance = rightSafeDistance;
     }
 
+    public double calcCircumradius() {
+        // Calculate the radius of the circumscribed circle.
+        // In other words, the radius of the minimal circle big enough to turn around in any direction.
+        // E.g., for a clock hand, this is the clock itself.
+
+        double front = length / 2 + frontSafeDistance;
+        double back = length / 2 + backSafeDistance;
+        double left = width / 2 + leftSafeDistance;
+        double right = width / 2 + rightSafeDistance;
+        return Math.max(
+                Math.max(front, back),
+                Math.max(left, right)
+        );
+    }
+
 
 }

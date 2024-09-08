@@ -160,4 +160,12 @@ public class DynamicMap {
                 origin.y + (mapImageBlackAndWhite.getHeight() - y + 0.5) * resolution
         );
     }
+
+    public double getWidthMeters() {
+        return mapImageBlackAndWhite.getWidth() * resolution;
+    }
+
+    public double getHeightMeters() {
+        return mapImageBlackAndWhite.getHeight() * resolution;
+    }
 }

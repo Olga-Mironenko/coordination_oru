@@ -81,7 +81,7 @@ public class GridTestInteractive {
 
         final double maxVelocityHum = 3.0;
         final double maxAccelerationHum = 2.0;
-        final double maxAccelerationAut = 0.3;
+        final double maxAccelerationAut = 0.4;
 
         double lengthVehicle = 3.0;
         double widthVehicle = 2.0;
@@ -150,7 +150,9 @@ public class GridTestInteractive {
         Missions.enqueueMissions(
                 new MissionBlueprint(aut1, aut1Start, aut1Finish).setDirection(
                         MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
-                ).setIsToCleanForward(true).setRadiusClean(5).setDxClean(2)
+                ).setIsToCleanForward(true).setRadiusClean(5).setDxClean(2).setXMaxClean(
+                        Missions.getDynamicMap().getWidthMeters() - vehicleSizeAut1.calcCircumradius() - 0.2
+                )
         );
 
         Missions.loopMissions.put(aut2.getID(), true);
@@ -164,7 +166,9 @@ public class GridTestInteractive {
         Missions.enqueueMissions(
                 new MissionBlueprint(aut3, aut3Start, aut3Finish).setDirection(
                         MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
-                ).setIsToCleanForward(true).setRadiusClean(5).setDxClean(1)
+                ).setIsToCleanForward(true).setRadiusClean(5).setDxClean(1).setXMaxClean(
+                        Missions.getDynamicMap().getWidthMeters() - vehicleSizeAut1.calcCircumradius() - 0.2
+                )
         );
 
         /*

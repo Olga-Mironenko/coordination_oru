@@ -22,6 +22,8 @@ public class MissionBlueprint {
     public double radiusClean = 0.0;
     public double dxClean = 0.0;
     public double dyClean = 0.0;
+    public double xMaxClean = Double.POSITIVE_INFINITY;
+    public double yMaxClean = Double.POSITIVE_INFINITY;
 
     public MissionBlueprint(AutonomousVehicle vehicle, Pose start, Pose finish) {
         this.vehicle = vehicle;
@@ -56,6 +58,16 @@ public class MissionBlueprint {
 
     public MissionBlueprint setDyClean(double dyClean) {
         this.dyClean = dyClean;
+        return this;
+    }
+
+    public MissionBlueprint setXMaxClean(double xMaxClean) {
+        this.xMaxClean = xMaxClean;
+        return this;
+    }
+
+    public MissionBlueprint setYMaxClean(double yMaxClean) {
+        this.yMaxClean = yMaxClean;
         return this;
     }
 }
