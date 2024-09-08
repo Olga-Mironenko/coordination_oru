@@ -50,7 +50,6 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
  *
  */
 public class Missions {
-
 	protected static HashMap<String,Pose> locations = new HashMap<String, Pose>();
 	protected static HashMap<String,PoseSteering[]> paths = new HashMap<String, PoseSteering[]>();
 	private static Logger metaCSPLogger = MetaCSPLogging.getLogger(Missions.class);
@@ -541,32 +540,59 @@ public class Missions {
 		missions.get(m.getRobotID()).add(m);
 	}
 
-	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose middle, Pose finish, boolean isInverse, boolean isOneWay) {
+	public static void enqueueMissions(MissionBlueprint blueprint) {
+		/*
+		Direction.FORWARD_ONLY:
+		- loop=false:
+		  - A -> B
+		- loop=true: makes no sense
+
+		Direction.FORWARD_BACKWARD_SINGLE_MISSION:
+		- loop=false:
+		  - A -> B -> A
+		- loop=true:
+		  - A -> B -> A
+		  - A -> B -> A
+		  - ...
+
+		Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS:
+		- loop=false:
+		  - A -> B, B -> A
+		- loop=true:
+		  - A -> B, B -> A
+		  - A -> B, B -> A
+		  - ...
+		*/
+
 		boolean isFinishTurnedAround = false;
 		ArrayList<Pose> goals = new ArrayList<>();
-		if (middle != null) {
-			goals.add(middle);
+		if (blueprint.middle != null) {
+			goals.add(blueprint.middle);
 		}
-		goals.add(finish);
+		goals.add(blueprint.finish);
 		if (isFinishTurnedAround) {
-			goals.add(GridMapConstants.turnAround(finish));
+			goals.add(GridMapConstants.turnAround(blueprint.finish));
 		}
-		vehicle.getPlan(start, goals.toArray(Pose[]::new), Missions.dynamicMap.filenameYAML, false);
+		blueprint.vehicle.getPlan(blueprint.start, goals.toArray(Pose[]::new), Missions.dynamicMap.filenameYAML, false);
 
-		var pathForward = vehicle.getPath();
-		PoseSteering[] pathBackward = isOneWay ? null : AbstractMotionPlanner.inversePathWithoutFirstAndLastPose(pathForward);
+		var pathForward = blueprint.vehicle.getPath();
+		PoseSteering[] pathBackward =
+				blueprint.direction == MissionBlueprint.Direction.FORWARD_ONLY
+						? null
+						: AbstractMotionPlanner.inversePathWithoutFirstAndLastPose(pathForward);
 		// E.g.: pathForward = [a, b, c, d], pathBackward = [c, b], so the whole cycle is [a, b, c, d,  b, c,  a, b, ...]
 
-		if (isInverse) {
-			assert ! isOneWay;
+		if (blueprint.direction == MissionBlueprint.Direction.FORWARD_BACKWARD_SINGLE_MISSION) {
+			assert ! blueprint.isToCleanForward;
+
 			PoseSteering[] pathTotal = (PoseSteering[]) ArrayUtils.addAll(pathForward, pathBackward);
-			Missions.enqueueMission(new Mission(vehicle.getID(), pathTotal));
+			Missions.enqueueMission(new Mission(blueprint.vehicle.getID(), pathTotal));
 		} else {
 			final int[] i = {5};
-			Mission missionForward = new Mission(vehicle.getID(), pathForward) {
+			Mission missionForward = new Mission(blueprint.vehicle.getID(), pathForward) {
 				@Override
 				public void onFinish() {
-					if (vehicle.getID() == 1) {
+					if (blueprint.isToCleanForward) {
 						Missions.getDynamicMap().cleanCircle(
 								GridMapConstants.shiftX(GridMapConstants.column3Row1Down, i[0]).getPosition(),
 								4
@@ -578,44 +604,31 @@ public class Missions {
 			};
 			Missions.enqueueMission(missionForward);
 
-			if (! isOneWay) {
-				Mission missionBackward = new Mission(vehicle.getID(), pathBackward);
+			if (blueprint.direction == MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS) {
+				Mission missionBackward = new Mission(blueprint.vehicle.getID(), pathBackward);
 				Missions.enqueueMission(missionBackward);
 			}
 		}
-
-		/*
-		by default (isOneWay=false):
-		 - isInverse=false (whether to include the inverse path into the same mission):
-		    - loop=false:
-  			  - A -> B, B -> A
-			- loop=true:
-			  - A -> B, B -> A
-			  - A -> B, B -> A
-			  - ...
-		  - isInverse=true:
-			- loop=false:
-  			  - A -> B -> A
-			- loop=true:
-			  - A -> B -> A
-			  - A -> B -> A
-			  - ...
-
-		isOneWay=true:
-		 - isInverse=false:
-		   - loop=false:
-		     - A -> B
-		   - loop=true: makes no sense
-		 - isInverse=true: makes no sense
-		 */
 	}
 
-	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose finish, boolean isInverse) {
-		enqueueMissions(vehicle, start, null, finish, isInverse, false);
+	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose finish, boolean isSingleMissionInBothDirections) {
+		enqueueMissions(
+			new MissionBlueprint(vehicle, start, finish).setDirection(
+				isSingleMissionInBothDirections
+						? MissionBlueprint.Direction.FORWARD_BACKWARD_SINGLE_MISSION
+						: MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+			)
+		);
 	}
 
-	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose middle, Pose finish, boolean isInverse) {
-		enqueueMissions(vehicle, start, middle, finish, isInverse, false);
+	public static void enqueueMissions(AutonomousVehicle vehicle, Pose start, Pose middle, Pose finish, boolean isSingleMissionInBothDirections) {
+		enqueueMissions(
+				new MissionBlueprint(vehicle, start, finish).setDirection(
+						isSingleMissionInBothDirections
+								? MissionBlueprint.Direction.FORWARD_BACKWARD_SINGLE_MISSION
+								: MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+				).setMiddle(middle)
+		);
 	}
 
 	/**

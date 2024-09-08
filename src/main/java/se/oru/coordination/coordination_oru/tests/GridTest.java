@@ -237,13 +237,13 @@ public class GridTest {
         Missions.startMissionDispatcher(tec);
         if (hum0 != null) Missions.loopMissions.put(hum0.getID(), ishumLoop);
 
-        final boolean isInverse = false;
-        if (hum0 != null) Missions.enqueueMissions(hum0, humStart, humMiddle, humFinish, isInverse);
-        if (aut1 != null) Missions.enqueueMissions(aut1, aut1Start, aut1Finish, isInverse);
-        if (aut2 != null) Missions.enqueueMissions(aut2, aut2Start, aut2Finish, isInverse);
-        if (aut3 != null) Missions.enqueueMissions(aut3, aut3Start, aut3Finish, isInverse);
-        if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isInverse);
-        if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isInverse);
+        final boolean isSingleMissionInBothDirections = false;
+        if (hum0 != null) Missions.enqueueMissions(hum0, humStart, humMiddle, humFinish, isSingleMissionInBothDirections);
+        if (aut1 != null) Missions.enqueueMissions(aut1, aut1Start, aut1Finish, isSingleMissionInBothDirections);
+        if (aut2 != null) Missions.enqueueMissions(aut2, aut2Start, aut2Finish, isSingleMissionInBothDirections);
+        if (aut3 != null) Missions.enqueueMissions(aut3, aut3Start, aut3Finish, isSingleMissionInBothDirections);
+        if (aut4 != null) Missions.enqueueMissions(aut4, aut4Start, aut4Finish, isSingleMissionInBothDirections);
+        if (aut5 != null) Missions.enqueueMissions(aut5, aut5Start, aut5Finish, isSingleMissionInBothDirections);
 
         final AutonomousVehicle hum0Final = hum0;
         new GatedThread("forcing thread") {

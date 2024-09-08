@@ -146,10 +146,24 @@ public class GridTestInteractive {
         Missions.loopMissions.put(aut2.getID(), true);
         Missions.loopMissions.put(aut3.getID(), true);
 
-        Missions.enqueueMissions(hum0, humStart, null, humFinish, false, true);
-        Missions.enqueueMissions(aut1, aut1Start, aut1Finish, false);
-        Missions.enqueueMissions(aut2, aut2Start, aut2Finish, false);
-        Missions.enqueueMissions(aut3, aut3Start, aut3Finish, false);
+        Missions.enqueueMissions(
+                new MissionBlueprint(hum0, humStart, humFinish)
+        );
+        Missions.enqueueMissions(
+                new MissionBlueprint(aut1, aut1Start, aut1Finish).setDirection(
+                        MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                ).setIsToCleanForward(true)
+        );
+        Missions.enqueueMissions(
+                new MissionBlueprint(aut2, aut2Start, aut2Finish).setDirection(
+                        MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                )
+        );
+        Missions.enqueueMissions(
+                new MissionBlueprint(aut3, aut3Start, aut3Finish).setDirection(
+                        MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                )
+        );
 
         /*
         new GatedThread("cleanCircle thread") {
