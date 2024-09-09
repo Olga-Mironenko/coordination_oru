@@ -14,6 +14,9 @@ import java.util.*;
 
 import javax.imageio.ImageIO;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -29,6 +32,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
+
 
 import se.oru.coordination.coordination_oru.CollisionEvent;
 import se.oru.coordination.coordination_oru.CriticalSection;
@@ -91,9 +95,11 @@ public class BrowserVisualization implements FleetVisualization {
 	
 	private void updateOverlayText() {
 		if (this.overlayText != null) {
-			String jsonString = "{ \"operation\" : \"setOverlayText\","
-					+ "\"data\" : "
-					+ "{ \"text\" : \""+ this.overlayText + "\" }}";
+			JsonObject jsonObject = new JsonObject();
+			jsonObject.addProperty("text", this.overlayText);
+			String payload = new Gson().toJson(jsonObject);
+
+			String jsonString = "{ \"operation\": \"setOverlayText\", \"data\": " + payload + "}";
 			sendMessage(jsonString);
 		}
 	}
@@ -358,17 +364,25 @@ public class BrowserVisualization implements FleetVisualization {
 			text += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
 		}
 
+		String thead1 = "";
+		String thead2 = "";
+		String tbodyHtml = "";
 		for (int id : idToVehicle.keySet()) {
 			AbstractVehicle vehicle = idToVehicle.get(id);
 			text += "(V" + id + ", " + vehicle.getType() + ") ";
+			String row = "<div style=\"text-align: left;\"><b>V" + id + "</b>, " + vehicle.getType() + "</div>";
+			thead1 = "";
+			thead2 = "Vehicle ID and type";
 
 			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
 			if (rr == null) {
 				text += "no robot report";
 			} else {
-
 				double velocity = rr.getVelocity();
-				text += String.format("v=<b>%.1f</b> m/s (max: %.1f m/s)", velocity, vehicle.getMaxVelocity());
+//				text += String.format("v=<b>%.1f</b> m/s (max: %.1f m/s)", velocity, vehicle.getMaxVelocity());
+				row += String.format(" | %.1f | %.1f", velocity, vehicle.getMaxVelocity());
+				thead1 += " |2 Velocity, m/s";
+				thead2 += " | current | max";
 
 				List<CollisionEvent> allCollisions = tec.robotIDToAllCollisions.getOrDefault(id, new ArrayList<>());
 				List<CollisionEvent> minorCollisions = tec.robotIDToMinorCollisions.getOrDefault(id, new ArrayList<>());
@@ -376,7 +390,10 @@ public class BrowserVisualization implements FleetVisualization {
 
 				assert allCollisions.size() == minorCollisions.size() + majorCollisions.size();
 
-				text += String.format("; collision events: <b>%d</b> minor, <b>%d</b> major", minorCollisions.size(), majorCollisions.size());
+//				text += String.format("; collision events: <b>%d</b> minor, <b>%d</b> major", minorCollisions.size(), majorCollisions.size());
+				row += String.format(" | %d</b> | %d", minorCollisions.size(), majorCollisions.size());
+				thead1 += " |2 Collision events";
+				thead2 += " | minor | major";
 
 				if (isCollisionInfo && ! VehiclesHashMap.isHuman(id)) {
 					if (allCollisions.size() != 0) {
@@ -386,15 +403,25 @@ public class BrowserVisualization implements FleetVisualization {
 					}
 				}
 
-				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
-
-				text += String.format("; i=%d (CP=%d, %s)",
-						rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
-				);
-
-				text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
+//				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
+				row += String.format(" | %.1f", vehicle.totalDistance);
+				thead1 += " | Efficiency";
+				thead2 += " | traveled, m";
 
 				if (isExtendedText) {
+					text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
+					row += String.format(" | (%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
+					thead1 += " |4 Tracker state";
+					thead2 += " | position";
+
+					text += String.format("; i=%d (CP=%d, %s)",
+							rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
+					);
+					row += String.format(" | %d | %d | <div style=\"text-align: left;\">%s</div>",
+							rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
+					);
+					thead2 += " | index | CP | status";
+
 					int numCalls = 0;
 					var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
 					if (numIntegrateCalls.containsKey(id)) {
@@ -406,33 +433,59 @@ public class BrowserVisualization implements FleetVisualization {
 				}
 			}
 
-			text += "; " + stringifyMissions(Missions.getMissions(id));
-			text += "<br>";
+			ArrayList<Mission> missions = Missions.getMissions(id);
+			if (missions == null) {
+				missions = new ArrayList<Mission>();
+			}
+			synchronized (missions) {
+				text += "; " + missions.size() + " future missions: [";
+				thead1 += " | Dispatcher";
+				thead2 += " | future missions";
+				row += " | <div style=\"text-align: left;\">[";
+				for (int i = 0; i < missions.size(); i++) {
+					if (i > 0) {
+						text += ", ";
+						row += ", ";
+					}
+					Mission mission = missions.get(i);
+					text += String.format("%d poses", mission.getPath().length);
+					row += String.format("%d poses", mission.getPath().length);
+				}
+				text += "]";
+				row += "]</div>";
+			}
 
+			text += "<br>";
+			tbodyHtml += "<tr> <td>" + row.replace(" | ", "</td> <td>") + "</td> </tr>\n";
 		}
 		if (isExtendedText) {
 //			text += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
 			text += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
 		}
-		setOverlayText(text);
-	}
 
-	protected static String stringifyMissions(ArrayList<Mission> missions) {
-		if (missions == null) {
-			missions = new ArrayList<Mission>();
-		}
-		synchronized (missions) {
-			String text = missions.size() + " future missions: [";
-			for (int i = 0; i < missions.size(); i++) {
-				if (i > 0) {
-					text += ", ";
-				}
-				Mission mission = missions.get(i);
-				text += String.format("%d poses", mission.getPath().length);
-			}
-			text += "]";
-			return text;
-		}
+		String thead2Html = "<tr> <th>" + thead2.replace(" | ", "</th> <th>") + "</th> </tr>\n";
+		String thead1Html = "<tr> <th>" + thead1.replaceAll(" [|]([2-9]?) ", "</th> <th colspan=\"$1\">") + "</th> </tr>\n";
+		text += "<style>\n" +
+				"  table.info td {\n" +
+				"    text-align: right;\n" +
+				"  }\n" +
+				"  table.info td,\n" +
+				"  table.info th,\n" +
+				"  table.info {\n" +
+				"    border: 1px solid;\n" +
+				"    border-collapse: collapse;\n" +
+				"    padding: 3px;\n" +
+				"  }\n" +
+				"</style>\n" +
+				"<table class=\"info\">\n" +
+				"  <thead>\n" + thead1Html + thead2Html +
+				"  </thead>\n" +
+				"\n" +
+				"  <tbody>\n" + tbodyHtml +
+				"  </tbody>\n" +
+				"</table>\n";
+
+		setOverlayText(text);
 	}
 
 	protected static String stringifyCriticalSections(HashSet<CriticalSection> allCriticalSections) {
