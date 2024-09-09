@@ -13,9 +13,9 @@ public class GridMapConstants extends BaseMapConstants {
     public final static double xColumn1 = 14.5;
     public final static double xColumn2 = 30.0;
     public final static double xColumn3 = 45.5;
-    public final static double yRow1 = 44.0;
+    public final static double yRow1 = 44.2;
     public final static double yRow2 = 30.0;
-    public final static double yRow3 = 16.0;
+    public final static double yRow3 = 15.7;
 
     /*
     x:
