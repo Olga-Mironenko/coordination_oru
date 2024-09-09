@@ -1,3 +1,5 @@
+#image: map-grid-gradient-300x300.png
+#resolution: 0.2
 image: map-grid-gradient.png
 resolution: 0.1
 origin: [0, 0, 0]

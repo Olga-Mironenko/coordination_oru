@@ -21,6 +21,7 @@ public class DynamicMap {
     public BufferedImage mapImageBlackAndWhite = null; // only two colors
     public double resolution = -1; // meters/pixel
     public double threshold = 0.3;
+    public static final double thresholdForOccupancyMap = 0.5;
     public Coordinate origin = null;
 
     public static BufferedImage deepCopy(BufferedImage bi) {
@@ -59,7 +60,10 @@ public class DynamicMap {
             for (int x = 0; x < bimg.getWidth(); x++) {
                 Color color = new Color(bimg.getRGB(x, y));
                 int graylevel = (color.getRed() + color.getGreen() + color.getBlue()) / 3;
-                int level = graylevel < threshold * 255 ? 0 : 255;
+
+                assert thresholdForOccupancyMap == 0.5;
+                int level = graylevel == 0 ? 0 : graylevel < threshold * 255 ? 63 : 255;
+
                 int r = level;
                 int g = level;
                 int b = level;

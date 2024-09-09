@@ -157,7 +157,7 @@ public class OccupancyMap {
 
 		this.mapResolution = dynamicMap.resolution;
 		this.mapOrigin = dynamicMap.origin;
-		this.threshold = 0.5;
+		this.threshold = dynamicMap.thresholdForOccupancyMap;
 
 		this.createOccupancyMap();
 		this.bimg_original = deepCopy(this.bimg);
