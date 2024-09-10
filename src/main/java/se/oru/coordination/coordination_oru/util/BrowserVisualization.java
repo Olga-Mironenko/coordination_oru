@@ -3,16 +3,11 @@ package se.oru.coordination.coordination_oru.util;
 
 import java.awt.Desktop;
 import java.awt.Dimension;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
-
-import javax.imageio.ImageIO;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -294,79 +289,15 @@ public class BrowserVisualization implements FleetVisualization {
 
 		return String.format("%d:%02d:%02d", h, m, s);
 	}
-	
-	protected void setStatusText() {
-		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
+
+	protected String makeVehicleTableHtml() {
 		String text = "";
-
-		if (AbstractVehicle.scenarioId != null) {
-			text += "Scenario: " + AbstractVehicle.scenarioId + "<br>";
-		}
-
-		if (isExtendedText && Timekeeper.isTimekeeperActive()) {
-//			text += String.format("Time: step %d, sim. %.1f s, real %.1f s<br>",
-//					Timekeeper.getTimestepsPassed(),
-//					Timekeeper.getVirtualMillisPassed() / 1000.0,
-//					Timekeeper.getRealMillisPassed() / 1000.0
-//			);
-
-			text += String.format("Current datetime: %s<br>", java.time.LocalDateTime.now().toString().replace('T', ' '));
-			text += String.format("Time passed (real): %s<br>", secondsToHMS(Timekeeper.getRealMillisPassed() / 1000));
-			text += String.format("Time passed (sim.): %s<br>", secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000));
-		}
-
-		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-
-		text += String.format(
-				"Collision events: <b>%d</b> minor, <b>%d</b> major<br>",
-				tec.allCollisionsList.size() - tec.majorCollisionsList.size(),
-				tec.majorCollisionsList.size()
-		);
-
-//		if (false && isExtendedText && idToVehicle.keySet().contains(HumanControl.idHuman) && HumanControl.targetVelocityHuman != Double.POSITIVE_INFINITY) {
-//			text += "targetVelocityHuman: " + round(HumanControl.targetVelocityHuman) + " m/s<br>";
-//		}
-
-		for (int id : new TreeSet<>(VehiclesHashMap.getList().keySet())) {
-			if (! VehiclesHashMap.isHuman(id)) {
-				continue;
-			}
-
-			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
-			if (rr == null) {
-				continue;
-			}
-
-			int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(id, 0);
-			int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(id, 0);
-			text += String.format(
-					"Human V%d: max velocity <b>%.1f</b> m/s; current velocity <b>%.1f</b>%s m/s" +
-					"; <b>%d</b> violations, <b>%d</b> forcing events",
-					id,
-					TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotMaxVelocity(id),
-					rr.getVelocity(),
-					rr.getVelocity() == 0.0 ? " (exactly zero)" : "",
-					numForcings - numUselessForcings,
-					numForcings
-			);
-			if (isExtendedText && Forcing.forcingSinceTimestep != -1) {
-				text += " (forcing is active since step " + Forcing.forcingSinceTimestep + ")";
-			}
-			text += "<br>";
-		}
-
-		if (HumanControl.status != null) {
-			text += HumanControl.status + "<br>";
-		}
-
-		String textEmergencyBreaker = AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
-		if (isExtendedText && textEmergencyBreaker != null) {
-			text += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
-		}
-
 		String thead1 = "";
 		String thead2 = "";
 		String tbodyHtml = "";
+
+		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
+		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 		for (int id : idToVehicle.keySet()) {
 			AbstractVehicle vehicle = idToVehicle.get(id);
 			text += "(V" + id + ", " + vehicle.getType() + ") ";
@@ -379,8 +310,12 @@ public class BrowserVisualization implements FleetVisualization {
 				text += "no robot report";
 			} else {
 				double velocity = rr.getVelocity();
-//				text += String.format("v=<b>%.1f</b> m/s (max: %.1f m/s)", velocity, vehicle.getMaxVelocity());
-				row += String.format(" | %.1f | %.1f", velocity, vehicle.getMaxVelocity());
+				text += String.format("v=<b>%.1f</b> m/s (max: %.1f m/s)", velocity, vehicle.getMaxVelocity());
+				row += String.format(" | %s%.1f | %.1f",
+						String.format("%.1f", velocity).equals("0.0") && velocity != 0.0 ? "~" : "",
+						velocity,
+						vehicle.getMaxVelocity()
+				);
 				thead1 += " |2 Velocity, m/s";
 				thead2 += " | current | max";
 
@@ -390,10 +325,20 @@ public class BrowserVisualization implements FleetVisualization {
 
 				assert allCollisions.size() == minorCollisions.size() + majorCollisions.size();
 
-//				text += String.format("; collision events: <b>%d</b> minor, <b>%d</b> major", minorCollisions.size(), majorCollisions.size());
+				thead1 += " |3 Safety-critical events";
+				thead2 += " | violations | near misses | collisions";
+
+				if (! VehiclesHashMap.isHuman(id)) {
+					row += " | ";
+				} else {
+					int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(id, 0);
+					int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(id, 0);
+					int numViolations = numForcings - numUselessForcings;
+					row += String.format(" | %d", numViolations);
+				}
+
+				text += String.format("; collision events: <b>%d</b> minor, <b>%d</b> major", minorCollisions.size(), majorCollisions.size());
 				row += String.format(" | %d</b> | %d", minorCollisions.size(), majorCollisions.size());
-				thead1 += " |2 Collision events";
-				thead2 += " | minor | major";
 
 				if (isCollisionInfo && ! VehiclesHashMap.isHuman(id)) {
 					if (allCollisions.size() != 0) {
@@ -403,10 +348,10 @@ public class BrowserVisualization implements FleetVisualization {
 					}
 				}
 
-//				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
-				row += String.format(" | %.1f", vehicle.totalDistance);
-				thead1 += " | Efficiency";
-				thead2 += " | traveled, m";
+				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
+				row += String.format(" | %.1f | ", vehicle.totalDistance);
+				thead1 += " |2 Efficiency";
+				thead2 += " | traveled, m | transported ore, t";
 
 				if (isExtendedText) {
 					text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
@@ -433,39 +378,37 @@ public class BrowserVisualization implements FleetVisualization {
 				}
 			}
 
-			ArrayList<Mission> missions = Missions.getMissions(id);
-			if (missions == null) {
-				missions = new ArrayList<Mission>();
-			}
-			synchronized (missions) {
-				text += "; " + missions.size() + " future missions: [";
-				thead1 += " | Dispatcher";
-				thead2 += " | future missions";
-				row += " | <div style=\"text-align: left;\">[";
-				for (int i = 0; i < missions.size(); i++) {
-					if (i > 0) {
-						text += ", ";
-						row += ", ";
-					}
-					Mission mission = missions.get(i);
-					text += String.format("%d poses", mission.getPath().length);
-					row += String.format("%d poses", mission.getPath().length);
+			if (isExtendedText) {
+				ArrayList<Mission> missions = Missions.getMissions(id);
+				if (missions == null) {
+					missions = new ArrayList<Mission>();
 				}
-				text += "]";
-				row += "]</div>";
+				synchronized (missions) {
+					text += "; " + missions.size() + " future missions: [";
+					row += " | <div style=\"text-align: left;\">" + missions.size() + ": [";
+					thead1 += " | Dispatcher";
+					thead2 += " | future missions";
+					for (int i = 0; i < missions.size(); i++) {
+						if (i > 0) {
+							text += ", ";
+							row += ", ";
+						}
+						Mission mission = missions.get(i);
+						text += String.format("%d poses", mission.getPath().length);
+						row += String.format("%d poses", mission.getPath().length);
+					}
+					text += "]";
+					row += "]</div>";
+				}
 			}
 
 			text += "<br>";
 			tbodyHtml += "<tr> <td>" + row.replace(" | ", "</td> <td>") + "</td> </tr>\n";
 		}
-		if (isExtendedText) {
-//			text += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
-			text += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
-		}
 
 		String thead2Html = "<tr> <th>" + thead2.replace(" | ", "</th> <th>") + "</th> </tr>\n";
 		String thead1Html = "<tr> <th>" + thead1.replaceAll(" [|]([2-9]?) ", "</th> <th colspan=\"$1\">") + "</th> </tr>\n";
-		text += "<style>\n" +
+		return "<style>\n" +
 				"  table.info td {\n" +
 				"    text-align: right;\n" +
 				"  }\n" +
@@ -476,6 +419,9 @@ public class BrowserVisualization implements FleetVisualization {
 				"    border-collapse: collapse;\n" +
 				"    padding: 3px;\n" +
 				"  }\n" +
+				"  table.info {\n" +
+				"    margin: 5px;\n" +
+				"  }\n" +
 				"</style>\n" +
 				"<table class=\"info\">\n" +
 				"  <thead>\n" + thead1Html + thead2Html +
@@ -484,8 +430,70 @@ public class BrowserVisualization implements FleetVisualization {
 				"  <tbody>\n" + tbodyHtml +
 				"  </tbody>\n" +
 				"</table>\n";
+	}
+	
+	protected void setStatusText() {
+		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-		setOverlayText(text);
+		String html = "";
+
+		if (AbstractVehicle.scenarioId != null) {
+			html += "Scenario: " + AbstractVehicle.scenarioId + "<br>";
+		}
+
+		html += String.format("Current datetime: %s<br>", java.time.LocalDateTime.now().format(
+				DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+		));
+		if (Timekeeper.isTimekeeperActive()) {
+			html += String.format("Time passed (real): %s<br>", secondsToHMS(Timekeeper.getRealMillisPassed() / 1000));
+			html += String.format("Time passed (sim.): %s<br>", secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000));
+		}
+
+		if (HumanControl.status != null) {
+			html += HumanControl.status + "<br>";
+		}
+
+		for (int id : new TreeSet<>(VehiclesHashMap.getList().keySet())) {
+			if (! VehiclesHashMap.isHuman(id)) {
+				continue;
+			}
+
+			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
+			if (rr == null) {
+				continue;
+			}
+
+			int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(id, 0);
+			html += String.format(
+					"Human V%d: <b>%d</b> forcing events",
+					id,
+					numForcings
+			);
+			if (isExtendedText && Forcing.forcingSinceTimestep != -1) {
+				html += " (forcing is active since step " + Forcing.forcingSinceTimestep + ")";
+			}
+			html += "<br>";
+		}
+
+		html += String.format(
+				"Collision events total: <b>%d</b> minor, <b>%d</b> major<br>",
+				tec.allCollisionsList.size() - tec.majorCollisionsList.size(),
+				tec.majorCollisionsList.size()
+		);
+
+		String textEmergencyBreaker = AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
+		if (isExtendedText && textEmergencyBreaker != null) {
+			html += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
+		}
+
+		html += makeVehicleTableHtml();
+
+		if (isExtendedText) {
+//			html += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
+			html += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
+		}
+
+		setOverlayText(html);
 	}
 
 	protected static String stringifyCriticalSections(HashSet<CriticalSection> allCriticalSections) {
@@ -498,12 +506,13 @@ public class BrowserVisualization implements FleetVisualization {
 
 		String text = "Critical sections" + (robotID == null ? "" : " for " + robotID) + ":";
 		if (criticalSections.isEmpty()) {
-			text += " none<br>";
+			text += " none<br>\n";
 		} else {
-			text += "<br>";
+			text += "<ul style=\"margin-block: 0px;\">";
 			for (CriticalSection cs : criticalSections) {
-				text += "- " + cs.toString(true) + "<br>";
+				text += "<li>" + cs.toString(true) + "</li>\n";
 			}
+			text += "</ul>\n";
 		}
 		return text;
 	}

@@ -26,6 +26,10 @@ public class HumanControl {
         return moveRobot(robotID, goal, new int[0]);
     }
 
+    public static String poseToShortString(Pose pose) {
+        return String.format("(%.1f, %.1f, %.1f)", pose.getX(), pose.getY(), pose.getTheta());
+    }
+
     public static boolean moveRobot(int robotID, Pose goal, int[] robotIDsObstacles) {
         if (isWorking) {
             return false;
@@ -42,7 +46,10 @@ public class HumanControl {
             // [(90, 200), (100, 200), (110, 200), (120, 200), (130, 200)]
             //                  ^                                old goal
 
-            String statusPrefix = String.format("Human controlled path for %s -> %s", currentPose, goal);
+            String statusPrefix = String.format("Human controlled path for %s → %s",
+                    poseToShortString(currentPose),
+                    poseToShortString(goal)
+            );
 
             try {
                 status = String.format("%s: finding...", statusPrefix);
