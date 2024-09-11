@@ -29,10 +29,7 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 
 
-import se.oru.coordination.coordination_oru.CollisionEvent;
-import se.oru.coordination.coordination_oru.CriticalSection;
-import se.oru.coordination.coordination_oru.Mission;
-import se.oru.coordination.coordination_oru.RobotReport;
+import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
@@ -300,12 +297,14 @@ public class BrowserVisualization implements FleetVisualization {
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 		for (int id : idToVehicle.keySet()) {
 			AbstractVehicle vehicle = idToVehicle.get(id);
+			TrajectoryEnvelope te = tec.trackers.get(id).getTrajectoryEnvelope();
+
 			text += "(V" + id + ", " + vehicle.getType() + ") ";
 			String row = "<div style=\"text-align: left;\"><b>V" + id + "</b>, " + vehicle.getType() + "</div>";
 			thead1 = "";
 			thead2 = "Vehicle ID and type";
 
-			RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(id);
+			RobotReport rr = tec.getRobotReport(id);
 			if (rr == null) {
 				text += "no robot report";
 			} else {
@@ -349,23 +348,26 @@ public class BrowserVisualization implements FleetVisualization {
 				}
 
 				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
-				row += String.format(" | %.1f | ", vehicle.totalDistance);
-				thead1 += " |2 Efficiency";
-				thead2 += " | traveled, m | transported ore, t";
+				row += String.format(" | %.1f | %d | ", vehicle.totalDistance, vehicle.getCycles());
+				thead1 += " |3 Efficiency";
+				thead2 += " | traveled, m | no. missions | transported ore, t";
 
 				if (isExtendedText) {
 					text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
 					row += String.format(" | (%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
-					thead1 += " |4 Tracker state";
-					thead2 += " | position";
+					thead1 += " |5 Tracker state (current mission)";
+					thead2 += " | position (x, y), m";
 
 					text += String.format("; i=%d (CP=%d, %s)",
 							rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
 					);
-					row += String.format(" | %d | %d | <div style=\"text-align: left;\">%s</div>",
-							rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
+					row += String.format(" | %d | %d | %d | <div style=\"text-align: left;\">%s</div>",
+							rr.getPathIndex(),
+							te.getPathLength(),
+							rr.getCriticalPoint(),
+							rr.statusString != null ? rr.statusString : "-"
 					);
-					thead2 += " | index | CP | status";
+					thead2 += " | index | poses | CP | status";
 
 					int numCalls = 0;
 					var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;

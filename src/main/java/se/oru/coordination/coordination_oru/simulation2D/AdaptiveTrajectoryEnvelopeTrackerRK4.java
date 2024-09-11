@@ -30,7 +30,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public static double deltaMaxVelocityCautious = 0.0;
 	public static double minMaxVelocityCautious = 0.0;
 
-	public static double coefDeltaTimeForSlowDown = 0.1;
+	public static double coefDeltaTimeForSlowdownProfile = 0.1;
 
 	public static double coefAccelerationToDeceleration = 1.7;
 	/**
@@ -42,9 +42,17 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	protected static final long WAIT_AMOUNT_AT_END = 0;
 	protected static final double EPSILON = 0.01;
-	protected double overallDistance = 0.0;
-	protected double totalDistance = 0.0;
+	protected double overallDistance = 0.0; // to the end of the mission
+	protected double totalDistance = 0.0; // to the nearest critical point
 	protected double positionToSlowDown = Double.POSITIVE_INFINITY;
+
+	protected double slowdownDebugEarlyStart;
+	protected double slowdownDebugEarlyFinishUnderestimation;
+	protected double slowdownDebugEarlyFinishOverestimation;
+	protected double slowdownDebugLateStart;
+	protected double slowdownDebugLateFinishUnderestimation;
+	protected double slowdownDebugLateFinishOverestimation;
+
 	protected double elapsedTrackingTime = 0.0;
 	private Thread th = null;
 	protected State state = null;
@@ -131,7 +139,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public AdaptiveTrajectoryEnvelopeTrackerRK4(TrajectoryEnvelope te, int timeStep, double temporalResolution, TrajectoryEnvelopeCoordinator tec, TrackingCallback cb) {
 		super(te, temporalResolution, tec, timeStep, cb);
 		this.state = new State(0.0, 0.0);
-		this.totalDistance = this.computeDistance(0, traj.getPose().length-1);
+		this.totalDistance = traj.getPathLength();
 		this.overallDistance = totalDistance;
 		this.computeInternalCriticalPoints();
 		this.slowDownProfile = this.computeSlowdownProfile();
@@ -149,7 +157,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	@Override
 	public void onTrajectoryEnvelopeUpdate() {
 		synchronized(reportsList) { //FIXME not ok, all the mutex should be changed
-			this.totalDistance = this.computeDistance(0, traj.getPose().length-1);
+			this.totalDistance = traj.getPathLength();
 			this.overallDistance = totalDistance;
 			this.internalCriticalPoints.clear();
 			this.computeInternalCriticalPoints();
@@ -325,7 +333,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
 		double time = 0.0;
-		double deltaTime = coefDeltaTimeForSlowDown * this.trackingPeriodInMillis /this.temporalResolution;
+		double deltaTime = coefDeltaTimeForSlowdownProfile * this.trackingPeriodInMillis / this.temporalResolution;
 		//Compute where to slow down (can do forward here for both states...)
 
 		while (tempStateBW.getVelocity() > 0.0) {
@@ -338,6 +346,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 			time += deltaTime;
 		}
+		assert tempStateBW.getVelocity() == 0.0;
 
 		for (var entry : ret.entrySet()) {
 			ret.put(entry.getKey(), tempStateBW.getPosition() - entry.getValue());
@@ -356,34 +365,49 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		State stateToBe = new State(state.getPosition(), Math.max(0, state.getVelocity()));
 		double time = 0.0;
-		double deltaTime = coefDeltaTimeForSlowDown * this.trackingPeriodInMillis / this.temporalResolution;
+		double deltaTime = this.trackingPeriodInMillis / this.temporalResolution;
 		Double prevPosition = null;
 
 		//Compute where to slow down (can do forward here, we have the slowdown profile...)
 		while (stateToBe.getPosition() < targetDistance) {
-			var approximation = slowDownProfile.ceilingEntry(stateToBe.getVelocity());
-			if (approximation == null) {
-//				assert Math.abs(state.getVelocity()) < 0.5; // otherwise, `slowDownProfile` must contain entries for greater speeds
-				return state.getPosition(); // essentially force slowing down
-			}
+			var approximationUnderestimation = slowDownProfile.floorEntry(stateToBe.getVelocity());
+			var approximationOverestimation = slowDownProfile.ceilingEntry(stateToBe.getVelocity());
 
-			double speedApproximate = approximation.getKey();
-			assert speedApproximate >= stateToBe.getVelocity();
+			assert approximationUnderestimation != null;
+			assert approximationOverestimation != null;
 
-			double stoppingDistanceApproximate = approximation.getValue();
-			// stoppingDistanceApproximate >= actual stopping distance
+			double velocityUnderestimation = approximationUnderestimation.getKey();
+			double velocityOverestimation = approximationOverestimation.getKey();
+			assert velocityUnderestimation <= stateToBe.getVelocity() && stateToBe.getVelocity() <= velocityOverestimation;
 
-			double landingPosition = stateToBe.getPosition() + stoppingDistanceApproximate;
-			if (landingPosition > targetDistance) {
+			double stoppingDistanceUnderestimation = approximationUnderestimation.getValue();
+			// stoppingDistanceUnderestimation <= actual stopping distance
+
+			double stoppingDistanceOverestimation = approximationOverestimation.getValue();
+			// stoppingDistanceOverestimation >= actual stopping distance
+			// (because the velocity for approximation >= `stateToBe.getVelocity()`)
+
+			double landingPositionUnderestimation = stateToBe.getPosition() + stoppingDistanceUnderestimation;
+			double landingPositionOverestimation = stateToBe.getPosition() + stoppingDistanceOverestimation;
+
+			if (landingPositionOverestimation > targetDistance) {
+				slowdownDebugLateStart = stateToBe.getPosition();
+				slowdownDebugLateFinishUnderestimation = landingPositionUnderestimation;
+				slowdownDebugLateFinishOverestimation = landingPositionOverestimation;
+
 				if (prevPosition == null) {
 					return state.getPosition();
 				}
 				return prevPosition; // at `prevPosition`, `landingPosition <= totalDistance`
 			}
 
+			slowdownDebugEarlyStart = stateToBe.getPosition();
+			slowdownDebugEarlyFinishUnderestimation = landingPositionUnderestimation;
+			slowdownDebugEarlyFinishOverestimation = landingPositionOverestimation;
+
 			prevPosition = stateToBe.getPosition();
 
-			double dampeningFW = getCurvatureDampening(getRobotReport(stateToBe).getPathIndex(), true);
+			double dampeningFW = getCurvatureDampening(getRobotReport(stateToBe).getPathIndex(), true); // backwards should be `false`?
 			integrateRK4(stateToBe, time, deltaTime, false, vehicle.getMaxVelocity(), dampeningFW, vehicle.getMaxAcceleration(), te.getRobotID());
 			assert stateToBe.getPosition() > prevPosition;
 
@@ -601,7 +625,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		if (criticalPointToSet == -1) {
 			//The critical point has been reset, go to the end
 			this.setFieldCriticalPoint(-1);
-			this.totalDistance = computeDistance(0, traj.getPose().length - 1);
+			this.totalDistance = traj.getPathLength();
 			this.positionToSlowDown = computePositionToSlowDown(totalDistance, false);
 			metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
 			return;
@@ -884,9 +908,20 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		assert status == Status.DRIVING;
 		assert continueToStay;
 		if (criticalPoint == -1) { // The end of mission.
+			assert slowdownDebugEarlyFinishOverestimation <= totalDistance && totalDistance < slowdownDebugLateFinishOverestimation;
+//			assert slowdownDebugEarlyFinishUnderestimation * 0.99 <= state.getPosition() && state.getPosition() <= slowdownDebugEarlyFinishOverestimation * 1.01;
+
+			double underrunUnderestimation = traj.getPathLength() - slowdownDebugEarlyFinishOverestimation;
+			double underrunOverestimation = traj.getPathLength() - slowdownDebugEarlyFinishUnderestimation;
+
+			double underrunActual = totalDistance - state.getPosition();
+			assert underrunActual >= 0;
+//			assert underrunUnderestimation * 0.99 <= underrunActual && underrunActual <= underrunOverestimation * 1.01;
+			assert underrunUnderestimation <= underrunActual && underrunActual <= underrunOverestimation * 2;
+
 			//set state to final position, just in case it didn't quite get there (it's certainly close enough)
-			assert Math.abs(this.state.getPosition() - totalDistance) <= 1;
 			this.state = new State(totalDistance, 0.0);
+
 			return Status.FULL_STOP;
 		}
 
@@ -917,10 +952,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		double positionOld = state.getPosition();
 
-		// Prefer to stop earlier than to cross over.
+		// Prefer to stop earlier (before `positionToSlowDown`) than to cross over.
 		State stateTemp = new State(state.getPosition(), state.getVelocity());
 		integrateRK4(stateTemp, elapsedTrackingTime, deltaTime, slowingDown, maxVelocity, dampening, maxAcceleration, te.getRobotID());
-		if (! slowingDown && stateTemp.getPosition() >= positionToSlowDown) {
+		if (! slowingDown && stateTemp.getPosition() > positionToSlowDown) {
 			slowingDown = true;
 			integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, maxVelocity, dampening, maxAcceleration, te.getRobotID());
 		} else {
@@ -973,8 +1008,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		double deltaTime = 0.0;
 		int myRobotID = te.getRobotID();
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(myRobotID);
-		int myTEID = te.getID();
 		Status status = Status.DRIVING;
+
 		boolean isReroutingNearParkedVehicleOK = true;
 		boolean isReroutingNearParkedVehicle =
 				VehiclesHashMap.isHuman(myRobotID) ?
@@ -1031,6 +1066,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		assert status == Status.FULL_STOP;
 		onPositionUpdate();
+		enqueueOneReport();
 
 		//continue transmitting until the coordinator will be informed of having reached the last position.
 		while (tec.getRobotReport(te.getRobotID()).getPathIndex() != -1)
@@ -1048,7 +1084,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			try { GatedThread.sleep(trackingPeriodInMillis); }
 			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
-		metaCSPLogger.info("RK4 tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + myTEID + ")");
+		metaCSPLogger.info("RK4 tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + te.getID() + ")");
 	}
 
 	public static double[] computeDTs(Trajectory traj, double maxVel, double maxAccel, int robotID) {

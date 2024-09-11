@@ -370,4 +370,8 @@ public abstract class AbstractVehicle {
     public Color getColor() {
         return color;
     }
+
+    public int getCycles() {
+        return cycles;
+    }
 }
