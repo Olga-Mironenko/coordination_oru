@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.SwingUtilities;
@@ -101,7 +100,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		}
 	});
 	protected ArrayList<TrajectoryEnvelope> envelopesToTrack = new ArrayList<>();
-	protected HashMap<TrajectoryEnvelope, Mission> teToMission = new HashMap<>();
+	protected HashMap<Integer, Mission> robotIDToMission = new HashMap<>();
 
 	protected ArrayList<TrajectoryEnvelope> currentParkingEnvelopes = new ArrayList<TrajectoryEnvelope>();
 	public HashSet<CriticalSection> allCriticalSections = new HashSet<CriticalSection>();
@@ -1534,10 +1533,10 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 							//remove critical sections in which this robot is involved
 							cleanUpRobotCS(myTE.getRobotID(), -1);
 
-							Mission mission = teToMission.get(myTE);
+							Mission mission = robotIDToMission.get(myTE.getRobotID());
 							if (mission != null) {
 								mission.onFinish();
-								teToMission.remove(te);
+								robotIDToMission.remove(myTE.getRobotID());
 							}
 
 							//clean up the old parking envelope
@@ -1665,7 +1664,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 				TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 				assert ! missionsRobot.isEmpty();
-				tec.teToMission.put(te, missionsRobot.get(missionsRobot.size() - 1));
+				tec.robotIDToMission.put(te.getRobotID(), missionsRobot.get(missionsRobot.size() - 1));
 
 				//Add mission stopping points
 				synchronized(stoppingPoints) {
