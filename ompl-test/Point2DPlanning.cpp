@@ -98,22 +98,30 @@ public:
     {
         if (!ss_)
             return false;
+
         ob::ScopedState<> start(ss_->getStateSpace());
         start[0] = start_row;
         start[1] = start_col;
+
         ob::ScopedState<> goal(ss_->getStateSpace());
         goal[0] = goal_row;
         goal[1] = goal_col;
+
         ss_->setStartAndGoalStates(start, goal);
+
         // generate a few solutions; all will be added to the goal;
-        for (int i = 0; i < 10; ++i)
+        for (int i = 0; i < 1; ++i)
         {
             if (ss_->getPlanner())
                 ss_->getPlanner()->clear();
             ss_->solve();
         }
+
+        // ss_->getPlanner()->getPlannerData() // TODO
+
         const std::size_t ns = ss_->getProblemDefinition()->getSolutionCount();
         OMPL_INFORM("Found %d solutions", (int)ns);
+
         if (ss_->haveSolutionPath())
         {
             if (!useDeterministicSampling_)
