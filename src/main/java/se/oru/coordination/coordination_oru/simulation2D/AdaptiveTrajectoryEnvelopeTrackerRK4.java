@@ -30,7 +30,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public static double deltaMaxVelocityCautious = 0.0;
 	public static double minMaxVelocityCautious = 0.0;
 
-	public static double coefDeltaTimeForSlowdownProfile = 0.1;
+	public static double coefDeltaTimeForSlowdownProfile = 1;
 
 	public static double coefAccelerationToDeceleration = 1.7;
 	/**
@@ -324,7 +324,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 
 	private TreeMap<Double,Double> computeSlowdownProfile() {
-		final double coef = 1.1; // slightly more than 1.0 to model speed which is greater than any actual speed
+		final double coef = 1.0; // slightly more than 1.0 to model speed which is greater than any actual speed
 
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
 
@@ -909,15 +909,18 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		assert continueToStay;
 		if (criticalPoint == -1) { // The end of mission.
 			assert slowdownDebugEarlyFinishOverestimation <= totalDistance && totalDistance < slowdownDebugLateFinishOverestimation;
-//			assert slowdownDebugEarlyFinishUnderestimation * 0.99 <= state.getPosition() && state.getPosition() <= slowdownDebugEarlyFinishOverestimation * 1.01;
+
+			assert slowdownDebugEarlyFinishUnderestimation * 0.999 <= state.getPosition() && state.getPosition() <= slowdownDebugEarlyFinishOverestimation * 1.001;
+			// The multiplication is only because of a limited floating-point precision.
 
 			double underrunUnderestimation = traj.getPathLength() - slowdownDebugEarlyFinishOverestimation;
 			double underrunOverestimation = traj.getPathLength() - slowdownDebugEarlyFinishUnderestimation;
 
 			double underrunActual = totalDistance - state.getPosition();
 			assert underrunActual >= 0;
-//			assert underrunUnderestimation * 0.99 <= underrunActual && underrunActual <= underrunOverestimation * 1.01;
-			assert underrunUnderestimation <= underrunActual && underrunActual <= underrunOverestimation * 2;
+
+			assert underrunUnderestimation * 0.999 <= underrunActual && underrunActual <= underrunOverestimation * 1.001;
+			// The multiplication is only because of a limited floating-point precision.
 
 			//set state to final position, just in case it didn't quite get there (it's certainly close enough)
 			this.state = new State(totalDistance, 0.0);
