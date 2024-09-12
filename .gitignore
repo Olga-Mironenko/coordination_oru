@@ -45,6 +45,16 @@ SimpleReedsSheppCarPlanner/cmake_install.cmake
 SimpleReedsSheppCarPlanner/install_manifest.txt
 SimpleReedsSheppCarPlanner/libsimplereedssheppcarplanner.so
 
+# ompl-test
+ompl-test/CMakeCache.txt
+ompl-test/CMakeFiles/
+ompl-test/Makefile
+ompl-test/cmake_install.cmake
+ompl-test/install_manifest.txt
+ompl-test/demo_Point2DPlanning
+ompl-test/resources
+ompl-test/*.ppm
+
 # Result .txt files
 src/main/java/se/oru/coordination/coordination_oru/results/*
 
