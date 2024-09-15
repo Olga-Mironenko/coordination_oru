@@ -50,7 +50,7 @@ public class AutonomousVehicle extends AbstractVehicle {
             rsp.setPlanningTimeInSecs(15);
             rsp.setFootprint(footprint);
             rsp.setTurningRadius(0.01);
-            rsp.setDistanceBetweenPathPoints(0.1);
+            rsp.setDistanceBetweenPathPoints(0.1); // TODO: resolution?
             setMapForPlanner(Missions.getDynamicMap());
         }
         return rsp;

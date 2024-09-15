@@ -2,7 +2,6 @@
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/planners/rrt/TRRT.h>
-//#include <ompl/geometric/planners/sst/SST.h>
 #include <ompl/geometric/planners/rrt/LBTRRT.h>
 #include <ompl/geometric/planners/rrt/pRRT.h>
 #include <ompl/geometric/planners/rrt/LazyRRT.h>
@@ -11,9 +10,6 @@
 #include <ompl/control/planners/kpiece/KPIECE1.h>
 #include <boost/math/constants/constants.hpp>
 
-#include <stdio.h>
-
-//using namespace mrpt::maps;
 using namespace std;
 
 namespace ob = ompl::base;
@@ -39,7 +35,7 @@ extern "C" bool plan_multiple_circles(uint8_t* occupancyMap, int mapWidth, int m
   int numInterpolationPoints = 0;
   ob::StateSpacePtr space(new ob::ReedsSheppStateSpace(turningRadius));
 
-  std::cout << "Using " << mapWidth << "x" << mapHeight << " occupancy map for validity checking (values < 0 are not free)" << std::endl;
+  std::cout << "Using " << mapWidth << "x" << mapHeight << " occupancy map for validity checking" << std::endl;
   
   ob::ScopedState<> start(space), goal(space);
   ob::RealVectorBounds bounds(2);

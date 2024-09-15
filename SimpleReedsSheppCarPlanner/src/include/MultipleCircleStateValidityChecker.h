@@ -4,7 +4,6 @@
 #include <ompl/base/spaces/ReedsSheppStateSpace.h>
 #include <ompl/base/ScopedState.h>
 #include <ompl/geometric/SimpleSetup.h>
-#include <math.h>
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -22,6 +21,7 @@ class MultipleCircleStateValidityChecker : public ob::StateValidityChecker {
   double* yCoords;
   int numCoords;
   bool noMap;
+  bool isDebug = false;
   
   MultipleCircleStateValidityChecker(const ob::SpaceInformationPtr &si, uint8_t* _occupancyMap, int _mapWidth, int _mapHeight, double _mapResolution, double _mapOriginX, double _mapOriginY, double _radius, double* _xCoords, double* _yCoords, int _numCoords) : ob::StateValidityChecker(si) {
     noMap = false;
@@ -44,6 +44,8 @@ class MultipleCircleStateValidityChecker : public ob::StateValidityChecker {
 
   virtual bool isValid(const ob::State *state) const;  
 
+protected:
+  virtual bool isOccupied(int x, int y) const;
 };
 
 #endif

@@ -353,8 +353,38 @@ public class OccupancyMap {
 	}
 	
 	/**
-	 * Get a linear byte array representation of this occupancy map. Pixel (i,j) is in location (i*mapWidth+j).
-	 * @return Linear byte array representation of this occupancy map, where (i,j) is in location (i*mapWidth+j).
+	 * Get a linear byte array representation of this occupancy map. Pixel (i,j) is in location (i*mapWidth+j)/8.
+	 * @return Linear byte array representation of this occupancy map, where (i,j) is in location (i*mapWidth+j)/8.
+	 *
+	 * <code>
+	 *       mapHeight=3, mapWidth=5:
+	 *
+	 * 		  0  1  2  3  4
+	 * 		  5  6  7  8  9
+	 * 		 10 11 12 13 14
+	 *
+	 * 		 pixel 13: x=3, y=2
+	 * 		 x=3, y=2 -> y * mapWidth + x = 2 * 5 + 3 = 13
+	 *
+	 * 		         Pixels
+	 * 		 Byte 0:  7  6  5  4  3  2  1  0
+	 * 		 Byte 1: 15 14 13 12 11 10  9  8
+	 *
+	 * 		 s.get(n) == ((bytes[n/8] & (1<<(n%8))) != 0:
+	 *
+	 * 		 s.get(13) == ( bytes[1] & (1 << 5) ) != 0
+	 *
+	 * 		 1 = 0000 0001
+	 * 		 1 << 5 =      -- left bitwise shift
+	 * 		     0010 0000 -- mask
+	 *
+	 * 		 Byte 1: abcd efgh
+	 * 		       & 0010 0000
+	 * 		         ---------
+	 * 		         00c0 0000
+	 * 		 c=0:    0000 0000 == 0
+	 * 		 c=1:    0010 0000 != 0
+	 * 	</code>
 	 */
 	public byte[] asByteArray() {
 		return this.occupancyMapLinearBits.toByteArray();
