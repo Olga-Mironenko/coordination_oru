@@ -23,6 +23,7 @@ std::vector<std::pair<double, double> > plannerDataToPoints(const ob::PlannerDat
 {
     std::ostringstream streamGraphml;
     pd.printGraphML(streamGraphml);
+
     // std::cout << streamGraphml.str() << std::endl;
 
     std::string s = streamGraphml.str();
@@ -122,7 +123,7 @@ public:
         {
             // if (ss_->getPlanner())
             //     ss_->getPlanner()->clearQuery();
-            ss_->solve(0.1);
+            ss_->solve(0.01);
             OMPL_INFORM("%d vertices in the roadmap", planner_->getRoadmap().m_vertices.size());
         }
 
@@ -143,6 +144,11 @@ public:
 
         ob::PlannerData pd(ss_->getSpaceInformation());
         ss_->getPlannerData(pd);
+
+        std::ofstream file("pd.graphml");
+        pd.printGraphML(file);
+        file.close();
+
         points_ = plannerDataToPoints(pd);
         OMPL_INFORM("%d points in the planner data", points_.size());
         for (int i = 0; i < points_.size(); ++i) {
