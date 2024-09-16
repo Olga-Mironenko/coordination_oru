@@ -10,7 +10,7 @@
 #include <ompl/base/PlannerDataGraph.h>
 #include <ompl/base/samplers/DeterministicStateSampler.h>
 #include <ompl/base/samplers/deterministic/HaltonSequence.h>
-#include <ompl/base/spaces/RealVectorStateSpace.h>
+#include <ompl/base/spaces/ReedsSheppStateSpace.h>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/planners/prm/PRMstar.h>
 #include <ompl/util/PPM.h>
@@ -73,22 +73,33 @@ public:
         }
 
        // TODO: an IntegerStateSpace
-        auto space(std::make_shared<ob::RealVectorStateSpace>());
+        ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(10));
         width_ = ppm_.getWidth();
         height_ = ppm_.getHeight();
-        space->addDimension(0.0, width_);
-        space->addDimension(0.0, height_);
+        ob::RealVectorBounds bounds(2);
+        bounds.low[0] = 0;
+        bounds.low[1] = 0;
+        bounds.high[0] = width_;
+        bounds.high[1] = height_;
+        space->as<ob::SE2StateSpace>()->setBounds(bounds);
         ss_ = std::make_shared<og::SimpleSetup>(space);
+
         const auto spaceInformation = ss_->getSpaceInformation();
+
+        const double minWallWidth = 5.0;
+        const double resolution = minWallWidth / space->getMaximumExtent();
+        spaceInformation->setStateValidityCheckingResolution(resolution);
 
         // set state validity checking for this space
         ss_->setStateValidityChecker([this](const ob::State *state) { return isStateValid(state); });
+
         space->setup();
-        spaceInformation->setStateValidityCheckingResolution(1.0 / space->getMaximumExtent());
+        space->printSettings(std::cout);
 
         ob::PlannerDataStorage pdStorage;
         ob::PlannerData pd(spaceInformation);
-        const bool isLoaded = pdStorage.load("pd.bin", pd);
+        // const bool isLoaded = pdStorage.load("pd.bin", pd);
+        const bool isLoaded = false;
         if (isLoaded) {
             OMPL_INFORM("PD is loaded");
             planner_ = std::make_shared<og::PRMstar>(pd);
@@ -102,8 +113,8 @@ public:
         // set the deterministic sampler
         space->setStateSamplerAllocator(
             std::bind(
-                &Plane2DEnvironment::allocateHaltonStateSamplerRealVector,
-                this, std::placeholders::_1, 2, std::vector<unsigned int>{2, 3}
+                &Plane2DEnvironment::allocateSampler,
+                this, std::placeholders::_1
             ));
     }
 
@@ -117,12 +128,14 @@ public:
         assert(yStart < height_);
         start[0] = xStart;
         start[1] = yStart;
+        start[2] = 0.0;
 
         ob::ScopedState<> goal(ss_->getStateSpace());
         assert(xGoal < width_);
         assert(yGoal < height_);
         goal[0] = xGoal;
         goal[1] = yGoal;
+        goal[2] = -3.14 / 2;
 
         ss_->setStartAndGoalStates(start, goal);
         const size_t numStarts = 1;
@@ -195,12 +208,11 @@ public:
 
         for (std::size_t i = 0; i < path.getStateCount(); ++i)
         {
-            const auto state = path.getState(i)->as<ob::RealVectorStateSpace::StateType>();
+            const auto state = path.getState(i)->as<ob::ReedsSheppStateSpace::StateType>();
+            const int x = static_cast<int>(state->getX());
+            const int y = static_cast<int>(state->getY());
 
-            const int x = static_cast<int>(state->values[0]);
             assert(0 <= x && x < width_);
-
-            const int y = static_cast<int>(state->values[1]);
             assert(0 <= y && y < height_);
 
             ompl::PPM::Color &c = ppm_.getPixel(y, x);
@@ -241,17 +253,12 @@ public:
 private:
     bool isStateValid(const ob::State *statePtr) const
     {
-        const auto state = statePtr->as<ob::RealVectorStateSpace::StateType>();
+        const auto state = statePtr->as<ob::ReedsSheppStateSpace::StateType>();
+        const int x = static_cast<int>(state->getX());
+        const int y = static_cast<int>(state->getY());
+        OMPL_DEBUG("isStateValue(%d, %d)", x, y);
 
-        const int x = static_cast<int>(state->values[0]);
-        assert(0 <= x && x <= width_);
-        if (x == width_) {
-            return false;
-        }
-
-        const int y = static_cast<int>(state->values[1]);
-        assert(0 <= y && y <= height_);
-        if (y == height_) {
+        if (! (0 <= x && x < width_ && 0 <= y && y < height_)) {
             return false;
         }
 
@@ -263,17 +270,11 @@ private:
         return isValid;
     }
 
-    ob::StateSamplerPtr allocateHaltonStateSamplerRealVector(const ompl::base::StateSpace *space, unsigned int dim,
-                                                             std::vector<unsigned int> bases = {})
+    ob::StateSamplerPtr allocateSampler(const ompl::base::StateSpace *space)
     {
         // specify which deterministic sequence to use, here: HaltonSequence
-        // optionally we can specify the bases used for generation (otherwise first dim prime numbers are used)
-        if (!bases.empty())
-            return std::make_shared<ompl::base::RealVectorDeterministicStateSampler>(
-                space, std::make_shared<ompl::base::HaltonSequence>(bases.size(), bases));
-
-        return std::make_shared<ompl::base::RealVectorDeterministicStateSampler>(
-            space, std::make_shared<ompl::base::HaltonSequence>(dim));
+        return std::make_shared<ompl::base::SE2DeterministicStateSampler>(
+            space, std::make_shared<ompl::base::HaltonSequence>(3));
     }
 
     og::SimpleSetupPtr ss_;

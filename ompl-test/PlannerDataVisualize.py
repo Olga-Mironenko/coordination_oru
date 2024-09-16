@@ -14,7 +14,7 @@ def useGraphTool():
     coordstrings = graph.vertex_properties["coords"]
     pos = graph.new_vertex_property("vector<double>")
     for i_vertex, coordstring in enumerate(coordstrings):
-        x, y = [float(value) for value in coordstring.split(",")]
+        x, y = [float(value) for value in coordstring.split(",")][:2]
         pos[i_vertex] = (x, y)
 
     # Write some interesting statistics
