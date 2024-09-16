@@ -78,6 +78,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	    };
 	    gs.setControl(sc);
 	    Polygon smoothFootprint = gs.smooth(footprint, 1.0);
+		// TODO: reduce the length of `collisionCircleCenters`? (a 5*3 rectangle gives ~800 points)
 		collisionCircleCenters = smoothFootprint.getCoordinates();
 	}
 	
@@ -162,11 +163,23 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 						throw new RuntimeException(e);
 					}
 				}
-				if (!INSTANCE.plan_multiple_circles(occ, w, h, res, mapOriginX, mapOriginY, robotRadius, xCoords, yCoords, numCoords, start_.getX(), start_.getY(), start_.getTheta(), goal_.getX(), goal_.getY(), goal_.getTheta(), path, pathLength, distanceBetweenPathPoints, turningRadius, planningTimeInSecs, algo.ordinal())) return false;
+				if (!INSTANCE.plan_multiple_circles(
+						occ, w, h, res,
+						mapOriginX, mapOriginY, robotRadius,
+						xCoords, yCoords, numCoords, // `collisionCircleCenters`
+						start_.getX(), start_.getY(), start_.getTheta(),
+						goal_.getX(), goal_.getY(), goal_.getTheta(),
+						path, pathLength,
+						distanceBetweenPathPoints, turningRadius,
+						planningTimeInSecs, algo.ordinal()
+				)) {
+					return false;
+				}
 			}
 			else {
 				if (!INSTANCE.plan_multiple_circles_nomap(xCoords, yCoords, numCoords, start_.getX(), start_.getY(), start_.getTheta(), goal_.getX(), goal_.getY(), goal_.getTheta(), path, pathLength, distanceBetweenPathPoints, turningRadius, planningTimeInSecs, algo.ordinal())) return false;					
 			}
+
 			final Pointer pathVals = path.getValue();
 			final PathPose valsRef = new PathPose(pathVals);
 			valsRef.read();

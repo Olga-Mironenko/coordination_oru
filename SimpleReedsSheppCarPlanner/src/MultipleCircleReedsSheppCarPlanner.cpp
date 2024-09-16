@@ -29,15 +29,23 @@ extern "C" void cleanupPath(PathPose* path) {
   free(path);
 }
 
-extern "C" bool plan_multiple_circles(uint8_t* occupancyMap, int mapWidth, int mapHeight, double mapResolution, double mapOriginX, double mapOriginY, double robotRadius, double* xCoords, double* yCoords, int numCoords, double startX, double startY, double startTheta, double goalX, double goalY, double goalTheta, PathPose** path, int* pathLength, double distanceBetweenPathPoints, double turningRadius, double planningTimeInSecs, PLANNING_ALGORITHM algo) {
+extern "C" bool plan_multiple_circles(
+  uint8_t* occupancyMap, int mapWidth, int mapHeight, double mapResolution,
+  double mapOriginX, double mapOriginY, double robotRadius,
+  double* xCoords, double* yCoords, int numCoords,
+  double startX, double startY, double startTheta,
+  double goalX, double goalY, double goalTheta,
+  PathPose** path, int* pathLength,
+  double distanceBetweenPathPoints, double turningRadius,
+  double planningTimeInSecs, PLANNING_ALGORITHM algo
+) {
 
   double pLen = 0.0;
   int numInterpolationPoints = 0;
   ob::StateSpacePtr space(new ob::ReedsSheppStateSpace(turningRadius));
 
   std::cout << "Using " << mapWidth << "x" << mapHeight << " occupancy map for validity checking" << std::endl;
-  
-  ob::ScopedState<> start(space), goal(space);
+
   ob::RealVectorBounds bounds(2);
   bounds.low[0] = mapOriginX;
   bounds.low[1] = mapOriginY;
@@ -119,6 +127,7 @@ extern "C" bool plan_multiple_circles(uint8_t* occupancyMap, int mapWidth, int m
   }
 
   // set the start and goal states
+  ob::ScopedState<> start(space), goal(space);
   start[0] = startX;
   start[1] = startY;
   start[2] = startTheta;
@@ -127,10 +136,9 @@ extern "C" bool plan_multiple_circles(uint8_t* occupancyMap, int mapWidth, int m
   goal[2] = goalTheta;
   ss.setStartAndGoalStates(start, goal);
 
-  // this call is optional, but we put it in to get more output information
-  ss.getSpaceInformation()->setStateValidityCheckingResolution(0.005);
+  ss.getSpaceInformation()->setStateValidityCheckingResolution(mapResolution / space->getMaximumExtent()); // 1 pixel
   ss.setup();
-  ss.print();
+  ss.print(); // this call is optional, but we put it in to get more output information
 
   // attempt to solve the problem within planningTimeInSecs seconds of planning time
   std::cout << "Planning time is " << planningTimeInSecs << " secs." << std::endl;
