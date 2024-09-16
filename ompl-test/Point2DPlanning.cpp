@@ -19,7 +19,7 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
-std::vector<std::pair<double, double> > plannerDataToPoints(const ob::PlannerData& pd)
+std::vector<std::tuple<double, double, double> > plannerDataToPoints(const ob::PlannerData& pd)
 {
     std::ostringstream streamGraphml;
     pd.printGraphML(streamGraphml);
@@ -30,7 +30,7 @@ std::vector<std::pair<double, double> > plannerDataToPoints(const ob::PlannerDat
     const std::string prefix = "<data key=\"key0\">";
     const std::string postfix = "</data>";
 
-    std::vector<std::pair<double, double> > points;
+    std::vector<std::tuple<double, double, double> > points;
 
     size_t last = 0;
     size_t next = 0;
@@ -42,14 +42,16 @@ std::vector<std::pair<double, double> > plannerDataToPoints(const ob::PlannerDat
             assert(indexPostfix != std::string::npos);
             std::string pair = line.substr(indexPrefix + prefix.size(), indexPostfix - indexPrefix - prefix.size());
 
-            const size_t indexComma = pair.find(',');
-            assert(indexComma != std::string::npos);
-            double x = strtod(pair.substr(0, indexComma).c_str(), nullptr);
-            double y = strtod(pair.substr(indexComma + 1).c_str(), nullptr);
+            const size_t indexComma1 = pair.find(',');
+            const size_t indexComma2 = pair.find(',', indexComma1 + 1);
+            assert(indexComma1 != std::string::npos);
+            double x = strtod(pair.substr(0, indexComma1).c_str(), nullptr);
+            double y = strtod(pair.substr(indexComma1 + 1, indexComma2).c_str(), nullptr);
+            double t = strtod(pair.substr(indexComma2 + 1).c_str(), nullptr);
 
-            // std::cout << x << ", " << y << std::endl;
+            std::cout << x << ", " << y << ", " << t << std::endl;
 
-            points.push_back(std::make_pair(x, y));
+            points.push_back(std::make_tuple(x, y, t));
         }
         last = next + 1;
     }
@@ -86,7 +88,7 @@ public:
 
         const auto spaceInformation = ss_->getSpaceInformation();
 
-        const double minWallWidth = 5.0;
+        const double minWallWidth = 1.0;
         const double resolution = minWallWidth / space->getMaximumExtent();
         spaceInformation->setStateValidityCheckingResolution(resolution);
 
@@ -147,7 +149,7 @@ public:
         {
             // if (ss_->getPlanner())
             //     ss_->getPlanner()->clearQuery();
-            ss_->solve(0.1);
+            ss_->solve(1);
             OMPL_INFORM("%d vertices in the roadmap", planner_->getRoadmap().m_vertices.size());
         }
 
@@ -180,7 +182,8 @@ public:
         OMPL_INFORM("%d points in the planner data", points_.size());
         for (int i = 0; i < points_.size(); ++i) {
             auto point = points_[i];
-            OMPL_INFORM("planner data point %d: x=%.1f, y=%.1f", i, point.first, point.second);
+            OMPL_INFORM("planner data point %d: x=%.1f, y=%.1f, t=%.1f",
+                i, std::get<0>(point), std::get<1>(point), std::get<2>(point));
         }
         assert(points_.size() <= roadmap.m_vertices.size());
         assert(points_.size() == numPointsInRoadmap);
@@ -222,24 +225,45 @@ public:
         }
 
         for (const auto point : points_) {
-            const int x = static_cast<int>(point.first);
+            const int x = static_cast<int>(std::get<0>(point));
+            const int y = static_cast<int>(std::get<1>(point));
+            const double t = std::get<2>(point);
+
             assert(0 <= x && x < width_);
-
-            const int y = static_cast<int>(point.second);
             assert(0 <= y && y < height_);
+            // assert(-M_PI_2 <= t && t < M_PI_2);
 
-            for (int dx = -2; dx <= 2; ++dx) {
-                for (int dy = -2; dy <= 2; ++dy) {
+            int d = 2;
+            for (int dx = -d; dx <= d; ++dx) {
+                for (int dy = -d; dy <= d; ++dy) {
                     const int xp = x + dx;
                     const int yp = y + dy;
                     if (0 <= xp && xp < width_ && 0 <= yp && yp < height_) {
                         ompl::PPM::Color &c = ppm_.getPixel(yp, xp);
                         c.red = 0;
-                        c.green = 255;
-                        c.blue = 0;
+                        if (dx == 0 && dy == 0) {
+                            c.green = 127;
+                            c.blue = 0;
+                        } else {
+                            c.green = 255;
+                            c.blue = 0;
+                        }
                     }
                 }
             }
+
+            double a = t - M_PI_2;
+            double uD = d * sin(a) + x;
+            double vD = d * cos(a) + y;
+            int u = static_cast<int>(std::trunc(uD)) + 1;
+            int v = static_cast<int>(std::trunc(vD)) + 1;
+            if (0 <= u && u < width_ && 0 <= v && v < height_) {
+                ompl::PPM::Color &c = ppm_.getPixel(v, u);
+                c.red = 0;
+                c.green = 0;
+                c.blue = 255;
+            }
+
         }
     }
 
@@ -256,7 +280,7 @@ private:
         const auto state = statePtr->as<ob::ReedsSheppStateSpace::StateType>();
         const int x = static_cast<int>(state->getX());
         const int y = static_cast<int>(state->getY());
-        OMPL_DEBUG("isStateValue(%d, %d)", x, y);
+        // OMPL_DEBUG("isStateValue(%d, %d)", x, y);
 
         if (! (0 <= x && x < width_ && 0 <= y && y < height_)) {
             return false;
@@ -282,7 +306,7 @@ private:
     size_t height_;
     ompl::PPM ppm_;
     std::shared_ptr<og::PRMstar> planner_;
-    std::vector<std::pair<double, double> > points_;
+    std::vector<std::tuple<double, double, double> > points_;
 };
 
 int main(int /*argc*/, char ** /*argv*/)
