@@ -5,13 +5,13 @@
 #include <boost/graph/graphml.hpp>
 #include <boost/filesystem.hpp>
 
+#include <ompl/base/PlannerData.h>
+#include <ompl/base/PlannerDataStorage.h>
 #include <ompl/base/PlannerDataGraph.h>
 #include <ompl/base/samplers/DeterministicStateSampler.h>
 #include <ompl/base/samplers/deterministic/HaltonSequence.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/geometric/SimpleSetup.h>
-#include <ompl/geometric/planners/rrt/RRTstar.h>
-#include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/prm/PRMstar.h>
 #include <ompl/util/PPM.h>
 #include <ompl/config.h>
@@ -79,17 +79,27 @@ public:
         space->addDimension(0.0, width_);
         space->addDimension(0.0, height_);
         ss_ = std::make_shared<og::SimpleSetup>(space);
+        const auto spaceInformation = ss_->getSpaceInformation();
 
         // set state validity checking for this space
         ss_->setStateValidityChecker([this](const ob::State *state) { return isStateValid(state); });
         space->setup();
-        ss_->getSpaceInformation()->setStateValidityCheckingResolution(1.0 / space->getMaximumExtent());
+        spaceInformation->setStateValidityCheckingResolution(1.0 / space->getMaximumExtent());
+
+        ob::PlannerDataStorage pdStorage;
+        ob::PlannerData pd(spaceInformation);
+        const bool isLoaded = pdStorage.load("pd.bin", pd);
+        if (isLoaded) {
+            OMPL_INFORM("PD is loaded");
+            planner_ = std::make_shared<og::PRMstar>(pd);
+            planner_->clearQuery();
+        } else {
+            OMPL_WARN("PD is not loaded");
+            planner_ = std::make_shared<og::PRMstar>(spaceInformation);
+        }
+        ss_->setPlanner(planner_);
 
         // set the deterministic sampler
-        // 2D space, no need to specify bases specifically
-        // PRMstar can use the deterministic sampling
-        planner_ = std::make_shared<og::PRMstar>(ss_->getSpaceInformation());
-        ss_->setPlanner(planner_);
         space->setStateSamplerAllocator(
             std::bind(
                 &Plane2DEnvironment::allocateHaltonStateSamplerRealVector,
@@ -102,14 +112,15 @@ public:
         if (!ss_)
             return false;
 
+        ob::ScopedState<> start(ss_->getStateSpace());
         assert(xStart < width_);
         assert(yStart < height_);
-
-        ob::ScopedState<> start(ss_->getStateSpace());
         start[0] = xStart;
         start[1] = yStart;
 
         ob::ScopedState<> goal(ss_->getStateSpace());
+        assert(xGoal < width_);
+        assert(yGoal < height_);
         goal[0] = xGoal;
         goal[1] = yGoal;
 
@@ -123,7 +134,7 @@ public:
         {
             // if (ss_->getPlanner())
             //     ss_->getPlanner()->clearQuery();
-            ss_->solve(0.01);
+            ss_->solve(0.1);
             OMPL_INFORM("%d vertices in the roadmap", planner_->getRoadmap().m_vertices.size());
         }
 
@@ -139,7 +150,7 @@ public:
             auto state = vertex.m_property.m_value;
             double x = state->as<ob::RealVectorStateSpace::StateType>()->values[0];
             double y = state->as<ob::RealVectorStateSpace::StateType>()->values[1];
-            OMPL_INFORM("roadmap vertex %d: x=%.1f, y=%.1f, numEdges=%d, isPoint=%d", i, x, y, numEdges, isPoint ? 1 : 0);
+            // OMPL_DEBUG("roadmap vertex %d: x=%.1f, y=%.1f, numEdges=%d, isPoint=%d", i, x, y, numEdges, isPoint ? 1 : 0);
         }
 
         ob::PlannerData pd(ss_->getSpaceInformation());
@@ -148,6 +159,9 @@ public:
         std::ofstream file("pd.graphml");
         pd.printGraphML(file);
         file.close();
+
+        ob::PlannerDataStorage pdStorage;
+        pdStorage.store(pd, "pd.bin");
 
         points_ = plannerDataToPoints(pd);
         OMPL_INFORM("%d points in the planner data", points_.size());
@@ -242,7 +256,11 @@ private:
         }
 
         const ompl::PPM::Color &c = ppm_.getPixel(y, x);
-        return c.red > 127 && c.green > 127 && c.blue > 127;
+        const bool isValid = c.red > 127 && c.green > 127 && c.blue > 127;
+
+        // OMPL_INFORM("isStateValid(%d,%d) -> %d", x, y, isValid ? 1 : 0);
+
+        return isValid;
     }
 
     ob::StateSamplerPtr allocateHaltonStateSamplerRealVector(const ompl::base::StateSpace *space, unsigned int dim,
