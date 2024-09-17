@@ -19,6 +19,12 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
+// The same as in `coordination_oru`:
+constexpr double thetaDown = -M_PI_2;
+constexpr double thetaUp = M_PI_2;
+constexpr double thetaRight = 0;
+constexpr double thetaLeft = M_PI;
+
 std::vector<std::tuple<double, double, double> > plannerDataToPoints(const ob::PlannerData& pd)
 {
     std::ostringstream streamGraphml;
@@ -120,7 +126,10 @@ public:
             ));
     }
 
-    bool plan(unsigned int xStart, unsigned int yStart, unsigned int xGoal, unsigned int yGoal)
+    bool plan(
+        double time,
+        unsigned int xStart, unsigned int yStart, double tStart,
+        unsigned int xGoal, unsigned int yGoal, double tGoal)
     {
         if (!ss_)
             return false;
@@ -130,14 +139,14 @@ public:
         assert(yStart < height_);
         start[0] = xStart;
         start[1] = yStart;
-        start[2] = 0.0;
+        start[2] = tStart;
 
         ob::ScopedState<> goal(ss_->getStateSpace());
         assert(xGoal < width_);
         assert(yGoal < height_);
         goal[0] = xGoal;
         goal[1] = yGoal;
-        goal[2] = -3.14 / 2;
+        goal[2] = tGoal;
 
         ss_->setStartAndGoalStates(start, goal);
         const size_t numStarts = 1;
@@ -149,7 +158,7 @@ public:
         {
             // if (ss_->getPlanner())
             //     ss_->getPlanner()->clearQuery();
-            ss_->solve(1);
+            ss_->solve(time);
             OMPL_INFORM("%d vertices in the roadmap", planner_->getRoadmap().m_vertices.size());
         }
 
@@ -201,6 +210,16 @@ public:
         return false;
     }
 
+    void setColor(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
+        assert(0 <= x && x < width_);
+        assert(0 <= y && y < height_);
+
+        ompl::PPM::Color &c = ppm_.getPixel(y, x);
+        c.red = r;
+        c.green = g;
+        c.blue = b;
+    }
+
     void recordSolution()
     {
         if (!ss_ || !ss_->haveSolutionPath())
@@ -218,10 +237,7 @@ public:
             assert(0 <= x && x < width_);
             assert(0 <= y && y < height_);
 
-            ompl::PPM::Color &c = ppm_.getPixel(y, x);
-            c.red = 255;
-            c.green = 0;
-            c.blue = 0;
+            setColor(x, y, 255, 0, 0);
         }
 
         for (const auto point : points_) {
@@ -233,37 +249,28 @@ public:
             assert(0 <= y && y < height_);
             // assert(-M_PI_2 <= t && t < M_PI_2);
 
-            int d = 2;
-            for (int dx = -d; dx <= d; ++dx) {
-                for (int dy = -d; dy <= d; ++dy) {
-                    const int xp = x + dx;
-                    const int yp = y + dy;
-                    if (0 <= xp && xp < width_ && 0 <= yp && yp < height_) {
-                        ompl::PPM::Color &c = ppm_.getPixel(yp, xp);
-                        c.red = 0;
-                        if (dx == 0 && dy == 0) {
-                            c.green = 127;
-                            c.blue = 0;
-                        } else {
-                            c.green = 255;
-                            c.blue = 0;
-                        }
-                    }
+            const int d = 2;
+            const int xMin = std::max(0, x - d);
+            const int xMax = std::min(static_cast<int>(width_) - 1, x + d);
+            const int yMin = std::max(0, y - d);
+            const int yMax = std::min(static_cast<int>(height_) - 1, y + d);
+
+            for (int xp = xMin; xp <= xMax; ++xp) {
+                for (int yp = yMin; yp <= yMax; ++yp) {
+                    setColor(xp, yp, 0, 255, 0);
                 }
             }
 
-            double a = t - M_PI_2;
-            double uD = d * sin(a) + x;
-            double vD = d * cos(a) + y;
-            int u = static_cast<int>(std::trunc(uD)) + 1;
-            int v = static_cast<int>(std::trunc(vD)) + 1;
-            if (0 <= u && u < width_ && 0 <= v && v < height_) {
-                ompl::PPM::Color &c = ppm_.getPixel(v, u);
-                c.red = 0;
-                c.green = 0;
-                c.blue = 255;
+            for (
+                double xp = x, yp = y;
+                xMin <= static_cast<int>(round(xp)) && static_cast<int>(round(xp)) <= xMax &&
+                yMin <= static_cast<int>(round(yp)) && static_cast<int>(round(yp)) <= yMax;
+                xp += cos(t), yp -= sin(t)
+            ) {
+                setColor(static_cast<int>(round(xp)), static_cast<int>(round(yp)), 0, 0, 255);
             }
 
+            setColor(x, y, 0, 127, 0);
         }
     }
 
@@ -316,7 +323,7 @@ int main(int /*argc*/, char ** /*argv*/)
     const boost::filesystem::path path(TEST_RESOURCES_DIR);
     Plane2DEnvironment env((path / "ppm/floor.ppm").string().c_str());
 
-    if (env.plan(0, 0, 777, 1265))
+    if (env.plan(10, 10, 10, thetaRight, 777, 1265, thetaDown))
     {
         env.recordSolution();
         env.save("result_demo.ppm");
