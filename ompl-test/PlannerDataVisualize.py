@@ -92,7 +92,7 @@ def main(filename_in="cmake-build-debug/pd.graphml"):
         vertex_size=vertexsize, vertex_fill_color=colorprops, pos=pos,
         edge_pen_width=edgesize, edge_color=edgecolor,
         output_size=(1859, 1658),
-        # output=filename_out,
+        output=filename_out,
     )
     print('\nDone')
 
