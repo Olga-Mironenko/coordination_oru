@@ -6,24 +6,23 @@
 #include <ompl/geometric/SimpleSetup.h>
 
 namespace ob = ompl::base;
-namespace og = ompl::geometric;
 
 class MultipleCircleStateValidityChecker : public ob::StateValidityChecker {
  public:
-  uint8_t* occupancyMap;
+  const uint8_t* occupancyMap;
   double mapResolution;
   int mapWidth;
   int mapHeight;
   double mapOriginX;
   double mapOriginY;
   float radius;
-  double* xCoords;
-  double* yCoords;
+  const double* xCoords;
+  const double* yCoords;
   int numCoords;
   bool noMap;
   bool isDebug = false;
   
-  MultipleCircleStateValidityChecker(const ob::SpaceInformationPtr &si, uint8_t* _occupancyMap, int _mapWidth, int _mapHeight, double _mapResolution, double _mapOriginX, double _mapOriginY, double _radius, double* _xCoords, double* _yCoords, int _numCoords) : ob::StateValidityChecker(si) {
+  MultipleCircleStateValidityChecker(const ob::SpaceInformationPtr &si, const uint8_t* _occupancyMap, int _mapWidth, int _mapHeight, double _mapResolution, double _mapOriginX, double _mapOriginY, double _radius, const double* _xCoords, const double* _yCoords, int _numCoords) : ob::StateValidityChecker(si) {
     noMap = false;
     radius = (float)_radius;
     xCoords = _xCoords;

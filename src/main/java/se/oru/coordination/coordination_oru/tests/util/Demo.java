@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru.tests.util;
 
 import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
+import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
@@ -25,6 +26,8 @@ public abstract class Demo {
             GatedThread.enable();
 
             AutonomousVehicle.isPathCachingEnabled = false;
+            ReedsSheppCarPlanner.isCachingPlanner = true;
+            AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar;
 
             //HumanControl.isEnabledForBrowser = true;
             BrowserVisualization.isExtendedText = true;

@@ -2,12 +2,16 @@
 
 # Based on `PlannerData.py` from OMPL demos.
 
+import sys
+
 import graph_tool.all as gt
 
 
-def useGraphTool():
+def main(filename_in="cmake-build-debug/pd.graphml"):
+    filename_out = filename_in + '.png'
+
     # Load the graphml data using graph-tool
-    graph = gt.load_graph("cmake-build-debug/pd.graphml", fmt="xml")
+    graph = gt.load_graph(filename_in, fmt="xml")
 
     edgeweights = graph.edge_properties["weight"]
 
@@ -15,7 +19,7 @@ def useGraphTool():
     pos = graph.new_vertex_property("vector<double>")
     for i_vertex, coordstring in enumerate(coordstrings):
         x, y = [float(value) for value in coordstring.split(",")][:2]
-        pos[i_vertex] = (x, y)
+        pos[i_vertex] = (x, -y)
 
     # Write some interesting statistics
     avgdeg, stddevdeg = gt.vertex_average(graph, "total")
@@ -88,10 +92,10 @@ def useGraphTool():
         vertex_size=vertexsize, vertex_fill_color=colorprops, pos=pos,
         edge_pen_width=edgesize, edge_color=edgecolor,
         output_size=(1859, 1658),
-        output="resources/ppm/pd.png"
+        # output=filename_out,
     )
     print('\nDone')
 
 
 if __name__ == "__main__":
-    useGraphTool()
+    main(*sys.argv[1:])

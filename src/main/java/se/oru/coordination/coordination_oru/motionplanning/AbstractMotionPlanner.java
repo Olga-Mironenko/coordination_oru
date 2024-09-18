@@ -136,15 +136,22 @@ public abstract class AbstractMotionPlanner {
 	}
 
 	public static PoseSteering[] inversePathWithoutFirstAndLastPose(PoseSteering[] path) {
-		PoseSteering[] pathInverse = new PoseSteering[path.length - 2];
-		for (int i = 1; i < path.length - 1; i++) {
+		int iFirst = 1;
+		int length = path.length - 2;
+		if (length <= 0) {
+			iFirst = 0;
+			length = path.length;
+		}
+
+		PoseSteering[] pathInverse = new PoseSteering[length];
+		for (int i = iFirst; i < iFirst + length; i++) {
 			PoseSteering ps = path[i];
 			PoseSteering psNew = new PoseSteering(
 					ps.getX(), ps.getY(), ps.getZ(),
 					ps.getRoll(), ps.getPitch(), inverseYaw(ps.getYaw()),
 					ps.getSteering()
 			);
-			pathInverse[pathInverse.length - i] = psNew;
+			pathInverse[length - 1 - (i - iFirst)] = psNew;
 		}
 		return pathInverse;
 	}

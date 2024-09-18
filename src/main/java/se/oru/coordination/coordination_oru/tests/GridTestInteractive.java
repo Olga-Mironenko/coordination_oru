@@ -52,7 +52,7 @@ public class GridTestInteractive {
         final Pose humStart = GridMapConstants.column2TopStart;
  //        final Pose humStart = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
 //        final Pose humFinish = GridMapConstants.column2Row1Right;
-        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.column2Row3Down);
+        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.column3Row3Down);
 
 //        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
 //        final Pose humFinish = GridMapConstants.turnAround(
@@ -88,7 +88,7 @@ public class GridTestInteractive {
         VehicleSize vehicleSizeAut2 = vehicleSizeAut1;
         VehicleSize vehicleSizeAut3 = vehicleSizeAut1;
 
-        AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
+//        AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect; // default
 //        AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar; // too slow
 //        AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.SPARS; // too slow
 //        AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTstar; // too slow

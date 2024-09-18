@@ -40,10 +40,14 @@ logs/
 # SimpleReedsSheppCarPlanner 
 SimpleReedsSheppCarPlanner/CMakeCache.txt
 SimpleReedsSheppCarPlanner/CMakeFiles/
+SimpleReedsSheppCarPlanner/.cmake
 SimpleReedsSheppCarPlanner/Makefile
 SimpleReedsSheppCarPlanner/cmake_install.cmake
-SimpleReedsSheppCarPlanner/install_manifest.txt
 SimpleReedsSheppCarPlanner/libsimplereedssheppcarplanner.so
+SimpleReedsSheppCarPlanner/libcachingreedssheppcarplanner.so
+SimpleReedsSheppCarPlanner/.ninja*
+SimpleReedsSheppCarPlanner/*.ninja
+SimpleReedsSheppCarPlanner/tmp/
 
 # ompl-test
 ompl-test/CMakeCache.txt
@@ -56,6 +60,7 @@ ompl-test/resources
 ompl-test/*.ppm
 ompl-test/cmake-build-debug
 ompl-test/*~
+ompl-test/graph-tool/
 
 # Result .txt files
 src/main/java/se/oru/coordination/coordination_oru/results/*

@@ -10,11 +10,8 @@
 #include <ompl/control/planners/kpiece/KPIECE1.h>
 #include <boost/math/constants/constants.hpp>
 
-using namespace std;
-
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
-namespace oc = ompl::control;
 
 enum PLANNING_ALGORITHM { RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT };
 
