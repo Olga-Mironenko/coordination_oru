@@ -55,6 +55,7 @@ ompl-test/demo_Point2DPlanning
 ompl-test/resources
 ompl-test/*.ppm
 ompl-test/cmake-build-debug
+ompl-test/*~
 
 # Result .txt files
 src/main/java/se/oru/coordination/coordination_oru/results/*

@@ -22,3 +22,6 @@ target_link_libraries(PlannerData PRIVATE
         Eigen3::Eigen
         Boost::filesystem
         Boost::system)
+
+add_executable(memcmp_performance memcmp_performance.c)
+add_executable(memory_difference memory_difference.c)
