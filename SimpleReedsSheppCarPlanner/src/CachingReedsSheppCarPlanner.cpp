@@ -100,35 +100,8 @@ extern "C" bool plan_multiple_circles(
     si, occupancyMap, mapWidth, mapHeight, mapResolution, mapOriginX, mapOriginY, robotRadius,
     xCoords, yCoords, numCoords));
 
-  //Return false if the start is occupied.
-  ompl::base::State *statePtrS = space->allocState();
-  statePtrS->as<ompl::base::SE2StateSpace::StateType>()->setX(startX);
-  statePtrS->as<ompl::base::SE2StateSpace::StateType>()->setY(startY);
-  statePtrS->as<ompl::base::SE2StateSpace::StateType>()->setYaw(startTheta);
-  std::cout << "Checking start pose (" << startX << "," << startY << "," << startTheta << ")" << std::endl;
-  bool isStartValid = si->getStateValidityChecker()->isValid(statePtrS);
-  space->freeState(statePtrS);
-  if (!isStartValid) {
-    std::cout << "Invalid start pose (" << startX << "," << startY << "," << startTheta << ") since pixel(s) around (" << (startX-mapOriginX)/mapResolution << "," << (mapHeight-(startY-mapOriginY)/mapResolution) << ") are occupied" << std::endl;
-    return false;
-  }
-
-  //Return false if the goal is occupied.
-  ompl::base::State *statePtrG = space->allocState();
-  statePtrG->as<ompl::base::SE2StateSpace::StateType>()->setX(goalX);
-  statePtrG->as<ompl::base::SE2StateSpace::StateType>()->setY(goalY);
-  statePtrG->as<ompl::base::SE2StateSpace::StateType>()->setYaw(goalTheta);
-  std::cout << "Checking goal pose (" << goalX << "," << goalY << "," << goalTheta << ")" << std::endl;
-  bool isGoalValid = si->getStateValidityChecker()->isValid(statePtrG);
-  space->freeState(statePtrG);
-  if (!isGoalValid) {
-    std::cout << "Invalid goal pose (" << goalX << "," << goalY << "," << goalTheta << ") since pixel(s) around (" << (goalX-mapOriginX)/mapResolution << "," << (mapHeight-(goalY-mapOriginY)/mapResolution) << ") are occupied" << std::endl;
-    return false;
-  }
-
   // set the start and goal states
   ob::ScopedState<> start(space), goal(space);
-  // TODO: reuse the variables above
   start[0] = startX;
   start[1] = startY;
   start[2] = startTheta;
@@ -138,7 +111,7 @@ extern "C" bool plan_multiple_circles(
   ss_->setStartAndGoalStates(start, goal);
 
   // attempt to solve the problem within planningTimeInSecs seconds of planning time
-  std::cout << "Planning time is " << planningTimeInSecs << " secs." << std::endl;
+  std::cout << "Planning time is to be " << planningTimeInSecs << " secs." << std::endl;
   planner_->clearQuery();
   ob::PlannerStatus solved = ss_->solve(planningTimeInSecs);
 
