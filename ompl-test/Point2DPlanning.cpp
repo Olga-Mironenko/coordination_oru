@@ -11,12 +11,15 @@
 #include <ompl/base/samplers/DeterministicStateSampler.h>
 #include <ompl/base/samplers/deterministic/HaltonSequence.h>
 #include <ompl/base/spaces/ReedsSheppStateSpace.h>
+#include <ompl/base/terminationconditions/CostConvergenceTerminationCondition.h>
+#include <ompl/base/terminationconditions/IterationTerminationCondition.h>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/planners/prm/PRMstar.h>
 #include <ompl/util/PPM.h>
 #include <ompl/config.h>
 
 namespace ob = ompl::base;
+namespace base = ompl::base;
 namespace og = ompl::geometric;
 
 // The same as in `coordination_oru`:
@@ -24,6 +27,60 @@ constexpr double thetaDown = -M_PI_2;
 constexpr double thetaUp = M_PI_2;
 constexpr double thetaRight = 0;
 constexpr double thetaLeft = M_PI;
+
+class PRMcustom : public og::PRMstar
+{
+public:
+    explicit PRMcustom(const ompl::base::SpaceInformationPtr &si)
+        : PRMstar(si) {
+    }
+
+    explicit PRMcustom(const ompl::base::PlannerData &data)
+        : PRMstar(data) {
+    }
+
+    // Based on `og::PRM::solve()` from the commit of `Wed Sep 11 07:27:06 2024 -0600`.
+    ob::PlannerStatus solveWithoutConstruct(const ob::PlannerTerminationCondition &ptc) {
+        unsigned long int nrStartStates = boost::num_vertices(g_);
+        OMPL_INFORM("%s: Starting planning with %lu states already in datastructure", getName().c_str(), nrStartStates);
+
+        // Reset addedNewSolution_ member and create solution checking thread
+        addedNewSolution_ = false;
+        ob::PathPtr sol;
+        checkForSolution(ptc, sol);
+
+        // (constructRoadmap is skipped)
+
+        OMPL_INFORM("%s: Created %u states", getName().c_str(), boost::num_vertices(g_) - nrStartStates);
+
+        if (sol)
+        {
+            base::PlannerSolution psol(sol);
+            psol.setPlannerName(getName());
+            // if the solution was optimized, we mark it as such
+            psol.setOptimized(opt_, bestCost_, addedNewSolution());
+            pdef_->addSolutionPath(psol);
+        }
+        else
+        {
+            // Return an approximate solution.
+            ompl::base::Cost diff = constructApproximateSolution(startM_, goalM_, sol);
+            if (!opt_->isFinite(diff))
+            {
+                OMPL_INFORM("Closest path is still start and goal");
+                return base::PlannerStatus::TIMEOUT;
+            }
+            OMPL_INFORM("Using approximate solution, heuristic cost-to-go is %f", diff.value());
+            pdef_->addSolutionPath(sol, true, diff.value(), getName());
+            return base::PlannerStatus::APPROXIMATE_SOLUTION;
+        }
+
+        return sol ? base::PlannerStatus::EXACT_SOLUTION : base::PlannerStatus::TIMEOUT;
+    }
+
+private:
+
+};
 
 std::vector<std::tuple<double, double, double> > plannerDataToPoints(const ob::PlannerData& pd)
 {
@@ -55,7 +112,7 @@ std::vector<std::tuple<double, double, double> > plannerDataToPoints(const ob::P
             double y = strtod(pair.substr(indexComma1 + 1, indexComma2).c_str(), nullptr);
             double t = strtod(pair.substr(indexComma2 + 1).c_str(), nullptr);
 
-            std::cout << x << ", " << y << ", " << t << std::endl;
+            // std::cout << x << ", " << y << ", " << t << std::endl;
 
             points.push_back(std::make_tuple(x, y, t));
         }
@@ -101,8 +158,8 @@ public:
         // set state validity checking for this space
         ss_->setStateValidityChecker([this](const ob::State *state) { return isStateValid(state); });
 
-        space->setup();
-        space->printSettings(std::cout);
+        // space->setup();
+        // space->printSettings(std::cout);
 
         ob::PlannerDataStorage pdStorage;
         ob::PlannerData pd(spaceInformation);
@@ -110,11 +167,11 @@ public:
         const bool isLoaded = false;
         if (isLoaded) {
             OMPL_INFORM("PD is loaded");
-            planner_ = std::make_shared<og::PRMstar>(pd);
+            planner_ = std::make_shared<PRMcustom>(pd);
             planner_->clearQuery();
         } else {
             OMPL_WARN("PD is not loaded");
-            planner_ = std::make_shared<og::PRMstar>(spaceInformation);
+            planner_ = std::make_shared<PRMcustom>(spaceInformation);
         }
         ss_->setPlanner(planner_);
 
@@ -127,12 +184,13 @@ public:
     }
 
     bool plan(
-        double time,
         unsigned int xStart, unsigned int yStart, double tStart,
         unsigned int xGoal, unsigned int yGoal, double tGoal)
     {
         if (!ss_)
             return false;
+
+        std::cout << "*** Planning started ***" << std::endl;
 
         ob::ScopedState<> start(ss_->getStateSpace());
         assert(xStart < width_);
@@ -156,9 +214,21 @@ public:
         OMPL_INFORM("%d vertices", planner_->getRoadmap().m_vertices.size());
         for (int i = 0; i < 1; ++i)
         {
-            // if (ss_->getPlanner())
-            //     ss_->getPlanner()->clearQuery();
-            ss_->solve(time);
+            ss_->getPlanner()->clearQuery();
+
+            OMPL_INFORM("Initialization:");
+            ss_->solve(ob::IterationTerminationCondition(0));
+
+            // auto pdef = ss_->getProblemDefinition();
+            // auto ptc = ob::CostConvergenceTerminationCondition(pdef, 1, 1);
+            // auto ptc = ob::exactSolnPlannerTerminationCondition(pdef);
+            auto ptc = ob::IterationTerminationCondition(2000);
+            OMPL_INFORM("Construction:");
+            planner_->constructRoadmap(ptc);
+
+            OMPL_INFORM("Solution finding:");
+            planner_->solveWithoutConstruct(ptc);
+
             OMPL_INFORM("%d vertices in the roadmap", planner_->getRoadmap().m_vertices.size());
         }
 
@@ -191,8 +261,8 @@ public:
         OMPL_INFORM("%d points in the planner data", points_.size());
         for (int i = 0; i < points_.size(); ++i) {
             auto point = points_[i];
-            OMPL_INFORM("planner data point %d: x=%.1f, y=%.1f, t=%.1f",
-                i, std::get<0>(point), std::get<1>(point), std::get<2>(point));
+            // OMPL_INFORM("planner data point %d: x=%.1f, y=%.1f, t=%.1f",
+            //     i, std::get<0>(point), std::get<1>(point), std::get<2>(point));
         }
         assert(points_.size() <= roadmap.m_vertices.size());
         assert(points_.size() == numPointsInRoadmap);
@@ -312,22 +382,28 @@ private:
     size_t width_;
     size_t height_;
     ompl::PPM ppm_;
-    std::shared_ptr<og::PRMstar> planner_;
+    std::shared_ptr<PRMcustom> planner_;
     std::vector<std::tuple<double, double, double> > points_;
 };
 
 int main(int /*argc*/, char ** /*argv*/)
 {
-    std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
-
     const boost::filesystem::path path(TEST_RESOURCES_DIR);
-    Plane2DEnvironment env((path / "ppm/floor.ppm").string().c_str());
 
-    if (env.plan(10, 10, 10, thetaRight, 777, 1265, thetaDown))
-    {
-        env.recordSolution();
-        env.save("result_demo.ppm");
+    for (int iRun = 1; iRun <= 1; iRun++) {
+        std::cout << "### RUN " << iRun << std::endl;
+        Plane2DEnvironment env((path / "ppm/floor.ppm").string().c_str());
+
+        if (env.plan(10, 10, thetaRight, 777, 1265, thetaDown))
+        {
+            env.recordSolution();
+            env.save("result_demo.ppm");
+        }
+
+        if (env.plan(20, 20, thetaRight, 600, 1000, thetaDown))
+        {
+            env.recordSolution();
+            env.save("result_demo2.ppm");
+        }
     }
-
-    return 0;
 }
