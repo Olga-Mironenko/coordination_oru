@@ -9,7 +9,10 @@ file(TO_NATIVE_PATH "${CMAKE_SOURCE_DIR}/resources" TEST_RESOURCES_DIR)
 string(REPLACE "\\" "\\\\" TEST_RESOURCES_DIR "${TEST_RESOURCES_DIR}")
 add_definitions(-DTEST_RESOURCES_DIR=\"${TEST_RESOURCES_DIR}\")
 
-add_executable(Point2DPlanning Point2DPlanning.cpp)
+add_executable(Point2DPlanning
+        Point2DPlanning.cpp
+        PRMcustom.cpp
+        PRMcustom.h)
 target_link_libraries(Point2DPlanning PRIVATE
         ompl::ompl
         Eigen3::Eigen

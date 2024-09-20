@@ -11,12 +11,11 @@
 #include <ompl/base/samplers/DeterministicStateSampler.h>
 #include <ompl/base/samplers/deterministic/HaltonSequence.h>
 #include <ompl/base/spaces/ReedsSheppStateSpace.h>
-#include <ompl/base/terminationconditions/CostConvergenceTerminationCondition.h>
 #include <ompl/base/terminationconditions/IterationTerminationCondition.h>
 #include <ompl/geometric/SimpleSetup.h>
-#include <ompl/geometric/planners/prm/PRMstar.h>
 #include <ompl/util/PPM.h>
-#include <ompl/config.h>
+
+#include "PRMcustom.h"
 
 namespace ob = ompl::base;
 namespace base = ompl::base;
@@ -27,60 +26,6 @@ constexpr double thetaDown = -M_PI_2;
 constexpr double thetaUp = M_PI_2;
 constexpr double thetaRight = 0;
 constexpr double thetaLeft = M_PI;
-
-class PRMcustom : public og::PRMstar
-{
-public:
-    explicit PRMcustom(const ompl::base::SpaceInformationPtr &si)
-        : PRMstar(si) {
-    }
-
-    explicit PRMcustom(const ompl::base::PlannerData &data)
-        : PRMstar(data) {
-    }
-
-    // Based on `og::PRM::solve()` from the commit of `Wed Sep 11 07:27:06 2024 -0600`.
-    ob::PlannerStatus solveWithoutConstruct(const ob::PlannerTerminationCondition &ptc) {
-        unsigned long int nrStartStates = boost::num_vertices(g_);
-        OMPL_INFORM("%s: Starting planning with %lu states already in datastructure", getName().c_str(), nrStartStates);
-
-        // Reset addedNewSolution_ member and create solution checking thread
-        addedNewSolution_ = false;
-        ob::PathPtr sol;
-        checkForSolution(ptc, sol);
-
-        // (constructRoadmap is skipped)
-
-        OMPL_INFORM("%s: Created %u states", getName().c_str(), boost::num_vertices(g_) - nrStartStates);
-
-        if (sol)
-        {
-            base::PlannerSolution psol(sol);
-            psol.setPlannerName(getName());
-            // if the solution was optimized, we mark it as such
-            psol.setOptimized(opt_, bestCost_, addedNewSolution());
-            pdef_->addSolutionPath(psol);
-        }
-        else
-        {
-            // Return an approximate solution.
-            ompl::base::Cost diff = constructApproximateSolution(startM_, goalM_, sol);
-            if (!opt_->isFinite(diff))
-            {
-                OMPL_INFORM("Closest path is still start and goal");
-                return base::PlannerStatus::TIMEOUT;
-            }
-            OMPL_INFORM("Using approximate solution, heuristic cost-to-go is %f", diff.value());
-            pdef_->addSolutionPath(sol, true, diff.value(), getName());
-            return base::PlannerStatus::APPROXIMATE_SOLUTION;
-        }
-
-        return sol ? base::PlannerStatus::EXACT_SOLUTION : base::PlannerStatus::TIMEOUT;
-    }
-
-private:
-
-};
 
 std::vector<std::tuple<double, double, double> > plannerDataToPoints(const ob::PlannerData& pd)
 {
@@ -167,11 +112,11 @@ public:
         const bool isLoaded = false;
         if (isLoaded) {
             OMPL_INFORM("PD is loaded");
-            planner_ = std::make_shared<PRMcustom>(pd);
+            planner_ = std::make_shared<og::PRMcustom>(pd, true);
             planner_->clearQuery();
         } else {
             OMPL_WARN("PD is not loaded");
-            planner_ = std::make_shared<PRMcustom>(spaceInformation);
+            planner_ = std::make_shared<og::PRMcustom>(spaceInformation, true);
         }
         ss_->setPlanner(planner_);
 
@@ -227,7 +172,7 @@ public:
             planner_->constructRoadmap(ptc);
 
             OMPL_INFORM("Solution finding:");
-            planner_->solveWithoutConstruct(ptc);
+            planner_->solve(ptc, true);
 
             OMPL_INFORM("%d vertices in the roadmap", planner_->getRoadmap().m_vertices.size());
         }
@@ -382,7 +327,7 @@ private:
     size_t width_;
     size_t height_;
     ompl::PPM ppm_;
-    std::shared_ptr<PRMcustom> planner_;
+    std::shared_ptr<og::PRMcustom> planner_;
     std::vector<std::tuple<double, double, double> > points_;
 };
 
@@ -391,6 +336,8 @@ int main(int /*argc*/, char ** /*argv*/)
     const boost::filesystem::path path(TEST_RESOURCES_DIR);
 
     for (int iRun = 1; iRun <= 1; iRun++) {
+        srand(1);
+
         std::cout << "### RUN " << iRun << std::endl;
         Plane2DEnvironment env((path / "ppm/floor.ppm").string().c_str());
 
