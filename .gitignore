@@ -61,6 +61,7 @@ ompl-test/*.ppm
 ompl-test/cmake-build-debug
 ompl-test/*~
 ompl-test/graph-tool/
+ompl-test/original-ompl-examples/
 
 # Result .txt files
 src/main/java/se/oru/coordination/coordination_oru/results/*
