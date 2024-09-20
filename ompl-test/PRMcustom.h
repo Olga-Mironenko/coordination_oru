@@ -208,6 +208,8 @@ namespace ompl
                 maintaining a 2:1 ratio for growing/expansion of roadmap) */
             void constructRoadmap(const base::PlannerTerminationCondition &ptc);
 
+            void constructRoadmap(int numIterationsSingleShot);
+
             /** \brief If the user desires, the roadmap can be
                 improved for the given time (seconds). The solve()
                 method will also improve the roadmap, as needed.*/

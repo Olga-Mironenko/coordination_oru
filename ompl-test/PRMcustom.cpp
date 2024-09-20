@@ -50,7 +50,7 @@
 
 #define foreach BOOST_FOREACH
 
-#include <boost/graph/astar_search.hpp>
+#include <ompl/base/terminationconditions/IterationTerminationCondition.h>
 
 // GoalVisitor
 namespace
@@ -317,7 +317,7 @@ void ompl::geometric::PRMcustom::expandRoadmap(const base::PlannerTerminationCon
     //  "Probabilistic Roadmaps for Path Planning in High-Dimensional Configuration Spaces"
     //        Lydia E. Kavraki, Petr Svestka, Jean-Claude Latombe, and Mark H. Overmars
 
-    OMPL_DEBUG("expandRoadmap");
+    OMPL_DEBUG("expandRoadmap (entered): %d vertices, %d edges", boost::num_vertices(g_), boost::num_edges(g_));
 
     PDF<Vertex> pdf;
     foreach (Vertex v, boost::vertices(g_))
@@ -383,6 +383,8 @@ void ompl::geometric::PRMcustom::expandRoadmap(const base::PlannerTerminationCon
             }
             graphMutex_.unlock();
         }
+
+        OMPL_DEBUG("expandRoadmap: i=%d, %d vertices, %d edges", iterations_, boost::num_vertices(g_), boost::num_edges(g_));
     }
 }
 
@@ -405,14 +407,21 @@ void ompl::geometric::PRMcustom::growRoadmap(const base::PlannerTerminationCondi
 
 void ompl::geometric::PRMcustom::growRoadmap(const base::PlannerTerminationCondition &ptc, base::State *workState)
 {
+    OMPL_DEBUG("growRoadmap (entered): %d vertices, %d edges", boost::num_vertices(g_), boost::num_edges(g_));
+
     /* grow roadmap in the regular fashion -- sample valid states, add them to the roadmap, add valid connections */
-    while (!ptc)
+    while (true)
     {
         iterations_++;
+
         // search for a valid state
         bool found = false;
-        while (!found && !ptc)
+        while (!found)
         {
+            if (ptc) {
+                return;
+            }
+
             unsigned int attempts = 0;
             do
             {
@@ -420,9 +429,11 @@ void ompl::geometric::PRMcustom::growRoadmap(const base::PlannerTerminationCondi
                 attempts++;
             } while (attempts < magic::FIND_VALID_STATE_ATTEMPTS_WITHOUT_TERMINATION_CHECK && !found);
         }
+
         // add it as a milestone
-        if (found)
-            addMilestone(si_->cloneState(workState));
+        addMilestone(si_->cloneState(workState));
+
+        OMPL_DEBUG("growRoadmap: i=%d, %d vertices, %d edges", iterations_, boost::num_vertices(g_), boost::num_edges(g_));
     }
 }
 
@@ -603,6 +614,7 @@ void ompl::geometric::PRMcustom::constructRoadmap(const base::PlannerTermination
     bool grow = true;
 
     bestCost_ = opt_->infiniteCost();
+
     while (!ptc())
     {
         // maintain a 2:1 ratio for growing/expansion of roadmap
@@ -617,6 +629,33 @@ void ompl::geometric::PRMcustom::constructRoadmap(const base::PlannerTermination
                           xstates);
         grow = !grow;
     }
+
+    si_->freeStates(xstates);
+}
+
+void ompl::geometric::PRMcustom::constructRoadmap(int numIterationsSingleShot)
+{
+    if (!isSetup())
+        setup();
+    if (!sampler_)
+        sampler_ = si_->allocValidStateSampler();
+    if (!simpleSampler_)
+        simpleSampler_ = si_->allocStateSampler();
+
+    std::vector<base::State *> xstates(magic::MAX_RANDOM_BOUNCE_STEPS);
+    si_->allocStates(xstates);
+
+    bestCost_ = opt_->infiniteCost();
+
+    int numIterationsGrow = static_cast<long long>(numIterationsSingleShot) * 2 / 3;
+    OMPL_DEBUG("Running growRoadmap for %d iterations", numIterationsGrow);
+    auto ptcGrow = base::IterationTerminationCondition(numIterationsGrow);
+    growRoadmap(ptcGrow, xstates[0]);
+
+    int numIterationsExpand = numIterationsSingleShot - numIterationsGrow;
+    auto ptcExpand = base::IterationTerminationCondition(numIterationsExpand);
+    OMPL_DEBUG("Running expandRoadmap for %d iterations", numIterationsExpand);
+    expandRoadmap(ptcExpand, xstates);
 
     si_->freeStates(xstates);
 }

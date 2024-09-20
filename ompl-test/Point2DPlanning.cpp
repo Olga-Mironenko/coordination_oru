@@ -167,11 +167,16 @@ public:
             // auto pdef = ss_->getProblemDefinition();
             // auto ptc = ob::CostConvergenceTerminationCondition(pdef, 1, 1);
             // auto ptc = ob::exactSolnPlannerTerminationCondition(pdef);
-            auto ptc = ob::IterationTerminationCondition(2000);
+            // auto ptc = ob::IterationTerminationCondition(100);
+
             OMPL_INFORM("Construction:");
-            planner_->constructRoadmap(ptc);
+            clock_t start = clock();
+            planner_->constructRoadmap(1000);
+            clock_t end = clock();
+            OMPL_INFORM("Construction took %.6f s", (double)(end - start) / CLOCKS_PER_SEC);
 
             OMPL_INFORM("Solution finding:");
+            auto ptc = ob::IterationTerminationCondition(100);
             planner_->solve(ptc, true);
 
             OMPL_INFORM("%d vertices in the roadmap", planner_->getRoadmap().m_vertices.size());
@@ -333,6 +338,8 @@ private:
 
 int main(int /*argc*/, char ** /*argv*/)
 {
+    ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
+
     const boost::filesystem::path path(TEST_RESOURCES_DIR);
 
     for (int iRun = 1; iRun <= 1; iRun++) {
