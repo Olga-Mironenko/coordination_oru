@@ -230,6 +230,8 @@ namespace ompl
                 given condition evaluates true. */
             void expandRoadmap(const base::PlannerTerminationCondition &ptc);
 
+            base::PlannerStatus initializeForSolve(const base::PlannerTerminationCondition &ptc);
+
             /** \brief Function that can solve the motion planning
                 problem. Grows a roadmap using
                 constructRoadmap(). This function can be called

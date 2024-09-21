@@ -4,10 +4,12 @@
 
 #include <boost/graph/graphml.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/graph/astar_search.hpp>
 
 #include <ompl/base/PlannerData.h>
 #include <ompl/base/PlannerDataStorage.h>
 #include <ompl/base/PlannerDataGraph.h>
+#include <ompl/base/goals/GoalState.h>
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/base/samplers/DeterministicStateSampler.h>
 #include <ompl/base/samplers/deterministic/HaltonSequence.h>
@@ -68,18 +70,29 @@ std::vector<std::tuple<double, double, double> > plannerDataToPoints(const ob::P
     return points;
 }
 
+// Used for A* search.  Computes the heuristic distance from vertex v1 to the goal
+ob::Cost distanceHeuristic(ob::PlannerData::Graph::Vertex v1,
+                           const ob::GoalState* goal,
+                           const ob::OptimizationObjective* obj,
+                           const boost::property_map<ob::PlannerData::Graph::Type,
+                           vertex_type_t>::type& plannerDataVertices)
+{
+    return ob::Cost(obj->costToGo(plannerDataVertices[v1]->getState(), goal));
+}
+
 class Plane2DEnvironment
 {
 public:
-    explicit Plane2DEnvironment(const char *ppm_file)
+    explicit Plane2DEnvironment(const std::string &ppm_file)
     {
+        ppm_file_ = ppm_file;
         try
         {
-            ppm_.loadFile(ppm_file);
+            ppm_.loadFile(ppm_file_.c_str());
         }
         catch (ompl::Exception &ex)
         {
-            OMPL_ERROR("Unable to load %s.\n%s", ppm_file, ex.what());
+            OMPL_ERROR("Unable to load %s.\n%s", ppm_file.c_str(), ex.what());
             return;
         }
 
@@ -109,18 +122,7 @@ public:
         // space->setup();
         // space->printSettings(std::cout);
 
-        ob::PlannerDataStorage pdStorage;
-        ob::PlannerData pd(spaceInformation);
-        // const bool isLoaded = pdStorage.load("pd.bin", pd);
-        const bool isLoaded = false;
-        if (isLoaded) {
-            OMPL_INFORM("PD is loaded");
-            planner_ = std::make_shared<og::PRMcustom>(pd, true);
-            planner_->clearQuery();
-        } else {
-            OMPL_WARN("PD is not loaded");
-            planner_ = std::make_shared<og::PRMcustom>(spaceInformation, true);
-        }
+        planner_ = std::make_shared<og::PRMcustom>(spaceInformation, true);
         ss_->setPlanner(planner_);
 
         // set the deterministic sampler
@@ -148,6 +150,14 @@ public:
         pdStorage.store(pd, filename.c_str());
     }
 
+    void loadPlannerData(const std::string &filename) {
+        ob::PlannerDataStorage pdStorage;
+        ob::PlannerData pd(ss_->getSpaceInformation());
+        pdStorage.load(filename.c_str(), pd);
+
+        planner_ = std::make_shared<og::PRMcustom>(pd, true);
+    }
+
     void construct(const int numIterations)
     {
         assert(ss_);
@@ -165,15 +175,10 @@ public:
         is_constructed_ = true;
     }
 
-    bool plan(
+    void setStartGoal(
         unsigned int xStart, unsigned int yStart, double tStart,
         unsigned int xGoal, unsigned int yGoal, double tGoal)
     {
-        assert(ss_);
-        assert(is_constructed_);
-
-        OMPL_INFORM("*** PLANNING:");
-
         ob::ScopedState<> start(ss_->getStateSpace());
         assert(xStart < width_);
         assert(yStart < height_);
@@ -191,12 +196,109 @@ public:
         ss_->getProblemDefinition()->clearSolutionPaths();
         ss_->getProblemDefinition()->clearSolutionNonExistenceProof();
         ss_->getProblemDefinition()->setStartAndGoalStates(start, goal);
+        planner_->setProblemDefinition(ss_->getProblemDefinition());
+    }
+
+    // Based on `readPlannerData()` from `ompl/demos/PlannerData.cpp`.
+    void pdToPath(ob::PlannerData &data, og::PathGeometric &path)
+    {
+        auto si = ss_->getSpaceInformation();
+
+        // Re-extract a shortest path from the loaded planner data
+        assert(data.numStartVertices() > 0 && data.numGoalVertices() > 0);
+
+        // Create an optimization objective for optimizing path length in A*
+        ob::PathLengthOptimizationObjective opt(si);
+
+        // Computing the weights of all edges based on the state space distance
+        // This is not done by default for efficiency
+        data.computeEdgeWeights(opt);
+
+        // Getting a handle to the raw Boost.Graph data
+        ob::PlannerData::Graph::Type& graph = data.toBoostGraph();
+
+        // Now we can apply any Boost.Graph algorithm.  How about A*!
+
+        // create a predecessor map to store A* results in
+        boost::vector_property_map<ob::PlannerData::Graph::Vertex> prev(data.numVertices());
+
+        // Retrieve a property map with the PlannerDataVertex object pointers for quick lookup
+        boost::property_map<ob::PlannerData::Graph::Type, vertex_type_t>::type vertices = get(vertex_type_t(), graph);
+
+        // Run A* search over our planner data
+        ob::GoalState goal(si);
+        goal.setState(data.getGoalVertex(0).getState());
+        ob::PlannerData::Graph::Vertex start = boost::vertex(data.getStartIndex(0), graph);
+        boost::astar_visitor<boost::null_visitor> dummy_visitor;
+        boost::astar_search(graph, start,
+            [&goal, &opt, &vertices](ob::PlannerData::Graph::Vertex v1) { return distanceHeuristic(v1, &goal, &opt, vertices); },
+            boost::predecessor_map(prev).
+            distance_compare([&opt](ob::Cost c1, ob::Cost c2) { return opt.isCostBetterThan(c1, c2); }).
+            distance_combine([&opt](ob::Cost c1, ob::Cost c2) { return opt.combineCosts(c1, c2); }).
+            distance_inf(opt.infiniteCost()).
+            distance_zero(opt.identityCost()).
+            visitor(dummy_visitor));
+
+        // Extracting the path
+        path.clear();
+        for (ob::PlannerData::Graph::Vertex pos = boost::vertex(data.getGoalIndex(0), graph);
+             prev[pos] != pos;
+             pos = prev[pos])
+        {
+            path.append(vertices[pos]->getState());
+        }
+        path.append(vertices[start]->getState());
+        path.reverse();
+
+        // print the path to screen
+        //path.print(std::cout);
+        std::cout << "Found stored solution with " << path.getStateCount() << " states and length " << path.length() << std::endl;
+    }
+
+    /*
+     * - load "pd.bin"
+     * - do initialization of `solve()`
+     * - do the search of `readPlannerData()`
+     */
+    bool query(
+        unsigned int xStart, unsigned int yStart, double tStart,
+        unsigned int xGoal, unsigned int yGoal, double tGoal,
+        og::PathGeometric &path)
+    {
+        OMPL_INFORM("*** QUERYING:");
+
+        loadPlannerData("pd.bin");
+
+        setStartGoal(xStart, yStart, tStart, xGoal, yGoal, tGoal);
+
+        const ob::PlannerStatus plannerStatusInit = planner_->initializeForSolve(ob::IterationTerminationCondition(0));
+        if (plannerStatusInit != ob::PlannerStatus::UNKNOWN) {
+            return false;
+        }
+
+        ob::PlannerData pd(ss_->getSpaceInformation());
+        planner_->getPlannerData(pd);
+        pdToPath(pd, path);
+        return true;
+    }
+
+    /*
+    bool plan(
+        unsigned int xStart, unsigned int yStart, double tStart,
+        unsigned int xGoal, unsigned int yGoal, double tGoal)
+    {
+        assert(ss_);
+        assert(is_constructed_);
+
+        OMPL_INFORM("*** PLANNING:");
+
+        setStartGoal(xStart, yStart, tStart, xGoal, yGoal, tGoal);
         const size_t numStarts = 1;
         const size_t numGoals = 1;
-        planner_->setProblemDefinition(ss_->getProblemDefinition());
 
         OMPL_INFORM("%d vertices", planner_->getRoadmap().m_vertices.size());
         planner_->clearQuery();
+
 
         OMPL_INFORM("Solution finding:");
         planner_->solve(ob::IterationTerminationCondition(1), true);
@@ -240,6 +342,7 @@ public:
         OMPL_WARN("Not found a solution");
         return false;
     }
+    */
 
     void setColor(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
         assert(0 <= x && x < width_);
@@ -251,13 +354,11 @@ public:
         c.blue = b;
     }
 
-    void recordSolution()
+    void savePath(og::PathGeometric &path, const char *filename)
     {
-        if (!ss_ || !ss_->haveSolutionPath())
-            return;
-        og::PathGeometric &path = ss_->getSolutionPath();
-
         path.interpolate(); // TODO: why is it needed?
+
+        ppm_.loadFile(ppm_file_.c_str());
 
         for (std::size_t i = 0; i < path.getStateCount(); ++i)
         {
@@ -303,13 +404,13 @@ public:
 
             setColor(x, y, 0, 127, 0);
         }
+
+        ppm_.saveFile(filename);
     }
 
-    void save(const char *filename)
+    og::PathGeometric makeEmptyPath()
     {
-        if (!ss_)
-            return;
-        ppm_.saveFile(filename);
+        return og::PathGeometric(ss_->getSpaceInformation());
     }
 
 private:
@@ -343,6 +444,7 @@ private:
     size_t width_;
     size_t height_;
     ompl::PPM ppm_;
+    std::string ppm_file_;
     std::shared_ptr<og::PRMcustom> planner_;
     std::vector<std::tuple<double, double, double> > points_;
     bool is_constructed_;
@@ -352,28 +454,25 @@ int main(int /*argc*/, char ** /*argv*/)
 {
     ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
 
-    const boost::filesystem::path path(TEST_RESOURCES_DIR);
+    const boost::filesystem::path pathResources(TEST_RESOURCES_DIR);
 
     for (int iRun = 1; iRun <= 1; iRun++) {
         srand(1);
 
         std::cout << "### RUN " << iRun << std::endl;
-        Plane2DEnvironment env((path / "ppm/floor.ppm").string().c_str());
+        Plane2DEnvironment env((pathResources / "ppm/floor.ppm").string());
 
         env.construct(1000);
+        og::PathGeometric path = env.makeEmptyPath();
 
-        if (env.plan(10, 10, thetaRight, 777, 1265, thetaDown))
+        if (env.query(10, 10, thetaRight, 777, 1265, thetaDown, path))
         {
-            env.recordSolution();
-            env.save("result_demo.ppm");
+            env.savePath(path, "result_demo.ppm");
         }
 
-        /*
-        if (env.plan(20, 20, thetaRight, 600, 1000, thetaDown))
+        if (env.query(20, 20, thetaRight, 600, 1000, thetaDown, path))
         {
-            env.recordSolution();
-            env.save("result_demo2.ppm");
+            env.savePath(path, "result_demo2.ppm");
         }
-        */
     }
 }

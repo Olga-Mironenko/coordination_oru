@@ -492,7 +492,7 @@ ompl::base::PlannerStatus ompl::geometric::PRMcustom::solve(const base::PlannerT
     return this->solve(ptc, false);
 }
 
-ompl::base::PlannerStatus ompl::geometric::PRMcustom::solve(const base::PlannerTerminationCondition &ptc, bool isSkippingConstruct)
+ompl::base::PlannerStatus ompl::geometric::PRMcustom::initializeForSolve(const base::PlannerTerminationCondition &ptc)
 {
     checkValidity();
     auto *goal = dynamic_cast<base::GoalSampleableRegion *>(pdef_->getGoal().get());
@@ -539,6 +539,16 @@ ompl::base::PlannerStatus ompl::geometric::PRMcustom::solve(const base::PlannerT
 
     OMPL_INFORM("After adding goal milestones: %d vertices, %d edges", boost::num_vertices(g_), boost::num_edges(g_));
     // TODO: output the number of components too
+
+    return base::PlannerStatus::UNKNOWN;
+}
+
+ompl::base::PlannerStatus ompl::geometric::PRMcustom::solve(const base::PlannerTerminationCondition &ptc, bool isSkippingConstruct)
+{
+    base::PlannerStatus plannerStatusInit = initializeForSolve(ptc);
+    if (plannerStatusInit != base::PlannerStatus::UNKNOWN) {
+        return plannerStatusInit;
+    }
 
     unsigned long int nrStartStates = boost::num_vertices(g_);
     OMPL_INFORM("%s: Starting planning with %lu states already in datastructure", getName().c_str(), nrStartStates);
