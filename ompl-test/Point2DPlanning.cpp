@@ -8,6 +8,7 @@
 #include <ompl/base/PlannerData.h>
 #include <ompl/base/PlannerDataStorage.h>
 #include <ompl/base/PlannerDataGraph.h>
+#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/base/samplers/DeterministicStateSampler.h>
 #include <ompl/base/samplers/deterministic/HaltonSequence.h>
 #include <ompl/base/spaces/ReedsSheppStateSpace.h>
@@ -82,7 +83,9 @@ public:
             return;
         }
 
-       // TODO: an IntegerStateSpace
+        is_constructed_ = false;
+
+        // TODO: an IntegerStateSpace
         ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(10));
         width_ = ppm_.getWidth();
         height_ = ppm_.getHeight();
@@ -128,14 +131,48 @@ public:
             ));
     }
 
+    void dumpGraphML(const std::string &filename) const {
+        ob::PlannerData pd(ss_->getSpaceInformation());
+        ss_->getPlannerData(pd);
+
+        std::ofstream file(filename.c_str());
+        pd.printGraphML(file);
+        file.close();
+    }
+
+    void dumpPlannerData(const std::string &filename) const {
+        ob::PlannerData pd(ss_->getSpaceInformation());
+        ss_->getPlannerData(pd);
+
+        ob::PlannerDataStorage pdStorage;
+        pdStorage.store(pd, filename.c_str());
+    }
+
+    void construct(const int numIterations)
+    {
+        assert(ss_);
+
+        planner_->clear();
+
+        OMPL_INFORM("*** CONSTRUCTION:");
+        const clock_t start = clock();
+        planner_->constructRoadmap(numIterations);
+        const clock_t end = clock();
+        OMPL_INFORM("Construction took %.6f s", static_cast<double>(end - start)/ CLOCKS_PER_SEC);
+
+        dumpPlannerData("pd.bin");
+
+        is_constructed_ = true;
+    }
+
     bool plan(
         unsigned int xStart, unsigned int yStart, double tStart,
         unsigned int xGoal, unsigned int yGoal, double tGoal)
     {
-        if (!ss_)
-            return false;
+        assert(ss_);
+        assert(is_constructed_);
 
-        std::cout << "*** Planning started ***" << std::endl;
+        OMPL_INFORM("*** PLANNING:");
 
         ob::ScopedState<> start(ss_->getStateSpace());
         assert(xStart < width_);
@@ -151,36 +188,19 @@ public:
         goal[1] = yGoal;
         goal[2] = tGoal;
 
-        ss_->setStartAndGoalStates(start, goal);
+        ss_->getProblemDefinition()->clearSolutionPaths();
+        ss_->getProblemDefinition()->clearSolutionNonExistenceProof();
+        ss_->getProblemDefinition()->setStartAndGoalStates(start, goal);
         const size_t numStarts = 1;
         const size_t numGoals = 1;
+        planner_->setProblemDefinition(ss_->getProblemDefinition());
 
-        // generate a few solutions; all will be added to the goal;
         OMPL_INFORM("%d vertices", planner_->getRoadmap().m_vertices.size());
-        for (int i = 0; i < 1; ++i)
-        {
-            ss_->getPlanner()->clearQuery();
+        planner_->clearQuery();
 
-            OMPL_INFORM("Initialization:");
-            ss_->solve(ob::IterationTerminationCondition(0));
-
-            // auto pdef = ss_->getProblemDefinition();
-            // auto ptc = ob::CostConvergenceTerminationCondition(pdef, 1, 1);
-            // auto ptc = ob::exactSolnPlannerTerminationCondition(pdef);
-            // auto ptc = ob::IterationTerminationCondition(100);
-
-            OMPL_INFORM("Construction:");
-            clock_t start = clock();
-            planner_->constructRoadmap(1000);
-            clock_t end = clock();
-            OMPL_INFORM("Construction took %.6f s", (double)(end - start) / CLOCKS_PER_SEC);
-
-            OMPL_INFORM("Solution finding:");
-            auto ptc = ob::IterationTerminationCondition(100);
-            planner_->solve(ptc, true);
-
-            OMPL_INFORM("%d vertices in the roadmap", planner_->getRoadmap().m_vertices.size());
-        }
+        OMPL_INFORM("Solution finding:");
+        planner_->solve(ob::IterationTerminationCondition(1), true);
+        OMPL_INFORM("%d vertices in the roadmap", planner_->getRoadmap().m_vertices.size());
 
         auto roadmap = planner_->getRoadmap();
         int numPointsInRoadmap = 0;
@@ -191,21 +211,17 @@ public:
             if (isPoint) {
                 numPointsInRoadmap++;
             }
+
             auto state = vertex.m_property.m_value;
             double x = state->as<ob::RealVectorStateSpace::StateType>()->values[0];
             double y = state->as<ob::RealVectorStateSpace::StateType>()->values[1];
-            // OMPL_DEBUG("roadmap vertex %d: x=%.1f, y=%.1f, numEdges=%d, isPoint=%d", i, x, y, numEdges, isPoint ? 1 : 0);
+            OMPL_DEBUG("roadmap vertex %d: x=%.1f, y=%.1f, numEdges=%d, isPoint=%d", i, x, y, numEdges, isPoint ? 1 : 0);
         }
+
+        dumpGraphML("pd.graphml");
 
         ob::PlannerData pd(ss_->getSpaceInformation());
         ss_->getPlannerData(pd);
-
-        std::ofstream file("pd.graphml");
-        pd.printGraphML(file);
-        file.close();
-
-        ob::PlannerDataStorage pdStorage;
-        pdStorage.store(pd, "pd.bin");
 
         points_ = plannerDataToPoints(pd);
         OMPL_INFORM("%d points in the planner data", points_.size());
@@ -215,18 +231,13 @@ public:
             //     i, std::get<0>(point), std::get<1>(point), std::get<2>(point));
         }
         assert(points_.size() <= roadmap.m_vertices.size());
-        assert(points_.size() == numPointsInRoadmap);
+        // assert(points_.size() == numPointsInRoadmap);
 
-        const std::size_t ns = ss_->getProblemDefinition()->getSolutionCount();
-        OMPL_INFORM("Found %d solutions (haveSolutionPath=%d)", ns, ss_->haveSolutionPath() ? 1 : 0);
-        // TODO: `haveSolutionPath` seems to be always `true`
-
-        if (ss_->haveSolutionPath())
-        {
-            og::PathGeometric &p = ss_->getSolutionPath();
+        if (ss_->haveSolutionPath()) {
+            OMPL_INFORM("Found a solution");
             return true;
         }
-
+        OMPL_WARN("Not found a solution");
         return false;
     }
 
@@ -334,6 +345,7 @@ private:
     ompl::PPM ppm_;
     std::shared_ptr<og::PRMcustom> planner_;
     std::vector<std::tuple<double, double, double> > points_;
+    bool is_constructed_;
 };
 
 int main(int /*argc*/, char ** /*argv*/)
@@ -348,16 +360,20 @@ int main(int /*argc*/, char ** /*argv*/)
         std::cout << "### RUN " << iRun << std::endl;
         Plane2DEnvironment env((path / "ppm/floor.ppm").string().c_str());
 
+        env.construct(1000);
+
         if (env.plan(10, 10, thetaRight, 777, 1265, thetaDown))
         {
             env.recordSolution();
             env.save("result_demo.ppm");
         }
 
+        /*
         if (env.plan(20, 20, thetaRight, 600, 1000, thetaDown))
         {
             env.recordSolution();
             env.save("result_demo2.ppm");
         }
+        */
     }
 }

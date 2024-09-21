@@ -210,21 +210,12 @@ void ompl::geometric::PRMcustom::setup()
     // If no optimization objective was specified, then default to
     // optimizing path length as computed by the distance() function
     // in the state space.
-    if (pdef_)
-    {
-        if (pdef_->hasOptimizationObjective())
-            opt_ = pdef_->getOptimizationObjective();
-        else
-        {
-            opt_ = std::make_shared<base::PathLengthOptimizationObjective>(si_);
-            if (!starStrategy_)
-                opt_->setCostThreshold(opt_->infiniteCost());
-        }
-    }
-    else
-    {
-        OMPL_INFORM("%s: problem definition is not set, deferring setup completion...", getName().c_str());
-        setup_ = false;
+    if (pdef_ && pdef_->hasOptimizationObjective()) {
+        opt_ = pdef_->getOptimizationObjective();
+    } else {
+        opt_ = std::make_shared<base::PathLengthOptimizationObjective>(si_);
+        if (!starStrategy_)
+            opt_->setCostThreshold(opt_->infiniteCost());
     }
 }
 
@@ -480,17 +471,9 @@ bool ompl::geometric::PRMcustom::maybeConstructSolution(const std::vector<Vertex
                     base::Cost pathCost = p->cost(opt_);
                     if (opt_->isCostBetterThan(pathCost, bestCost_))
                         bestCost_ = pathCost;
-                    // Check if optimization objective is satisfied
-                    if (opt_->isSatisfied(pathCost))
-                    {
-                        solution = p;
-                        return true;
-                    }
-                    if (opt_->isCostBetterThan(pathCost, sol_cost))
-                    {
-                        solution = p;
-                        sol_cost = pathCost;
-                    }
+
+                    solution = p;
+                    return true;
                 }
             }
         }
@@ -511,46 +494,51 @@ ompl::base::PlannerStatus ompl::geometric::PRMcustom::solve(const base::PlannerT
 
 ompl::base::PlannerStatus ompl::geometric::PRMcustom::solve(const base::PlannerTerminationCondition &ptc, bool isSkippingConstruct)
 {
-    if (! isSkippingConstruct) {
-        checkValidity();
-        auto *goal = dynamic_cast<base::GoalSampleableRegion *>(pdef_->getGoal().get());
+    checkValidity();
+    auto *goal = dynamic_cast<base::GoalSampleableRegion *>(pdef_->getGoal().get());
 
-        if (goal == nullptr)
+    if (goal == nullptr)
+    {
+        OMPL_ERROR("%s: Unknown type of goal", getName().c_str());
+        return base::PlannerStatus::UNRECOGNIZED_GOAL_TYPE;
+    }
+
+    OMPL_INFORM("Before adding start milestones: %d vertices, %d edges", boost::num_vertices(g_), boost::num_edges(g_));
+
+    // Add the valid start states as milestones
+    while (const base::State *st = pis_.nextStart())
+        startM_.push_back(addMilestone(si_->cloneState(st)));
+
+    if (startM_.empty())
+    {
+        OMPL_ERROR("%s: There are no valid initial states!", getName().c_str());
+        return base::PlannerStatus::INVALID_START;
+    }
+
+    OMPL_INFORM("Before adding goal milestones: %d vertices, %d edges", boost::num_vertices(g_), boost::num_edges(g_));
+
+    if (!goal->couldSample())
+    {
+        OMPL_ERROR("%s: Insufficient states in sampleable goal region", getName().c_str());
+        return base::PlannerStatus::INVALID_GOAL;
+    }
+
+    // Ensure there is at least one valid goal state
+    if (goal->maxSampleCount() > goalM_.size() || goalM_.empty())
+    {
+        const base::State *st = goalM_.empty() ? pis_.nextGoal(ptc) : pis_.nextGoal();
+        if (st != nullptr)
+            goalM_.push_back(addMilestone(si_->cloneState(st)));
+
+        if (goalM_.empty())
         {
-            OMPL_ERROR("%s: Unknown type of goal", getName().c_str());
-            return base::PlannerStatus::UNRECOGNIZED_GOAL_TYPE;
-        }
-
-        // Add the valid start states as milestones
-        while (const base::State *st = pis_.nextStart())
-            startM_.push_back(addMilestone(si_->cloneState(st)));
-
-        if (startM_.empty())
-        {
-            OMPL_ERROR("%s: There are no valid initial states!", getName().c_str());
-            return base::PlannerStatus::INVALID_START;
-        }
-
-        if (!goal->couldSample())
-        {
-            OMPL_ERROR("%s: Insufficient states in sampleable goal region", getName().c_str());
+            OMPL_ERROR("%s: Unable to find any valid goal states", getName().c_str());
             return base::PlannerStatus::INVALID_GOAL;
         }
-
-        // Ensure there is at least one valid goal state
-        if (goal->maxSampleCount() > goalM_.size() || goalM_.empty())
-        {
-            const base::State *st = goalM_.empty() ? pis_.nextGoal(ptc) : pis_.nextGoal();
-            if (st != nullptr)
-                goalM_.push_back(addMilestone(si_->cloneState(st)));
-
-            if (goalM_.empty())
-            {
-                OMPL_ERROR("%s: Unable to find any valid goal states", getName().c_str());
-                return base::PlannerStatus::INVALID_GOAL;
-            }
-        }
     }
+
+    OMPL_INFORM("After adding goal milestones: %d vertices, %d edges", boost::num_vertices(g_), boost::num_edges(g_));
+    // TODO: output the number of components too
 
     unsigned long int nrStartStates = boost::num_vertices(g_);
     OMPL_INFORM("%s: Starting planning with %lu states already in datastructure", getName().c_str(), nrStartStates);
