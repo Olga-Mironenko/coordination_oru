@@ -5,6 +5,7 @@
 #include <boost/graph/graphml.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/graph/astar_search.hpp>
+#include <utility>
 
 #include <ompl/base/PlannerData.h>
 #include <ompl/base/PlannerDataStorage.h>
@@ -32,25 +33,33 @@ constexpr double thetaLeft = M_PI;
 
 // Used for A* search.  Computes the heuristic distance from vertex v1 to the goal
 ob::Cost distanceHeuristic(ob::PlannerData::Graph::Vertex v1,
-                           const ob::GoalState* goal,
-                           const ob::OptimizationObjective* obj,
+                           const ob::GoalState *goal,
+                           const ob::OptimizationObjective *obj,
                            const boost::property_map<ob::PlannerData::Graph::Type,
-                           vertex_type_t>::type& plannerDataVertices)
-{
+                               vertex_type_t>::type &plannerDataVertices) {
     return ob::Cost(obj->costToGo(plannerDataVertices[v1]->getState(), goal));
 }
 
-// TODO: make things `protected`
-class Plane2DEnvironment
-{
+class Plane2DEnvironment {
+protected:
+    std::string ppm_file_;
+    std::string pd_file_;
+
+    ompl::PPM ppm_;
+    size_t width_;
+    size_t height_;
+
+    og::SimpleSetupPtr ss_;
+    std::shared_ptr<og::PRMcustom> planner_;
+
 public:
-    explicit Plane2DEnvironment(const std::string &ppm_file)
-    {
-        ppm_file_ = ppm_file;
+    explicit Plane2DEnvironment(std::string ppm_file, std::string pd_file_)
+        : ppm_file_(std::move(ppm_file))
+        , pd_file_(std::move(pd_file_)) {
     }
 
+protected:
     void createSimpleSetup() {
-        // TODO: an IntegerStateSpace
         ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(10));
         width_ = ppm_.getWidth();
         height_ = ppm_.getHeight();
@@ -77,6 +86,7 @@ public:
         ss_->getSpaceInformation()->setStateValidityCheckingResolution(resolution);
     }
 
+public:
     void dumpGraphML(const std::string &filename) const {
         ob::PlannerData pd(ss_->getSpaceInformation());
         ss_->getPlannerData(pd);
@@ -86,31 +96,33 @@ public:
         file.close();
     }
 
-    void dumpPlannerData(const std::string &filename) const {
+protected:
+    void dumpPlannerData() const {
         ob::PlannerData pd(ss_->getSpaceInformation());
         ss_->getPlannerData(pd);
 
         ob::PlannerDataStorage pdStorage;
-        pdStorage.store(pd, filename.c_str());
+        pdStorage.store(pd, pd_file_.c_str());
     }
 
-    void loadPlannerData(const std::string &filename) {
+protected:
+    void loadPlannerData() {
         createSimpleSetup();
 
         ob::PlannerDataStorage pdStorage;
         ob::PlannerData pd(ss_->getSpaceInformation());
 
         clock_t start = clock();
-        pdStorage.load(filename.c_str(), pd);
+        pdStorage.load(pd_file_.c_str(), pd);
         clock_t end = clock();
-        OMPL_INFORM("(pdStorage.load took %.6f s)", static_cast<double>(end - start)/ CLOCKS_PER_SEC);
+        OMPL_INFORM("(pdStorage.load took %.6f s)", static_cast<double>(end - start) / CLOCKS_PER_SEC);
 
         planner_ = std::make_shared<og::PRMcustom>(pd, true);
         ss_->setPlanner(planner_);
     }
 
-    void construct(const int numIterations)
-    {
+public:
+    void construct(const int numIterations) {
         OMPL_INFORM("*** CONSTRUCTION:");
 
         ppm_.loadFile(ppm_file_.c_str());
@@ -122,15 +134,15 @@ public:
         const clock_t start = clock();
         planner_->constructRoadmap(numIterations);
         const clock_t end = clock();
-        OMPL_INFORM("Construction took %.6f s", static_cast<double>(end - start)/ CLOCKS_PER_SEC);
+        OMPL_INFORM("Construction took %.6f s", static_cast<double>(end - start) / CLOCKS_PER_SEC);
 
-        dumpPlannerData("pd.bin");
+        dumpPlannerData();
     }
 
+protected:
     void setStartGoal(
         unsigned int xStart, unsigned int yStart, double tStart,
-        unsigned int xGoal, unsigned int yGoal, double tGoal)
-    {
+        unsigned int xGoal, unsigned int yGoal, double tGoal) {
         ob::ScopedState<> start(ss_->getStateSpace());
         assert(xStart < width_);
         assert(yStart < height_);
@@ -151,9 +163,9 @@ public:
         planner_->getProblemDefinition()->setStartAndGoalStates(start, goal);
     }
 
+protected:
     // Based on `readPlannerData()` from `ompl/demos/PlannerData.cpp`.
-    std::shared_ptr<ompl::geometric::PathGeometric> pdToPath(ob::PlannerData &pd) const
-    {
+    std::shared_ptr<ompl::geometric::PathGeometric> pdToPath(ob::PlannerData &pd) const {
         auto si = ss_->getSpaceInformation();
 
         // Re-extract a shortest path from the loaded planner data
@@ -167,7 +179,7 @@ public:
         pd.computeEdgeWeights(opt);
 
         // Getting a handle to the raw Boost.Graph data
-        ob::PlannerData::Graph::Type& graph = pd.toBoostGraph();
+        ob::PlannerData::Graph::Type &graph = pd.toBoostGraph();
 
         // Now we can apply any Boost.Graph algorithm.  How about A*!
 
@@ -183,20 +195,21 @@ public:
         ob::PlannerData::Graph::Vertex start = boost::vertex(pd.getStartIndex(0), graph);
         boost::astar_visitor<boost::null_visitor> dummy_visitor;
         boost::astar_search(graph, start,
-            [&goal, &opt, &vertices](ob::PlannerData::Graph::Vertex v1) { return distanceHeuristic(v1, &goal, &opt, vertices); },
-            boost::predecessor_map(prev).
-            distance_compare([&opt](ob::Cost c1, ob::Cost c2) { return opt.isCostBetterThan(c1, c2); }).
-            distance_combine([&opt](ob::Cost c1, ob::Cost c2) { return opt.combineCosts(c1, c2); }).
-            distance_inf(opt.infiniteCost()).
-            distance_zero(opt.identityCost()).
-            visitor(dummy_visitor));
+                            [&goal, &opt, &vertices](ob::PlannerData::Graph::Vertex v1) {
+                                return distanceHeuristic(v1, &goal, &opt, vertices);
+                            },
+                            boost::predecessor_map(prev).
+                            distance_compare([&opt](ob::Cost c1, ob::Cost c2) { return opt.isCostBetterThan(c1, c2); }).
+                            distance_combine([&opt](ob::Cost c1, ob::Cost c2) { return opt.combineCosts(c1, c2); }).
+                            distance_inf(opt.infiniteCost()).
+                            distance_zero(opt.identityCost()).
+                            visitor(dummy_visitor));
 
         // Extracting the path
         auto path = std::make_shared<og::PathGeometric>(si);
         for (ob::PlannerData::Graph::Vertex pos = boost::vertex(pd.getGoalIndex(0), graph);
              prev[pos] != pos;
-             pos = prev[pos])
-        {
+             pos = prev[pos]) {
             path->append(vertices[pos]->getState());
         }
         path->append(vertices[start]->getState());
@@ -204,24 +217,25 @@ public:
 
         // print the path to screen
         //path.print(std::cout);
-        std::cout << "Found stored solution with " << path->getStateCount() << " states and length " << path->length() << std::endl;
+        std::cout << "Found stored solution with " << path->getStateCount() << " states and length " << path->length()
+                << std::endl;
         return path;
     }
 
+public:
     std::shared_ptr<ompl::geometric::PathGeometric> query(
         unsigned int xStart, unsigned int yStart, double tStart,
-        unsigned int xGoal, unsigned int yGoal, double tGoal)
-    {
+        unsigned int xGoal, unsigned int yGoal, double tGoal) {
         OMPL_INFORM("*** QUERYING:");
 
         ppm_.loadFile(ppm_file_.c_str());
 
         clock_t start = clock();
-        loadPlannerData("pd.bin");
+        loadPlannerData();
         setStartGoal(xStart, yStart, tStart, xGoal, yGoal, tGoal);
         const ob::PlannerStatus plannerStatusInit = planner_->initializeForSolve(ob::IterationTerminationCondition(0));
         clock_t end = clock();
-        OMPL_INFORM("Query: initialization took %.6f s", static_cast<double>(end - start)/ CLOCKS_PER_SEC);
+        OMPL_INFORM("Query: initialization took %.6f s", static_cast<double>(end - start) / CLOCKS_PER_SEC);
 
         if (plannerStatusInit != ob::PlannerStatus::UNKNOWN) {
             return nullptr;
@@ -232,11 +246,12 @@ public:
         planner_->getPlannerData(pd);
         std::shared_ptr<ompl::geometric::PathGeometric> path = pdToPath(pd);
         end = clock();
-        OMPL_INFORM("Query: path finding took %.6f s", static_cast<double>(end - start)/ CLOCKS_PER_SEC);
+        OMPL_INFORM("Query: path finding took %.6f s", static_cast<double>(end - start) / CLOCKS_PER_SEC);
 
         return path;
     }
 
+protected:
     void setColor(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
         assert(0 <= x && x < width_);
         assert(0 <= y && y < height_);
@@ -247,13 +262,12 @@ public:
         c.blue = b;
     }
 
-    void savePath(std::shared_ptr<ompl::geometric::PathGeometric> path, const char *filename)
-    {
+public:
+    void savePath(std::shared_ptr<ompl::geometric::PathGeometric> path, const char *filename) {
         ppm_.loadFile(ppm_file_.c_str());
 
         path->interpolate();
-        for (std::size_t i = 0; i < path->getStateCount(); ++i)
-        {
+        for (std::size_t i = 0; i < path->getStateCount(); ++i) {
             const auto state = path->getState(i)->as<ob::ReedsSheppStateSpace::StateType>();
             const int x = static_cast<int>(state->getX());
             const int y = static_cast<int>(state->getY());
@@ -311,15 +325,14 @@ public:
         ppm_.saveFile(filename);
     }
 
-private:
-    bool isStateValid(const ob::State *statePtr) const
-    {
+protected:
+    bool isStateValid(const ob::State *statePtr) const {
         const auto state = statePtr->as<ob::ReedsSheppStateSpace::StateType>();
         const int x = static_cast<int>(state->getX());
         const int y = static_cast<int>(state->getY());
         // OMPL_DEBUG("isStateValue(%d, %d)", x, y);
 
-        if (! (0 <= x && x < width_ && 0 <= y && y < height_)) {
+        if (!(0 <= x && x < width_ && 0 <= y && y < height_)) {
             return false;
         }
 
@@ -331,46 +344,34 @@ private:
         return isValid;
     }
 
-    ob::StateSamplerPtr allocateSampler(const ompl::base::StateSpace *space) const
-    {
+    ob::StateSamplerPtr allocateSampler(const ompl::base::StateSpace *space) const {
         // specify which deterministic sequence to use, here: HaltonSequence
         return std::make_shared<ompl::base::SE2DeterministicStateSampler>(
             space, std::make_shared<ompl::base::HaltonSequence>(3));
     }
-
-    ompl::PPM ppm_;
-    std::string ppm_file_;
-    size_t width_;
-    size_t height_;
-
-    og::SimpleSetupPtr ss_;
-    std::shared_ptr<og::PRMcustom> planner_;
 };
 
-int main(int /*argc*/, char ** /*argv*/)
-{
+int main(int /*argc*/, char ** /*argv*/) {
     ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
 
     const boost::filesystem::path pathResources(TEST_RESOURCES_DIR);
 
-    for (int iRun = 1; iRun <= 1; iRun++) {
+    for (int iRun = 500; iRun <= 2500; iRun += 500) {
         srand(1);
 
         std::cout << "### RUN " << iRun << std::endl;
-        Plane2DEnvironment env((pathResources / "ppm/floor.ppm").string());
+        Plane2DEnvironment env((pathResources / "ppm/floor.ppm").string(), "pd.bin");
 
-        env.construct(2000);
+        env.construct(iRun);
         std::shared_ptr<ompl::geometric::PathGeometric> path;
 
         path = env.query(10, 10, thetaRight, 777, 1265, thetaDown);
-        if (path != nullptr)
-        {
+        if (path != nullptr) {
             env.savePath(path, "result_demo.ppm");
         }
 
         path = env.query(20, 20, thetaRight, 600, 1000, thetaDown);
-        if (path != nullptr)
-        {
+        if (path != nullptr) {
             env.savePath(path, "result_demo2.ppm");
         }
     }
