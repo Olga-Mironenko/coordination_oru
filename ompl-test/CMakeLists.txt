@@ -19,7 +19,10 @@ target_link_libraries(Point2DPlanning PRIVATE
         Boost::filesystem
         Boost::system)
 
-add_executable(PlannerData PlannerData.cpp)
+add_executable(PlannerData
+        PlannerData.cpp
+        PRMcustom.cpp
+        PRMcustom.h)
 target_link_libraries(PlannerData PRIVATE
         ompl::ompl
         Eigen3::Eigen

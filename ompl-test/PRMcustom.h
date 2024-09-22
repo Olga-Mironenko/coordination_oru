@@ -295,6 +295,10 @@ namespace ompl
                 return nn_;
             }
 
+            const base::State *vertexToState(const int index) const {
+                return stateProperty_[index];
+            }
+
         protected:
             /** \brief Free all the memory allocated by the planner */
             void freeMemory();

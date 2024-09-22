@@ -30,46 +30,6 @@ constexpr double thetaUp = M_PI_2;
 constexpr double thetaRight = 0;
 constexpr double thetaLeft = M_PI;
 
-std::vector<std::tuple<double, double, double> > plannerDataToPoints(const ob::PlannerData& pd)
-{
-    std::ostringstream streamGraphml;
-    pd.printGraphML(streamGraphml);
-
-    // std::cout << streamGraphml.str() << std::endl;
-
-    std::string s = streamGraphml.str();
-    const std::string prefix = "<data key=\"key0\">";
-    const std::string postfix = "</data>";
-
-    std::vector<std::tuple<double, double, double> > points;
-
-    size_t last = 0;
-    size_t next = 0;
-    while ((next = s.find('\n', last)) != std::string::npos) {
-        std::string line = s.substr(last, next - last);
-        const size_t indexPrefix = line.find(prefix);
-        if (indexPrefix != std::string::npos) {
-            const size_t indexPostfix = line.find(postfix);
-            assert(indexPostfix != std::string::npos);
-            std::string pair = line.substr(indexPrefix + prefix.size(), indexPostfix - indexPrefix - prefix.size());
-
-            const size_t indexComma1 = pair.find(',');
-            const size_t indexComma2 = pair.find(',', indexComma1 + 1);
-            assert(indexComma1 != std::string::npos);
-            double x = strtod(pair.substr(0, indexComma1).c_str(), nullptr);
-            double y = strtod(pair.substr(indexComma1 + 1, indexComma2).c_str(), nullptr);
-            double t = strtod(pair.substr(indexComma2 + 1).c_str(), nullptr);
-
-            // std::cout << x << ", " << y << ", " << t << std::endl;
-
-            points.push_back(std::make_tuple(x, y, t));
-        }
-        last = next + 1;
-    }
-
-    return points;
-}
-
 // Used for A* search.  Computes the heuristic distance from vertex v1 to the goal
 ob::Cost distanceHeuristic(ob::PlannerData::Graph::Vertex v1,
                            const ob::GoalState* goal,
@@ -80,24 +40,16 @@ ob::Cost distanceHeuristic(ob::PlannerData::Graph::Vertex v1,
     return ob::Cost(obj->costToGo(plannerDataVertices[v1]->getState(), goal));
 }
 
+// TODO: make things `protected`
 class Plane2DEnvironment
 {
 public:
     explicit Plane2DEnvironment(const std::string &ppm_file)
     {
         ppm_file_ = ppm_file;
-        try
-        {
-            ppm_.loadFile(ppm_file_.c_str());
-        }
-        catch (ompl::Exception &ex)
-        {
-            OMPL_ERROR("Unable to load %s.\n%s", ppm_file.c_str(), ex.what());
-            return;
-        }
+    }
 
-        is_constructed_ = false;
-
+    void createSimpleSetup() {
         // TODO: an IntegerStateSpace
         ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(10));
         width_ = ppm_.getWidth();
@@ -110,27 +62,19 @@ public:
         space->as<ob::SE2StateSpace>()->setBounds(bounds);
         ss_ = std::make_shared<og::SimpleSetup>(space);
 
-        const auto spaceInformation = ss_->getSpaceInformation();
-
-        const double minWallWidth = 1.0;
-        const double resolution = minWallWidth / space->getMaximumExtent();
-        spaceInformation->setStateValidityCheckingResolution(resolution);
-
-        // set state validity checking for this space
-        ss_->setStateValidityChecker([this](const ob::State *state) { return isStateValid(state); });
-
-        // space->setup();
-        // space->printSettings(std::cout);
-
-        planner_ = std::make_shared<og::PRMcustom>(spaceInformation, true);
-        ss_->setPlanner(planner_);
-
         // set the deterministic sampler
         space->setStateSamplerAllocator(
             std::bind(
                 &Plane2DEnvironment::allocateSampler,
                 this, std::placeholders::_1
             ));
+
+        // set state validity checking for this space
+        ss_->setStateValidityChecker([this](const ob::State *state) { return isStateValid(state); });
+
+        const double minWallWidth = 1.0;
+        const double resolution = minWallWidth / space->getMaximumExtent();
+        ss_->getSpaceInformation()->setStateValidityCheckingResolution(resolution);
     }
 
     void dumpGraphML(const std::string &filename) const {
@@ -151,28 +95,36 @@ public:
     }
 
     void loadPlannerData(const std::string &filename) {
+        createSimpleSetup();
+
         ob::PlannerDataStorage pdStorage;
         ob::PlannerData pd(ss_->getSpaceInformation());
+
+        clock_t start = clock();
         pdStorage.load(filename.c_str(), pd);
+        clock_t end = clock();
+        OMPL_INFORM("(pdStorage.load took %.6f s)", static_cast<double>(end - start)/ CLOCKS_PER_SEC);
 
         planner_ = std::make_shared<og::PRMcustom>(pd, true);
+        ss_->setPlanner(planner_);
     }
 
     void construct(const int numIterations)
     {
-        assert(ss_);
-
-        planner_->clear();
-
         OMPL_INFORM("*** CONSTRUCTION:");
+
+        ppm_.loadFile(ppm_file_.c_str());
+        createSimpleSetup();
+        planner_ = std::make_shared<og::PRMcustom>(ss_->getSpaceInformation(), true);
+        ss_->setPlanner(planner_);
+        ss_->setup();
+
         const clock_t start = clock();
         planner_->constructRoadmap(numIterations);
         const clock_t end = clock();
         OMPL_INFORM("Construction took %.6f s", static_cast<double>(end - start)/ CLOCKS_PER_SEC);
 
         dumpPlannerData("pd.bin");
-
-        is_constructed_ = true;
     }
 
     void setStartGoal(
@@ -193,42 +145,42 @@ public:
         goal[1] = yGoal;
         goal[2] = tGoal;
 
-        ss_->getProblemDefinition()->clearSolutionPaths();
-        ss_->getProblemDefinition()->clearSolutionNonExistenceProof();
-        ss_->getProblemDefinition()->setStartAndGoalStates(start, goal);
         planner_->setProblemDefinition(ss_->getProblemDefinition());
+        planner_->getProblemDefinition()->clearSolutionPaths();
+        planner_->getProblemDefinition()->clearSolutionNonExistenceProof();
+        planner_->getProblemDefinition()->setStartAndGoalStates(start, goal);
     }
 
     // Based on `readPlannerData()` from `ompl/demos/PlannerData.cpp`.
-    void pdToPath(ob::PlannerData &data, og::PathGeometric &path)
+    std::shared_ptr<ompl::geometric::PathGeometric> pdToPath(ob::PlannerData &pd) const
     {
         auto si = ss_->getSpaceInformation();
 
         // Re-extract a shortest path from the loaded planner data
-        assert(data.numStartVertices() > 0 && data.numGoalVertices() > 0);
+        assert(pd.numStartVertices() == 1 && pd.numGoalVertices() == 1);
 
         // Create an optimization objective for optimizing path length in A*
         ob::PathLengthOptimizationObjective opt(si);
 
         // Computing the weights of all edges based on the state space distance
         // This is not done by default for efficiency
-        data.computeEdgeWeights(opt);
+        pd.computeEdgeWeights(opt);
 
         // Getting a handle to the raw Boost.Graph data
-        ob::PlannerData::Graph::Type& graph = data.toBoostGraph();
+        ob::PlannerData::Graph::Type& graph = pd.toBoostGraph();
 
         // Now we can apply any Boost.Graph algorithm.  How about A*!
 
         // create a predecessor map to store A* results in
-        boost::vector_property_map<ob::PlannerData::Graph::Vertex> prev(data.numVertices());
+        boost::vector_property_map<ob::PlannerData::Graph::Vertex> prev(pd.numVertices());
 
         // Retrieve a property map with the PlannerDataVertex object pointers for quick lookup
         boost::property_map<ob::PlannerData::Graph::Type, vertex_type_t>::type vertices = get(vertex_type_t(), graph);
 
         // Run A* search over our planner data
         ob::GoalState goal(si);
-        goal.setState(data.getGoalVertex(0).getState());
-        ob::PlannerData::Graph::Vertex start = boost::vertex(data.getStartIndex(0), graph);
+        goal.setState(pd.getGoalVertex(0).getState());
+        ob::PlannerData::Graph::Vertex start = boost::vertex(pd.getStartIndex(0), graph);
         boost::astar_visitor<boost::null_visitor> dummy_visitor;
         boost::astar_search(graph, start,
             [&goal, &opt, &vertices](ob::PlannerData::Graph::Vertex v1) { return distanceHeuristic(v1, &goal, &opt, vertices); },
@@ -240,109 +192,50 @@ public:
             visitor(dummy_visitor));
 
         // Extracting the path
-        path.clear();
-        for (ob::PlannerData::Graph::Vertex pos = boost::vertex(data.getGoalIndex(0), graph);
+        auto path = std::make_shared<og::PathGeometric>(si);
+        for (ob::PlannerData::Graph::Vertex pos = boost::vertex(pd.getGoalIndex(0), graph);
              prev[pos] != pos;
              pos = prev[pos])
         {
-            path.append(vertices[pos]->getState());
+            path->append(vertices[pos]->getState());
         }
-        path.append(vertices[start]->getState());
-        path.reverse();
+        path->append(vertices[start]->getState());
+        path->reverse();
 
         // print the path to screen
         //path.print(std::cout);
-        std::cout << "Found stored solution with " << path.getStateCount() << " states and length " << path.length() << std::endl;
+        std::cout << "Found stored solution with " << path->getStateCount() << " states and length " << path->length() << std::endl;
+        return path;
     }
 
-    /*
-     * - load "pd.bin"
-     * - do initialization of `solve()`
-     * - do the search of `readPlannerData()`
-     */
-    bool query(
-        unsigned int xStart, unsigned int yStart, double tStart,
-        unsigned int xGoal, unsigned int yGoal, double tGoal,
-        og::PathGeometric &path)
-    {
-        OMPL_INFORM("*** QUERYING:");
-
-        loadPlannerData("pd.bin");
-
-        setStartGoal(xStart, yStart, tStart, xGoal, yGoal, tGoal);
-
-        const ob::PlannerStatus plannerStatusInit = planner_->initializeForSolve(ob::IterationTerminationCondition(0));
-        if (plannerStatusInit != ob::PlannerStatus::UNKNOWN) {
-            return false;
-        }
-
-        ob::PlannerData pd(ss_->getSpaceInformation());
-        planner_->getPlannerData(pd);
-        pdToPath(pd, path);
-        return true;
-    }
-
-    /*
-    bool plan(
+    std::shared_ptr<ompl::geometric::PathGeometric> query(
         unsigned int xStart, unsigned int yStart, double tStart,
         unsigned int xGoal, unsigned int yGoal, double tGoal)
     {
-        assert(ss_);
-        assert(is_constructed_);
+        OMPL_INFORM("*** QUERYING:");
 
-        OMPL_INFORM("*** PLANNING:");
+        ppm_.loadFile(ppm_file_.c_str());
 
+        clock_t start = clock();
+        loadPlannerData("pd.bin");
         setStartGoal(xStart, yStart, tStart, xGoal, yGoal, tGoal);
-        const size_t numStarts = 1;
-        const size_t numGoals = 1;
+        const ob::PlannerStatus plannerStatusInit = planner_->initializeForSolve(ob::IterationTerminationCondition(0));
+        clock_t end = clock();
+        OMPL_INFORM("Query: initialization took %.6f s", static_cast<double>(end - start)/ CLOCKS_PER_SEC);
 
-        OMPL_INFORM("%d vertices", planner_->getRoadmap().m_vertices.size());
-        planner_->clearQuery();
-
-
-        OMPL_INFORM("Solution finding:");
-        planner_->solve(ob::IterationTerminationCondition(1), true);
-        OMPL_INFORM("%d vertices in the roadmap", planner_->getRoadmap().m_vertices.size());
-
-        auto roadmap = planner_->getRoadmap();
-        int numPointsInRoadmap = 0;
-        for (int i = 0; i < roadmap.m_vertices.size(); ++i) {
-            auto vertex = roadmap.m_vertices[i];
-            size_t numEdges = vertex.m_out_edges.size();
-            bool isPoint = i < numStarts + numGoals || numEdges > 0;
-            if (isPoint) {
-                numPointsInRoadmap++;
-            }
-
-            auto state = vertex.m_property.m_value;
-            double x = state->as<ob::RealVectorStateSpace::StateType>()->values[0];
-            double y = state->as<ob::RealVectorStateSpace::StateType>()->values[1];
-            OMPL_DEBUG("roadmap vertex %d: x=%.1f, y=%.1f, numEdges=%d, isPoint=%d", i, x, y, numEdges, isPoint ? 1 : 0);
+        if (plannerStatusInit != ob::PlannerStatus::UNKNOWN) {
+            return nullptr;
         }
 
-        dumpGraphML("pd.graphml");
-
+        start = clock();
         ob::PlannerData pd(ss_->getSpaceInformation());
-        ss_->getPlannerData(pd);
+        planner_->getPlannerData(pd);
+        std::shared_ptr<ompl::geometric::PathGeometric> path = pdToPath(pd);
+        end = clock();
+        OMPL_INFORM("Query: path finding took %.6f s", static_cast<double>(end - start)/ CLOCKS_PER_SEC);
 
-        points_ = plannerDataToPoints(pd);
-        OMPL_INFORM("%d points in the planner data", points_.size());
-        for (int i = 0; i < points_.size(); ++i) {
-            auto point = points_[i];
-            // OMPL_INFORM("planner data point %d: x=%.1f, y=%.1f, t=%.1f",
-            //     i, std::get<0>(point), std::get<1>(point), std::get<2>(point));
-        }
-        assert(points_.size() <= roadmap.m_vertices.size());
-        // assert(points_.size() == numPointsInRoadmap);
-
-        if (ss_->haveSolutionPath()) {
-            OMPL_INFORM("Found a solution");
-            return true;
-        }
-        OMPL_WARN("Not found a solution");
-        return false;
+        return path;
     }
-    */
 
     void setColor(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
         assert(0 <= x && x < width_);
@@ -354,32 +247,42 @@ public:
         c.blue = b;
     }
 
-    void savePath(og::PathGeometric &path, const char *filename)
+    void savePath(std::shared_ptr<ompl::geometric::PathGeometric> path, const char *filename)
     {
-        path.interpolate(); // TODO: why is it needed?
-
         ppm_.loadFile(ppm_file_.c_str());
 
-        for (std::size_t i = 0; i < path.getStateCount(); ++i)
+        path->interpolate();
+        for (std::size_t i = 0; i < path->getStateCount(); ++i)
         {
-            const auto state = path.getState(i)->as<ob::ReedsSheppStateSpace::StateType>();
+            const auto state = path->getState(i)->as<ob::ReedsSheppStateSpace::StateType>();
             const int x = static_cast<int>(state->getX());
             const int y = static_cast<int>(state->getY());
-
-            assert(0 <= x && x < width_);
-            assert(0 <= y && y < height_);
 
             setColor(x, y, 255, 0, 0);
         }
 
-        for (const auto point : points_) {
-            const int x = static_cast<int>(std::get<0>(point));
-            const int y = static_cast<int>(std::get<1>(point));
-            const double t = std::get<2>(point);
+        ob::PlannerData pd(ss_->getSpaceInformation());
+        planner_->getPlannerData(pd);
+        // std::cout << "starts=" << pd.numStartVertices() << ", goals=" << pd.numGoalVertices() << std::endl;
+        // ob::PlannerData::Graph::Type& graph = pd.toBoostGraph();
+
+        for (int i = 0; i < pd.numVertices(); i++) {
+            const auto v = pd.getVertex(i);
+
+            std::vector<unsigned int> neighbor_indices;
+            pd.getEdges(i, neighbor_indices);
+            if (neighbor_indices.size() == 0) {
+                continue;
+            }
+
+            const auto state = planner_->vertexToState(i)->as<ob::ReedsSheppStateSpace::StateType>();
+            const int x = static_cast<int>(state->getX());
+            const int y = static_cast<int>(state->getY());
+            const double t = state->getYaw();
 
             assert(0 <= x && x < width_);
             assert(0 <= y && y < height_);
-            // assert(-M_PI_2 <= t && t < M_PI_2);
+            assert(-M_PI <= t && t <= M_PI); // ?
 
             const int d = 2;
             const int xMin = std::max(0, x - d);
@@ -408,11 +311,6 @@ public:
         ppm_.saveFile(filename);
     }
 
-    og::PathGeometric makeEmptyPath()
-    {
-        return og::PathGeometric(ss_->getSpaceInformation());
-    }
-
 private:
     bool isStateValid(const ob::State *statePtr) const
     {
@@ -433,21 +331,20 @@ private:
         return isValid;
     }
 
-    ob::StateSamplerPtr allocateSampler(const ompl::base::StateSpace *space)
+    ob::StateSamplerPtr allocateSampler(const ompl::base::StateSpace *space) const
     {
         // specify which deterministic sequence to use, here: HaltonSequence
         return std::make_shared<ompl::base::SE2DeterministicStateSampler>(
             space, std::make_shared<ompl::base::HaltonSequence>(3));
     }
 
-    og::SimpleSetupPtr ss_;
-    size_t width_;
-    size_t height_;
     ompl::PPM ppm_;
     std::string ppm_file_;
+    size_t width_;
+    size_t height_;
+
+    og::SimpleSetupPtr ss_;
     std::shared_ptr<og::PRMcustom> planner_;
-    std::vector<std::tuple<double, double, double> > points_;
-    bool is_constructed_;
 };
 
 int main(int /*argc*/, char ** /*argv*/)
@@ -462,15 +359,17 @@ int main(int /*argc*/, char ** /*argv*/)
         std::cout << "### RUN " << iRun << std::endl;
         Plane2DEnvironment env((pathResources / "ppm/floor.ppm").string());
 
-        env.construct(1000);
-        og::PathGeometric path = env.makeEmptyPath();
+        env.construct(2000);
+        std::shared_ptr<ompl::geometric::PathGeometric> path;
 
-        if (env.query(10, 10, thetaRight, 777, 1265, thetaDown, path))
+        path = env.query(10, 10, thetaRight, 777, 1265, thetaDown);
+        if (path != nullptr)
         {
             env.savePath(path, "result_demo.ppm");
         }
 
-        if (env.query(20, 20, thetaRight, 600, 1000, thetaDown, path))
+        path = env.query(20, 20, thetaRight, 600, 1000, thetaDown);
+        if (path != nullptr)
         {
             env.savePath(path, "result_demo2.ppm");
         }

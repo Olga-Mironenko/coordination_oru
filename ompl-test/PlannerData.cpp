@@ -39,11 +39,14 @@
 #include <ompl/base/PlannerDataGraph.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
+#include <ompl/geometric/planners/prm/PRM.h>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/base/goals/GoalState.h>
 
 #include <boost/graph/astar_search.hpp>
 #include <iostream>
+
+#include "PRMcustom.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -81,6 +84,9 @@ void planWithSimpleSetup()
     // define a simple setup class
     og::SimpleSetup ss(space);
 
+    // auto planner = std::make_shared<og::PRMcustom>(ss.getSpaceInformation(), true);
+    // ss.setPlanner(planner);
+
     // set state validity checking for this space
     ss.setStateValidityChecker([](const ob::State *state) { return isStateValid(state); });
 
@@ -113,7 +119,7 @@ void planWithSimpleSetup()
         ob::PlannerData data(ss.getSpaceInformation());
         ss.getPlannerData(data);
 
-        data.printGraphviz();
+        // data.printGraphviz();
 
         ob::PlannerDataStorage dataStorage;
         dataStorage.store(data, "myPlannerData");
