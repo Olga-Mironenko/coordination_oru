@@ -19,7 +19,7 @@ def main(filename_in="cmake-build-debug/pd.graphml"):
     pos = graph.new_vertex_property("vector<double>")
     for i_vertex, coordstring in enumerate(coordstrings):
         x, y = [float(value) for value in coordstring.split(",")][:2]
-        pos[i_vertex] = (x, -y)
+        pos[i_vertex] = (x, y)
 
     # Write some interesting statistics
     avgdeg, stddevdeg = gt.vertex_average(graph, "total")
@@ -92,7 +92,7 @@ def main(filename_in="cmake-build-debug/pd.graphml"):
         vertex_size=vertexsize, vertex_fill_color=colorprops, pos=pos,
         edge_pen_width=edgesize, edge_color=edgecolor,
         output_size=(1859, 1658),
-        output=filename_out,
+        # output=filename_out,
     )
     print('\nDone')
 

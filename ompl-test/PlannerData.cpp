@@ -129,13 +129,13 @@ void planWithSimpleSetup()
 }
 
 // Used for A* search.  Computes the heuristic distance from vertex v1 to the goal
-ob::Cost distanceHeuristic(ob::PlannerData::Graph::Vertex v1,
+ob::Cost distanceHeuristic(ob::PlannerData::Graph::Vertex v,
                            const ob::GoalState* goal,
-                           const ob::OptimizationObjective* obj,
+                           const ob::OptimizationObjective* opt,
                            const boost::property_map<ob::PlannerData::Graph::Type,
-                           vertex_type_t>::type& plannerDataVertices)
+                           vertex_type_t>::type& vertices)
 {
-    return ob::Cost(obj->costToGo(plannerDataVertices[v1]->getState(), goal));
+    return ob::Cost(opt->costToGo(vertices[v]->getState(), goal));
 }
 
 void readPlannerData()
