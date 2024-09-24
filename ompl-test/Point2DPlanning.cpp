@@ -31,13 +31,6 @@ constexpr double thetaUp = M_PI_2;
 constexpr double thetaRight = 0;
 constexpr double thetaLeft = M_PI;
 
-std::string stateToString(const ob::State *stateRaw) {
-    const auto state = stateRaw->as<ob::SE2StateSpace::StateType>();
-    std::stringstream ss;
-    ss << "(" << state->getX() << ", " << state->getY() << ", " << state->getYaw() << ")";
-    return ss.str();
-}
-
 class Plane2DEnvironment {
 protected:
     std::string pathPD_;
@@ -83,6 +76,14 @@ protected:
     }
 
 protected:
+    static std::string stateToString(const ob::State *stateRaw) {
+        const auto state = stateRaw->as<ob::SE2StateSpace::StateType>();
+        std::stringstream ss;
+        ss << "(" << state->getX() << ", " << state->getY() << ", " << state->getYaw() << ")";
+        return ss.str();
+    }
+
+protected:
     void dumpGraphML(const std::string &filename) const {
         ob::PlannerData pd(ss_->getSpaceInformation());
         ss_->getPlannerData(pd);
@@ -96,6 +97,14 @@ protected:
     void dumpPlannerData() const {
         ob::PlannerData pd(ss_->getSpaceInformation());
         ss_->getPlannerData(pd);
+
+        // Computing the weights of all edges based on the state space distance
+        // This is not done by default for efficiency
+        // const ob::PathLengthOptimizationObjective opt(ss_->getSpaceInformation());
+        // pd.computeEdgeWeights(opt);
+        // with that in findPath: 2.5 s for the first query
+        // without that in findPath: 9.5 s for the first query
+        // with that in construct: 9.5 s for the first query
 
         ob::PlannerDataStorage pdStorage;
         pdStorage.store(pd, pathPD_.c_str());
@@ -199,7 +208,10 @@ protected:
 
         // Computing the weights of all edges based on the state space distance
         // This is not done by default for efficiency
-        pd.computeEdgeWeights(opt); // TODO: don't do that (compute on the fly instead)
+        pd.computeEdgeWeights(opt);
+        // with that in findPath: 2.5 s for the first query
+        // without that in findPath: 9.5 s for the first query
+        // with that in construct: 9.5 s for the first query
 
         // Getting a handle to the raw Boost.Graph data
         ob::PlannerData::Graph::Type &graphOrig = pd.toBoostGraph();
