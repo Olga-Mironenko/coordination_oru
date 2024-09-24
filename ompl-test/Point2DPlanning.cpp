@@ -31,11 +31,64 @@ constexpr double thetaUp = M_PI_2;
 constexpr double thetaRight = 0;
 constexpr double thetaLeft = M_PI;
 
+class Map {
+public:
+    virtual void loadFile(const std::string &filename) = 0;
+    virtual void saveFile(const std::string &filename) = 0;
+    virtual size_t getWidth() const = 0;
+    virtual size_t getHeight() const = 0;
+
+    struct Color {
+        unsigned char red;
+        unsigned char green;
+        unsigned char blue;
+    };
+
+    virtual Color getPixel(size_t y, size_t x) const = 0;
+    virtual void setPixel(size_t y, size_t x, const Color &color) = 0;
+
+    virtual ~Map() = default;
+};
+
+class MapPPM : public Map {
+private:
+    ompl::PPM ppm_;
+
+public:
+    void loadFile(const std::string &filename) override {
+        ppm_.loadFile(filename.c_str());
+    }
+
+    void saveFile(const std::string &filename) override {
+        ppm_.saveFile(filename.c_str());
+    }
+
+    size_t getWidth() const override {
+        return ppm_.getWidth();
+    }
+
+    size_t getHeight() const override {
+        return ppm_.getHeight();
+    }
+
+    Color getPixel(size_t y, size_t x) const override {
+        const ompl::PPM::Color &c = ppm_.getPixel(y, x);
+        return {c.red, c.green, c.blue};
+    }
+
+    void setPixel(size_t y, size_t x, const Color &color) override {
+        ompl::PPM::Color &c = ppm_.getPixel(y, x);
+        c.red = color.red;
+        c.green = color.green;
+        c.blue = color.blue;
+    }
+};
+
 class Plane2DEnvironment {
 protected:
     std::string pathPD_;
 
-    ompl::PPM map_; // the current map
+    std::shared_ptr<Map> map_; // the current map
     size_t width_;
     size_t height_;
 
@@ -44,14 +97,14 @@ protected:
 
 public:
     explicit Plane2DEnvironment(std::string pathPD_)
-        : pathPD_(std::move(pathPD_)) {
+        : pathPD_(std::move(pathPD_)), map_(std::make_shared<MapPPM>()) {
     }
 
 protected:
     void createSimpleSetup() {
         ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(10));
-        width_ = map_.getWidth();
-        height_ = map_.getHeight();
+        width_ = map_->getWidth();
+        height_ = map_->getHeight();
         ob::RealVectorBounds bounds(2);
         bounds.low[0] = 0;
         bounds.low[1] = 0;
@@ -130,7 +183,7 @@ public:
     void construct(const std::string &filenameMap, const int numIterations) {
         OMPL_INFORM("*** CONSTRUCTION:");
 
-        map_.loadFile(filenameMap.c_str());
+        map_->loadFile(filenameMap.c_str());
         createSimpleSetup();
         planner_ = std::make_shared<og::PRMcustom>(ss_->getSpaceInformation(), true);
         ss_->setPlanner(planner_);
@@ -286,7 +339,7 @@ public:
         unsigned int xGoal, unsigned int yGoal, double tGoal) {
         OMPL_INFORM("*** QUERYING:");
 
-        map_.loadFile(filenameMap.c_str());
+        map_->loadFile(filenameMap.c_str());
 
         clock_t start = clock();
         loadPlannerData();
@@ -311,14 +364,12 @@ public:
     }
 
 protected:
-    void setColor(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
+    void setColor(int x, int y, unsigned char r, unsigned char g, unsigned char b) const {
         assert(0 <= x && x < width_);
         assert(0 <= y && y < height_);
 
-        ompl::PPM::Color &c = map_.getPixel(y, x);
-        c.red = r;
-        c.green = g;
-        c.blue = b;
+        const Map::Color color = {r, g, b};
+        map_->setPixel(y, x, color);
     }
 
 public:
@@ -327,7 +378,7 @@ public:
         const std::shared_ptr<ompl::geometric::PathGeometric> &path,
         const std::string &filenameResult
         ) {
-        map_.loadFile(filenameMap.c_str());
+        map_->loadFile(filenameMap);
 
         path->interpolate();
         for (std::size_t i = 0; i < path->getStateCount(); ++i) {
@@ -385,7 +436,7 @@ public:
             setColor(x, y, 0, 127, 0);
         }
 
-        map_.saveFile(filenameResult.c_str());
+        map_->saveFile(filenameResult);
     }
 
 protected:
@@ -393,16 +444,13 @@ protected:
         const auto state = statePtr->as<ob::ReedsSheppStateSpace::StateType>();
         const int x = static_cast<int>(state->getX());
         const int y = static_cast<int>(state->getY());
-        // OMPL_DEBUG("isStateValue(%d, %d)", x, y);
 
         if (!(0 <= x && x < width_ && 0 <= y && y < height_)) {
             return false;
         }
 
-        const ompl::PPM::Color &c = map_.getPixel(y, x);
+        Map::Color c = map_->getPixel(y, x);
         const bool isValid = c.red > 127 && c.green > 127 && c.blue > 127;
-
-        // OMPL_INFORM("isStateValid(%d,%d) -> %d", x, y, isValid ? 1 : 0);
 
         return isValid;
     }
