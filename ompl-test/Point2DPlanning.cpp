@@ -5,7 +5,6 @@
 #include <boost/graph/graphml.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/graph/astar_search.hpp>
-#include <utility>
 
 #include <ompl/base/PlannerData.h>
 #include <ompl/base/PlannerDataStorage.h>
@@ -31,10 +30,15 @@ constexpr double thetaUp = M_PI_2;
 constexpr double thetaRight = 0;
 constexpr double thetaLeft = M_PI;
 
-class Map {
+class Conditions {
 public:
+    virtual size_t getNumIterations() const = 0;
+
+    virtual std::string computeFilenamePD() const = 0;
+    
     virtual void loadFile(const std::string &filename) = 0;
-    virtual void saveFile(const std::string &filename) = 0;
+    virtual void saveFile(const std::string &filenameResult) = 0;
+
     virtual size_t getWidth() const = 0;
     virtual size_t getHeight() const = 0;
 
@@ -45,22 +49,37 @@ public:
     };
 
     virtual Color getPixel(size_t y, size_t x) const = 0;
+    virtual bool isOccupied(size_t y, size_t x) const = 0;
+
     virtual void setPixel(size_t y, size_t x, const Color &color) = 0;
 
-    virtual ~Map() = default;
+    virtual ~Conditions() = default;
 };
 
-class MapPPM : public Map {
-private:
+class ConditionsPPM : public Conditions {
+public:
+    size_t numIterations_;
     ompl::PPM ppm_;
 
-public:
+    ConditionsPPM(size_t numIterations, const std::string &filenamePPM)
+        : numIterations_(numIterations) {
+        ConditionsPPM::loadFile(filenamePPM);
+    }
+
+    size_t getNumIterations() const {
+        return numIterations_;
+    }
+
+    std::string computeFilenamePD() const override {
+        return "pd.bin";
+    }
+
     void loadFile(const std::string &filename) override {
         ppm_.loadFile(filename.c_str());
     }
 
-    void saveFile(const std::string &filename) override {
-        ppm_.saveFile(filename.c_str());
+    void saveFile(const std::string &filenameResult) override {
+        ppm_.saveFile(filenameResult.c_str());
     }
 
     size_t getWidth() const override {
@@ -76,6 +95,11 @@ public:
         return {c.red, c.green, c.blue};
     }
 
+    bool isOccupied(size_t y, size_t x) const override {
+        const Conditions::Color c = getPixel(y, x);
+        return ! (c.red > 127 && c.green > 127 && c.blue > 127);
+    }
+
     void setPixel(size_t y, size_t x, const Color &color) override {
         ompl::PPM::Color &c = ppm_.getPixel(y, x);
         c.red = color.red;
@@ -86,30 +110,22 @@ public:
 
 class Plane2DEnvironment {
 protected:
-    std::string pathPD_;
-
-    std::shared_ptr<Map> map_; // the current map
-    size_t width_;
-    size_t height_;
+    std::shared_ptr<Conditions> conditions_;
 
     og::SimpleSetupPtr ss_;
     std::shared_ptr<og::PRMcustom> planner_;
 
 public:
-    explicit Plane2DEnvironment(std::string pathPD_)
-        : pathPD_(std::move(pathPD_)), map_(std::make_shared<MapPPM>()) {
-    }
+    explicit Plane2DEnvironment() = default;
 
 protected:
     void createSimpleSetup() {
         ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(10));
-        width_ = map_->getWidth();
-        height_ = map_->getHeight();
         ob::RealVectorBounds bounds(2);
         bounds.low[0] = 0;
         bounds.low[1] = 0;
-        bounds.high[0] = width_;
-        bounds.high[1] = height_;
+        bounds.high[0] = conditions_->getWidth();
+        bounds.high[1] = conditions_->getHeight();
         space->as<ob::SE2StateSpace>()->setBounds(bounds);
         ss_ = std::make_shared<og::SimpleSetup>(space);
 
@@ -160,7 +176,7 @@ protected:
         // with that in construct: 9.5 s for the first query
 
         ob::PlannerDataStorage pdStorage;
-        pdStorage.store(pd, pathPD_.c_str());
+        pdStorage.store(pd, conditions_->computeFilenamePD().c_str());
     }
 
 protected:
@@ -171,7 +187,7 @@ protected:
         ob::PlannerData pd(ss_->getSpaceInformation());
 
         clock_t start = clock();
-        pdStorage.load(pathPD_.c_str(), pd);
+        pdStorage.load(conditions_->computeFilenamePD().c_str(), pd);
         clock_t end = clock();
         OMPL_INFORM("(pdStorage.load took %.6f s)", static_cast<double>(end - start) / CLOCKS_PER_SEC);
 
@@ -179,22 +195,32 @@ protected:
         ss_->setPlanner(planner_);
     }
 
-public:
-    void construct(const std::string &filenameMap, const int numIterations) {
+protected:
+    void construct() {
         OMPL_INFORM("*** CONSTRUCTION:");
 
-        map_->loadFile(filenameMap.c_str());
         createSimpleSetup();
         planner_ = std::make_shared<og::PRMcustom>(ss_->getSpaceInformation(), true);
         ss_->setPlanner(planner_);
         ss_->setup();
 
         const clock_t start = clock();
-        planner_->constructRoadmap(numIterations);
+        planner_->constructRoadmap(conditions_->getNumIterations());
         const clock_t end = clock();
         OMPL_INFORM("Construction took %.6f s", static_cast<double>(end - start) / CLOCKS_PER_SEC);
 
         dumpPlannerData();
+    }
+
+public:
+    void constructIfNeeded(std::shared_ptr<Conditions> conditions) {
+        // Make a filename based on `conditions_`.
+        // If the file doesn't exist, call `construct`.
+        conditions_ = conditions;
+        std::string filenamePD = conditions_->computeFilenamePD();
+        if (! boost::filesystem::exists(filenamePD)) {
+            construct();
+        }
     }
 
 protected:
@@ -202,15 +228,15 @@ protected:
         unsigned int xStart, unsigned int yStart, double tStart,
         unsigned int xGoal, unsigned int yGoal, double tGoal) {
         ob::ScopedState<> start(ss_->getStateSpace());
-        assert(xStart < width_);
-        assert(yStart < height_);
+        assert(xStart < conditions_->getWidth());
+        assert(yStart < conditions_->getHeight());
         start[0] = xStart;
         start[1] = yStart;
         start[2] = tStart;
 
         ob::ScopedState<> goal(ss_->getStateSpace());
-        assert(xGoal < width_);
-        assert(yGoal < height_);
+        assert(xGoal < conditions_->getWidth());
+        assert(yGoal < conditions_->getHeight());
         goal[0] = xGoal;
         goal[1] = yGoal;
         goal[2] = tGoal;
@@ -320,6 +346,7 @@ protected:
             path->append(vertices[pos]->getState());
         }
         if (path->getStateCount() == 0 && startIndex != goalIndex) {
+            OMPL_ERROR("Path not found");
             return nullptr;
         }
         path->append(vertices[startIndex]->getState());
@@ -334,12 +361,12 @@ protected:
 
 public:
     std::shared_ptr<ompl::geometric::PathGeometric> query(
-        const std::string &filenameMap,
+        std::shared_ptr<Conditions> conditions,
         unsigned int xStart, unsigned int yStart, double tStart,
         unsigned int xGoal, unsigned int yGoal, double tGoal) {
         OMPL_INFORM("*** QUERYING:");
 
-        map_->loadFile(filenameMap.c_str());
+        constructIfNeeded(conditions);
 
         clock_t start = clock();
         loadPlannerData();
@@ -349,6 +376,7 @@ public:
         OMPL_INFORM("Query: initialization took %.6f s", static_cast<double>(end - start) / CLOCKS_PER_SEC);
 
         if (plannerStatusInit != ob::PlannerStatus::UNKNOWN) {
+            OMPL_ERROR("Query: initialization failed, planner returned %s", plannerStatusInit.asString());
             return nullptr;
         }
 
@@ -365,20 +393,20 @@ public:
 
 protected:
     void setColor(int x, int y, unsigned char r, unsigned char g, unsigned char b) const {
-        assert(0 <= x && x < width_);
-        assert(0 <= y && y < height_);
+        assert(0 <= x && x < conditions_->getWidth());
+        assert(0 <= y && y < conditions_->getHeight());
 
-        const Map::Color color = {r, g, b};
-        map_->setPixel(y, x, color);
+        const Conditions::Color color = {r, g, b};
+        conditions_->setPixel(y, x, color);
     }
 
 public:
     void savePath(
-        const std::string &filenameMap,
+        std::shared_ptr<ConditionsPPM> conditions,
         const std::shared_ptr<ompl::geometric::PathGeometric> &path,
         const std::string &filenameResult
         ) {
-        map_->loadFile(filenameMap);
+        conditions_ = conditions;
 
         path->interpolate();
         for (std::size_t i = 0; i < path->getStateCount(); ++i) {
@@ -408,15 +436,15 @@ public:
             const int y = static_cast<int>(state->getY());
             const double t = state->getYaw();
 
-            assert(0 <= x && x < width_);
-            assert(0 <= y && y < height_);
+            assert(0 <= x && x < conditions_->getWidth());
+            assert(0 <= y && y < conditions_->getHeight());
             assert(-M_PI <= t && t <= M_PI); // ?
 
             const int d = 2;
             const int xMin = std::max(0, x - d);
-            const int xMax = std::min(static_cast<int>(width_) - 1, x + d);
+            const int xMax = std::min(static_cast<int>(conditions_->getWidth()) - 1, x + d);
             const int yMin = std::max(0, y - d);
-            const int yMax = std::min(static_cast<int>(height_) - 1, y + d);
+            const int yMax = std::min(static_cast<int>(conditions_->getHeight()) - 1, y + d);
 
             for (int xp = xMin; xp <= xMax; ++xp) {
                 for (int yp = yMin; yp <= yMax; ++yp) {
@@ -436,7 +464,7 @@ public:
             setColor(x, y, 0, 127, 0);
         }
 
-        map_->saveFile(filenameResult);
+        conditions_->saveFile(filenameResult);
     }
 
 protected:
@@ -445,14 +473,11 @@ protected:
         const int x = static_cast<int>(state->getX());
         const int y = static_cast<int>(state->getY());
 
-        if (!(0 <= x && x < width_ && 0 <= y && y < height_)) {
+        if (!(0 <= x && x < conditions_->getWidth() && 0 <= y && y < conditions_->getHeight())) {
             return false;
         }
 
-        Map::Color c = map_->getPixel(y, x);
-        const bool isValid = c.red > 127 && c.green > 127 && c.blue > 127;
-
-        return isValid;
+        return ! conditions_->isOccupied(y, x);
     }
 
     ob::StateSamplerPtr allocateSampler(const ob::StateSpace *space) const {
@@ -473,20 +498,23 @@ int main(int /*argc*/, char ** /*argv*/) {
         srand(1);
 
         std::cout << "### RUN " << iRun << std::endl;
-        Plane2DEnvironment env("pd.bin");
+        Plane2DEnvironment env;
 
-        // env.construct(filenameFloor, iRun);
+        std::shared_ptr<ConditionsPPM> conditionsPPM = std::make_shared<ConditionsPPM>(iRun, filenameFloor);
+        env.constructIfNeeded(conditionsPPM);
+
         std::shared_ptr<ompl::geometric::PathGeometric> path;
 
-        path = env.query(filenameFloorWithObstacle, 10, 10, thetaRight, 777, 1265, thetaDown);
-        // path = env.query(filenameFloorWithObstacle, 720, 900, thetaRight, 720, 1050, thetaDown);
+        conditionsPPM->loadFile(filenameFloorWithObstacle);
+        path = env.query(conditionsPPM, 10, 10, thetaRight, 777, 1265, thetaDown);
         if (path != nullptr) {
-            env.savePath(filenameFloorWithObstacle, path, "result_demo.ppm");
+            env.savePath(conditionsPPM, path, "result_demo.ppm");
         }
 
-        path = env.query(filenameFloor, 20, 20, thetaRight, 600, 1000, thetaDown);
+        conditionsPPM->loadFile(filenameFloor);
+        path = env.query(conditionsPPM, 20, 20, thetaRight, 600, 1000, thetaDown);
         if (path != nullptr) {
-            env.savePath(filenameFloor, path, "result_demo2.ppm");
+            env.savePath(conditionsPPM, path, "result_demo2.ppm");
         }
     }
 }
