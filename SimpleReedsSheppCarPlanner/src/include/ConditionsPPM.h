@@ -1,4 +1,4 @@
- #ifndef CONDITIONSPPM_H
+#ifndef CONDITIONSPPM_H
 #define CONDITIONSPPM_H
 
 #include <boost/graph/graphml.hpp>
@@ -7,6 +7,7 @@
 #include <ompl/util/PPM.h>
 
 #include "Conditions.h"
+#include "Footprint.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -16,9 +17,11 @@ public:
     size_t numIterations_;
     std::string mapId_;
     ompl::PPM ppm_;
+    std::shared_ptr<Footprint> footprint_;
 
-    ConditionsPPM(size_t numIterations, std::string mapId, const std::string &filenamePPMWithoutObstacles)
-        : numIterations_(numIterations), mapId_(std::move(mapId)) {
+    ConditionsPPM(size_t numIterations, std::string mapId, const std::string &filenamePPMWithoutObstacles,
+                  std::shared_ptr<Footprint> footprint)
+        : numIterations_(numIterations), mapId_(std::move(mapId)), footprint_(std::move(footprint)) {
         ConditionsPPM::loadFile(filenamePPMWithoutObstacles);
     }
 
@@ -48,17 +51,24 @@ public:
         return ppm_.getHeight();
     }
 
-    Color getPixel(size_t y, size_t x) const override {
+    Color getPixel(int y, int x) const override {
         const ompl::PPM::Color &c = ppm_.getPixel(y, x);
         return {c.red, c.green, c.blue};
     }
 
-    bool isOccupied(size_t y, size_t x) const override {
+    bool isPixelOccupied(int y, int x) const override {
+        if (! isPixelInBounds(y, x)) {
+            return true;
+        }
         const Conditions::Color c = getPixel(y, x);
-        return ! (c.red > 127 && c.green > 127 && c.blue > 127);
+        return !(c.red > 127 && c.green > 127 && c.blue > 127);
     }
 
-    void setPixel(size_t y, size_t x, const Color &color) override {
+    bool isFootprintOccupied(double x, double y, double t) const override {
+        return ! footprint_->isValid(this, x, y, t);
+    }
+
+    void setPixel(int y, int x, const Color &color) override {
         ompl::PPM::Color &c = ppm_.getPixel(y, x);
         c.red = color.red;
         c.green = color.green;

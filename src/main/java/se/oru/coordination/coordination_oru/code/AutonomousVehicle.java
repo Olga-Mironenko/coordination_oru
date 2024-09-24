@@ -46,10 +46,10 @@ public class AutonomousVehicle extends AbstractVehicle {
 //        if (true) {
         if (rsp == null) {
             rsp = new ReedsSheppCarPlanner(planningAlgorithm);
-            rsp.setRadius(0.01);
+            rsp.setRadius(0.1);
             rsp.setPlanningTimeInSecs(15);
             rsp.setFootprint(footprint);
-            rsp.setTurningRadius(0.01);
+            rsp.setTurningRadius(0.5);
             rsp.setDistanceBetweenPathPoints(0.1); // TODO: resolution?
 
             if (ReedsSheppCarPlanner.isCachingPlanner) {

@@ -30,7 +30,7 @@ bool MultipleCircleStateValidityChecker::isValid(const ob::State *state) const {
         return true;
     }
 
-    //Position in meters in map frame.
+    // Position in meters in map frame.
     float xMetersCenter = static_cast<float>(s->getX()) - mapOriginX;
     float yMetersCenter = static_cast<float>(s->getY()) - mapOriginY;
     float theta = static_cast<float>(s->getYaw());

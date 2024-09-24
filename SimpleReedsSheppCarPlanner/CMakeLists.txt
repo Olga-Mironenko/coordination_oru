@@ -29,5 +29,7 @@ add_executable(Point2DPlanning
         src/include/PRMcustom.h
         src/include/Conditions.h
         src/include/ConditionsPPM.h
-        src/include/PathFinder.h)
+        src/include/PathFinder.h
+        src/include/Footprint.h
+)
 target_link_libraries(Point2DPlanning PRIVATE ompl::ompl)

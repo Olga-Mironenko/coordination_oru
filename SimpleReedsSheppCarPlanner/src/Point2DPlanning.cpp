@@ -24,9 +24,7 @@ constexpr double thetaUp = M_PI_2;
 constexpr double thetaRight = 0;
 constexpr double thetaLeft = M_PI;
 
-int main(int /*argc*/, char ** /*argv*/) {
-    ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
-
+void testConditions(bool isPPM, bool isSinglePointFootprint) {
     const boost::filesystem::path dirResources(TEST_RESOURCES_DIR);
     const std::string filenameFloor = (dirResources / "ppm/floor.ppm").string();
     const std::string filenameFloorWithObstacle = (dirResources / "ppm/floor_with_obstacle.ppm").string();
@@ -34,24 +32,57 @@ int main(int /*argc*/, char ** /*argv*/) {
     for (int iRun = 1000; iRun <= 1000; iRun += 500) {
         srand(1);
 
-        std::cout << "### RUN " << iRun << std::endl;
+        std::cout << "### " << (isPPM ? "PPM" : "Occupancy") << " RUN " << iRun << std::endl;
         PathFinder finder;
-
-        std::shared_ptr<ConditionsPPM> conditionsPPM = std::make_shared<ConditionsPPM>(iRun, "floor", filenameFloor);
-        finder.constructIfNeeded(conditionsPPM);
-
         std::shared_ptr<ompl::geometric::PathGeometric> path;
 
-        conditionsPPM->loadFile(filenameFloorWithObstacle);
-        path = finder.query(conditionsPPM, 10, 10, thetaRight, 777, 1265, thetaDown);
-        if (path != nullptr) {
-            finder.savePath(conditionsPPM, path, "tmp/result_demo1.ppm");
+        std::shared_ptr<Conditions> conditions;
+        std::shared_ptr<Footprint> footprint;
+
+        if (isSinglePointFootprint) {
+            footprint = std::make_shared<Footprint>();
+        } else {
+            // See `makeFootprint` in `AbstractVehicle.java`.
+            double xLengthFront = 5;
+            double xLengthBack = 5;
+            double yLengthLeft = 2;
+            double yLengthRight = 2;
+            footprint = std::make_shared<Footprint>(1, 0, 0, 2,
+                                                    new double[4] { -xLengthBack, xLengthFront, xLengthFront, -xLengthBack },
+                                                    new double[4] { yLengthLeft, yLengthLeft, -yLengthRight, -yLengthRight },
+                                                    4, false);
         }
 
-        conditionsPPM->loadFile(filenameFloor);
-        path = finder.query(conditionsPPM, 20, 20, thetaRight, 600, 1000, thetaDown);
-        if (path != nullptr) {
-            finder.savePath(conditionsPPM, path, "tmp/result_demo2.ppm");
+        if (isPPM) {
+            conditions = std::make_shared<ConditionsPPM>(iRun, "floor", filenameFloor, footprint);
+        } else {
+            // TODO
+        }
+        finder.constructIfNeeded(conditions);
+
+        conditions->loadFile(filenameFloorWithObstacle);
+        path = finder.query(conditions, 10, 10, thetaRight, 777, 1265, thetaDown);
+        if (isPPM && path != nullptr) {
+            finder.savePath(
+                std::dynamic_pointer_cast<ConditionsPPM>(conditions),
+                path,
+                "tmp/result_demo1.ppm");
+        }
+
+        conditions->loadFile(filenameFloor);
+        path = finder.query(conditions, 20, 20, thetaRight, 600, 1000, thetaDown);
+        if (isPPM && path != nullptr) {
+            finder.savePath(
+                std::dynamic_pointer_cast<ConditionsPPM>(conditions),
+                path,
+                "tmp/result_demo2.ppm");
         }
     }
+}
+
+int main(int /*argc*/, char ** /*argv*/) {
+    ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
+
+    // testConditions(true, true);
+    testConditions(true, false);
 }

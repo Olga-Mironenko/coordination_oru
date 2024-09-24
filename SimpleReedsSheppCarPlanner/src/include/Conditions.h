@@ -16,16 +16,21 @@ public:
     virtual size_t getWidth() const = 0;
     virtual size_t getHeight() const = 0;
 
+    bool isPixelInBounds(int y, int x) const {
+        return x >= 0 && y >= 0 && x < getWidth() && y < getHeight();
+    }
+
     struct Color {
         unsigned char red;
         unsigned char green;
         unsigned char blue;
     };
 
-    virtual Color getPixel(size_t y, size_t x) const = 0;
-    virtual bool isOccupied(size_t y, size_t x) const = 0;
+    virtual Color getPixel(int y, int x) const = 0;
+    virtual bool isPixelOccupied(int y, int x) const = 0;
+    virtual bool isFootprintOccupied(double x, double y, double t) const = 0;
 
-    virtual void setPixel(size_t y, size_t x, const Color &color) = 0;
+    virtual void setPixel(int y, int x, const Color &color) = 0;
 
     virtual ~Conditions() = default;
 };

@@ -50,7 +50,9 @@ protected:
             ));
 
         // set state validity checking for this space
-        ss_->setStateValidityChecker([this, conditions](const ob::State *state) { return isStateValid(conditions, state); });
+        ss_->setStateValidityChecker([this, conditions](const ob::State *state) {
+            return isStateValid(conditions, state);
+        });
 
         const double minWallWidth = 1.0;
         const double resolution = minWallWidth / space->getMaximumExtent();
@@ -384,12 +386,9 @@ protected:
         const auto state = statePtr->as<ob::ReedsSheppStateSpace::StateType>();
         const int x = static_cast<int>(state->getX());
         const int y = static_cast<int>(state->getY());
+        const double t = state->getYaw();
 
-        if (!(0 <= x && x < conditions->getWidth() && 0 <= y && y < conditions->getHeight())) {
-            return false;
-        }
-
-        return ! conditions->isOccupied(y, x);
+        return ! conditions->isFootprintOccupied(x, y, t);
     }
 
     ob::StateSamplerPtr allocateSampler(const ob::StateSpace *space) const {
