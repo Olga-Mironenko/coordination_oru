@@ -5,6 +5,7 @@
 #include <boost/graph/graphml.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/graph/astar_search.hpp>
+#include <utility>
 
 #include <ompl/base/PlannerData.h>
 #include <ompl/base/PlannerDataStorage.h>
@@ -59,11 +60,12 @@ public:
 class ConditionsPPM : public Conditions {
 public:
     size_t numIterations_;
+    std::string mapId_;
     ompl::PPM ppm_;
 
-    ConditionsPPM(size_t numIterations, const std::string &filenamePPM)
-        : numIterations_(numIterations) {
-        ConditionsPPM::loadFile(filenamePPM);
+    ConditionsPPM(size_t numIterations, std::string mapId, const std::string &filenamePPMWithoutObstacles)
+        : numIterations_(numIterations), mapId_(std::move(mapId)) {
+        ConditionsPPM::loadFile(filenamePPMWithoutObstacles);
     }
 
     size_t getNumIterations() const {
@@ -71,7 +73,9 @@ public:
     }
 
     std::string computeFilenamePD() const override {
-        return "pd.bin";
+        std::stringstream ss;
+        ss << mapId_ << "-" << numIterations_ << ".pd";
+        return ss.str();
     }
 
     void loadFile(const std::string &filename) override {
@@ -108,13 +112,13 @@ public:
     }
 };
 
-class Plane2DEnvironment {
+class PathFinder {
 protected:
     og::SimpleSetupPtr ss_;
     std::shared_ptr<og::PRMcustom> planner_;
 
 public:
-    explicit Plane2DEnvironment() = default;
+    explicit PathFinder() = default;
 
 protected:
     void createSimpleSetup(std::shared_ptr<Conditions> conditions) {
@@ -130,7 +134,7 @@ protected:
         // set the deterministic sampler
         space->setStateSamplerAllocator(
             std::bind(
-                &Plane2DEnvironment::allocateSampler,
+                &PathFinder::allocateSampler,
                 this, std::placeholders::_1
             ));
 
@@ -215,6 +219,7 @@ public:
         // Make a filename based on `conditions`.
         // If the file doesn't exist, call `construct`.
         std::string filenamePD = conditions->computeFilenamePD();
+        OMPL_INFORM("Checking PD file %s", filenamePD.c_str());
         if (! boost::filesystem::exists(filenamePD)) {
             construct(conditions);
         }
@@ -494,23 +499,23 @@ int main(int /*argc*/, char ** /*argv*/) {
         srand(1);
 
         std::cout << "### RUN " << iRun << std::endl;
-        Plane2DEnvironment env;
+        PathFinder finder;
 
-        std::shared_ptr<ConditionsPPM> conditionsPPM = std::make_shared<ConditionsPPM>(iRun, filenameFloor);
-        env.constructIfNeeded(conditionsPPM);
+        std::shared_ptr<ConditionsPPM> conditionsPPM = std::make_shared<ConditionsPPM>(iRun, "floor", filenameFloor);
+        finder.constructIfNeeded(conditionsPPM);
 
         std::shared_ptr<ompl::geometric::PathGeometric> path;
 
         conditionsPPM->loadFile(filenameFloorWithObstacle);
-        path = env.query(conditionsPPM, 10, 10, thetaRight, 777, 1265, thetaDown);
+        path = finder.query(conditionsPPM, 10, 10, thetaRight, 777, 1265, thetaDown);
         if (path != nullptr) {
-            env.savePath(conditionsPPM, path, "result_demo.ppm");
+            finder.savePath(conditionsPPM, path, "result_demo.ppm");
         }
 
         conditionsPPM->loadFile(filenameFloor);
-        path = env.query(conditionsPPM, 20, 20, thetaRight, 600, 1000, thetaDown);
+        path = finder.query(conditionsPPM, 20, 20, thetaRight, 600, 1000, thetaDown);
         if (path != nullptr) {
-            env.savePath(conditionsPPM, path, "result_demo2.ppm");
+            finder.savePath(conditionsPPM, path, "result_demo2.ppm");
         }
     }
 }
