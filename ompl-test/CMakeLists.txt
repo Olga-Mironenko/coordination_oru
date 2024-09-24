@@ -12,12 +12,11 @@ add_definitions(-DTEST_RESOURCES_DIR=\"${TEST_RESOURCES_DIR}\")
 add_executable(Point2DPlanning
         Point2DPlanning.cpp
         PRMcustom.cpp
-        PRMcustom.h)
-target_link_libraries(Point2DPlanning PRIVATE
-        ompl::ompl
-        Eigen3::Eigen
-        Boost::filesystem
-        Boost::system)
+        PRMcustom.h
+        Conditions.h
+        ConditionsPPM.h
+        PathFinder.h)
+target_link_libraries(Point2DPlanning PRIVATE ompl::ompl)
 
 add_executable(PlannerData
         PlannerData.cpp
