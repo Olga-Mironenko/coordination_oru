@@ -110,8 +110,6 @@ public:
 
 class Plane2DEnvironment {
 protected:
-    std::shared_ptr<Conditions> conditions_;
-
     og::SimpleSetupPtr ss_;
     std::shared_ptr<og::PRMcustom> planner_;
 
@@ -119,13 +117,13 @@ public:
     explicit Plane2DEnvironment() = default;
 
 protected:
-    void createSimpleSetup() {
+    void createSimpleSetup(std::shared_ptr<Conditions> conditions) {
         ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(10));
         ob::RealVectorBounds bounds(2);
         bounds.low[0] = 0;
         bounds.low[1] = 0;
-        bounds.high[0] = conditions_->getWidth();
-        bounds.high[1] = conditions_->getHeight();
+        bounds.high[0] = conditions->getWidth();
+        bounds.high[1] = conditions->getHeight();
         space->as<ob::SE2StateSpace>()->setBounds(bounds);
         ss_ = std::make_shared<og::SimpleSetup>(space);
 
@@ -137,7 +135,7 @@ protected:
             ));
 
         // set state validity checking for this space
-        ss_->setStateValidityChecker([this](const ob::State *state) { return isStateValid(state); });
+        ss_->setStateValidityChecker([this, conditions](const ob::State *state) { return isStateValid(conditions, state); });
 
         const double minWallWidth = 1.0;
         const double resolution = minWallWidth / space->getMaximumExtent();
@@ -163,7 +161,7 @@ protected:
     }
 
 protected:
-    void dumpPlannerData() const {
+    void dumpPlannerData(std::shared_ptr<Conditions> conditions) const {
         ob::PlannerData pd(ss_->getSpaceInformation());
         ss_->getPlannerData(pd);
 
@@ -176,18 +174,18 @@ protected:
         // with that in construct: 9.5 s for the first query
 
         ob::PlannerDataStorage pdStorage;
-        pdStorage.store(pd, conditions_->computeFilenamePD().c_str());
+        pdStorage.store(pd, conditions->computeFilenamePD().c_str());
     }
 
 protected:
-    void loadPlannerData() {
-        createSimpleSetup();
+    void loadPlannerData(std::shared_ptr<Conditions> conditions) {
+        createSimpleSetup(conditions);
 
         ob::PlannerDataStorage pdStorage;
         ob::PlannerData pd(ss_->getSpaceInformation());
 
         clock_t start = clock();
-        pdStorage.load(conditions_->computeFilenamePD().c_str(), pd);
+        pdStorage.load(conditions->computeFilenamePD().c_str(), pd);
         clock_t end = clock();
         OMPL_INFORM("(pdStorage.load took %.6f s)", static_cast<double>(end - start) / CLOCKS_PER_SEC);
 
@@ -196,47 +194,47 @@ protected:
     }
 
 protected:
-    void construct() {
+    void construct(std::shared_ptr<Conditions> conditions) {
         OMPL_INFORM("*** CONSTRUCTION:");
 
-        createSimpleSetup();
+        createSimpleSetup(conditions);
         planner_ = std::make_shared<og::PRMcustom>(ss_->getSpaceInformation(), true);
         ss_->setPlanner(planner_);
         ss_->setup();
 
         const clock_t start = clock();
-        planner_->constructRoadmap(conditions_->getNumIterations());
+        planner_->constructRoadmap(conditions->getNumIterations());
         const clock_t end = clock();
         OMPL_INFORM("Construction took %.6f s", static_cast<double>(end - start) / CLOCKS_PER_SEC);
 
-        dumpPlannerData();
+        dumpPlannerData(conditions);
     }
 
 public:
     void constructIfNeeded(std::shared_ptr<Conditions> conditions) {
-        // Make a filename based on `conditions_`.
+        // Make a filename based on `conditions`.
         // If the file doesn't exist, call `construct`.
-        conditions_ = conditions;
-        std::string filenamePD = conditions_->computeFilenamePD();
+        std::string filenamePD = conditions->computeFilenamePD();
         if (! boost::filesystem::exists(filenamePD)) {
-            construct();
+            construct(conditions);
         }
     }
 
 protected:
     void setStartGoal(
+        std::shared_ptr<Conditions> conditions,
         unsigned int xStart, unsigned int yStart, double tStart,
         unsigned int xGoal, unsigned int yGoal, double tGoal) {
         ob::ScopedState<> start(ss_->getStateSpace());
-        assert(xStart < conditions_->getWidth());
-        assert(yStart < conditions_->getHeight());
+        assert(xStart < conditions->getWidth());
+        assert(yStart < conditions->getHeight());
         start[0] = xStart;
         start[1] = yStart;
         start[2] = tStart;
 
         ob::ScopedState<> goal(ss_->getStateSpace());
-        assert(xGoal < conditions_->getWidth());
-        assert(yGoal < conditions_->getHeight());
+        assert(xGoal < conditions->getWidth());
+        assert(yGoal < conditions->getHeight());
         goal[0] = xGoal;
         goal[1] = yGoal;
         goal[2] = tGoal;
@@ -369,8 +367,8 @@ public:
         constructIfNeeded(conditions);
 
         clock_t start = clock();
-        loadPlannerData();
-        setStartGoal(xStart, yStart, tStart, xGoal, yGoal, tGoal);
+        loadPlannerData(conditions);
+        setStartGoal(conditions, xStart, yStart, tStart, xGoal, yGoal, tGoal);
         const ob::PlannerStatus plannerStatusInit = planner_->initializeForSolve(ob::IterationTerminationCondition(0));
         clock_t end = clock();
         OMPL_INFORM("Query: initialization took %.6f s", static_cast<double>(end - start) / CLOCKS_PER_SEC);
@@ -392,12 +390,12 @@ public:
     }
 
 protected:
-    void setColor(int x, int y, unsigned char r, unsigned char g, unsigned char b) const {
-        assert(0 <= x && x < conditions_->getWidth());
-        assert(0 <= y && y < conditions_->getHeight());
+    void setColor(std::shared_ptr<Conditions> conditions, int x, int y, unsigned char r, unsigned char g, unsigned char b) const {
+        assert(0 <= x && x < conditions->getWidth());
+        assert(0 <= y && y < conditions->getHeight());
 
         const Conditions::Color color = {r, g, b};
-        conditions_->setPixel(y, x, color);
+        conditions->setPixel(y, x, color);
     }
 
 public:
@@ -406,15 +404,13 @@ public:
         const std::shared_ptr<ompl::geometric::PathGeometric> &path,
         const std::string &filenameResult
         ) {
-        conditions_ = conditions;
-
         path->interpolate();
         for (std::size_t i = 0; i < path->getStateCount(); ++i) {
             const auto state = path->getState(i)->as<ob::ReedsSheppStateSpace::StateType>();
             const int x = static_cast<int>(state->getX());
             const int y = static_cast<int>(state->getY());
 
-            setColor(x, y, 255, 0, 0);
+            setColor(conditions, x, y, 255, 0, 0);
         }
 
         ob::PlannerData pd(ss_->getSpaceInformation());
@@ -436,19 +432,19 @@ public:
             const int y = static_cast<int>(state->getY());
             const double t = state->getYaw();
 
-            assert(0 <= x && x < conditions_->getWidth());
-            assert(0 <= y && y < conditions_->getHeight());
+            assert(0 <= x && x < conditions->getWidth());
+            assert(0 <= y && y < conditions->getHeight());
             assert(-M_PI <= t && t <= M_PI); // ?
 
             const int d = 2;
             const int xMin = std::max(0, x - d);
-            const int xMax = std::min(static_cast<int>(conditions_->getWidth()) - 1, x + d);
+            const int xMax = std::min(static_cast<int>(conditions->getWidth()) - 1, x + d);
             const int yMin = std::max(0, y - d);
-            const int yMax = std::min(static_cast<int>(conditions_->getHeight()) - 1, y + d);
+            const int yMax = std::min(static_cast<int>(conditions->getHeight()) - 1, y + d);
 
             for (int xp = xMin; xp <= xMax; ++xp) {
                 for (int yp = yMin; yp <= yMax; ++yp) {
-                    setColor(xp, yp, 0, 255, 0);
+                    setColor(conditions, xp, yp, 0, 255, 0);
                 }
             }
 
@@ -458,26 +454,26 @@ public:
                 yMin <= static_cast<int>(round(yp)) && static_cast<int>(round(yp)) <= yMax;
                 xp += cos(t), yp -= sin(t)
             ) {
-                setColor(static_cast<int>(round(xp)), static_cast<int>(round(yp)), 0, 0, 255);
+                setColor(conditions, static_cast<int>(round(xp)), static_cast<int>(round(yp)), 0, 0, 255);
             }
 
-            setColor(x, y, 0, 127, 0);
+            setColor(conditions, x, y, 0, 127, 0);
         }
 
-        conditions_->saveFile(filenameResult);
+        conditions->saveFile(filenameResult);
     }
 
 protected:
-    bool isStateValid(const ob::State *statePtr) const {
+    bool isStateValid(std::shared_ptr<Conditions> conditions, const ob::State *statePtr) const {
         const auto state = statePtr->as<ob::ReedsSheppStateSpace::StateType>();
         const int x = static_cast<int>(state->getX());
         const int y = static_cast<int>(state->getY());
 
-        if (!(0 <= x && x < conditions_->getWidth() && 0 <= y && y < conditions_->getHeight())) {
+        if (!(0 <= x && x < conditions->getWidth() && 0 <= y && y < conditions->getHeight())) {
             return false;
         }
 
-        return ! conditions_->isOccupied(y, x);
+        return ! conditions->isOccupied(y, x);
     }
 
     ob::StateSamplerPtr allocateSampler(const ob::StateSpace *space) const {
