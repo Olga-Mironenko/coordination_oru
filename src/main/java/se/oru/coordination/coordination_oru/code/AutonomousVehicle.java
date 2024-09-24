@@ -51,6 +51,14 @@ public class AutonomousVehicle extends AbstractVehicle {
             rsp.setFootprint(footprint);
             rsp.setTurningRadius(0.01);
             rsp.setDistanceBetweenPathPoints(0.1); // TODO: resolution?
+
+            if (ReedsSheppCarPlanner.isCachingPlanner) {
+                setMapForPlanner(Missions.getDynamicMap().cloneWithoutObstacles());
+                rsp.setStart(new Pose(-1, -1, -1));
+                rsp.setGoals(new Pose(-1, -1, -1));
+                rsp.plan();
+            }
+
             setMapForPlanner(Missions.getDynamicMap());
         }
         return rsp;

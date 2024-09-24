@@ -55,7 +55,7 @@ public class DynamicMap {
     }
 
     public static void thresholdImage(BufferedImage bimg, double threshold) {
-        assert 0.0 < threshold && threshold <= 1.0;
+        assert 0.0 <= threshold && threshold <= 1.0;
         for (int y = 0; y < bimg.getHeight(); y++) {
             for (int x = 0; x < bimg.getWidth(); x++) {
                 Color color = new Color(bimg.getRGB(x, y));
@@ -74,6 +74,10 @@ public class DynamicMap {
     }
 
     public DynamicMap(String mapYAMLFile) {
+        this(mapYAMLFile, false);
+    }
+
+    public DynamicMap(String mapYAMLFile, boolean isWithoutObstacles) {
         try {
             filenameYAML = mapYAMLFile;
             File file = new File(mapYAMLFile);
@@ -99,6 +103,10 @@ public class DynamicMap {
                 }
             }
             br.close();
+
+            if (isWithoutObstacles) {
+                threshold = 0.0;
+            }
 
             mapImageGrayscale = ImageIO.read(new File(imageFilename));
             grayscaleImage(mapImageGrayscale);
@@ -171,5 +179,9 @@ public class DynamicMap {
 
     public double getHeightMeters() {
         return mapImageBlackAndWhite.getHeight() * resolution;
+    }
+
+    public DynamicMap cloneWithoutObstacles() {
+        return new DynamicMap(this.filenameYAML, true);
     }
 }

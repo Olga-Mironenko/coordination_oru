@@ -82,6 +82,12 @@ extern "C" bool plan_multiple_circles(
 ) {
   assert(algo == PRMstar);
 
+  // TODO:
+  // - Create the finder if needed.
+  // - Create a `ConditionsOccupancy`.
+  // - Call `finder.constructIfNeeded` (if startX == startY == startTheta == goalX == goalY == goalTheta == -1).
+  // - Call `finder.query`.
+
   indexRun++;
 
   if (ss_ == nullptr) {
