@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Ioan Sucan, James D. Marble, Ryan Luna, Henning Kayser */
+/* Based on PRM.h (from OMPL). Its authors: Ioan Sucan, James D. Marble, Ryan Luna, Henning Kayser */
 
 #include "PRMcustom.h"
 #include "ompl/geometric/planners/prm/ConnectionStrategy.h"

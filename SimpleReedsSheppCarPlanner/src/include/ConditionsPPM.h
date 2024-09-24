@@ -28,7 +28,7 @@ public:
 
     std::string computeFilenamePD() const override {
         std::stringstream ss;
-        ss << mapId_ << "-" << numIterations_ << ".pd";
+        ss << "tmp/" << mapId_ << "-" << numIterations_ << ".pd";
         return ss.str();
     }
 

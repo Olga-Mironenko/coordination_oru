@@ -45,9 +45,11 @@ SimpleReedsSheppCarPlanner/Makefile
 SimpleReedsSheppCarPlanner/cmake_install.cmake
 SimpleReedsSheppCarPlanner/libsimplereedssheppcarplanner.so
 SimpleReedsSheppCarPlanner/libcachingreedssheppcarplanner.so
+SimpleReedsSheppCarPlanner/Point2DPlanning
 SimpleReedsSheppCarPlanner/.ninja*
 SimpleReedsSheppCarPlanner/*.ninja
 SimpleReedsSheppCarPlanner/tmp/
+SimpleReedsSheppCarPlanner/resources/
 
 # ompl-test
 ompl-test/CMakeCache.txt
@@ -56,7 +58,6 @@ ompl-test/Makefile
 ompl-test/cmake_install.cmake
 ompl-test/install_manifest.txt
 ompl-test/demo_Point2DPlanning
-ompl-test/resources
 ompl-test/*.ppm
 ompl-test/cmake-build-debug
 ompl-test/*~

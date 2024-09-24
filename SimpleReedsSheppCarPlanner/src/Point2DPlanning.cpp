@@ -45,13 +45,13 @@ int main(int /*argc*/, char ** /*argv*/) {
         conditionsPPM->loadFile(filenameFloorWithObstacle);
         path = finder.query(conditionsPPM, 10, 10, thetaRight, 777, 1265, thetaDown);
         if (path != nullptr) {
-            finder.savePath(conditionsPPM, path, "result_demo.ppm");
+            finder.savePath(conditionsPPM, path, "tmp/result_demo1.ppm");
         }
 
         conditionsPPM->loadFile(filenameFloor);
         path = finder.query(conditionsPPM, 20, 20, thetaRight, 600, 1000, thetaDown);
         if (path != nullptr) {
-            finder.savePath(conditionsPPM, path, "result_demo2.ppm");
+            finder.savePath(conditionsPPM, path, "tmp/result_demo2.ppm");
         }
     }
 }

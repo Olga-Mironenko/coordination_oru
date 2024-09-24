@@ -1,9 +1,10 @@
 #include <fstream>
 #include <iostream>
 
-#include "MultipleCircleStateValidityChecker.h"
 #include <ompl/geometric/planners/prm/PRMstar.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
+
+#include "MultipleCircleStateValidityChecker.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
