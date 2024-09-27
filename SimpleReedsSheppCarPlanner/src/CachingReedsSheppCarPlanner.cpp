@@ -72,7 +72,8 @@ void initialize(
 }
 
 extern "C" bool plan_multiple_circles(
-  uint8_t* occupancyMap, int mapWidth, int mapHeight, double mapResolution,
+  // TODO: add `char* mapId`
+  const uint8_t* occupancyMap, int mapWidth, int mapHeight, double mapResolution,
   double mapOriginX, double mapOriginY, double robotRadius,
   const double* xCoords, const double* yCoords, int numCoords,
   double startX, double startY, double startTheta,

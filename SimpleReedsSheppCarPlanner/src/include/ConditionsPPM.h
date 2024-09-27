@@ -1,9 +1,6 @@
 #ifndef CONDITIONSPPM_H
 #define CONDITIONSPPM_H
 
-#include <boost/graph/graphml.hpp>
-#include <utility>
-
 #include <ompl/util/PPM.h>
 
 #include "Conditions.h"
@@ -13,33 +10,30 @@ namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
 class ConditionsPPM : public Conditions {
-public:
-    size_t numIterations_;
-    std::string mapId_;
+protected:
     ompl::PPM ppm_;
-    std::shared_ptr<Footprint> footprint_;
 
-    ConditionsPPM(size_t numIterations, std::string mapId, const std::string &filenamePPMWithoutObstacles,
-                  std::shared_ptr<Footprint> footprint)
-        : numIterations_(numIterations), mapId_(std::move(mapId)), footprint_(std::move(footprint)) {
+public:
+    ConditionsPPM(const std::string &mapId, const size_t numIterations, const double turningRadius,
+                  const std::shared_ptr<Footprint> &footprint,
+                  const std::string &filenamePPMWithoutObstacles)
+        : Conditions(mapId, numIterations, turningRadius, footprint) {
         ConditionsPPM::loadFile(filenamePPMWithoutObstacles);
     }
 
-    size_t getNumIterations() const {
-        return numIterations_;
-    }
-
-    std::string computeFilenamePD() const override {
-        std::stringstream ss;
-        ss << "tmp/" << mapId_ << "-" << numIterations_ << ".pd";
-        return ss.str();
-    }
-
     void loadFile(const std::string &filename) override {
+        const size_t width = ppm_.getWidth();
+        const size_t height = ppm_.getHeight();
+
         ppm_.loadFile(filename.c_str());
+
+        if (width != 0) {
+            assert(width == ppm_.getWidth());
+            assert(height == ppm_.getHeight());
+        }
     }
 
-    void saveFile(const std::string &filenameResult) override {
+    void saveFile(const std::string &filenameResult) {
         ppm_.saveFile(filenameResult.c_str());
     }
 
@@ -51,24 +45,19 @@ public:
         return ppm_.getHeight();
     }
 
-    Color getPixel(int y, int x) const override {
-        const ompl::PPM::Color &c = ppm_.getPixel(y, x);
-        return {c.red, c.green, c.blue};
+    ompl::PPM::Color getPixel(int y, int x) const override {
+        return ppm_.getPixel(y, x);
     }
 
     bool isPixelOccupied(int y, int x) const override {
         if (! isPixelInBounds(y, x)) {
             return true;
         }
-        const Conditions::Color c = getPixel(y, x);
-        return !(c.red > 127 && c.green > 127 && c.blue > 127);
+        const ompl::PPM::Color c = getPixel(y, x);
+        return isColorOccupied(c);
     }
 
-    bool isFootprintOccupied(double x, double y, double t) const override {
-        return ! footprint_->isValid(this, x, y, t);
-    }
-
-    void setPixel(int y, int x, const Color &color) override {
+    void setPixel(int y, int x, const ompl::PPM::Color &color) {
         ompl::PPM::Color &c = ppm_.getPixel(y, x);
         c.red = color.red;
         c.green = color.green;

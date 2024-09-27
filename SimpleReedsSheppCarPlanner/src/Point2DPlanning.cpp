@@ -12,6 +12,7 @@
 #include <ompl/base/spaces/ReedsSheppStateSpace.h>
 #include <ompl/geometric/SimpleSetup.h>
 
+#include "ConditionsOccupancy.h"
 #include "ConditionsPPM.h"
 #include "PathFinder.h"
 
@@ -30,9 +31,14 @@ void testConditions(bool isPPM, bool isSinglePointFootprint) {
     const std::string filenameFloorWithObstacle = (dirResources / "ppm/floor_with_obstacle.ppm").string();
 
     for (int iRun = 1000; iRun <= 1000; iRun += 500) {
+        const int numIterations = iRun;
+        constexpr double turningRadius = 10;
+
         srand(1);
 
-        std::cout << "### " << (isPPM ? "PPM" : "Occupancy") << " RUN " << iRun << std::endl;
+        std::cout << "### " << (isPPM ? "PPM" : "Occupancy")
+                  << " " << (isSinglePointFootprint ? "single" : "non-single")
+                  << " RUN " << iRun << std::endl;
         PathFinder finder;
         std::shared_ptr<ompl::geometric::PathGeometric> path;
 
@@ -54,9 +60,11 @@ void testConditions(bool isPPM, bool isSinglePointFootprint) {
         }
 
         if (isPPM) {
-            conditions = std::make_shared<ConditionsPPM>(iRun, "floor", filenameFloor, footprint);
+            conditions = std::make_shared<ConditionsPPM>(
+                "floor", numIterations, turningRadius, footprint, filenameFloor);
         } else {
-            // TODO
+            conditions = std::make_shared<ConditionsOccupancy>(
+                "floor", numIterations, turningRadius, footprint, filenameFloor);
         }
         finder.constructIfNeeded(conditions);
 
@@ -66,7 +74,7 @@ void testConditions(bool isPPM, bool isSinglePointFootprint) {
             finder.savePath(
                 std::dynamic_pointer_cast<ConditionsPPM>(conditions),
                 path,
-                "tmp/result_demo1.ppm");
+                "tmp/result_" + conditions->computeId() + "_1.ppm");
         }
 
         conditions->loadFile(filenameFloor);
@@ -75,7 +83,7 @@ void testConditions(bool isPPM, bool isSinglePointFootprint) {
             finder.savePath(
                 std::dynamic_pointer_cast<ConditionsPPM>(conditions),
                 path,
-                "tmp/result_demo2.ppm");
+                "tmp/result_" + conditions->computeId() + "_2.ppm");
         }
     }
 }
@@ -83,6 +91,9 @@ void testConditions(bool isPPM, bool isSinglePointFootprint) {
 int main(int /*argc*/, char ** /*argv*/) {
     ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
 
+    // testConditions(false, true);
     // testConditions(true, true);
+
+    testConditions(false, false);
     testConditions(true, false);
 }

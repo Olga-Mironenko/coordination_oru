@@ -33,7 +33,7 @@ public:
 
 protected:
     void createSimpleSetup(std::shared_ptr<Conditions> conditions) {
-        ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(10));
+        ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(conditions->getTurningRadius()));
         ob::RealVectorBounds bounds(2);
         bounds.low[0] = 0;
         bounds.low[1] = 0;
@@ -308,11 +308,11 @@ public:
     }
 
 protected:
-    void setColor(std::shared_ptr<Conditions> conditions, int x, int y, unsigned char r, unsigned char g, unsigned char b) const {
+    void setColor(std::shared_ptr<ConditionsPPM> conditions, int x, int y, unsigned char r, unsigned char g, unsigned char b) const {
         assert(0 <= x && x < conditions->getWidth());
         assert(0 <= y && y < conditions->getHeight());
 
-        const Conditions::Color color = {r, g, b};
+        const ompl::PPM::Color color = {r, g, b};
         conditions->setPixel(y, x, color);
     }
 
