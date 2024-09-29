@@ -26,10 +26,14 @@ public abstract class Demo {
             GatedThread.enable();
 
             AutonomousVehicle.isPathCachingEnabled = false;
+
             ReedsSheppCarPlanner.isCachingPlanner = true;
-            AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar;
-//            AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect;
-            AutonomousVehicle.numIterationsRoadmapConstruction = 2000;
+            if (! ReedsSheppCarPlanner.isCachingPlanner) {
+                AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect;
+            } else {
+                AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar;
+                AutonomousVehicle.numIterationsRoadmapConstruction = 1000;
+            }
 
             //HumanControl.isEnabledForBrowser = true;
             BrowserVisualization.isExtendedText = true;

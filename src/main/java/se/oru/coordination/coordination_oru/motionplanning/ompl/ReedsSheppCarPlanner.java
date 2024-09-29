@@ -194,7 +194,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 				if (! isCachingPlanner) {
 					if (!INSTANCE_SIMPLE.plan_multiple_circles(
 							occ, w, h, res,
-							mapOriginX, mapOriginY, robotRadius,
+							mapOriginX, mapOriginY, 0, // TODO: robotRadius
 							xCoords, yCoords, numCoords, // `collisionCircleCenters`
 							start_.getX(), start_.getY(), start_.getTheta(),
 							goal_.getX(), goal_.getY(), goal_.getTheta(),

@@ -45,8 +45,8 @@ bool MultipleCircleStateValidityChecker::isValid(const ob::State *state) const {
         int yPixels = mapHeight - (int) (yMeters / mapResolution);
         int radiusPixels = ceil(radius / mapResolution);
 
-        for (int dx = -radiusPixels; dx <= radiusPixels; dx += 2 * radiusPixels) {
-            for (int dy = -radiusPixels; dy <= radiusPixels; dy += 2 * radiusPixels) {
+        for (int dx = -radiusPixels; dx <= radiusPixels; dx += radiusPixels == 0 ? 1 : 2 * radiusPixels) {
+            for (int dy = -radiusPixels; dy <= radiusPixels; dy += radiusPixels == 0 ? 1 : 2 * radiusPixels) {
                 /* Each "circle":
 
                    1                    3
