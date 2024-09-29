@@ -81,8 +81,6 @@ public class GridTestInteractive {
         final double maxAccelerationHum = 2.0;
         final double maxAccelerationAut = 0.4;
 
-        double lengthVehicle = 3.0;
-        double widthVehicle = 2.0;
         VehicleSize vehicleSizeHum = new VehicleSize(3, 2, 1, 1, 0.5, 0.5);
         VehicleSize vehicleSizeAut1 = new VehicleSize(3, 2, 1, 1, 0.5, 0.5);
         VehicleSize vehicleSizeAut2 = vehicleSizeAut1;

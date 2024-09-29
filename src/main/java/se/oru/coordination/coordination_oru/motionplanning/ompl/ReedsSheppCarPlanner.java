@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
@@ -82,9 +83,14 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	        }
 	    };
 	    gs.setControl(sc);
-	    Polygon smoothFootprint = gs.smooth(footprint, 1.0);
-		// TODO: reduce the length of `collisionCircleCenters`? (a 5*3 rectangle gives ~800 points)
-		collisionCircleCenters = smoothFootprint.getCoordinates();
+	    Polygon smoothFootprint = gs.smooth(footprint, 1);
+
+		Coordinate[] c = smoothFootprint.getCoordinates();
+		if (c.length > 1 && c[0].equals2D(c[c.length - 1])) {
+			c = Arrays.copyOf(c, c.length - 1);
+		}
+
+		collisionCircleCenters = c;
 	}
 	
 	public Coordinate[] getCollisionCircleCenters() {
@@ -184,7 +190,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 				} else {
 					if (!INSTANCE_CACHING.plan_multiple_circles(
 							occ, w, h, res,
-							mapOriginX, mapOriginY, robotRadius,
+							mapOriginX, mapOriginY, 0, // TODO: robotRadius
 							xCoords, yCoords, numCoords, // `collisionCircleCenters`
 							start_.getX(), start_.getY(), start_.getTheta(),
 							goal_.getX(), goal_.getY(), goal_.getTheta(),

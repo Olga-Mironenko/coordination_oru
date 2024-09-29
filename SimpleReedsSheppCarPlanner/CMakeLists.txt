@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(SimpleReedsSheppCarPlanner)
 
 set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_BUILD_TYPE Debug)
 
 find_package(ompl REQUIRED base)
 
@@ -18,9 +19,10 @@ add_library(simplereedssheppcarplanner SHARED
 target_link_libraries(simplereedssheppcarplanner PRIVATE ompl::ompl)
 
 add_library(cachingreedssheppcarplanner SHARED
-        src/include/MultipleCircleStateValidityChecker.h
-        src/MultipleCircleStateValidityChecker.cpp
-        src/CachingReedsSheppCarPlanner.cpp)
+        src/CachingReedsSheppCarPlanner.cpp
+        src/Footprint.cpp
+        src/PRMcustom.cpp
+)
 target_link_libraries(cachingreedssheppcarplanner PRIVATE ompl::ompl)
 
 add_executable(Point2DPlanning

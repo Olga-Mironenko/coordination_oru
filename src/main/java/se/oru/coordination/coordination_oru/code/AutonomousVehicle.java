@@ -46,7 +46,7 @@ public class AutonomousVehicle extends AbstractVehicle {
 //        if (true) {
         if (rsp == null) {
             rsp = new ReedsSheppCarPlanner(planningAlgorithm);
-            rsp.setRadius(0.1);
+            rsp.setRadius(1); // TODO (the greater the value, the less is the number of robot circles)
             rsp.setPlanningTimeInSecs(15);
             rsp.setFootprint(footprint);
             rsp.setTurningRadius(0.5);

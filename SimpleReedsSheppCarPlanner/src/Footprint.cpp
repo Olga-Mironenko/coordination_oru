@@ -4,6 +4,8 @@
 #include "Conditions.h"
 #include "Footprint.h"
 
+#include <ompl/util/Console.h>
+
 bool Footprint::isValid(const Conditions *conditions, double x, double y, double t) const {
     const float xMetersCenter = x - mapOriginX;
     const float yMetersCenter = y - mapOriginY;
@@ -34,10 +36,12 @@ bool Footprint::isValid(const Conditions *conditions, double x, double y, double
 
                  */
 
-                const int xCircle = xPixels + dx;
-                const int yCircle = yPixels + dy;
+                const int xCorner = xPixels + dx;
+                const int yCorner = yPixels + dy;
 
-                if (conditions->isPixelOccupied(yCircle, xCircle)) {
+                if (conditions->isPixelOccupied(yCorner, xCorner)) {
+                    // OMPL_DEBUG("Footprint::isValid(%.1f, %.1f, %.1f): corner (%d, %d) of circle (%.1f, %.1f) is occupied",
+                    //     x, y, t, xCorner, yCorner, xMeters, yMeters);
                     return false;
                 }
             }

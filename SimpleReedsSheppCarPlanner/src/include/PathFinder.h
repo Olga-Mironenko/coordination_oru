@@ -18,6 +18,8 @@
 #include <ompl/base/terminationconditions/IterationTerminationCondition.h>
 #include <ompl/geometric/SimpleSetup.h>
 
+#include "Conditions.h"
+#include "ConditionsPPM.h"
 #include "PRMcustom.h"
 
 namespace ob = ompl::base;
@@ -141,8 +143,8 @@ public:
 protected:
     void setStartGoal(
         std::shared_ptr<Conditions> conditions,
-        unsigned int xStart, unsigned int yStart, double tStart,
-        unsigned int xGoal, unsigned int yGoal, double tGoal) {
+        double xStart, double yStart, double tStart,
+        double xGoal, double yGoal, double tGoal) {
         ob::ScopedState<> start(ss_->getStateSpace());
         assert(xStart < conditions->getWidth());
         assert(yStart < conditions->getHeight());
@@ -278,8 +280,8 @@ protected:
 public:
     std::shared_ptr<ompl::geometric::PathGeometric> query(
         std::shared_ptr<Conditions> conditions,
-        unsigned int xStart, unsigned int yStart, double tStart,
-        unsigned int xGoal, unsigned int yGoal, double tGoal) {
+        double xStart, double yStart, double tStart,
+        double xGoal, double yGoal, double tGoal) {
         OMPL_INFORM("*** QUERYING:");
 
         constructIfNeeded(conditions);
@@ -384,11 +386,7 @@ public:
 protected:
     bool isStateValid(std::shared_ptr<Conditions> conditions, const ob::State *statePtr) const {
         const auto state = statePtr->as<ob::ReedsSheppStateSpace::StateType>();
-        const int x = static_cast<int>(state->getX());
-        const int y = static_cast<int>(state->getY());
-        const double t = state->getYaw();
-
-        return ! conditions->isFootprintOccupied(x, y, t);
+        return ! conditions->isFootprintOccupied(state->getX(), state->getY(), state->getYaw());
     }
 
     ob::StateSamplerPtr allocateSampler(const ob::StateSpace *space) const {

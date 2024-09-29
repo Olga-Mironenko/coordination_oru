@@ -6,13 +6,11 @@
 #include <memory>
 #include <string>
 
+#include <ompl/util/Console.h>
 #include <ompl/util/PPM.h>
 
 #include "Conditions.h"
 #include "Footprint.h"
-
-namespace ob = ompl::base;
-namespace og = ompl::geometric;
 
 class ConditionsOccupancy : public Conditions {
     const uint8_t* occupancyMap_;
@@ -31,6 +29,10 @@ public:
                         const std::string &filenamePPMWithoutObstacles)
         : Conditions(mapId, numIterations, turningRadius, footprint) {
         ConditionsOccupancy::loadFile(filenamePPMWithoutObstacles);
+    }
+
+    int getPixelNumber(int y, const int x) const {
+        return y * mapWidth_ + x;
     }
 
     void loadFile(const std::string &filename) override {
@@ -52,7 +54,7 @@ public:
 
         for (int y = 0; y < mapHeight_; ++y) {
             for (int x = 0; x < mapWidth_; ++x) {
-                const int pixelNumber = y * mapWidth_ + x;
+                const int pixelNumber = getPixelNumber(y, x);
 
                 const ompl::PPM::Color& c = ppm.getPixel(y, x);
                 const uint8_t bit = isColorOccupied(c);
@@ -80,9 +82,12 @@ public:
         if (! isPixelInBounds(y, x)) {
             return true;
         }
-        const int pixelNumber = y * mapWidth_ + x;
+        const int pixelNumber = getPixelNumber(y, x);
+
         const uint8_t byte = occupancyMap_[pixelNumber / 8];
         const bool bit = (byte & (1 << (pixelNumber % 8))) != 0;
+
+        // OMPL_DEBUG("isPixelOccupied(x=%d, y=%d): %d", x, y, bit);
         return bit;
     }
 };

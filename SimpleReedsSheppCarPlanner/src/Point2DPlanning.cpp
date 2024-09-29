@@ -34,16 +34,17 @@ void testConditions(bool isPPM, bool isSinglePointFootprint) {
         const int numIterations = iRun;
         constexpr double turningRadius = 10;
 
+        // Initialization
+
         srand(1);
 
         std::cout << "### " << (isPPM ? "PPM" : "Occupancy")
                   << " " << (isSinglePointFootprint ? "single" : "non-single")
                   << " RUN " << iRun << std::endl;
         PathFinder finder;
-        std::shared_ptr<ompl::geometric::PathGeometric> path;
 
-        std::shared_ptr<Conditions> conditions;
         std::shared_ptr<Footprint> footprint;
+        std::shared_ptr<Conditions> conditions;
 
         if (isSinglePointFootprint) {
             footprint = std::make_shared<Footprint>();
@@ -68,6 +69,11 @@ void testConditions(bool isPPM, bool isSinglePointFootprint) {
         }
         finder.constructIfNeeded(conditions);
 
+        std::shared_ptr<ompl::geometric::PathGeometric> path;
+
+        // Query 1:
+
+        srand(1);
         conditions->loadFile(filenameFloorWithObstacle);
         path = finder.query(conditions, 10, 10, thetaRight, 777, 1265, thetaDown);
         if (isPPM && path != nullptr) {
@@ -77,6 +83,9 @@ void testConditions(bool isPPM, bool isSinglePointFootprint) {
                 "tmp/result_" + conditions->computeId() + "_1.ppm");
         }
 
+        // Query 2:
+
+        srand(1);
         conditions->loadFile(filenameFloor);
         path = finder.query(conditions, 20, 20, thetaRight, 600, 1000, thetaDown);
         if (isPPM && path != nullptr) {

@@ -30,6 +30,7 @@ hs_err_pid*
 # temporary maps
 .temp*/
 logs/
+tmp/
 
 # IntelliJ IDEA
 .idea/
