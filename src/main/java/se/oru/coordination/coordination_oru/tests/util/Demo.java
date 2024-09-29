@@ -29,6 +29,7 @@ public abstract class Demo {
             ReedsSheppCarPlanner.isCachingPlanner = true;
             AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar;
 //            AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect;
+            AutonomousVehicle.numIterationsRoadmapConstruction = 2000;
 
             //HumanControl.isEnabledForBrowser = true;
             BrowserVisualization.isExtendedText = true;

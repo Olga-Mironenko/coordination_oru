@@ -42,7 +42,7 @@ extern "C" void cleanupPath(const PathPose* path) {
 
 PathFinder finder;
 
-extern "C" bool plan_multiple_circles(
+extern "C" bool plan(
   const uint8_t* occupancyMap, int mapWidth, int mapHeight, double mapResolution,
   double mapOriginX, double mapOriginY, double robotRadius,
   const double* xCoords, const double* yCoords, int numCoords,
@@ -50,7 +50,7 @@ extern "C" bool plan_multiple_circles(
   double goalX, double goalY, double goalTheta,
   PathPose** pathOut, int* pathOutLength,
   double distanceBetweenPathPoints, double turningRadius,
-  double planningTimeInSecs, PLANNING_ALGORITHM algo
+  int numIterations, PLANNING_ALGORITHM algo
   ) {
   // Overview:
   // - Create a `Footprint`.
@@ -60,7 +60,6 @@ extern "C" bool plan_multiple_circles(
 
   assert(algo == PRMstar);
   const char* mapId = "grid"; // TODO: add as a parameter
-  int numIterations = 100; // TODO: add as a parameter
 
   srand(1);
 

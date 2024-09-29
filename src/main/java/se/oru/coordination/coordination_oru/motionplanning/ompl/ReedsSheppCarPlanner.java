@@ -35,18 +35,19 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	private double distanceBetweenPathPoints = 0.5;
 	private double turningRadius = 1.0;
 	private double planningTimeInSecs = 30.0;
+	private int numIterationsRoadmapConstruction = 1000;
 	private Coordinate[] collisionCircleCenters = null;
 	private PLANNING_ALGORITHM algo;
 
 	public static boolean isCachingPlanner = true;
-	public static ReedsSheppCarPlannerLib INSTANCE_SIMPLE = null;
-	public static ReedsSheppCarPlannerLib INSTANCE_CACHING = null;
+	public static ReedsSheppCarPlannerLib INSTANCE_SIMPLE;
+	public static CachingPlannerLib INSTANCE_CACHING;
 	static {
 		NativeLibrary.addSearchPath("simplereedssheppcarplanner", "SimpleReedsSheppCarPlanner");
 		INSTANCE_SIMPLE = Native.loadLibrary("simplereedssheppcarplanner", ReedsSheppCarPlannerLib.class);
 
 		NativeLibrary.addSearchPath("cachingplanner", "SimpleReedsSheppCarPlanner");
-		INSTANCE_CACHING = Native.loadLibrary("cachingplanner", ReedsSheppCarPlannerLib.class);
+		INSTANCE_CACHING = Native.loadLibrary("cachingplanner", CachingPlannerLib.class);
 	}
 
 	@Override
@@ -136,7 +137,15 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	public double getPlanningTimeInSecs() {
 		return this.planningTimeInSecs;
 	}
-	
+
+	public int getNumIterationsRoadmapConstruction() {
+		return numIterationsRoadmapConstruction;
+	}
+
+	public void setNumIterationsRoadmapConstruction(int numIterationsRoadmapConstruction) {
+		this.numIterationsRoadmapConstruction = numIterationsRoadmapConstruction;
+	}
+
 	@Override
 	public boolean doPlanning() {
 		this.pathPS = null;
@@ -188,7 +197,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 						return false;
 					}
 				} else {
-					if (!INSTANCE_CACHING.plan_multiple_circles(
+					if (!INSTANCE_CACHING.plan(
 							occ, w, h, res,
 							mapOriginX, mapOriginY, 0, // TODO: robotRadius
 							xCoords, yCoords, numCoords, // `collisionCircleCenters`
@@ -196,7 +205,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 							goal_.getX(), goal_.getY(), goal_.getTheta(),
 							path, pathLength,
 							distanceBetweenPathPoints, turningRadius,
-							planningTimeInSecs, algo.ordinal()
+							numIterationsRoadmapConstruction, algo.ordinal()
 					)) {
 						return false;
 					}

@@ -1,6 +1,7 @@
 package se.oru.coordination.coordination_oru.motionplanning.tests.ompl;
 
 
+import org.apache.commons.lang.ArrayUtils;
 import org.metacsp.utility.UI.JTSDrawingPanel;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -22,7 +23,8 @@ public class TestReedsSheppCarPlannerSmoothGeometry {
 		JTSDrawingPanel panel = JTSDrawingPanel.makeEmpty("debug");
 		GeometryFactory gf = new GeometryFactory();
 		Polygon footprint = gf.createPolygon(new Coordinate[] {footprint1,footprint2,footprint3,footprint4,footprint1});
-		Polygon smoothedFootprint = gf.createPolygon(rsp.getCollisionCircleCenters());
+		Coordinate[] c = rsp.getCollisionCircleCenters();
+		Polygon smoothedFootprint = gf.createPolygon((Coordinate[]) ArrayUtils.add(c, c[0]));
 		System.out.println("Smoothing went from " + footprint.getCoordinates().length + " to " + smoothedFootprint.getCoordinates().length + " points");
 		panel.addGeometry("orig", footprint, true, true, true, "#00FF00");
 		panel.addGeometry("smooth", smoothedFootprint, false, false, true, "#FF0000");
