@@ -45,7 +45,7 @@ SimpleReedsSheppCarPlanner/.cmake
 SimpleReedsSheppCarPlanner/Makefile
 SimpleReedsSheppCarPlanner/cmake_install.cmake
 SimpleReedsSheppCarPlanner/libsimplereedssheppcarplanner.so
-SimpleReedsSheppCarPlanner/libcachingreedssheppcarplanner.so
+SimpleReedsSheppCarPlanner/libcachingplanner.so
 SimpleReedsSheppCarPlanner/Point2DPlanning
 SimpleReedsSheppCarPlanner/.ninja*
 SimpleReedsSheppCarPlanner/*.ninja

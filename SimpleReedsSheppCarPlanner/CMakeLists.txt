@@ -18,12 +18,12 @@ add_library(simplereedssheppcarplanner SHARED
         src/MultipleCircleReedsSheppCarPlanner.cpp)
 target_link_libraries(simplereedssheppcarplanner PRIVATE ompl::ompl)
 
-add_library(cachingreedssheppcarplanner SHARED
-        src/CachingReedsSheppCarPlanner.cpp
+add_library(cachingplanner SHARED
+        src/CachingPlanner.cpp
         src/Footprint.cpp
         src/PRMcustom.cpp
 )
-target_link_libraries(cachingreedssheppcarplanner PRIVATE ompl::ompl)
+target_link_libraries(cachingplanner PRIVATE ompl::ompl)
 
 add_executable(Point2DPlanning
         src/Point2DPlanning.cpp

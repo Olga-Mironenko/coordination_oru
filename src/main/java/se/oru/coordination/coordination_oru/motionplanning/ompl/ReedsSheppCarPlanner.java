@@ -45,8 +45,8 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 		NativeLibrary.addSearchPath("simplereedssheppcarplanner", "SimpleReedsSheppCarPlanner");
 		INSTANCE_SIMPLE = Native.loadLibrary("simplereedssheppcarplanner", ReedsSheppCarPlannerLib.class);
 
-		NativeLibrary.addSearchPath("cachingreedssheppcarplanner", "SimpleReedsSheppCarPlanner");
-		INSTANCE_CACHING = Native.loadLibrary("cachingreedssheppcarplanner", ReedsSheppCarPlannerLib.class);
+		NativeLibrary.addSearchPath("cachingplanner", "SimpleReedsSheppCarPlanner");
+		INSTANCE_CACHING = Native.loadLibrary("cachingplanner", ReedsSheppCarPlannerLib.class);
 	}
 
 	@Override

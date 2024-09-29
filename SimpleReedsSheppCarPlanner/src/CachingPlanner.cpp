@@ -5,17 +5,39 @@
 #include "Footprint.h"
 #include "PathFinder.h"
 
+namespace ob = ompl::base;
+namespace og = ompl::geometric;
+
 enum PLANNING_ALGORITHM { RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT };
 
-typedef struct PathPose {
+struct PathPose {
   double x;
   double y;
   double theta;
-} PathPose;
+};
 
-extern "C" void cleanupPath(PathPose* path) {
-  std::cout << "Cleaning up memory.." << std::endl;
-  free(path);
+void copyPath(
+  const std::shared_ptr<og::PathGeometric> &path,
+  PathPose** pathOut, int* pathOutLength)
+{
+  const std::vector<ob::State*>& states = path->getStates();
+  std::vector<double> reals;
+
+  *pathOutLength = states.size();
+  *pathOut = new PathPose[states.size()];
+
+  for (std::size_t i = 0; i < path->getStateCount(); ++i) {
+    const auto state = path->getState(i)->as<ob::ReedsSheppStateSpace::StateType>();
+
+    (*pathOut)[i].x = state->getX();
+    (*pathOut)[i].y = state->getY();
+    (*pathOut)[i].theta = state->getYaw();
+  }
+}
+
+extern "C" void cleanupPath(const PathPose* path) {
+  // std::cout << "Cleaning up memory.." << std::endl;
+  delete[] path;
 }
 
 PathFinder finder;
@@ -59,32 +81,18 @@ extern "C" bool plan_multiple_circles(
     return false;
   }
 
-  std::shared_ptr<ompl::geometric::PathGeometric> path = finder.query(
+  std::shared_ptr<og::PathGeometric> path = finder.query(
     conditions, startX, startY, startTheta, goalX, goalY, goalTheta);
 
   if (path == nullptr) {
     return false;
   }
 
-  // TODO: extract into a separate function
   double pLen = path->length();
   int numInterpolationPoints = pLen / distanceBetweenPathPoints;
   if (numInterpolationPoints > 0) path->interpolate(numInterpolationPoints);
 
-  const std::vector<ob::State*>& states = path->getStates();
-  std::vector<double> reals;
-
-  *pathOutLength = states.size();
-  *pathOut = static_cast<PathPose *>(malloc(sizeof(PathPose) * states.size()));
-  memset(*pathOut, 0, sizeof(PathPose) * states.size());
-
-  for (std::size_t i = 0; i < path->getStateCount(); ++i) {
-      const auto state = path->getState(i)->as<ob::ReedsSheppStateSpace::StateType>();
-
-      (*pathOut)[i].x = state->getX();
-      (*pathOut)[i].y = state->getY();
-      (*pathOut)[i].theta = state->getYaw();
-  }
+  copyPath(path, pathOut, pathOutLength);
   return true;
 }
 
