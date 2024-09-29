@@ -80,7 +80,7 @@ extern "C" bool plan(
   }
 
   std::shared_ptr<og::PathGeometric> path = finder.query(
-    conditions, startX, startY, startTheta, goalX, goalY, goalTheta);
+    conditions, startX, startY, startTheta, goalX, goalY, goalTheta, 1000);
 
   if (path == nullptr) {
     return false;

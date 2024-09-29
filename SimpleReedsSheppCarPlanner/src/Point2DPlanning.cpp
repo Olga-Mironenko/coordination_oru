@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#include <boost/graph/graphml.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <boost/graph/astar_search.hpp>
 
 #include <ompl/base/PlannerDataStorage.h>
@@ -25,7 +25,7 @@ constexpr double thetaUp = M_PI_2;
 constexpr double thetaRight = 0;
 constexpr double thetaLeft = M_PI;
 
-void testConditions(bool isPPM, bool isSinglePointFootprint) {
+void testConditions(bool isPPM, bool isSinglePointFootprint, int numIterationsSimplification) {
     const boost::filesystem::path dirResources(TEST_RESOURCES_DIR);
     const std::string filenameFloor = (dirResources / "ppm/floor.ppm").string();
     const std::string filenameFloorWithObstacle = (dirResources / "ppm/floor_with_obstacle.ppm").string();
@@ -40,6 +40,7 @@ void testConditions(bool isPPM, bool isSinglePointFootprint) {
 
         std::cout << "### " << (isPPM ? "PPM" : "Occupancy")
                   << " " << (isSinglePointFootprint ? "single" : "non-single")
+                  << " simp" << numIterationsSimplification
                   << " RUN " << iRun << std::endl;
         PathFinder finder;
 
@@ -73,26 +74,40 @@ void testConditions(bool isPPM, bool isSinglePointFootprint) {
 
         // Query 1:
 
+        auto makeFilename = [&](int iQuery) -> std::string {
+            return (
+                boost::format("tmp/result_%s_%d_simp%s.ppm")
+                % conditions->computeId() % iQuery % numIterationsSimplification).str();
+        };
+
         srand(1);
         conditions->loadFile(filenameFloorWithObstacle);
-        path = finder.query(conditions, 10, 10, thetaRight, 777, 1265, thetaDown);
+        path = finder.query(
+            conditions,
+            10, 10, thetaRight,
+            777, 1265, thetaDown,
+            numIterationsSimplification);
         if (isPPM && path != nullptr) {
             finder.savePath(
                 std::dynamic_pointer_cast<ConditionsPPM>(conditions),
                 path,
-                "tmp/result_" + conditions->computeId() + "_1.ppm");
+                makeFilename(1));
         }
 
         // Query 2:
 
         srand(1);
         conditions->loadFile(filenameFloor);
-        path = finder.query(conditions, 20, 20, thetaRight, 600, 1000, thetaDown);
+        path = finder.query(
+            conditions,
+            20, 20, thetaRight,
+            600, 1000, thetaDown,
+            numIterationsSimplification);
         if (isPPM && path != nullptr) {
             finder.savePath(
                 std::dynamic_pointer_cast<ConditionsPPM>(conditions),
                 path,
-                "tmp/result_" + conditions->computeId() + "_2.ppm");
+                makeFilename(2));
         }
     }
 }
@@ -103,6 +118,9 @@ int main(int /*argc*/, char ** /*argv*/) {
     // testConditions(false, true);
     // testConditions(true, true);
 
-    testConditions(false, false);
-    testConditions(true, false);
+    testConditions(true, false, 0);
+    testConditions(true, false, 100);
+    testConditions(true, false, 500);
+    testConditions(true, false, 1000);
+    // testConditions(true, false);
 }

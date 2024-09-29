@@ -167,7 +167,7 @@ protected:
 
 protected:
     // Based on `readPlannerData()` from `ompl/demos/PlannerData.cpp`.
-    std::shared_ptr<ompl::geometric::PathGeometric> findPath(ob::PlannerData &pd) const {
+    std::shared_ptr<og::PathGeometric> findPath(ob::PlannerData &pd) const {
         struct EdgePredicate {
             ob::SpaceInformationPtr si_;
             const ob::PlannerData *pd_;
@@ -277,11 +277,28 @@ protected:
         return path;
     }
 
+    std::shared_ptr<og::PathGeometric> simplify(
+        std::shared_ptr<og::PathGeometric> path, int numIterationsSimplification) const {
+        const auto si = ss_->getSpaceInformation();
+        og::PathSimplifier simplifier(si);
+
+        auto ptc = ob::IterationTerminationCondition(numIterationsSimplification);
+        // 10-20 "iterations" per one simplification cycle
+
+        std::shared_ptr<og::PathGeometric> pathCopy = std::make_shared<og::PathGeometric>(*path);
+        if (simplifier.simplify(*pathCopy, ptc, true)) {
+            return pathCopy;
+        }
+
+        return path;
+    }
+
 public:
-    std::shared_ptr<ompl::geometric::PathGeometric> query(
+    std::shared_ptr<og::PathGeometric> query(
         std::shared_ptr<Conditions> conditions,
         double xStart, double yStart, double tStart,
-        double xGoal, double yGoal, double tGoal) {
+        double xGoal, double yGoal, double tGoal,
+        int numIterationsSimplification) {
         OMPL_INFORM("*** QUERYING:");
 
         constructIfNeeded(conditions);
@@ -302,11 +319,22 @@ public:
         ob::PlannerData pd(ss_->getSpaceInformation());
         planner_->getPlannerData(pd);
         // dumpGraphML("pd.graphml");
-        std::shared_ptr<ompl::geometric::PathGeometric> path = findPath(pd);
+        std::shared_ptr<og::PathGeometric> path = findPath(pd);
         end = clock();
         OMPL_INFORM("Query: path finding took %.6f s", static_cast<double>(end - start) / CLOCKS_PER_SEC);
 
-        return path;
+        if (path == nullptr || numIterationsSimplification == 0) {
+            return path;
+        }
+
+        start = clock();
+        std::shared_ptr<og::PathGeometric> pathAfterSimplification = simplify(path, numIterationsSimplification);
+        end = clock();
+        OMPL_INFORM("Query: simplification (%s) took %.6f s",
+            pathAfterSimplification != path ? "successful" : "failed",
+            static_cast<double>(end - start) / CLOCKS_PER_SEC);
+
+        return pathAfterSimplification;
     }
 
 protected:
@@ -321,7 +349,7 @@ protected:
 public:
     void savePath(
         std::shared_ptr<ConditionsPPM> conditions,
-        const std::shared_ptr<ompl::geometric::PathGeometric> &path,
+        const std::shared_ptr<og::PathGeometric> &path,
         const std::string &filenameResult
         ) {
         path->interpolate();
