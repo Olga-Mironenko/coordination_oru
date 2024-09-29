@@ -15,6 +15,7 @@ import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
@@ -572,7 +573,12 @@ public class Missions {
 		if (isFinishTurnedAround) {
 			goals.add(GridMapConstants.turnAround(blueprint.finish));
 		}
-		blueprint.vehicle.getPlan(blueprint.start, goals.toArray(Pose[]::new), Missions.dynamicMap.filenameYAML, false);
+		blueprint.vehicle.getPlan(
+				blueprint.start,
+				goals.toArray(Pose[]::new),
+				FilenameUtils.getBaseName(Missions.dynamicMap.filenameYAML),
+				false
+		);
 
 		var pathForward = blueprint.vehicle.getPath();
 		PoseSteering[] pathBackward =

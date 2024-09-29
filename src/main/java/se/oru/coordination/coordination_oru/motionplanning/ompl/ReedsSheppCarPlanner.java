@@ -25,8 +25,7 @@ import se.oru.coordination.coordination_oru.util.GeometrySmoother;
 import se.oru.coordination.coordination_oru.util.GeometrySmoother.SmootherControl;
 
 public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
-	
-	public static enum PLANNING_ALGORITHM { RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT }; 
+    public static enum PLANNING_ALGORITHM { RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT };
 	public static boolean isDumpingToDot = false;
 
 	private double robotRadius = 1.0;
@@ -36,6 +35,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	private double turningRadius = 1.0;
 	private double planningTimeInSecs = 30.0;
 	private int numIterationsRoadmapConstruction = 1000;
+	private String mapId;
 	private Coordinate[] collisionCircleCenters = null;
 	private PLANNING_ALGORITHM algo;
 
@@ -146,6 +146,14 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 		this.numIterationsRoadmapConstruction = numIterationsRoadmapConstruction;
 	}
 
+	public String getMapId() {
+		return mapId;
+	}
+
+	public void setMapId(String mapId) {
+		this.mapId = mapId;
+	}
+
 	@Override
 	public boolean doPlanning() {
 		this.pathPS = null;
@@ -198,7 +206,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 					}
 				} else {
 					if (!INSTANCE_CACHING.plan(
-							occ, w, h, res,
+							mapId, occ, w, h, res,
 							mapOriginX, mapOriginY, 0, // TODO: robotRadius
 							xCoords, yCoords, numCoords, // `collisionCircleCenters`
 							start_.getX(), start_.getY(), start_.getTheta(),

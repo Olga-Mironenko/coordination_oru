@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface CachingPlannerLib extends Library {
 	boolean plan(
-            byte[] occupancyMap, int width, int height,
+            String mapId, byte[] occupancyMap, int width, int height,
             double mapResolution, double mapOriginX, double mapOriginY, double robotRadius,
             double[] xCoords, double[] yCoords, int numCoords,
             double startX, double startY, double startTheta,

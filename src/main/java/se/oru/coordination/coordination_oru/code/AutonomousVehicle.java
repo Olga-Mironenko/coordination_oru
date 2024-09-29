@@ -43,7 +43,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         super(vehicleNumber, 1, Color.YELLOW, null, 5, 2, 0.5, 0.5);
     }
 
-    public ReedsSheppCarPlanner makePlanner(String map, Coordinate[] footprint) {
+    public ReedsSheppCarPlanner makePlanner(String mapId, Coordinate[] footprint) {
 //        if (true) {
         if (rsp == null) {
             rsp = new ReedsSheppCarPlanner(planningAlgorithm);
@@ -56,6 +56,7 @@ public class AutonomousVehicle extends AbstractVehicle {
                 rsp.setPlanningTimeInSecs(15);
             } else {
                 rsp.setNumIterationsRoadmapConstruction(numIterationsRoadmapConstruction);
+                rsp.setMapId(mapId);
 
                 setMapForPlanner(Missions.getDynamicMap().cloneWithoutObstacles());
                 rsp.setStart(new Pose(-1, -1, -1));
@@ -74,11 +75,11 @@ public class AutonomousVehicle extends AbstractVehicle {
     }
 
     @Override
-    public void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath) {
-        getPlan(initial, goals, map, inversePath, new int[0]);
+    public void getPlan(Pose initial, Pose[] goals, String mapId, Boolean inversePath) {
+        getPlan(initial, goals, mapId, inversePath, new int[0]);
     }
 
-    public void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath, int[] robotIDsObstacles) {
+    public void getPlan(Pose initial, Pose[] goals, String mapId, Boolean inversePath, int[] robotIDsObstacles) {
         String filenameCache = null;
         PoseSteering[] path = null;
 
@@ -89,14 +90,14 @@ public class AutonomousVehicle extends AbstractVehicle {
         base += "_" + planningAlgorithm + (inversePath ? "_inv" : "");
 
         if (isPathCachingEnabled && robotIDsObstacles.length == 0) {
-            filenameCache = "paths/" + FilenameUtils.getBaseName(map) + "/" + base + ".path";
+            filenameCache = "paths/" + mapId + "/" + base + ".path";
             if (new File(filenameCache).isFile()) {
                 path = Missions.loadPathFromFile(filenameCache);
             }
         }
 
         if (path == null) {
-            var rsp = makePlanner(map, getFootprint());
+            var rsp = makePlanner(mapId, getFootprint());
             TrajectoryEnvelopeCoordinatorSimulation.tec.setMotionPlanner(this.getID(), rsp);
 
             if (robotIDsObstacles.length > 0) {

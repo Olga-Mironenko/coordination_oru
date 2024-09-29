@@ -43,7 +43,7 @@ extern "C" void cleanupPath(const PathPose* path) {
 PathFinder finder;
 
 extern "C" bool plan(
-  const uint8_t* occupancyMap, int mapWidth, int mapHeight, double mapResolution,
+  const char* mapId, const uint8_t* occupancyMap, int mapWidth, int mapHeight, double mapResolution,
   double mapOriginX, double mapOriginY, double robotRadius,
   const double* xCoords, const double* yCoords, int numCoords,
   double startX, double startY, double startTheta,
@@ -58,9 +58,8 @@ extern "C" bool plan(
   // - Call `finder.constructIfNeeded` (if startX == startY == startTheta == goalX == goalY == goalTheta == -1).
   // - Call `finder.query`.
 
+  ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
   assert(algo == PRMstar);
-  const char* mapId = "grid"; // TODO: add as a parameter
-
   srand(1);
 
   std::shared_ptr<Footprint> footprint = std::make_shared<Footprint>(
