@@ -41,6 +41,7 @@ extern "C" void cleanupPath(const PathPose* path) {
 }
 
 PathFinder finder;
+bool isRNGSeeded = false;
 
 extern "C" bool plan(
   const char* mapId, const uint8_t* occupancyMap, int mapWidth, int mapHeight, double mapResolution,
@@ -61,6 +62,10 @@ extern "C" bool plan(
   ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
   assert(algo == PRMstar);
   srand(1);
+  if (! isRNGSeeded) {
+    ompl::RNG::setSeed(1);
+    isRNGSeeded = true;
+  }
 
   std::shared_ptr<Footprint> footprint = std::make_shared<Footprint>(
     mapResolution, mapOriginX, mapOriginY, robotRadius,
@@ -86,9 +91,10 @@ extern "C" bool plan(
     return false;
   }
 
-  double pLen = path->length();
-  int numInterpolationPoints = pLen / distanceBetweenPathPoints;
-  if (numInterpolationPoints > 0) path->interpolate(numInterpolationPoints);
+  // TODO: move into `query`
+   double pLen = path->length();
+   int numInterpolationPoints = pLen / distanceBetweenPathPoints;
+   if (numInterpolationPoints > 0) path->interpolate(numInterpolationPoints);
 
   copyPath(path, pathOut, pathOutLength);
   return true;

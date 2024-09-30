@@ -34,7 +34,7 @@ public:
     explicit PathFinder() = default;
 
 protected:
-    void createSimpleSetup(std::shared_ptr<Conditions> conditions) {
+    void createSimpleSetup(std::shared_ptr<Conditions> conditions, bool isConstruction) {
         ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(conditions->getTurningRadius()));
         ob::RealVectorBounds bounds(2);
         bounds.low[0] = 0;
@@ -44,12 +44,16 @@ protected:
         space->as<ob::SE2StateSpace>()->setBounds(bounds);
         ss_ = std::make_shared<og::SimpleSetup>(space);
 
-        // set the deterministic sampler
-        space->setStateSamplerAllocator(
-            std::bind(
-                &PathFinder::allocateSampler,
-                this, std::placeholders::_1
-            ));
+        if (isConstruction) {
+            // Set the deterministic (Halton) sampler.
+            // Note: The sampler doesn't support near-sampling needed to fix paths during simplification.
+            // But it provides more uniform milestones, so it's used during construction.
+            space->setStateSamplerAllocator(
+                std::bind(
+                    &PathFinder::allocateHaltonSampler,
+                    this, std::placeholders::_1
+                ));
+        }
 
         // set state validity checking for this space
         ss_->setStateValidityChecker([this, conditions](const ob::State *state) {
@@ -98,7 +102,7 @@ protected:
 
 protected:
     void loadPlannerData(std::shared_ptr<Conditions> conditions) {
-        createSimpleSetup(conditions);
+        createSimpleSetup(conditions, false);
 
         ob::PlannerDataStorage pdStorage;
         ob::PlannerData pd(ss_->getSpaceInformation());
@@ -116,7 +120,7 @@ protected:
     void construct(std::shared_ptr<Conditions> conditions) {
         OMPL_INFORM("*** CONSTRUCTION:");
 
-        createSimpleSetup(conditions);
+        createSimpleSetup(conditions, true);
         planner_ = std::make_shared<og::PRMcustom>(ss_->getSpaceInformation(), true);
         ss_->setPlanner(planner_);
         ss_->setup();
@@ -287,10 +291,13 @@ protected:
 
         std::shared_ptr<og::PathGeometric> pathCopy = std::make_shared<og::PathGeometric>(*path);
         if (simplifier.simplify(*pathCopy, ptc, true)) {
+            std::cout << "Simplified: " << path->getStateCount() << " states and length " << path->length()
+                    << std::endl;
             return pathCopy;
         }
 
-        return path;
+        std::cout << "Simplification failed" << std::endl;
+        return pathCopy;
     }
 
 public:
@@ -298,7 +305,7 @@ public:
         std::shared_ptr<Conditions> conditions,
         double xStart, double yStart, double tStart,
         double xGoal, double yGoal, double tGoal,
-        int numIterationsSimplification) {
+        int numIterationsSimplification, int numAttemptsSimplification = 3) {
         OMPL_INFORM("*** QUERYING:");
 
         constructIfNeeded(conditions);
@@ -327,14 +334,28 @@ public:
             return path;
         }
 
-        start = clock();
-        std::shared_ptr<og::PathGeometric> pathAfterSimplification = simplify(path, numIterationsSimplification);
-        end = clock();
-        OMPL_INFORM("Query: simplification (%s) took %.6f s",
-            pathAfterSimplification != path ? "successful" : "failed",
-            static_cast<double>(end - start) / CLOCKS_PER_SEC);
+        // return path;
 
-        return pathAfterSimplification;
+//        double pLen = path->length();
+//        int numInterpolationPoints = pLen / 0.1;
+//        if (numInterpolationPoints > 0) path->interpolate(numInterpolationPoints);
+
+        for (int iAttempt = 0; iAttempt < numAttemptsSimplification; iAttempt++) {
+            start = clock();
+            std::shared_ptr<og::PathGeometric> pathAfterSimplification = simplify(path, numIterationsSimplification);
+            bool isOk = pathAfterSimplification != path;
+            end = clock();
+
+            OMPL_INFORM("Query: simplification (%s) took %.6f s",
+                        isOk ? "successful" : "failed",
+                        static_cast<double>(end - start) / CLOCKS_PER_SEC);
+
+            if (isOk) {
+                return pathAfterSimplification;
+            }
+        }
+
+        return path;
     }
 
 protected:
@@ -417,7 +438,7 @@ protected:
         return ! conditions->isFootprintOccupied(state->getX(), state->getY(), state->getYaw());
     }
 
-    ob::StateSamplerPtr allocateSampler(const ob::StateSpace *space) const {
+    ob::StateSamplerPtr allocateHaltonSampler(const ob::StateSpace *space) const {
         // specify which deterministic sequence to use, here: HaltonSequence
         return std::make_shared<ob::SE2DeterministicStateSampler>(
             space, std::make_shared<ob::HaltonSequence>(3));

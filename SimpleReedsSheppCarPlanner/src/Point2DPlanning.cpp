@@ -30,8 +30,8 @@ void testConditions(bool isPPM, bool isSinglePointFootprint, int numIterationsSi
     const std::string filenameFloor = (dirResources / "ppm/floor.ppm").string();
     const std::string filenameFloorWithObstacle = (dirResources / "ppm/floor_with_obstacle.ppm").string();
 
-    for (int iRun = 1000; iRun <= 1000; iRun += 500) {
-        const int numIterations = iRun;
+    const int numIterations = 1000;
+    for (int iRun = numIterations; iRun <= numIterations; iRun += 500) {
         constexpr double turningRadius = 10;
 
         // Initialization
@@ -96,31 +96,38 @@ void testConditions(bool isPPM, bool isSinglePointFootprint, int numIterationsSi
 
         // Query 2:
 
-        srand(1);
-        conditions->loadFile(filenameFloor);
-        path = finder.query(
-            conditions,
-            20, 20, thetaRight,
-            600, 1000, thetaDown,
-            numIterationsSimplification);
-        if (isPPM && path != nullptr) {
-            finder.savePath(
-                std::dynamic_pointer_cast<ConditionsPPM>(conditions),
-                path,
-                makeFilename(2));
-        }
+         srand(1);
+         conditions->loadFile(filenameFloor);
+         path = finder.query(
+             conditions,
+             20, 20, thetaRight,
+             600, 1000, thetaDown,
+             numIterationsSimplification);
+         if (isPPM && path != nullptr) {
+             finder.savePath(
+                 std::dynamic_pointer_cast<ConditionsPPM>(conditions),
+                 path,
+                 makeFilename(2));
+         }
     }
 }
 
-int main(int /*argc*/, char ** /*argv*/) {
+int main(int argc, char *argv[]) {
+    // assert(argc == 2);
+    // int seed = std::atoi(argv[1]);
+    int seed = 107;
+
+    std::cout << "Seed: " << seed << std::endl;
+    ompl::RNG::setSeed(seed);
+
     ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
 
     // testConditions(false, true);
     // testConditions(true, true);
 
-    testConditions(true, false, 0);
-    testConditions(true, false, 100);
+    // testConditions(true, false, 0);
+    // testConditions(true, false, 100);
     testConditions(true, false, 500);
-    testConditions(true, false, 1000);
+    // testConditions(true, false, 1000);
     // testConditions(true, false);
 }
