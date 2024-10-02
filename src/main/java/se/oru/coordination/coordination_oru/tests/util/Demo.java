@@ -32,7 +32,7 @@ public abstract class Demo {
                 AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect;
             } else {
                 AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar;
-                AutonomousVehicle.numIterationsRoadmapConstruction = 1000;
+                AutonomousVehicle.numIterationsRoadmapConstruction = 3000;
                 AutonomousVehicle.numIterationsPathSimplification = 1000;
             }
 

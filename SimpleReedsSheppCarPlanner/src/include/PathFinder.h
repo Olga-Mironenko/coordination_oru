@@ -313,7 +313,7 @@ public:
         OMPL_INFORM("Query: initialization took %.6f s", static_cast<double>(end - start) / CLOCKS_PER_SEC);
 
         if (plannerStatusInit != ob::PlannerStatus::UNKNOWN) {
-            OMPL_ERROR("Query: initialization failed, planner returned %s", plannerStatusInit.asString());
+            OMPL_ERROR("Query: initialization failed, planner returned %s", plannerStatusInit.asString().c_str());
             return nullptr;
         }
 

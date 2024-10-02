@@ -2,7 +2,6 @@ package se.oru.coordination.coordination_oru.tests;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.code.*;
-import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
@@ -137,33 +136,38 @@ public class GridTestInteractive {
         Missions.setMap(YAML_FILE);
         Missions.startMissionDispatcher(tec);
 
-        Missions.loopMissions.put(hum0.getID(), false);
-        Missions.enqueueMissions(
-                new MissionBlueprint(hum0, humStart, humFinish)
-        );
+        new GatedThread("enqueue thread") { // path planning takes a while
+            @Override
+            public void runCore() {
+                Missions.loopMissions.put(hum0.getID(), false);
+                Missions.enqueueMissions(
+                        new MissionBlueprint(hum0, humStart, humFinish)
+                );
 
-        double xMaxClean = Missions.getDynamicMap().getWidthMeters() - GridMapConstants.xLeft;
+                double xMaxClean = Missions.getDynamicMap().getWidthMeters() - GridMapConstants.xLeft;
 
-        Missions.loopMissions.put(aut1.getID(), false);
-        Missions.enqueueMissions(
-                new MissionBlueprint(aut1, aut1Start, aut1Finish).setDirection(
-                        MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
-                ).setIsToCleanForward(true).setRadiusClean(6).setDxClean(2).setXMaxClean(xMaxClean)
-        );
+                Missions.loopMissions.put(aut1.getID(), false);
+                Missions.enqueueMissions(
+                        new MissionBlueprint(aut1, aut1Start, aut1Finish).setDirection(
+                                MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                        ).setIsToCleanForward(true).setRadiusClean(6).setDxClean(2).setXMaxClean(xMaxClean)
+                );
 
-        Missions.loopMissions.put(aut2.getID(), true);
-        Missions.enqueueMissions(
-                new MissionBlueprint(aut2, aut2Start, aut2Finish).setDirection(
-                        MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
-                )
-        );
+                Missions.loopMissions.put(aut2.getID(), true);
+                Missions.enqueueMissions(
+                        new MissionBlueprint(aut2, aut2Start, aut2Finish).setDirection(
+                                MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                        )
+                );
 
-        Missions.loopMissions.put(aut3.getID(), false);
-        Missions.enqueueMissions(
-                new MissionBlueprint(aut3, aut3Start, aut3Finish).setDirection(
-                        MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
-                ).setIsToCleanForward(true).setRadiusClean(5).setDxClean(1).setXMaxClean(xMaxClean)
-        );
+                Missions.loopMissions.put(aut3.getID(), false);
+                Missions.enqueueMissions(
+                        new MissionBlueprint(aut3, aut3Start, aut3Finish).setDirection(
+                                MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                        ).setIsToCleanForward(true).setRadiusClean(5).setDxClean(1).setXMaxClean(xMaxClean)
+                );
+            }
+        }.start();
 
         /*
         new GatedThread("cleanCircle thread") {
