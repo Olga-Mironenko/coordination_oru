@@ -20,6 +20,7 @@ import java.util.List;
 public class AutonomousVehicle extends AbstractVehicle {
     public static boolean isPathCachingEnabled = false;
     public static int numIterationsRoadmapConstruction = 1000;
+    public static int numIterationsPathSimplification = 500;
     public static ReedsSheppCarPlanner.PLANNING_ALGORITHM planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect;
     private ReedsSheppCarPlanner rsp;
 
@@ -47,7 +48,7 @@ public class AutonomousVehicle extends AbstractVehicle {
 //        if (true) {
         if (rsp == null) {
             rsp = new ReedsSheppCarPlanner(planningAlgorithm);
-            rsp.setRadius(1); // TODO (the greater the value, the less is the number of robot circles)
+            rsp.setRadius(0.5); // TODO (the greater the value, the less is the number of robot circles)
             rsp.setFootprint(footprint);
             rsp.setTurningRadius(0.5);
             rsp.setDistanceBetweenPathPoints(0.1); // TODO: resolution?
@@ -56,6 +57,7 @@ public class AutonomousVehicle extends AbstractVehicle {
                 rsp.setPlanningTimeInSecs(15);
             } else {
                 rsp.setNumIterationsRoadmapConstruction(numIterationsRoadmapConstruction);
+                rsp.setNumIterationsPathSimplification(numIterationsPathSimplification);
                 rsp.setMapId(mapId);
 
                 setMapForPlanner(Missions.getDynamicMap().cloneWithoutObstacles());

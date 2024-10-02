@@ -9,36 +9,52 @@
 
 class Conditions {
 protected:
+    // Construction:
     std::string mapId_;
-    size_t numIterations_;
+    size_t numIterationsConstruction_;
     double turningRadius_;
     std::shared_ptr<Footprint> footprint_;
+    // Querying:
+    size_t numIterationsSimplification_;
+    size_t numAttemptsSimplification_ = 3;
 
 public:
-    Conditions(const std::string &mapId, const size_t numIterations, const double turningRadius,
+    Conditions(const std::string &mapId,
+               const size_t numIterationsConstruction,
+               const size_t numIterationsSimplification,
+               const double turningRadius,
                const std::shared_ptr<Footprint> &footprint)
         : mapId_(mapId),
-          numIterations_(numIterations),
+          numIterationsConstruction_(numIterationsConstruction),
+          numIterationsSimplification_(numIterationsSimplification),
           turningRadius_(turningRadius),
           footprint_(footprint) {
     }
 
     virtual ~Conditions() = default;
 
-    std::string computeId() const {
+    std::string computeIdConstruction() const {
         std::stringstream ss;
-        ss << mapId_ << "_" << numIterations_ << "_" << turningRadius_ << "_" << footprint_->computeId();
+        ss << mapId_ << "_" << numIterationsConstruction_ << "_" << turningRadius_ << "_" << footprint_->computeId();
         return ss.str();
     }
 
     std::string computeFilenamePD() const {
         std::stringstream ss;
-        ss << "tmp/" << computeId() << ".pd";
+        ss << "tmp/" << computeIdConstruction() << ".pd";
         return ss.str();
     }
 
-    size_t getNumIterations() const {
-        return numIterations_;
+    size_t getNumIterationsConstruction() const {
+        return numIterationsConstruction_;
+    }
+
+    size_t getNumIterationsSimplification() const {
+        return numIterationsSimplification_;
+    }
+
+    size_t getNumAttemptsSimplification() const {
+        return numAttemptsSimplification_;
     }
 
     std::shared_ptr<Footprint> getFootprint() const {

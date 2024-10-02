@@ -18,7 +18,7 @@ public interface CachingPlannerLib extends Library {
             double goalX, double goalY, double goalTheta,
             PointerByReference path, IntByReference pathLength,
             double distanceBetweenPathPoints, double turningRadius,
-            int numIterations, int algo);
+            int numIterationsConstruction, int numIterationsSimplification);
 	
 	void cleanupPath(Pointer p);
 	
@@ -35,7 +35,7 @@ public interface CachingPlannerLib extends Library {
 		}
 		@Override
 		protected List<String> getFieldOrder() {
-			return Arrays.asList(new String[] {"x", "y", "theta"});
+			return Arrays.asList("x", "y", "theta");
 		}
 	}
 }

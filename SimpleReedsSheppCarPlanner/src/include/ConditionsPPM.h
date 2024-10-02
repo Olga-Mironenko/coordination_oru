@@ -14,10 +14,13 @@ protected:
     ompl::PPM ppm_;
 
 public:
-    ConditionsPPM(const std::string &mapId, const size_t numIterations, const double turningRadius,
+    ConditionsPPM(const std::string &mapId,
+                  const size_t numIterationsConstruction,
+                  const size_t numIterationsSimplification,
+                  const double turningRadius,
                   const std::shared_ptr<Footprint> &footprint,
                   const std::string &filenamePPMWithoutObstacles)
-        : Conditions(mapId, numIterations, turningRadius, footprint) {
+        : Conditions(mapId, numIterationsConstruction, numIterationsSimplification, turningRadius, footprint) {
         ConditionsPPM::loadFile(filenamePPMWithoutObstacles);
     }
 

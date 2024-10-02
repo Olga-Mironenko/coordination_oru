@@ -48,8 +48,8 @@ public:
     }
 
     Footprint(
-        double _mapResolution, double _mapOriginX, double _mapOriginY, double _radius,
-        const double* _xCoords, const double* _yCoords, int _numCoords, bool _isYInverted
+        const double _mapResolution, const double _mapOriginX, const double _mapOriginY, const double _radius,
+        const double* _xCoords, const double* _yCoords, const int _numCoords, const bool _isYInverted
         ) {
         isPoint = false;
         isYInverted = _isYInverted;

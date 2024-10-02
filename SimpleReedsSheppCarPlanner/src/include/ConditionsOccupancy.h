@@ -18,16 +18,22 @@ class ConditionsOccupancy : public Conditions {
     int mapHeight_;
 
 public:
-    ConditionsOccupancy(const std::string &mapId, const size_t numIterations, const double turningRadius,
+    ConditionsOccupancy(const std::string &mapId,
+                        const size_t numIterationsConstruction,
+                        const size_t numIterationsSimplification,
+                        const double turningRadius,
                         const std::shared_ptr<Footprint> &footprint,
                         const uint8_t* occupancyMap, const int mapWidth, const int mapHeight)
-        : Conditions(mapId, numIterations, turningRadius, footprint),
+        : Conditions(mapId, numIterationsConstruction, numIterationsSimplification, turningRadius, footprint),
           occupancyMap_(occupancyMap), mapWidth_(mapWidth), mapHeight_(mapHeight) {}
 
-    ConditionsOccupancy(const std::string &mapId, const size_t numIterations, const double turningRadius,
+    ConditionsOccupancy(const std::string &mapId,
+                        const size_t numIterationsConstruction,
+                        const size_t numIterationsSimplification,
+                        const double turningRadius,
                         const std::shared_ptr<Footprint> &footprint,
                         const std::string &filenamePPMWithoutObstacles)
-        : Conditions(mapId, numIterations, turningRadius, footprint) {
+        : Conditions(mapId, numIterationsConstruction, numIterationsSimplification, turningRadius, footprint) {
         ConditionsOccupancy::loadFile(filenamePPMWithoutObstacles);
     }
 

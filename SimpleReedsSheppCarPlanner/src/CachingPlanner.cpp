@@ -8,8 +8,6 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
-enum PLANNING_ALGORITHM { RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT };
-
 struct PathPose {
   double x;
   double y;
@@ -47,11 +45,11 @@ extern "C" bool plan(
   const char* mapId, const uint8_t* occupancyMap, int mapWidth, int mapHeight, double mapResolution,
   double mapOriginX, double mapOriginY, double robotRadius,
   const double* xCoords, const double* yCoords, int numCoords,
-  double startX, double startY, double startTheta,
-  double goalX, double goalY, double goalTheta,
+  const double startX, const double startY, const double startTheta,
+  const double goalX, const double goalY, const double goalTheta,
   PathPose** pathOut, int* pathOutLength,
-  double distanceBetweenPathPoints, double turningRadius,
-  int numIterations, PLANNING_ALGORITHM algo
+  const double distanceBetweenPathPoints, double turningRadius,
+  int numIterationsConstruction, int numIterationsSimplification
   ) {
   // Overview:
   // - Create a `Footprint`.
@@ -60,19 +58,19 @@ extern "C" bool plan(
   // - Call `finder.query`.
 
   ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
-  assert(algo == PRMstar);
   srand(1);
   if (! isRNGSeeded) {
     ompl::RNG::setSeed(1);
     isRNGSeeded = true;
   }
 
-  std::shared_ptr<Footprint> footprint = std::make_shared<Footprint>(
+  auto footprint = std::make_shared<Footprint>(
     mapResolution, mapOriginX, mapOriginY, robotRadius,
     xCoords, yCoords, numCoords,
     true);
-  std::shared_ptr<Conditions> conditions = std::make_shared<ConditionsOccupancy>(
-    mapId, numIterations, turningRadius, footprint, occupancyMap, mapWidth, mapHeight);
+  const std::shared_ptr<Conditions> conditions = std::make_shared<ConditionsOccupancy>(
+    mapId, numIterationsConstruction, numIterationsSimplification, turningRadius,
+    footprint, occupancyMap, mapWidth, mapHeight);
 
   if (startX == -1 && startY == -1 && startTheta == -1 && goalX == -1 && goalY == -1 && goalTheta == -1) {
     for (int x = 0; x < mapWidth; x++) {
@@ -84,22 +82,17 @@ extern "C" bool plan(
     return false;
   }
 
-  std::shared_ptr<og::PathGeometric> path = finder.query(
-    conditions, startX, startY, startTheta, goalX, goalY, goalTheta, 1000);
+  const std::shared_ptr<og::PathGeometric> path = finder.query(
+    conditions, startX, startY, startTheta, goalX, goalY, goalTheta);
 
   if (path == nullptr) {
     return false;
   }
 
-  // TODO: move into `query`
-   double pLen = path->length();
-   int numInterpolationPoints = pLen / distanceBetweenPathPoints;
-   if (numInterpolationPoints > 0) path->interpolate(numInterpolationPoints);
+  const double pLen = path->length();
+  const int numInterpolationPoints = pLen / distanceBetweenPathPoints;
+  if (numInterpolationPoints > 0) path->interpolate(numInterpolationPoints);
 
   copyPath(path, pathOut, pathOutLength);
   return true;
-}
-
-extern "C" bool plan_multiple_circles_nomap(double* xCoords, double* yCoords, int numCoords, double startX, double startY, double startTheta, double goalX, double goalY, double goalTheta, PathPose** path, int* pathLength, double distanceBetweenPathPoints, double turningRadius, double planningTimeInSecs, PLANNING_ALGORITHM algo) {
-  return false;
 }

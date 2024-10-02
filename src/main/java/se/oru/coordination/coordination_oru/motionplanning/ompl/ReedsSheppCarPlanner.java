@@ -25,7 +25,7 @@ import se.oru.coordination.coordination_oru.util.GeometrySmoother;
 import se.oru.coordination.coordination_oru.util.GeometrySmoother.SmootherControl;
 
 public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
-    public static enum PLANNING_ALGORITHM { RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT };
+	public static enum PLANNING_ALGORITHM { RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT };
 	public static boolean isDumpingToDot = false;
 
 	private double robotRadius = 1.0;
@@ -35,6 +35,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	private double turningRadius = 1.0;
 	private double planningTimeInSecs = 30.0;
 	private int numIterationsRoadmapConstruction = 1000;
+	private int numIterationsPathSimplification = 500;
 	private String mapId;
 	private Coordinate[] collisionCircleCenters = null;
 	private PLANNING_ALGORITHM algo;
@@ -133,21 +134,13 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	public Pose[] getGoals() {
 		return this.goal;
 	}
-	
-	public double getPlanningTimeInSecs() {
-		return this.planningTimeInSecs;
-	}
-
-	public int getNumIterationsRoadmapConstruction() {
-		return numIterationsRoadmapConstruction;
-	}
 
 	public void setNumIterationsRoadmapConstruction(int numIterationsRoadmapConstruction) {
 		this.numIterationsRoadmapConstruction = numIterationsRoadmapConstruction;
 	}
 
-	public String getMapId() {
-		return mapId;
+	public void setNumIterationsPathSimplification(int numIterationsPathSimplification) {
+		this.numIterationsPathSimplification = numIterationsPathSimplification;
 	}
 
 	public void setMapId(String mapId) {
@@ -213,7 +206,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 							goal_.getX(), goal_.getY(), goal_.getTheta(),
 							path, pathLength,
 							distanceBetweenPathPoints, turningRadius,
-							numIterationsRoadmapConstruction, algo.ordinal()
+							numIterationsRoadmapConstruction, numIterationsPathSimplification
 					)) {
 						return false;
 					}

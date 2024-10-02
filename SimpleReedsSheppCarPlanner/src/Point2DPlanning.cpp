@@ -7,9 +7,7 @@
 #include <boost/graph/astar_search.hpp>
 
 #include <ompl/base/PlannerDataStorage.h>
-#include <ompl/base/PlannerDataGraph.h>
 #include <ompl/base/samplers/DeterministicStateSampler.h>
-#include <ompl/base/spaces/ReedsSheppStateSpace.h>
 #include <ompl/geometric/SimpleSetup.h>
 
 #include "ConditionsOccupancy.h"
@@ -30,18 +28,18 @@ void testConditions(bool isPPM, bool isSinglePointFootprint, int numIterationsSi
     const std::string filenameFloor = (dirResources / "ppm/floor.ppm").string();
     const std::string filenameFloorWithObstacle = (dirResources / "ppm/floor_with_obstacle.ppm").string();
 
-    const int numIterations = 1000;
-    for (int iRun = numIterations; iRun <= numIterations; iRun += 500) {
+    for (int numIterationsConstruction = 2000; numIterationsConstruction <= 2000; numIterationsConstruction++) {
         constexpr double turningRadius = 10;
 
-        // Initialization
+        // Initialization:
 
         srand(1);
 
         std::cout << "### " << (isPPM ? "PPM" : "Occupancy")
                   << " " << (isSinglePointFootprint ? "single" : "non-single")
+                  << " con" << numIterationsConstruction
                   << " simp" << numIterationsSimplification
-                  << " RUN " << iRun << std::endl;
+                  << std::endl;
         PathFinder finder;
 
         std::shared_ptr<Footprint> footprint;
@@ -51,10 +49,10 @@ void testConditions(bool isPPM, bool isSinglePointFootprint, int numIterationsSi
             footprint = std::make_shared<Footprint>();
         } else {
             // See `makeFootprint` in `AbstractVehicle.java`.
-            double xLengthFront = 5;
-            double xLengthBack = 5;
-            double yLengthLeft = 2;
-            double yLengthRight = 2;
+            constexpr double xLengthFront = 5;
+            constexpr double xLengthBack = 5;
+            constexpr double yLengthLeft = 2;
+            constexpr double yLengthRight = 2;
             footprint = std::make_shared<Footprint>(1, 0, 0, 2,
                                                     new double[4] { -xLengthBack, xLengthFront, xLengthFront, -xLengthBack },
                                                     new double[4] { yLengthLeft, yLengthLeft, -yLengthRight, -yLengthRight },
@@ -63,10 +61,12 @@ void testConditions(bool isPPM, bool isSinglePointFootprint, int numIterationsSi
 
         if (isPPM) {
             conditions = std::make_shared<ConditionsPPM>(
-                "floor", numIterations, turningRadius, footprint, filenameFloor);
+                "floor", numIterationsConstruction, numIterationsSimplification, turningRadius, footprint,
+                filenameFloor);
         } else {
             conditions = std::make_shared<ConditionsOccupancy>(
-                "floor", numIterations, turningRadius, footprint, filenameFloor);
+                "floor", numIterationsConstruction, numIterationsSimplification, turningRadius, footprint,
+                filenameFloor);
         }
         finder.constructIfNeeded(conditions);
 
@@ -76,8 +76,8 @@ void testConditions(bool isPPM, bool isSinglePointFootprint, int numIterationsSi
 
         auto makeFilename = [&](int iQuery) -> std::string {
             return (
-                boost::format("tmp/result_%s_%d_simp%s.ppm")
-                % conditions->computeId() % iQuery % numIterationsSimplification).str();
+                boost::format("tmp/result_%s_query%d_simp%s.ppm")
+                % conditions->computeIdConstruction() % iQuery % numIterationsSimplification).str();
         };
 
         srand(1);
@@ -85,8 +85,7 @@ void testConditions(bool isPPM, bool isSinglePointFootprint, int numIterationsSi
         path = finder.query(
             conditions,
             10, 10, thetaRight,
-            777, 1265, thetaDown,
-            numIterationsSimplification);
+            777, 1265, thetaDown);
         if (isPPM && path != nullptr) {
             finder.savePath(
                 std::dynamic_pointer_cast<ConditionsPPM>(conditions),
@@ -96,31 +95,30 @@ void testConditions(bool isPPM, bool isSinglePointFootprint, int numIterationsSi
 
         // Query 2:
 
-         srand(1);
-         conditions->loadFile(filenameFloor);
-         path = finder.query(
-             conditions,
-             20, 20, thetaRight,
-             600, 1000, thetaDown,
-             numIterationsSimplification);
-         if (isPPM && path != nullptr) {
-             finder.savePath(
-                 std::dynamic_pointer_cast<ConditionsPPM>(conditions),
-                 path,
-                 makeFilename(2));
-         }
+        srand(1);
+        conditions->loadFile(filenameFloor);
+        path = finder.query(
+            conditions,
+            20, 20, thetaRight,
+            600, 1000, thetaDown);
+        if (isPPM && path != nullptr) {
+            finder.savePath(
+                std::dynamic_pointer_cast<ConditionsPPM>(conditions),
+                path,
+                makeFilename(2));
+        }
     }
 }
 
 int main(int argc, char *argv[]) {
+    ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
+
     // assert(argc == 2);
     // int seed = std::atoi(argv[1]);
     int seed = 107;
 
     std::cout << "Seed: " << seed << std::endl;
     ompl::RNG::setSeed(seed);
-
-    ompl::msg::setLogLevel(ompl::msg::LOG_INFO);
 
     // testConditions(false, true);
     // testConditions(true, true);

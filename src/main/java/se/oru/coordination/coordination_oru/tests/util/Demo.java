@@ -33,6 +33,7 @@ public abstract class Demo {
             } else {
                 AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar;
                 AutonomousVehicle.numIterationsRoadmapConstruction = 1000;
+                AutonomousVehicle.numIterationsPathSimplification = 1000;
             }
 
             //HumanControl.isEnabledForBrowser = true;
