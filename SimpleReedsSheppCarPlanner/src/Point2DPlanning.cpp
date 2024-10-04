@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
 
     // testConditions(true, false, 0);
     // testConditions(true, false, 100);
-    testConditions(true, false, 500);
+    testConditions(true, false, 0);
     // testConditions(true, false, 1000);
     // testConditions(true, false);
 }

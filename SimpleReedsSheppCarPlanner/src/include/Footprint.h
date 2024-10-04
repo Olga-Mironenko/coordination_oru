@@ -1,6 +1,7 @@
 #ifndef FOOTPRINT_H
 #define FOOTPRINT_H
 
+#include <iomanip>
 #include <sstream>
 
 class Conditions;
@@ -40,6 +41,7 @@ public:
 
     std::string computeId() const {
         std::stringstream ss;
+        ss << std::setprecision(1);
         for (int i = 0; i < numCoords; i++) {
             ss << xCoords[i] << "," << yCoords[i] << "_";
         }

@@ -45,13 +45,13 @@ public class DynamicMineMap {
 
         final String YAML_FILE = "maps/mine-map-test.yaml";
 
-        final Pose mainTunnelLeft = new Pose(4.25,15.35, -Math.PI);
+        final Pose mainTunnelLeft = new Pose(4.5,14.8, GridMapConstants.thetaRight);
         final Pose mainTunnelRight = new Pose(80.05,24.75, Math.PI);
         final Pose orePass = new Pose(54.11,11.34,-Math.PI/2);
         final Pose drawPoint15 = new Pose(9.9,84.5,-Math.PI/2);
         final Pose drawPoint16 = new Pose(17.1,84.6,-Math.PI/2);
         final Pose drawPoint17 = new Pose(24.3,85.45,-Math.PI/2);
-        final Pose drawPoint18 = new Pose(31.6,84.6,-Math.PI/2);
+        final Pose drawPoint18 = new Pose(31.6,84.6,GridMapConstants.thetaUp);
         final Pose drawPoint19 = new Pose(39.05,85.45,-Math.PI/2);
         final Pose drawPoint19_bottom = new Pose(38.8,28.6,-Math.PI/2);
         final Pose mainTunnelBetween19And20 = new Pose(43.57,17.85, -Math.PI);
@@ -85,7 +85,7 @@ public class DynamicMineMap {
         final double maxAccelerationHum = 2.0;
         final double maxAccelerationAut = 0.4;
 
-        VehicleSize vehicleSizeHum = new VehicleSize(0.5, 0.5, 0, 0, 0, 0);
+        VehicleSize vehicleSizeHum = new VehicleSize(1.5, 1, 0, 0, 0, 0);
         VehicleSize vehicleSizeAut1 = vehicleSizeHum;
         VehicleSize vehicleSizeAut2 = vehicleSizeHum;
         VehicleSize vehicleSizeAut3 = vehicleSizeHum;
@@ -132,7 +132,7 @@ public class DynamicMineMap {
         Missions.setMap(YAML_FILE); // before BrowserVisualization
 
         var viz = new BrowserVisualization();
-        viz.setInitialTransform(7.0, 5.0, 5.0);
+        viz.setInitialTransform(7.0, 32.0, -8.5);
         tec.setVisualization(viz);
 
         Missions.startMissionDispatcher(tec);
@@ -145,19 +145,25 @@ public class DynamicMineMap {
                         new MissionBlueprint(hum0, humStart, humFinish)
                 );
 
-                Missions.loopMissions.put(aut1.getID(), false);
+                Missions.loopMissions.put(aut1.getID(), true);
                 Missions.enqueueMissions(
-                        new MissionBlueprint(aut1, aut1Start, aut1Finish)
+                        new MissionBlueprint(aut1, aut1Start, aut1Finish).setDirection(
+                                MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                        )
                 );
 
                 Missions.loopMissions.put(aut2.getID(), true);
                 Missions.enqueueMissions(
-                        new MissionBlueprint(aut2, aut2Start, aut2Finish)
+                        new MissionBlueprint(aut2, aut2Start, aut2Finish).setDirection(
+                                MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                        )
                 );
 
-                Missions.loopMissions.put(aut3.getID(), false);
+                Missions.loopMissions.put(aut3.getID(), true);
                 Missions.enqueueMissions(
-                        new MissionBlueprint(aut3, aut3Start, aut3Finish)
+                        new MissionBlueprint(aut3, aut3Start, aut3Finish).setDirection(
+                                MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                        )
                 );
             }
         }.start();

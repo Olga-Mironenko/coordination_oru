@@ -4,8 +4,8 @@ import sys
 
 assert len(sys.argv) == 7
 
-height_pixels = int(sys.argv[1])
-width_pixels = int(sys.argv[2])
+width_pixels = int(sys.argv[1])
+height_pixels = int(sys.argv[2])
 resolution = float(sys.argv[3])
 if sys.argv[4] == 'px2m':
     x_pixels = int(sys.argv[5])
