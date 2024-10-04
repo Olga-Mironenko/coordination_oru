@@ -71,7 +71,8 @@ public class DynamicMineMap {
         final Pose orePassOppositePoint = new Pose(53,32.4,-Math.PI/2);
 
         final Pose humStart = drawPoint20;
-        final Pose humFinish = drawPoint21;
+        final Pose humFinish = new Pose(46.7,19.2, GridMapConstants.thetaRight);
+//        final Pose humFinish = drawPoint21;
         final boolean ishumReturn = false;
         final boolean ishumLoop = false;
         final Pose aut1Start = mainTunnelRight;
@@ -85,7 +86,7 @@ public class DynamicMineMap {
         final double maxAccelerationHum = 2.0;
         final double maxAccelerationAut = 0.4;
 
-        VehicleSize vehicleSizeHum = new VehicleSize(1.5, 1, 0, 0, 0, 0);
+        VehicleSize vehicleSizeHum = new VehicleSize(2, 1.5, 0, 0, 0, 0);
         VehicleSize vehicleSizeAut1 = vehicleSizeHum;
         VehicleSize vehicleSizeAut2 = vehicleSizeHum;
         VehicleSize vehicleSizeAut3 = vehicleSizeHum;

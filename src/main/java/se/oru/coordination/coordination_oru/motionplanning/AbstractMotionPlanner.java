@@ -218,12 +218,18 @@ public abstract class AbstractMotionPlanner {
 		goalFoot = at.transform(goalFoot);
 		return goalFoot;
 	}
+
+	public static boolean intersectsConsiderably(Geometry footprint, Geometry obstacle) {
+		Geometry intersection = obstacle.intersection(footprint);
+		double area = intersection.getArea();
+		return area > 0 && area > footprint.getArea() * 0.03;
+	}
 	
 	public synchronized boolean plan() {
 		Geometry goalFoot = this.getFootprintInPose(this.goal[this.goal.length-1]);
 		if (this.om != null && checkGoalPose) {
 			for (Geometry obs : this.om.getObstacles()) {
-				if (obs.intersects(goalFoot)) {
+				if (intersectsConsiderably(goalFoot, obs)) {
 					metaCSPLogger.info("Goal intersects with an obstacle, no path can exist");
 					return false;
 				}
@@ -259,8 +265,8 @@ public abstract class AbstractMotionPlanner {
 			Geometry checkFoot = getFootprintInPose(p);
 			if (this.om != null) {
 				for (Geometry obs : this.om.getObstacles()) {
-					if (obs.intersects(checkFoot)) {
-						collidingPose = new Pose(p.getX(),p.getY(),p.getTheta());
+					if (intersectsConsiderably(checkFoot, obs)) {
+						collidingPose = new Pose(p.getX(), p.getY(), p.getTheta());
 						metaCSPLogger.info("Path verification failed");
 						return false;
 					}
