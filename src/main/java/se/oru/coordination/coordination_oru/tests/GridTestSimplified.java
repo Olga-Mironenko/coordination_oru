@@ -122,12 +122,13 @@ public class GridTestSimplified {
         tec.setYieldIfParking(false);
         tec.setBreakDeadlocks(true, false, false);
 
+        Missions.setMap(YAML_FILE); // before BrowserVisualization
+
         var viz = new BrowserVisualization();
         viz.setMap(YAML_FILE);
         viz.setInitialTransform(7.0, 5.0, 5.0);
         tec.setVisualization(viz);
 
-        Missions.setMap(YAML_FILE);
         Missions.startMissionDispatcher(tec);
 
         Missions.loopMissions.put(hum0.getID(), true);
