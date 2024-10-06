@@ -331,11 +331,15 @@ void ompl::geometric::PRMcustom::expandRoadmap(const base::PlannerTerminationCon
     while (!ptc)
     {
         iterations_++;
+
+        // Note: `rand()` is used instead of `rng_` because the former can be reset more explicitly (with `srand()`).
         double uniform = static_cast<double>(rand()) / RAND_MAX;
         // OMPL_DEBUG("uniform=%g", uniform);
+
         Vertex v = pdf.sample(uniform);
         unsigned int s =
             si_->randomBounceMotion(simpleSampler_, stateProperty_[v], workStates.size(), workStates, false);
+
         if (s > 0)
         {
             s--;

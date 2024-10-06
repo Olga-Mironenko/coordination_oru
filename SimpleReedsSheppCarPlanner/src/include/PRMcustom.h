@@ -424,9 +424,6 @@ namespace ompl
              * assumed) */
             bool userSetConnectionStrategy_{false};
 
-            /** \brief Random number generator */
-            RNG rng_;
-
             /** \brief A flag indicating that a solution has been added during solve() */
             bool addedNewSolution_{false};
 
