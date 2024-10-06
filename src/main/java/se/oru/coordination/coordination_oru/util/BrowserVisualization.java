@@ -173,16 +173,16 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 	
 	private void enqueueMessage(String message) {
-		if (BrowserVisualizationSocket.ENDPOINTS.size() > 0) {
-			synchronized (BrowserVisualizationSocket.ENDPOINTS) {
+		synchronized (BrowserVisualizationSocket.ENDPOINTS) {
+			if (!BrowserVisualizationSocket.ENDPOINTS.isEmpty()) {
 				this.msgQueue.add(message);
 			}
 		}
 	}
 	
 	private void sendMessages() {
-		if (BrowserVisualizationSocket.ENDPOINTS.size() > 0) {
-			synchronized (BrowserVisualizationSocket.ENDPOINTS) {
+		synchronized (BrowserVisualizationSocket.ENDPOINTS) {
+			if (!BrowserVisualizationSocket.ENDPOINTS.isEmpty()) {
 				for (String message : this.msgQueue) {
 					sendMessage(message);
 				}

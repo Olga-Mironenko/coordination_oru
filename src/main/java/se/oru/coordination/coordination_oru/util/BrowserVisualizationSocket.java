@@ -21,7 +21,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 public class BrowserVisualizationSocket extends WebSocketAdapter {
 
-    public static HashSet<RemoteEndpoint> ENDPOINTS = new HashSet<RemoteEndpoint>();
+    public static final HashSet<RemoteEndpoint> ENDPOINTS = new HashSet<RemoteEndpoint>();
 
     public static DynamicMap dynamicMap = null;
 
@@ -36,52 +36,48 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         return Missions.getDynamicMap();
     }
 
-    private static void sendMap(RemoteEndpoint rep) {
+    private static void sendMap(RemoteEndpoint rep) throws IOException {
         DynamicMap dmap = getDynamicMap();
-        if (dmap != null) {
-            try {
-                System.out.println("Sending map metadata to newly connected client...");
-                String setMetadataString = "{ \"operation\" : \"setMapMetadata\","
-                        + "\"data\" : "
-                        + "{ \"resolution\" : " + dmap.resolution + ", \"x\" : " + dmap.origin.x + ", \"y\" : " + dmap.origin.y + "}}";
-                rep.sendString(setMetadataString);
+        assert dmap != null;
 
-                System.out.println("Sending map to newly connected client...");
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(dmap.mapImageBlackAndWhite, "png", baos);
-                baos.flush();
-                byte[] imageInBytes = baos.toByteArray();
-                baos.close();
-                ByteBuffer bb = ByteBuffer.wrap(imageInBytes);
-                rep.sendBytes(bb);
-            }
-            catch(IOException e) { e.printStackTrace(); }
+        System.out.println("Sending map metadata to newly connected client...");
+        String setMetadataString = "{ \"operation\" : \"setMapMetadata\","
+                + "\"data\" : "
+                + "{ \"resolution\" : " + dmap.resolution + ", \"x\" : " + dmap.origin.x + ", \"y\" : " + dmap.origin.y + "}}";
+        rep.sendString(setMetadataString);
 
-            if (BrowserVisualizationSocket.initialTranslation != null) {
-                try {
-                    System.out.println("Sending initial transform to newly connected client...");
-                    String setInitialTransformString = "{ \"operation\" : \"setInitialTransform\","
-                            + "\"data\" : "
-                            + "{ \"scale\" : " + initialScale + ", \"x\" : " + initialTranslation.x + ", \"y\" : " + initialTranslation.y + "}}";
-                    rep.sendString(setInitialTransformString);
-                }
-                catch(IOException e) { e.printStackTrace(); }
-            }
+        System.out.println("Sending map to newly connected client...");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(dmap.mapImageBlackAndWhite, "png", baos);
+        baos.flush();
+        byte[] imageInBytes = baos.toByteArray();
+        baos.close();
+        ByteBuffer bb = ByteBuffer.wrap(imageInBytes);
+        rep.sendBytes(bb);
 
-            try {
-                System.out.println("Sending initial font scale to newly connected client...");
-                String setFontScaleString = "{ \"operation\" : \"setFontScale\","
-                        + "\"data\" : "
-                        + "{ \"scale\" : " + fontScale + "}}";
-                rep.sendString(setFontScaleString);
-            }
-            catch(IOException e) { e.printStackTrace(); }
-        }
+        assert BrowserVisualizationSocket.initialTranslation != null;
+        System.out.println("Sending initial transform to newly connected client...");
+        String setInitialTransformString = "{ \"operation\" : \"setInitialTransform\","
+                + "\"data\" : "
+                + "{ \"scale\" : " + initialScale + ", \"x\" : " + initialTranslation.x + ", \"y\" : " + initialTranslation.y + "}}";
+        rep.sendString(setInitialTransformString);
+
+        System.out.println("Sending initial font scale to newly connected client...");
+        String setFontScaleString = "{ \"operation\" : \"setFontScale\","
+                + "\"data\" : "
+                + "{ \"scale\" : " + fontScale + "}}";
+        rep.sendString(setFontScaleString);
     }
 
     public static void sendMapToAll() {
-        for (RemoteEndpoint rep : BrowserVisualizationSocket.ENDPOINTS) {
-            sendMap(rep);
+        synchronized (ENDPOINTS) {
+            for (RemoteEndpoint rep : BrowserVisualizationSocket.ENDPOINTS) {
+                try {
+                    sendMap(rep);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 
@@ -89,13 +85,17 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
     public void onWebSocketConnect(Session sess) {
         super.onWebSocketConnect(sess);
         System.out.println("Socket Connected: " + sess);
+
+        RemoteEndpoint rep = super.getRemote();
         synchronized (ENDPOINTS) {
-            RemoteEndpoint rep = super.getRemote();
             ENDPOINTS.add(rep);
+        }
 
-            //Send map and map parameters if present
-
+        //Send map and map parameters if present
+        try {
             sendMap(rep);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -152,7 +152,9 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
         System.out.println("Removing connection to client");
-        ENDPOINTS.remove(super.getRemote());
+        synchronized (ENDPOINTS) {
+            ENDPOINTS.remove(super.getRemote());
+        }
         super.onWebSocketClose(statusCode,reason);
         System.out.println("Socket Closed: [" + statusCode + "] " + reason);
     }
