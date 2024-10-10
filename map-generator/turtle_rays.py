@@ -17,8 +17,11 @@ import turtle
 from PIL import Image
 
 
-WIDTH_PEN = 30
-LENGTH_STEP = 40
+WIDTH_PEN = 10
+LENGTH_STEP = 20
+assert WIDTH_PEN < LENGTH_STEP  # for a gap between rays
+
+LENGTH_OP = LENGTH_STEP
 
 # Note: GIF can have only 256 colors, so they may be distorted (not pure black in particular;
 # see https://docs.gimp.org/2.10/en/gimp-stuck-export-gif-colors-changed.html).
@@ -46,6 +49,9 @@ class Drawer:
         assert 0 <= yc < self.canvas_height
 
         return xc, yc
+
+    def get_starting_theta(self):
+        return int(self.turtle.heading() - 180)
 
     def compute_ray_length(self):
         current_x, current_y = self.get_turtle_position_on_canvas()
@@ -77,8 +83,10 @@ class Drawer:
             current_x, current_y = next_x, next_y
             length += 0.1
 
-    def draw_branch(self, num_rays, is_horizontal):
-        for i in range(num_rays):
+    def draw_branch(self, num_rays, i_branch):
+        is_horizontal = i_branch % 2 == 0
+
+        for i_ray in range(num_rays):
             self.turtle.forward(LENGTH_STEP)
             if is_horizontal:
                 self.turtle.right(90)
@@ -87,8 +95,12 @@ class Drawer:
 
             ray_length = int(max(0, self.compute_ray_length() - WIDTH_GAP_RAY_OBSTACLE))
             self.turtle.forward(ray_length)
-            print(f'Ray end: {self.get_turtle_position_on_canvas()}')
+            print(f'Ray end: {(*self.get_turtle_position_on_canvas(), self.get_starting_theta())}')
             self.turtle.backward(ray_length)
+
+            if i_branch == 0 and i_ray == 2:
+                self.turtle.backward(LENGTH_OP)
+                self.turtle.forward(LENGTH_OP)
 
             if is_horizontal:
                 self.turtle.left(90)
@@ -101,10 +113,10 @@ class Drawer:
         else:
             self.turtle.left(90)
 
-    def draw_tree(self, rays):
+    def draw_tree(self, tree):
         self.turtle.setheading(180)  # west
-        for i_branch, num_rays in enumerate(rays):
-            self.draw_branch(num_rays, i_branch % 2 == 0)
+        for i_branch, num_rays in enumerate(tree):
+            self.draw_branch(num_rays, i_branch)
 
 
 def image_to_occupied_pixels(image):
@@ -143,8 +155,19 @@ def main():
 
     drawer = Drawer(t, occupied_pixels, image.width, image.height)
 
-    drawer.draw_tree([6, 2, 4])
-    #drawer.draw_tree([5, 4])
+    trees = [
+        [6, 0, 4],
+        [5, 4, 3, 2],
+    ]
+
+    for i_tree in range(len(trees) - 1):
+        tree = trees[i_tree]
+        for i_ray in range(len(tree)):
+            if i_ray % 2 == 1:
+                assert tree[i_ray] == 0
+
+    for tree in trees:
+        drawer.draw_tree(tree)
 
     t.screen.mainloop()
 
