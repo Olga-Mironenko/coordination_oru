@@ -11,48 +11,140 @@ E.g.::
         )
     )
 """
+import math
 import turtle
 
-M = 10
+from PIL import Image
 
-def draw_branch(t, num_rays, is_horizontal):
-    for i in range(num_rays):
-        t.forward(M)
+
+WIDTH_PEN = 30
+LENGTH_STEP = 40
+
+# Note: GIF can have only 256 colors, so they may be distorted (not pure black in particular;
+# see https://docs.gimp.org/2.10/en/gimp-stuck-export-gif-colors-changed.html).
+FILENAME_BG_PNG = 'obstacles.png'
+WIDTH_GAP_IMAGE_CANVAS = 100
+WIDTH_GAP_RAY_OBSTACLE = WIDTH_PEN // 2 + 10
+
+
+class Drawer:
+    def __init__(self, t, occupied_pixels, canvas_width, canvas_height):
+        self.turtle: turtle.Turtle = t
+        self.occupied_pixels: set[tuple[int, int]] = occupied_pixels
+        self.canvas_width = canvas_width
+        self.canvas_height = canvas_height
+
+    def get_turtle_position_on_canvas(self):
+        x, y = self.turtle.position()
+        x = int(x)
+        y = int(y)
+
+        xc = x + self.canvas_width // 2
+        assert 0 <= xc < self.canvas_width
+
+        yc = self.canvas_height // 2 - y
+        assert 0 <= yc < self.canvas_height
+
+        return xc, yc
+
+    def compute_ray_length(self):
+        current_x, current_y = self.get_turtle_position_on_canvas()
+        heading_rad = math.radians(self.turtle.heading())
+        ray_width = self.turtle.pensize()
+
+        # Define the change in x and y for the given heading
+        delta_x = math.cos(heading_rad)
+        delta_y = -math.sin(heading_rad)  # Negate to make positive angles go upwards
+
+        length = 0.0
+
+        while True:
+            # Calculate the new coordinates (move by small increments)
+            next_x = current_x + delta_x * 0.1
+            next_y = current_y + delta_y * 0.1
+
+            # Check for collisions with canvas borders
+            if next_x < 0 or next_x >= self.canvas_width or next_y < 0 or next_y >= self.canvas_height:
+                return length
+
+            # Check for collision with occupied pixels
+            for i in range(-ray_width // 2, ray_width // 2 + 1):
+                for j in range(-ray_width // 2, ray_width // 2 + 1):
+                    if (int(next_x) + i, int(next_y) + j) in self.occupied_pixels:
+                        return length
+
+            # Update the current position and increase the length
+            current_x, current_y = next_x, next_y
+            length += 0.1
+
+    def draw_branch(self, num_rays, is_horizontal):
+        for i in range(num_rays):
+            self.turtle.forward(LENGTH_STEP)
+            if is_horizontal:
+                self.turtle.right(90)
+            else:
+                self.turtle.left(90)
+
+            ray_length = int(max(0, self.compute_ray_length() - WIDTH_GAP_RAY_OBSTACLE))
+            self.turtle.forward(ray_length)
+            print(f'Ray end: {self.get_turtle_position_on_canvas()}')
+            self.turtle.backward(ray_length)
+
+            if is_horizontal:
+                self.turtle.left(90)
+            else:
+                self.turtle.right(90)
+
+        self.turtle.forward(LENGTH_STEP)
         if is_horizontal:
-            t.right(90)
+            self.turtle.right(90)
         else:
-            t.left(90)
+            self.turtle.left(90)
 
-        t.forward(10 * M)
-        t.backward(10 * M)
-
-        if is_horizontal:
-            t.left(90)
-        else:
-            t.right(90)
-
-    t.forward(M)
-    if is_horizontal:
-        t.right(90)
-    else:
-        t.left(90)
+    def draw_tree(self, rays):
+        self.turtle.setheading(180)  # west
+        for i_branch, num_rays in enumerate(rays):
+            self.draw_branch(num_rays, i_branch % 2 == 0)
 
 
-def draw_tree(t, rays):
-    t.setheading(180)  # west
-    for i_branch, num_rays in enumerate(rays):
-        draw_branch(t, num_rays, i_branch % 2 == 0)
+def image_to_occupied_pixels(image):
+    assert image.mode == 'RGB'
+    pixels = image.load()
+    occupied_pixels = set()
+
+    for y in range(image.height):
+        for x in range(image.width):
+            rgb = pixels[x, y]
+            if rgb != (0, 0, 0):
+                occupied_pixels.add((x, y))
+                #print(f"Pixel at ({x}, {y}) is occupied.")
+
+    return occupied_pixels
 
 
 def main():
+    image = Image.open(FILENAME_BG_PNG)
+    occupied_pixels = image_to_occupied_pixels(image)
+
     turtle.mode('standard')
+    turtle.setup(image.width + WIDTH_GAP_IMAGE_CANVAS, image.height + WIDTH_GAP_IMAGE_CANVAS)
+    turtle.getscreen().bgcolor('gray')
+    turtle.getscreen().bgpic(FILENAME_BG_PNG)
 
     t = turtle.Turtle()
+    t.pencolor('white')
+    t.width(WIDTH_PEN)
     t.speed('fastest')
-    t.width(3)
 
-    draw_tree(t, [6, 2, 4])
-    draw_tree(t, [5, 4])
+    t.penup()
+    t.goto(image.width // 2 - 10 - WIDTH_PEN // 2,
+           -image.height // 2 + 30 + WIDTH_PEN // 2)
+    t.pendown()
+
+    drawer = Drawer(t, occupied_pixels, image.width, image.height)
+
+    drawer.draw_tree([6, 2, 4])
+    #drawer.draw_tree([5, 4])
 
     t.screen.mainloop()
 
