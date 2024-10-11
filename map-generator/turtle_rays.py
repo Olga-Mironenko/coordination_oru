@@ -16,7 +16,7 @@ import turtle
 
 from PIL import Image
 
-LENGTH_STEP = 50
+LENGTH_STEP = 30
 WIDTH_PEN = LENGTH_STEP // 2
 assert WIDTH_PEN < LENGTH_STEP  # for a gap between rays
 
@@ -29,6 +29,30 @@ LENGTH_RAY_MIN = 1  # or LENGTH_STEP
 FILENAME_BG_PNG = 'obstacles.png'
 WIDTH_GAP_IMAGE_CANVAS = 100
 WIDTH_GAP_RAY_OBSTACLE = WIDTH_PEN // 2 + 10
+
+
+class Tree:
+    def __init__(self, branches, heading_horizontal=180, heading_vertical=90):
+        self.branches = branches
+        self.heading_horizontal = heading_horizontal
+        self.heading_vertical = heading_vertical
+
+    def __repr__(self):
+        return f'Tree({self.branches}, {self.heading_horizontal}, {self.heading_vertical})'
+
+    def check(self, is_last):
+        if not is_last:
+            for i_branch, branch in enumerate(self.branches):
+                # Horizontal branches must have no rays:
+                if i_branch % 2 == 1:
+                    assert branch == 0
+
+    def compute_height_before_op(self):
+        num_steps_before_op = I_RAY_BRANCH_ZERO_OP + 1
+        length_before_op = LENGTH_STEP * num_steps_before_op
+        alpha = math.radians(self.heading_horizontal - 180)
+        height_before_op = length_before_op * math.sin(alpha)
+        return height_before_op
 
 
 class Drawer:
@@ -54,6 +78,7 @@ class Drawer:
     def get_starting_theta(self):
         return int(self.turtle.heading() - 180)
 
+    # TODO: add `length_limit`
     def compute_ray_length(self):
         current_x, current_y = self.get_turtle_position_on_canvas()
         heading_rad = math.radians(self.turtle.heading())
@@ -95,17 +120,19 @@ class Drawer:
         self.turtle.forward(distance)
         return True
 
-    def draw_branch(self, num_rays, i_branch):
+    def draw_branch(self, tree, num_rays, i_branch):
         is_horizontal = i_branch % 2 == 0
+        heading_branch = tree.heading_horizontal if is_horizontal else tree.heading_vertical
+        heading_ray = tree.heading_vertical if is_horizontal else tree.heading_horizontal
 
         for i_ray in range(num_rays):
+            # Move to the beginning of the ray:
+            self.turtle.setheading(heading_branch)
             if not self.forward_with_check(LENGTH_STEP):
                 return False
-            if is_horizontal:
-                self.turtle.right(90)
-            else:
-                self.turtle.left(90)
 
+            # Draw the ray:
+            self.turtle.setheading(heading_ray)
             ray_length = self.compute_ray_length() - WIDTH_GAP_RAY_OBSTACLE
             if ray_length < LENGTH_RAY_MIN:
                 return False
@@ -113,6 +140,7 @@ class Drawer:
             print(f'Ray end: {(*self.get_turtle_position_on_canvas(), self.get_starting_theta())}')
             self.turtle.backward(ray_length)
 
+            # Draw the OP if needed:
             if i_branch == 0 and i_ray == I_RAY_BRANCH_ZERO_OP:
                 self.turtle.left(180)
                 if not self.forward_with_check(LENGTH_OP):
@@ -120,30 +148,34 @@ class Drawer:
                 self.turtle.backward(LENGTH_OP)
                 self.turtle.right(180)
 
-            if is_horizontal:
-                self.turtle.left(90)
-            else:
-                self.turtle.right(90)
-
+        self.turtle.setheading(heading_branch)
         if not self.forward_with_check(LENGTH_STEP):
             return False
-        if is_horizontal:
-            self.turtle.right(90)
-        else:
-            self.turtle.left(90)
 
         return True
 
     def draw_tree(self, tree):
-        self.turtle.setheading(180)  # west
-
-        for i_branch, num_rays in enumerate(tree):
-            if not self.draw_branch(num_rays, i_branch):
+        for i_branch, num_rays in enumerate(tree.branches):
+            if not self.draw_branch(tree, num_rays, i_branch):
                 return False
 
         return True
 
-    def draw_trees(self, trees):
+    def home(self, trees, width_image, height_image):
+        x = width_image - WIDTH_PEN // 2
+        y = height_image - WIDTH_PEN // 2
+
+        y -= trees[0].compute_height_before_op() + LENGTH_OP
+
+        self.turtle.penup()
+        self.turtle.goto(int(x) - width_image // 2,
+                         height_image // 2 - int(y))
+        self.turtle.pendown()
+
+    def draw_trees(self, trees, width_image, height_image):
+        assert trees
+        self.home(trees, width_image, height_image)
+
         for tree in trees:
             if not self.draw_tree(tree):
                 return False
@@ -171,7 +203,10 @@ def main():
     occupied_pixels = image_to_occupied_pixels(image)
 
     turtle.mode('standard')
-    turtle.setup(image.width + WIDTH_GAP_IMAGE_CANVAS, image.height + WIDTH_GAP_IMAGE_CANVAS)
+    turtle.setup(width=image.width + WIDTH_GAP_IMAGE_CANVAS,
+                 height=image.height + WIDTH_GAP_IMAGE_CANVAS,
+                 startx=0,
+                 starty=0)
     turtle.getscreen().bgcolor('gray')
     turtle.getscreen().bgpic(FILENAME_BG_PNG)
 
@@ -180,27 +215,18 @@ def main():
     t.width(WIDTH_PEN)
     t.speed('fastest')
 
-    t.penup()
-    t.goto(image.width // 2 - WIDTH_PEN // 2,
-           -image.height // 2 + LENGTH_OP + WIDTH_PEN // 2)
-    t.pendown()
-
     drawer = Drawer(t, occupied_pixels, image.width, image.height)
 
     trees = [
-        [6, 0, 4],
-        [3, 0, 5],
-        [5, 4, 3, 2],
+        Tree([5, 0, 2], 170, 90),
+        Tree([3, 0, 2], 180, 270),
+        Tree([5, 4, 3, 2], 150, 90),
     ]
 
-    for i_tree in range(len(trees) - 1):
-        tree = trees[i_tree]
-        for i_branch in range(len(tree)):
-            # Horizontal branches must have no rays:
-            if i_branch % 2 == 1:
-                assert tree[i_branch] == 0
+    for i_tree, tree in enumerate(trees):
+        tree.check(i_tree == len(trees) - 1)
 
-    if not drawer.draw_trees(trees):
+    if not drawer.draw_trees(trees, image.width, image.height):
         print('Not all trees are drawn')
     else:
         print('All trees are drawn')
