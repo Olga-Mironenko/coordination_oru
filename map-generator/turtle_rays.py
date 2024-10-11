@@ -28,12 +28,19 @@ LENGTH_RAY_MIN = 1  # or LENGTH_STEP
 
 # Note: GIF can have only 256 colors, so they may be distorted (not pure black in particular;
 # see https://docs.gimp.org/2.10/en/gimp-stuck-export-gif-colors-changed.html).
-FILENAME_BG_PNG = 'obstacles.png'
+FILENAME_OBSTACLES_PNG = 'obstacles.png'
 WIDTH_GAP_IMAGE_CANVAS = 100
+assert WIDTH_GAP_IMAGE_CANVAS % 2 == 0
 WIDTH_GAP_RAY_OBSTACLE = WIDTH_PEN // 2 + 10
+
+X_WINDOW_START = 0
+Y_WINDOW_START = 0
 
 PROBABILITY_BRIDGE_PRESENCE = 0.5
 PROBABILITY_BRIDGE_SINGLE = 0.5
+
+FILENAME_MAP_EPS = 'map.eps'
+FILENAME_MAP_PNG = 'map.png'
 
 
 class Tree:
@@ -251,19 +258,42 @@ def image_to_occupied_pixels(image):
     return occupied_pixels
 
 
+def export_to_eps(t: turtle.Turtle, filename_eps: str, width: int, height: int) -> None:
+    t.hideturtle()
+    t.getscreen().getcanvas().postscript(file=filename_eps,
+                                         width=width, height=height,
+                                         pagewidth=width, pageheight=height)
+    t.showturtle()
+
+
+def convert_eps_to_png(filename_eps, filename_png, width, height):
+    pic = Image.open(filename_eps)
+    pic.load()
+
+    x = WIDTH_GAP_IMAGE_CANVAS // 2 + 1
+    y = WIDTH_GAP_IMAGE_CANVAS // 2 + 1
+    pic = pic.crop((x, y, x + width, y + height))
+
+    pic.save(filename_png)
+
+
 def main():
     random.seed(1)
 
-    image = Image.open(FILENAME_BG_PNG)
+    image = Image.open(FILENAME_OBSTACLES_PNG)
     occupied_pixels = image_to_occupied_pixels(image)
 
+    screen = turtle.getscreen()
+    width_screen = image.width + WIDTH_GAP_IMAGE_CANVAS
+    height_screen = image.height + WIDTH_GAP_IMAGE_CANVAS
+
     turtle.mode('standard')
-    turtle.setup(width=image.width + WIDTH_GAP_IMAGE_CANVAS,
-                 height=image.height + WIDTH_GAP_IMAGE_CANVAS,
-                 startx=0,
-                 starty=0)
-    turtle.getscreen().bgcolor('gray')
-    turtle.getscreen().bgpic(FILENAME_BG_PNG)
+    turtle.setup(width=width_screen,
+                 height=height_screen,
+                 startx=X_WINDOW_START,
+                 starty=Y_WINDOW_START)
+    screen.bgcolor('gray')
+    screen.bgpic(FILENAME_OBSTACLES_PNG)
 
     t = turtle.Turtle()
     t.pencolor('white')
@@ -286,7 +316,10 @@ def main():
     else:
         print('All trees are drawn')
 
-    t.screen.mainloop()
+    export_to_eps(t, FILENAME_MAP_EPS, width_screen, height_screen)
+    convert_eps_to_png(FILENAME_MAP_EPS, FILENAME_MAP_PNG, image.width, image.height)
+
+    screen.mainloop()
 
 
 if __name__ == '__main__':
