@@ -12,7 +12,9 @@ E.g.::
     )
 """
 import math
+import random
 import turtle
+from typing import Optional
 
 from PIL import Image
 
@@ -29,6 +31,8 @@ LENGTH_RAY_MIN = 1  # or LENGTH_STEP
 FILENAME_BG_PNG = 'obstacles.png'
 WIDTH_GAP_IMAGE_CANVAS = 100
 WIDTH_GAP_RAY_OBSTACLE = WIDTH_PEN // 2 + 10
+
+PROBABILITY_BRIDGE = 0.5
 
 
 class Tree:
@@ -124,16 +128,45 @@ class Drawer:
     def get_pose(self):
         return *self.get_turtle_position_on_canvas(), self.get_starting_theta()
 
+    def draw_bridge_and_return_to_branch(self, altitude, spans, ray_length, heading_branch, heading_ray):
+        """
+        E.g., for spans (0, 233) and (15, 506):
+
+        - intersection: (15, 233)
+        - go backwards by: (506 - 233) + (233 - 15) * ratio
+        """
+        ratio = random.random()
+        intersection_min = max(spans[-2][0], spans[-1][0])
+        intersection_max = min(spans[-2][1], spans[-1][1])
+        length_before_bridge = int(altitude + ray_length - intersection_max
+                                   + (intersection_max - intersection_min) * ratio)
+        self.turtle.backward(length_before_bridge)
+
+        self.turtle.setheading(heading_branch + 180)
+        if not self.forward_with_check(LENGTH_STEP):
+            return False
+        self.turtle.backward(LENGTH_STEP)
+
+        self.turtle.setheading(heading_ray)
+        self.turtle.backward(ray_length - length_before_bridge)
+
     def draw_branch(self, tree, num_rays, i_branch):
         is_horizontal = i_branch % 2 == 0
         heading_branch = tree.heading_horizontal if is_horizontal else tree.heading_vertical
         heading_ray = tree.heading_vertical if is_horizontal else tree.heading_horizontal
+
+        altitude: Optional[float] = None
+        spans: list[tuple[float, float]] = []   # each pair: (altitude of the ray, altitude + length of the ray)
 
         for i_ray in range(num_rays):
             # Move to the beginning of the ray:
             self.turtle.setheading(heading_branch)
             if not self.forward_with_check(LENGTH_STEP):
                 return False
+            if i_ray == 0:
+                altitude = 0.0
+            else:
+                altitude += math.sin(math.radians(heading_branch)) * LENGTH_STEP
 
             # Draw the ray:
             self.turtle.setheading(heading_ray)
@@ -142,7 +175,11 @@ class Drawer:
                 return False
             self.turtle.forward(ray_length)
             print(f'Ray end: {self.get_pose()}')
-            self.turtle.backward(ray_length)
+            spans.append((altitude, altitude + ray_length))
+            if not (i_ray % 2 == 1 and random.random() >= PROBABILITY_BRIDGE):
+                self.turtle.backward(ray_length)
+            else:
+                self.draw_bridge_and_return_to_branch(altitude, spans, ray_length, heading_branch, heading_ray)
 
             # Draw the OP if needed:
             if i_branch == 0 and i_ray == I_RAY_BRANCH_ZERO_OP:
@@ -167,10 +204,14 @@ class Drawer:
         return True
 
     def home(self, trees, width_image, height_image):
-        x = width_image - WIDTH_PEN // 2
-        y = height_image - WIDTH_PEN // 2
+        x = width_image
+        y = height_image
 
         y -= trees[0].compute_height_before_op() + LENGTH_OP
+        y = min(height_image - 1, y)
+
+        x -= WIDTH_PEN // 2
+        y -= WIDTH_PEN // 2
 
         self.turtle.penup()
         self.turtle.goto(int(x) - width_image // 2,
@@ -204,6 +245,8 @@ def image_to_occupied_pixels(image):
 
 
 def main():
+    random.seed(1)
+
     image = Image.open(FILENAME_BG_PNG)
     occupied_pixels = image_to_occupied_pixels(image)
 
@@ -223,8 +266,8 @@ def main():
     drawer = Drawer(t, occupied_pixels, image.width, image.height)
 
     trees = [
-        Tree([5, 0, 2], 170, 90),
-        Tree([3, 0, 2], 180, 85),
+        Tree([5, 0, 2], 150, 90),
+        Tree([3, 0, 2], 185, 90),
         Tree([5, 4, 3, 2], 150, 90),
     ]
 
