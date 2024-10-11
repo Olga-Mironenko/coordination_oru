@@ -13,6 +13,7 @@ E.g.::
 """
 import math
 import random
+import tempfile
 import turtle
 from typing import Optional
 
@@ -38,9 +39,6 @@ Y_WINDOW_START = 0
 
 PROBABILITY_BRIDGE_PRESENCE = 0.5
 PROBABILITY_BRIDGE_SINGLE = 0.5
-
-FILENAME_MAP_EPS = 'map.eps'
-FILENAME_MAP_PNG = 'map.png'
 
 
 class Tree:
@@ -271,14 +269,14 @@ def convert_eps_to_png(filename_eps, filename_png, width, height):
     pic.load()
 
     x = WIDTH_GAP_IMAGE_CANVAS // 2 + 1
-    y = WIDTH_GAP_IMAGE_CANVAS // 2 + 1
+    y = WIDTH_GAP_IMAGE_CANVAS // 2 + 2
     pic = pic.crop((x, y, x + width, y + height))
 
     pic.save(filename_png)
 
 
-def main():
-    random.seed(1)
+def generate_map(filename_map_png):
+    print(f'=== GENERATING {filename_map_png} ===')
 
     image = Image.open(FILENAME_OBSTACLES_PNG)
     occupied_pixels = image_to_occupied_pixels(image)
@@ -316,10 +314,19 @@ def main():
     else:
         print('All trees are drawn')
 
-    export_to_eps(t, FILENAME_MAP_EPS, width_screen, height_screen)
-    convert_eps_to_png(FILENAME_MAP_EPS, FILENAME_MAP_PNG, image.width, image.height)
+    with tempfile.NamedTemporaryFile() as fp:
+        export_to_eps(t, fp.name, width_screen, height_screen)
+        convert_eps_to_png(fp.name, filename_map_png, image.width, image.height)
 
-    screen.mainloop()
+    #screen.mainloop()
+
+
+def main():
+    random.seed(1)
+
+    num_maps = 5
+    for i in range(1, num_maps + 1):
+        generate_map(f'map{i}.png')
 
 
 if __name__ == '__main__':
