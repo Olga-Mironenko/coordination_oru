@@ -76,10 +76,9 @@ class Drawer:
         return xc, yc
 
     def get_starting_theta(self):
-        return int(self.turtle.heading() - 180)
+        return int(self.turtle.heading() - 180) % 360
 
-    # TODO: add `length_limit`
-    def compute_ray_length(self):
+    def compute_ray_length(self, length_limit=float('inf')):
         current_x, current_y = self.get_turtle_position_on_canvas()
         heading_rad = math.radians(self.turtle.heading())
         ray_width = self.turtle.pensize()
@@ -90,7 +89,7 @@ class Drawer:
 
         length = 0
 
-        while True:
+        while length < length_limit:
             # Calculate the new coordinates (move by small increments)
             next_x = current_x + delta_x
             next_y = current_y + delta_y
@@ -103,22 +102,27 @@ class Drawer:
             next_y_int = int(next_y)
 
             # Check for collision with occupied pixels
-            for i in range(-ray_width // 2, ray_width // 2 + 1):
-                for j in range(-ray_width // 2, ray_width // 2 + 1):
-                    if (next_x_int + i, next_y_int + j) in self.occupied_pixels:
+            for x in range(next_x_int - ray_width // 2, next_x_int + ray_width // 2 + 1):
+                for y in range(next_y_int - ray_width // 2, next_y_int + ray_width // 2 + 1):
+                    if (x, y) in self.occupied_pixels:
                         return length
 
             # Update the current position and increase the length
             current_x, current_y = next_x, next_y
             length += 1
 
+        return length
+
     def forward_with_check(self, distance):
-        ray_length = self.compute_ray_length()
+        ray_length = self.compute_ray_length(distance)
         if ray_length < distance:
             return False
 
         self.turtle.forward(distance)
         return True
+
+    def get_pose(self):
+        return *self.get_turtle_position_on_canvas(), self.get_starting_theta()
 
     def draw_branch(self, tree, num_rays, i_branch):
         is_horizontal = i_branch % 2 == 0
@@ -137,7 +141,7 @@ class Drawer:
             if ray_length < LENGTH_RAY_MIN:
                 return False
             self.turtle.forward(ray_length)
-            print(f'Ray end: {(*self.get_turtle_position_on_canvas(), self.get_starting_theta())}')
+            print(f'Ray end: {self.get_pose()}')
             self.turtle.backward(ray_length)
 
             # Draw the OP if needed:
@@ -145,6 +149,7 @@ class Drawer:
                 self.turtle.left(180)
                 if not self.forward_with_check(LENGTH_OP):
                     return False
+                print(f'OP: {self.get_pose()}')
                 self.turtle.backward(LENGTH_OP)
                 self.turtle.right(180)
 
@@ -219,7 +224,7 @@ def main():
 
     trees = [
         Tree([5, 0, 2], 170, 90),
-        Tree([3, 0, 2], 180, 270),
+        Tree([3, 0, 2], 180, 85),
         Tree([5, 4, 3, 2], 150, 90),
     ]
 
