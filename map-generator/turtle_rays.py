@@ -32,7 +32,8 @@ FILENAME_BG_PNG = 'obstacles.png'
 WIDTH_GAP_IMAGE_CANVAS = 100
 WIDTH_GAP_RAY_OBSTACLE = WIDTH_PEN // 2 + 10
 
-PROBABILITY_BRIDGE = 0.5
+PROBABILITY_BRIDGE_PRESENCE = 0.5
+PROBABILITY_BRIDGE_SINGLE = 0.5
 
 
 class Tree:
@@ -128,13 +129,15 @@ class Drawer:
     def get_pose(self):
         return *self.get_turtle_position_on_canvas(), self.get_starting_theta()
 
-    def draw_bridge_and_return_to_branch(self, altitude, spans, ray_length, heading_branch, heading_ray):
+    def draw_bridge(self, altitude, spans, ray_length, heading_branch, heading_ray):
         """
         E.g., for spans (0, 233) and (15, 506):
 
         - intersection: (15, 233)
         - go backwards by: (506 - 233) + (233 - 15) * ratio
         """
+        position_start = self.turtle.position()
+
         ratio = random.random()
         intersection_min = max(spans[-2][0], spans[-1][0])
         intersection_max = min(spans[-2][1], spans[-1][1])
@@ -148,7 +151,11 @@ class Drawer:
         self.turtle.backward(LENGTH_STEP)
 
         self.turtle.setheading(heading_ray)
-        self.turtle.backward(ray_length - length_before_bridge)
+        self.turtle.forward(length_before_bridge)  # the original position
+
+        position_finish = self.turtle.position()
+        assert math.isclose(position_finish[0], position_start[0])
+        assert math.isclose(position_finish[1], position_start[1])
 
     def draw_branch(self, tree, num_rays, i_branch):
         is_horizontal = i_branch % 2 == 0
@@ -176,10 +183,10 @@ class Drawer:
             self.turtle.forward(ray_length)
             print(f'Ray end: {self.get_pose()}')
             spans.append((altitude, altitude + ray_length))
-            if not (i_ray % 2 == 1 and random.random() >= PROBABILITY_BRIDGE):
-                self.turtle.backward(ray_length)
-            else:
-                self.draw_bridge_and_return_to_branch(altitude, spans, ray_length, heading_branch, heading_ray)
+            if i_ray % 2 == 1 and random.random() < PROBABILITY_BRIDGE_PRESENCE:
+                for i_bridge in range(1 if random.random() < PROBABILITY_BRIDGE_SINGLE else 2):
+                    self.draw_bridge(altitude, spans, ray_length, heading_branch, heading_ray)
+            self.turtle.backward(ray_length)
 
             # Draw the OP if needed:
             if i_branch == 0 and i_ray == I_RAY_BRANCH_ZERO_OP:
