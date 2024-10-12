@@ -11,6 +11,7 @@ E.g.::
         )
     )
 """
+import datetime
 import math
 import pathlib
 import random
@@ -19,6 +20,7 @@ import tempfile
 import turtle
 from typing import Optional
 
+import natsort
 from PIL import Image
 from loguru import logger
 
@@ -41,6 +43,23 @@ Y_WINDOW_START = 0
 
 PROBABILITY_BRIDGE_PRESENCE = 0.5
 PROBABILITY_BRIDGE_SINGLE = 0.5
+
+MAP_RESOLUTION_COORDINATION_ORU = 0.1  # meters per pixel
+
+
+class Pose:
+    def __init__(self, x, y, heading):
+        self.x = x
+        self.y = y
+        self.heading = heading
+
+    def __repr__(self):
+        return f"Pose({self.x}, {self.y}, {self.heading})"
+
+    def to_coordination_oru_format(self, image_height):
+        return (self.x * MAP_RESOLUTION_COORDINATION_ORU,
+                (image_height - self.y) * MAP_RESOLUTION_COORDINATION_ORU,
+                math.radians(self.heading))
 
 
 class Tree:
@@ -84,8 +103,15 @@ class Drawer:
         self.occupied_pixels: set[tuple[int, int]] = occupied_pixels
         self.canvas_width = canvas_width
         self.canvas_height = canvas_height
-        self.poses_ops = []
-        self.poses_ray_ends = []
+
+        self.name2pose: dict[str, Pose] = {}
+        self.kind_pose_to_num: dict[str, int] = {}
+
+    def add_pose(self, kind, pose):
+        self.kind_pose_to_num[kind] = self.kind_pose_to_num.get(kind, 0) + 1
+        name = f'{kind}{self.kind_pose_to_num[kind]}'
+        self.name2pose[name] = pose
+        logger.info(f'Pose: {name}: {pose}')
 
     def get_turtle_position_on_canvas(self):
         x, y = self.turtle.position()
@@ -167,7 +193,7 @@ class Drawer:
         return True
 
     def get_pose(self):
-        return *self.get_turtle_position_on_canvas(), self.get_starting_theta()
+        return Pose(*self.get_turtle_position_on_canvas(), self.get_starting_theta())
 
     def draw_bridge(self, altitude, spans, ray_length, heading_branch, heading_ray):
         """
@@ -223,8 +249,7 @@ class Drawer:
                 return False
             self.turtle.forward(ray_length)
 
-            self.poses_ray_ends.append(self.get_pose())
-            logger.info(f'Ray end {len(self.poses_ray_ends)}: {self.get_pose()}')
+            self.add_pose('D', self.get_pose())  # draw point
 
             spans.append((altitude, altitude + ray_length))
             if i_ray % 2 == 1 and random.random() < PROBABILITY_BRIDGE_PRESENCE:
@@ -238,8 +263,7 @@ class Drawer:
                 self.turtle.left(180)
                 if not self.forward_with_check(LENGTH_OP):
                     return False
-                self.poses_ops.append(self.get_pose())
-                logger.info(f'OP {len(self.poses_ops)}: {self.get_pose()}')
+                self.add_pose('OP', self.get_pose())  # ore point
                 self.turtle.backward(LENGTH_OP)
                 self.turtle.right(180)
 
@@ -326,7 +350,7 @@ def convert_eps_to_png(filename_eps, filename_png, width, height):
     pic.save(filename_png)
 
 
-def generate_map(*, seed, filename_map_png, filename_background_png_to_generate, filename_log):
+def generate_map(*, seed, filename_map_png, filename_background_png_to_generate, filename_log, filename_locations):
     logger.remove()
     logger.add(
         sys.stdout,
@@ -381,16 +405,23 @@ def generate_map(*, seed, filename_map_png, filename_background_png_to_generate,
         export_to_eps(t, fp.name, width_screen, height_screen)
         convert_eps_to_png(fp.name, filename_map_png, image.width, image.height)
 
+    with open(filename_locations, 'w') as file:
+        for name, pose in natsort.natsorted(drawer.name2pose.items()):
+            print(name, *pose.to_coordination_oru_format(image.height), sep='\t', file=file)
+
     #screen.mainloop()
 
 
 def main():
-    path_maps = pathlib.Path('generated-maps')
-    if not path_maps.exists():
-        path_maps.mkdir()
-    else:
-        for path in path_maps.iterdir():
-            path.unlink()
+    path_root = pathlib.Path('generated-maps')
+    subdir = datetime.datetime.now().isoformat(sep='_', timespec='seconds')
+
+    path_maps = path_root / subdir
+    path_maps.mkdir(exist_ok=False, parents=True)
+
+    path_current = path_root / 'current'
+    path_current.unlink(missing_ok=True)
+    path_current.symlink_to(subdir, target_is_directory=True)
 
     num_maps = 5
     for i in range(1, num_maps + 1):
@@ -399,6 +430,7 @@ def main():
             filename_map_png=str(path_maps / f'map{i}.png'),
             filename_background_png_to_generate=str(path_maps / f'background{i}.png'),
             filename_log=str(path_maps / f'log{i}.log'),
+            filename_locations=str(path_maps / f'locations{i}.tsv'),
         )
 
 

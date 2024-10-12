@@ -827,7 +827,7 @@ public class Missions {
 			while (in.hasNextLine()) {
 				String line = in.nextLine().trim();
 				if (line.length() != 0 && !line.startsWith("#")) {
-					String[] oneline = line.split(" |\t");
+					String[] oneline = line.split("[ \t]");
 					Pose ps = null;
 					if (line.contains("->")) {
 						PoseSteering[] knownPath = loadPathFromFile(pathOnly+oneline[3]);
@@ -962,9 +962,7 @@ public class Missions {
 	 */
 	@Deprecated
 	public static Pose getLocation(String name) {
-		Pose ret = locations.get(name);
-		if (ret == null) throw new Error("Unknown location " + name);
-		return ret;
+        return getLocationPose(name);
 	}
 	
 	/**
