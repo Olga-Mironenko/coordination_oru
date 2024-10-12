@@ -20,6 +20,8 @@ from typing import Optional
 
 from PIL import Image
 
+import background_generator
+
 LENGTH_STEP = 50
 WIDTH_PEN = LENGTH_STEP // 2
 assert WIDTH_PEN < LENGTH_STEP  # for a gap between rays
@@ -28,9 +30,6 @@ I_RAY_BRANCH_ZERO_OP = 2
 LENGTH_OP = LENGTH_STEP
 LENGTH_RAY_MIN = 1  # or LENGTH_STEP
 
-# Note: GIF can have only 256 colors, so they may be distorted (not pure black in particular;
-# see https://docs.gimp.org/2.10/en/gimp-stuck-export-gif-colors-changed.html).
-FILENAME_OBSTACLES_PNG = 'obstacles.png'
 WIDTH_GAP_IMAGE_CANVAS = 100
 assert WIDTH_GAP_IMAGE_CANVAS % 2 == 0
 WIDTH_GAP_RAY_OBSTACLE = WIDTH_PEN // 2 + 10
@@ -49,7 +48,7 @@ class Tree:
         for i in range(0, len(branches), 1 if is_last else 2):
             branches[i] = random.randint(0, 5)
 
-        heading_horizontal = random.randint(150, 180)
+        heading_horizontal = random.randint(165, 180)
         heading_vertical = 90
 
         return Tree(branches, heading_horizontal, heading_vertical)
@@ -274,6 +273,9 @@ class Drawer:
 
 
 def image_to_occupied_pixels(image):
+    # Note: GIF can have only 256 colors, so they may be distorted (not pure black in particular;
+    # see https://docs.gimp.org/2.10/en/gimp-stuck-export-gif-colors-changed.html).
+
     assert image.mode == 'RGB'
     pixels = image.load()
     occupied_pixels = set()
@@ -314,10 +316,13 @@ def convert_eps_to_png(filename_eps, filename_png, width, height):
     pic.save(filename_png)
 
 
-def generate_map(filename_map_png):
+def generate_map(*, filename_map_png, filename_background_png_to_generate, seed):
     print(f'=== GENERATING {filename_map_png} ===')
 
-    image = Image.open(FILENAME_OBSTACLES_PNG)
+    random.seed(seed)
+
+    background_generator.generate_background(filename_background_png_to_generate)
+    image = Image.open(filename_background_png_to_generate)
     occupied_pixels = image_to_occupied_pixels(image)
 
     screen = turtle.getscreen()
@@ -330,7 +335,7 @@ def generate_map(filename_map_png):
                  startx=X_WINDOW_START,
                  starty=Y_WINDOW_START)
     screen.bgcolor('gray')
-    screen.bgpic(FILENAME_OBSTACLES_PNG)
+    screen.bgpic(filename_background_png_to_generate)
 
     t = turtle.Turtle()
     t.pencolor('white')
@@ -358,8 +363,6 @@ def generate_map(filename_map_png):
 
 
 def main():
-    random.seed(1)
-
     path_maps = pathlib.Path('generated-maps')
     if not path_maps.exists():
         path_maps.mkdir()
@@ -369,7 +372,9 @@ def main():
 
     num_maps = 5
     for i in range(1, num_maps + 1):
-        generate_map(str(path_maps / f'map{i}.png'))
+        generate_map(filename_map_png=str(path_maps / f'map{i}.png'),
+                     filename_background_png_to_generate=str(path_maps / f'background{i}.png'),
+                     seed=i)
 
 
 if __name__ == '__main__':
