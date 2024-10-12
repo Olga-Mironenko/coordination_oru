@@ -36,7 +36,7 @@ LENGTH_RAY_MIN = 1  # or LENGTH_STEP
 
 WIDTH_GAP_IMAGE_CANVAS = 100
 assert WIDTH_GAP_IMAGE_CANVAS % 2 == 0
-WIDTH_GAP_RAY_OBSTACLE = WIDTH_PEN // 2 + 10
+WIDTH_GAP_RAY_OBSTACLE = WIDTH_PEN * 3 // 2
 
 X_WINDOW_START = 0
 Y_WINDOW_START = 0
@@ -45,6 +45,9 @@ PROBABILITY_BRIDGE_PRESENCE = 0.5
 PROBABILITY_BRIDGE_SINGLE = 0.5
 
 MAP_RESOLUTION_COORDINATION_ORU = 0.1  # meters per pixel
+
+KIND_POSE_TO_COLOR_LABEL = {'D': 'gray', 'OP': 'yellow'}
+FONT_LABEL = ('Arial', 12, 'normal')
 
 
 class Pose:
@@ -105,13 +108,25 @@ class Drawer:
         self.canvas_height = canvas_height
 
         self.name2pose: dict[str, Pose] = {}
-        self.kind_pose_to_num: dict[str, int] = {}
+        self.kind_pose_to_num: dict[str, int] = {}  # TODO: main tunnel start, end
 
     def add_pose(self, kind, pose):
         self.kind_pose_to_num[kind] = self.kind_pose_to_num.get(kind, 0) + 1
         name = f'{kind}{self.kind_pose_to_num[kind]}'
         self.name2pose[name] = pose
         logger.info(f'Pose: {name}: {pose}')
+
+        shift = WIDTH_PEN * 3 // 2 if 225 <= self.turtle.heading() <= 315 else WIDTH_PEN // 2
+        self.turtle.penup()
+        self.turtle.forward(shift)
+
+        pencolor_orig = self.turtle.pencolor()
+        self.turtle.pencolor(KIND_POSE_TO_COLOR_LABEL[kind])
+        self.turtle.write(name, align='center', font=FONT_LABEL)
+        self.turtle.pencolor(pencolor_orig)
+
+        self.turtle.backward(shift)
+        self.turtle.pendown()
 
     def get_turtle_position_on_canvas(self):
         x, y = self.turtle.position()
