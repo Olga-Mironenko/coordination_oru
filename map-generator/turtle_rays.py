@@ -14,11 +14,13 @@ E.g.::
 import math
 import pathlib
 import random
+import sys
 import tempfile
 import turtle
 from typing import Optional
 
 from PIL import Image
+from loguru import logger
 
 import background_generator
 
@@ -82,6 +84,8 @@ class Drawer:
         self.occupied_pixels: set[tuple[int, int]] = occupied_pixels
         self.canvas_width = canvas_width
         self.canvas_height = canvas_height
+        self.poses_ops = []
+        self.poses_ray_ends = []
 
     def get_turtle_position_on_canvas(self):
         x, y = self.turtle.position()
@@ -212,16 +216,21 @@ class Drawer:
                 altitude += math.sin(math.radians(heading_branch)) * LENGTH_STEP
 
             # Draw the ray:
+
             self.turtle.setheading(heading_ray)
             ray_length = self.compute_ray_length() - WIDTH_GAP_RAY_OBSTACLE
             if ray_length < LENGTH_RAY_MIN:
                 return False
             self.turtle.forward(ray_length)
-            print(f'Ray end: {self.get_pose()}')
+
+            self.poses_ray_ends.append(self.get_pose())
+            logger.info(f'Ray end {len(self.poses_ray_ends)}: {self.get_pose()}')
+
             spans.append((altitude, altitude + ray_length))
             if i_ray % 2 == 1 and random.random() < PROBABILITY_BRIDGE_PRESENCE:
                 for i_bridge in range(1 if random.random() < PROBABILITY_BRIDGE_SINGLE else 2):
                     self.draw_bridge(altitude, spans, ray_length, heading_branch, heading_ray)
+
             self.turtle.backward(ray_length)
 
             # Draw the OP if needed:
@@ -229,7 +238,8 @@ class Drawer:
                 self.turtle.left(180)
                 if not self.forward_with_check(LENGTH_OP):
                     return False
-                print(f'OP: {self.get_pose()}')
+                self.poses_ops.append(self.get_pose())
+                logger.info(f'OP {len(self.poses_ops)}: {self.get_pose()}')
                 self.turtle.backward(LENGTH_OP)
                 self.turtle.right(180)
 
@@ -285,7 +295,7 @@ def image_to_occupied_pixels(image):
             rgb = pixels[x, y]
             if rgb != (0, 0, 0):
                 occupied_pixels.add((x, y))
-                #print(f"Pixel at ({x}, {y}) is occupied.")
+                logger.debug(f"Pixel at ({x}, {y}) is occupied.")
 
     return occupied_pixels
 
@@ -316,8 +326,20 @@ def convert_eps_to_png(filename_eps, filename_png, width, height):
     pic.save(filename_png)
 
 
-def generate_map(*, filename_map_png, filename_background_png_to_generate, seed):
-    print(f'=== GENERATING {filename_map_png} ===')
+def generate_map(*, seed, filename_map_png, filename_background_png_to_generate, filename_log):
+    logger.remove()
+    logger.add(
+        sys.stdout,
+        level='INFO',
+        format='<green>{time:HH:mm:ss.SSS}:</green> <level>{level}:</level> {message}',
+    )
+    logger.add(
+        filename_log,
+        level='INFO',
+        format='<level>{level}:</level> {message}',
+    )
+
+    logger.info(f'=== GENERATING {filename_map_png} ===')
 
     random.seed(seed)
 
@@ -351,9 +373,9 @@ def generate_map(*, filename_map_png, filename_background_png_to_generate, seed)
         tree.check(i_tree == len(trees) - 1)
 
     if not drawer.draw_trees(trees, image.width, image.height):
-        print('Not all trees are drawn')
+        logger.warning('Not all trees are drawn')
     else:
-        print('All trees are drawn')
+        logger.info('All trees are drawn')
 
     with tempfile.NamedTemporaryFile() as fp:
         export_to_eps(t, fp.name, width_screen, height_screen)
@@ -372,9 +394,12 @@ def main():
 
     num_maps = 5
     for i in range(1, num_maps + 1):
-        generate_map(filename_map_png=str(path_maps / f'map{i}.png'),
-                     filename_background_png_to_generate=str(path_maps / f'background{i}.png'),
-                     seed=i)
+        generate_map(
+            seed=i,
+            filename_map_png=str(path_maps / f'map{i}.png'),
+            filename_background_png_to_generate=str(path_maps / f'background{i}.png'),
+            filename_log=str(path_maps / f'log{i}.log'),
+        )
 
 
 if __name__ == '__main__':
