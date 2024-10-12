@@ -20,7 +20,7 @@ from typing import Optional
 
 from PIL import Image
 
-LENGTH_STEP = 30
+LENGTH_STEP = 50
 WIDTH_PEN = LENGTH_STEP // 2
 assert WIDTH_PEN < LENGTH_STEP  # for a gap between rays
 
@@ -120,14 +120,34 @@ class Drawer:
             if next_x < 0 or next_x >= self.canvas_width or next_y < 0 or next_y >= self.canvas_height:
                 return length
 
-            next_x_int = int(next_x)
-            next_y_int = int(next_y)
+            x_min = math.floor(next_x) - ray_width // 2
+            x_max = math.ceil(next_x) + ray_width // 2
+
+            y_min = math.floor(next_y) - ray_width // 2
+            y_max = math.ceil(next_y) + ray_width // 2
+
+            if length == 0:
+                new_pixels = ((x, y)
+                              for x in range(x_min, x_max + 1)
+                              for y in range(y_min, y_max + 1))
+            else:
+                new_pixels = []
+
+                # noinspection Duplicates
+                if math.floor(next_x) < math.floor(current_x):  # left pixels
+                    new_pixels += ((x_min, y) for y in range(y_min, y_max + 1))
+                elif math.ceil(next_x) > math.ceil(current_x):  # right pixels
+                    new_pixels += ((x_max, y) for y in range(y_min, y_max + 1))
+
+                # noinspection Duplicates
+                if math.floor(next_y) < math.floor(current_y):  # upper pixels
+                    new_pixels += ((x, y_min) for x in range(x_min, x_max + 1))
+                elif math.ceil(next_y) > math.ceil(current_y):  # lower pixels
+                    new_pixels += ((x, y_max) for x in range(x_min, x_max + 1))
 
             # Check for collision with occupied pixels
-            for x in range(next_x_int - ray_width // 2, next_x_int + ray_width // 2 + 1):
-                for y in range(next_y_int - ray_width // 2, next_y_int + ray_width // 2 + 1):
-                    if (x, y) in self.occupied_pixels:
-                        return length
+            if any(pixel in self.occupied_pixels for pixel in new_pixels):
+                return length
 
             # Update the current position and increase the length
             current_x, current_y = next_x, next_y
@@ -280,9 +300,16 @@ def convert_eps_to_png(filename_eps, filename_png, width, height):
     pic = Image.open(filename_eps)
     pic.load()
 
-    x = WIDTH_GAP_IMAGE_CANVAS // 2 + 1
-    y = WIDTH_GAP_IMAGE_CANVAS // 2 + 2
-    pic = pic.crop((x, y, x + width, y + height))
+    x_min = WIDTH_GAP_IMAGE_CANVAS // 2 + 1
+    y_min = WIDTH_GAP_IMAGE_CANVAS // 2 + 2
+
+    x_max = x_min + width
+    y_max = y_min + height
+
+    assert pic.getpixel((x_min - 1, y_min - 1)) == (255, 255, 255)
+    assert pic.getpixel((x_max + 1, y_max + 1)) == (255, 255, 255)
+
+    pic = pic.crop((x_min, y_min, x_max, y_max))
 
     pic.save(filename_png)
 
