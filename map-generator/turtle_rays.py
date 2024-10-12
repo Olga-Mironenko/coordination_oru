@@ -12,6 +12,7 @@ E.g.::
     )
 """
 import math
+import pathlib
 import random
 import tempfile
 import turtle
@@ -42,6 +43,17 @@ PROBABILITY_BRIDGE_SINGLE = 0.5
 
 
 class Tree:
+    @classmethod
+    def generate(cls, *, is_last):
+        branches = [0] * random.randint(2, 4)
+        for i in range(0, len(branches), 1 if is_last else 2):
+            branches[i] = random.randint(0, 5)
+
+        heading_horizontal = random.randint(150, 180)
+        heading_vertical = 90
+
+        return Tree(branches, heading_horizontal, heading_vertical)
+
     def __init__(self, branches, heading_horizontal=180, heading_vertical=90):
         self.branches = branches
         self.heading_horizontal = heading_horizontal
@@ -300,11 +312,8 @@ def generate_map(filename_map_png):
 
     drawer = Drawer(t, occupied_pixels, image.width, image.height)
 
-    trees = [
-        Tree([5, 0, 2], 150, 90),
-        Tree([3, 0, 2], 185, 90),
-        Tree([5, 4, 3, 2], 150, 90),
-    ]
+    num_trees = 2
+    trees = [Tree.generate(is_last=i == num_trees - 1) for i in range(num_trees)]
 
     for i_tree, tree in enumerate(trees):
         tree.check(i_tree == len(trees) - 1)
@@ -324,9 +333,16 @@ def generate_map(filename_map_png):
 def main():
     random.seed(1)
 
+    path_maps = pathlib.Path('generated-maps')
+    if not path_maps.exists():
+        path_maps.mkdir()
+    else:
+        for path in path_maps.iterdir():
+            path.unlink()
+
     num_maps = 5
     for i in range(1, num_maps + 1):
-        generate_map(f'map{i}.png')
+        generate_map(str(path_maps / f'map{i}.png'))
 
 
 if __name__ == '__main__':
