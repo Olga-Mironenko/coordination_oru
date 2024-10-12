@@ -50,7 +50,7 @@ public class AutonomousVehicle extends AbstractVehicle {
             rsp = new ReedsSheppCarPlanner(planningAlgorithm);
             rsp.setRadius(0.25); // TODO (the greater the value, the less is the number of robot circles)
             rsp.setFootprint(footprint);
-            rsp.setTurningRadius(1); // TODO: this should be a vehicle attribute
+            rsp.setTurningRadius(0.01); // TODO: this should be a vehicle attribute (and "1" is a more natural value)
             rsp.setDistanceBetweenPathPoints(0.1); // TODO: resolution?
 
             if (! ReedsSheppCarPlanner.isCachingPlanner) {

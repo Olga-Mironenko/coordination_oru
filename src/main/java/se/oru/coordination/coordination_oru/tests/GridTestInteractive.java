@@ -33,6 +33,8 @@ public class GridTestInteractive {
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
+        boolean isMapCleaning = true;
+
         HumanControl.isEnabledForBrowser = true;
 //        BrowserVisualization.isExtendedText = false;
 
@@ -40,7 +42,7 @@ public class GridTestInteractive {
         Timekeeper.setVirtualMinutesPassedMax(60);
 //        Timekeeper.realMillisPassedMax = 10 * 1000;
 
-        final String YAML_FILE = "maps/map-grid-gradient.yaml";
+        final String YAML_FILE = isMapCleaning ? "maps/map-grid-gradient.yaml" : "maps/map-grid.yaml";
 
 //        final Pose humStart = GridMapConstants.column1Row1Down;
 //        final Pose humStart = GridMapConstants.column2Row1;
@@ -147,12 +149,14 @@ public class GridTestInteractive {
 
                 double xMaxClean = Missions.getDynamicMap().getWidthMeters() - GridMapConstants.xLeft;
 
-                Missions.loopMissions.put(aut1.getID(), false);
-                Missions.enqueueMissions(
-                        new MissionBlueprint(aut1, aut1Start, aut1Finish).setDirection(
-                                MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
-                        ).setIsToCleanForward(true).setRadiusClean(6).setDxClean(2).setXMaxClean(xMaxClean)
+                Missions.loopMissions.put(aut1.getID(), ! isMapCleaning);
+                MissionBlueprint mb1 = new MissionBlueprint(aut1, aut1Start, aut1Finish).setDirection(
+                        MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
                 );
+                if (isMapCleaning) {
+                    mb1.setIsToCleanForward(true).setRadiusClean(6).setDxClean(2).setXMaxClean(xMaxClean);
+                }
+                Missions.enqueueMissions(mb1);
 
                 Missions.loopMissions.put(aut2.getID(), true);
                 Missions.enqueueMissions(
@@ -161,12 +165,14 @@ public class GridTestInteractive {
                         )
                 );
 
-                Missions.loopMissions.put(aut3.getID(), false);
-                Missions.enqueueMissions(
-                        new MissionBlueprint(aut3, aut3Start, aut3Finish).setDirection(
-                                MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
-                        ).setIsToCleanForward(true).setRadiusClean(5).setDxClean(1).setXMaxClean(xMaxClean)
+                Missions.loopMissions.put(aut3.getID(), ! isMapCleaning);
+                MissionBlueprint mb3 = new MissionBlueprint(aut3, aut3Start, aut3Finish).setDirection(
+                        MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
                 );
+                if (isMapCleaning) {
+                    mb3.setIsToCleanForward(true).setRadiusClean(5).setDxClean(1).setXMaxClean(xMaxClean);
+                }
+                Missions.enqueueMissions(mb3);
             }
         }.start();
 

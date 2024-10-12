@@ -25,6 +25,8 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledGlobally = true;
             GatedThread.enable();
 
+            GatedThread.millisArtificialSleep = 0;
+
             AutonomousVehicle.isPathCachingEnabled = false;
 
             ReedsSheppCarPlanner.isCachingPlanner = true;
@@ -35,6 +37,8 @@ public abstract class Demo {
                 AutonomousVehicle.numIterationsRoadmapConstruction = 4000;
                 AutonomousVehicle.numIterationsPathSimplification = 1000;
             }
+
+            // TODO: add sections "Pro-action", "Reaction", ...
 
             //HumanControl.isEnabledForBrowser = true;
             BrowserVisualization.isExtendedText = true;

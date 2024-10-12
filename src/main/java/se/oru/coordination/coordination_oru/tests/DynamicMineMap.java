@@ -82,11 +82,11 @@ public class DynamicMineMap {
         final Pose aut3Start = drawPoint22;
         final Pose aut3Finish = drawPoint23;
 
-        final double maxVelocityHum = 3.0;
+        final double maxVelocityHum = 2.0;
         final double maxAccelerationHum = 2.0;
         final double maxAccelerationAut = 0.4;
 
-        VehicleSize vehicleSizeHum = new VehicleSize(2, 1.5, 0, 0, 0, 0);
+        VehicleSize vehicleSizeHum = new VehicleSize(1.5, 1.5, 0, 0, 0, 0);
         VehicleSize vehicleSizeAut1 = vehicleSizeHum;
         VehicleSize vehicleSizeAut2 = vehicleSizeHum;
         VehicleSize vehicleSizeAut3 = vehicleSizeHum;
@@ -94,9 +94,9 @@ public class DynamicMineMap {
         // TODO: `maxAcceleration` passed here is not used by `tec`.
         AutonomousVehicle hum0 = new HumanDrivenVehicle(0, 0, Color.ORANGE, Color.ORANGE, maxVelocityHum, maxAccelerationHum);
 //        AutonomousVehicle hum0 = new AutonomousVehicle(0, 0, Color.BLUE, Color.BLUE, maxVelocityHum, maxAccelerationHum);
-        AutonomousVehicle aut1 = new AutonomousVehicle(1, 0, Color.BLUE, Color.BLUE, 10, maxAccelerationAut);
-        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.BLUE, Color.BLUE, 10, maxAccelerationAut);
-        AutonomousVehicle aut3 = new AutonomousVehicle(3, 0, Color.BLUE, Color.BLUE, 10, maxAccelerationAut);
+        AutonomousVehicle aut1 = new AutonomousVehicle(1, 0, Color.BLUE, Color.BLUE, 5, maxAccelerationAut);
+        AutonomousVehicle aut2 = new AutonomousVehicle(2, 0, Color.BLUE, Color.BLUE, 6, maxAccelerationAut);
+        AutonomousVehicle aut3 = new AutonomousVehicle(3, 0, Color.BLUE, Color.BLUE, 6, maxAccelerationAut);
 
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 0, 0);
         tec.setupSolver(0, 100000000);
