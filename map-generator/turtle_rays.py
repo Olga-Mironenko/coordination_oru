@@ -12,6 +12,7 @@ The general idea::
     )
 """
 import datetime
+import json
 import math
 import pathlib
 import random
@@ -410,8 +411,10 @@ def make_screenshot(t: turtle.Turtle,
 def generate_scenario(path_maps: pathlib.Path, index: int) -> None:
     basename_map_png = f'map{index}.png'
     basename_locations = f'locations{index}.tsv'
+    basename_mapconf = f'mapconf{index}.yaml'
 
-    filename_scenario = str(path_maps / f'scenario{index}.yaml')
+    filename_scenario = str(path_maps / f'scenario{index}.json')
+    filename_mapconf = str(path_maps / basename_mapconf)
     filename_map_png = str(path_maps / basename_map_png)
     filename_locations = str(path_maps / basename_locations)
     filename_background_png_to_generate = str(path_maps / f'background{index}.png')
@@ -429,7 +432,7 @@ def generate_scenario(path_maps: pathlib.Path, index: int) -> None:
         format='<level>{level}:</level> {message}',
     )
 
-    logger.info(f'=== GENERATING {filename_scenario} ===')
+    logger.info(f'=== GENERATING {filename_mapconf} ===')
 
     random.seed(index)
 
@@ -475,14 +478,21 @@ def generate_scenario(path_maps: pathlib.Path, index: int) -> None:
         for name, pose in drawer.name2pose.items():
             print(name, *pose.to_coordination_oru_format(image.height), sep='\t', file=file)
 
-    with open(filename_scenario, 'w') as file:
+    with open(filename_mapconf, 'w') as file:
         file.write(textwrap.dedent(f"""
             image: {basename_map_png}
-            locations: {basename_locations}
             resolution: 0.1
             origin: [0, 0, 0]
             occupied_thresh: 1.0
             """).strip())
+
+    scenario = {
+        'mapconf': basename_mapconf,
+        'locations': basename_locations,
+    }
+
+    with open(filename_scenario, 'w') as file:
+        json.dump(scenario, file, indent=4, ensure_ascii=False)
 
     #screen.mainloop()
 

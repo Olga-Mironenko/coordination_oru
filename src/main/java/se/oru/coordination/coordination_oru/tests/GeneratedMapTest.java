@@ -12,6 +12,14 @@ import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+
 import java.awt.*;
 
 public class GeneratedMapTest {
@@ -25,14 +33,28 @@ public class GeneratedMapTest {
     }
     protected static void runDemo(String scenarioString) {
         if (scenarioString == null) {
-            scenarioString = "map-generator/generated-maps/current/scenario1.yaml";
+            scenarioString = "map-generator/generated-maps/current/scenario1.json";
+        }
+
+        try (FileReader reader = new FileReader(scenarioString)) {
+            JsonElement jsonElement = JsonParser.parseReader(reader);
+
+            assert jsonElement.isJsonObject();
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+            File file = new File(scenarioString);
+            String basenameLocations = jsonObject.get("locations").getAsString();
+            Missions.loadRoadMap(file.getParentFile() + File.separator + basenameLocations);
+
+            String basenameMapconf = jsonObject.get("mapconf").getAsString();
+            Missions.setMap(file.getParentFile() + File.separator + basenameMapconf);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         HumanControl.isEnabledForBrowser = true;
         Timekeeper.setVirtualMinutesPassedMax(60);
-
-        final String YAML_FILE = scenarioString;
-        Missions.setMap(YAML_FILE);
 
         final Pose humStart = Missions.getLocationPose("D1");
         final Pose humFinish = GridMapConstants.turnAround(Missions.getLocationPose("D2"));

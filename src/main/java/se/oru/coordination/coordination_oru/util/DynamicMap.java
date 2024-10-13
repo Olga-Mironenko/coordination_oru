@@ -100,9 +100,6 @@ public class DynamicMap {
                         ).trim();
                         origin = new Coordinate(Double.parseDouble(x), Double.parseDouble(y));
                     }
-                    else if (key.equals("locations")) {
-                        Missions.loadRoadMap(file.getParentFile() + File.separator + value);
-                    }
                     else if (key.equals("negate")) {
                         if (! value.equals("0")) {
                             throw new RuntimeException("Non-zero negate is not supported here yet");
