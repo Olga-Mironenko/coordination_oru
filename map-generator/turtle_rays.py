@@ -1,5 +1,5 @@
 """
-E.g.::
+The general idea::
 
     (  # the main horizontal line (branch)
         ()*6  # simple vertical lines (rays)
@@ -15,8 +15,8 @@ import datetime
 import math
 import pathlib
 import random
+import subprocess
 import sys
-import tempfile
 import textwrap
 import turtle
 from typing import Optional
@@ -378,30 +378,33 @@ def image_to_occupied_pixels(image):
     return occupied_pixels
 
 
-def export_to_eps(t: turtle.Turtle, filename_eps: str, width: int, height: int) -> None:
+def make_screenshot(t: turtle.Turtle,
+                    image_width: int, image_height: int,
+                    filename_map_png: str) -> None:
+    """
+    Note: If there is a risk of the window on the main display being overlapped,
+    run `Xvfb :99 -screen 0 1024x768x24` and pass `DISPLAY=:99` to the program.
+    """
+    screen = t.getscreen()
+
+    bgcolor_orig = screen.bgcolor()
+    bgpic_orig = screen.bgpic()
+
+    screen.bgcolor('black')
+    screen.bgpic('nopic')
     t.hideturtle()
-    t.getscreen().getcanvas().postscript(file=filename_eps,
-                                         width=width, height=height,
-                                         pagewidth=width, pageheight=height)
+
+    shift = WIDTH_GAP_IMAGE_CANVAS // 2 + 2
+    subprocess.run(
+        f'xwd -nobdrs -silent -id $(xdotool search --name "Python Turtle Graphics")'
+        f' | convert xwd:- -crop {image_width}x{image_height}+{shift}+{shift} {filename_map_png}',
+        shell=True,
+        check=True,
+    )
+
+    screen.bgcolor(bgcolor_orig)
+    screen.bgpic(bgpic_orig)
     t.showturtle()
-
-
-def convert_eps_to_png(filename_eps, filename_png, width, height):
-    pic = Image.open(filename_eps)
-    pic.load()
-
-    x_min = WIDTH_GAP_IMAGE_CANVAS // 2 + 1
-    y_min = WIDTH_GAP_IMAGE_CANVAS // 2 + 2
-
-    x_max = x_min + width
-    y_max = y_min + height
-
-    assert pic.getpixel((x_min - 1, y_min - 1)) == (255, 255, 255)
-    assert pic.getpixel((x_max + 1, y_max + 1)) == (255, 255, 255)
-
-    pic = pic.crop((x_min, y_min, x_max, y_max))
-
-    pic.save(filename_png)
 
 
 def generate_scenario(path_maps: pathlib.Path, index: int) -> None:
@@ -464,9 +467,7 @@ def generate_scenario(path_maps: pathlib.Path, index: int) -> None:
     else:
         logger.info('All trees are drawn')
 
-    with tempfile.NamedTemporaryFile() as fp:
-        export_to_eps(t, fp.name, width_screen, height_screen)
-        convert_eps_to_png(fp.name, filename_map_png, image.width, image.height)
+    make_screenshot(t, image.width, image.height, filename_map_png)
 
     with open(filename_locations, 'w') as file:
         print('# Locations:', file=file)
@@ -480,7 +481,6 @@ def generate_scenario(path_maps: pathlib.Path, index: int) -> None:
             locations: {basename_locations}
             resolution: 0.1
             origin: [0, 0, 0]
-            negate: 0
             occupied_thresh: 1.0
             """).strip())
 
