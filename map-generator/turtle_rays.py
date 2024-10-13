@@ -20,7 +20,6 @@ import tempfile
 import turtle
 from typing import Optional
 
-import natsort
 from PIL import Image
 from loguru import logger
 
@@ -46,7 +45,7 @@ PROBABILITY_BRIDGE_SINGLE = 0.5
 
 MAP_RESOLUTION_COORDINATION_ORU = 0.1  # meters per pixel
 
-KIND_POSE_TO_COLOR_LABEL = {'D': 'gray', 'OP': 'yellow'}
+KIND_POSE_TO_COLOR_LABEL = {'D': 'gray', 'OP': 'yellow', 'start': None, 'finish': None}
 FONT_LABEL = ('Arial', 16, 'normal')
 
 
@@ -60,9 +59,12 @@ class Pose:
         return f"Pose({self.x}, {self.y}, {self.heading})"
 
     def to_coordination_oru_format(self, image_height):
-        return (self.x * MAP_RESOLUTION_COORDINATION_ORU,
-                (image_height - self.y) * MAP_RESOLUTION_COORDINATION_ORU,
-                math.radians(self.heading))
+        return tuple(round(value, 3)
+                     for value in (
+                         self.x * MAP_RESOLUTION_COORDINATION_ORU,
+                         (image_height - self.y) * MAP_RESOLUTION_COORDINATION_ORU,
+                         math.radians(self.heading),
+                     ))
 
 
 class Tree:
@@ -108,18 +110,31 @@ class Drawer:
         self.canvas_height = canvas_height
 
         self.name2pose: dict[str, Pose] = {}
-        self.kind_pose_to_num: dict[str, int] = {}  # TODO: main tunnel start, end
+        self.kind_pose_to_num: dict[str, int] = {}
 
     def add_pose(self, kind, pose):
         self.kind_pose_to_num[kind] = self.kind_pose_to_num.get(kind, 0) + 1
-        name = f'{kind}{self.kind_pose_to_num[kind]}'
+
+        if kind in ('start', 'finish'):
+            assert self.kind_pose_to_num[kind] == 1
+            name = kind
+        elif kind in ('D', 'OP'):
+            name = f'{kind}{self.kind_pose_to_num[kind]}'
+        else:
+            raise ValueError(f'Unknown kind {kind}')
+
         self.name2pose[name] = pose
         logger.info(f'Pose: {name}: {pose}')
 
+        color = KIND_POSE_TO_COLOR_LABEL[kind]
+        if color is not None:
+            self.draw_label(name, color)
+
+    def draw_label(self, label, color):
         position_orig = self.turtle.position()
         x, y = position_orig
 
-        width_text = FONT_LABEL[1] * len(name)
+        width_text = FONT_LABEL[1] * len(label)
         height_text = 6 + FONT_LABEL[1]
 
         heading = self.turtle.heading()
@@ -138,8 +153,8 @@ class Drawer:
         self.turtle.goto(x, y)
 
         pencolor_orig = self.turtle.pencolor()
-        self.turtle.pencolor(KIND_POSE_TO_COLOR_LABEL[kind])
-        self.turtle.write(name, align='center', font=FONT_LABEL)
+        self.turtle.pencolor(color)
+        self.turtle.write(label, align='center', font=FONT_LABEL)
         self.turtle.pencolor(pencolor_orig)
 
         self.turtle.goto(*position_orig)
@@ -331,11 +346,17 @@ class Drawer:
         assert trees
         self.home(trees, width_image, height_image)
 
+        self.add_pose('start', self.get_pose())
+
+        is_ok = True
         for tree in trees:
             if not self.draw_tree(tree):
-                return False
+                is_ok = False
+                break
 
-        return True
+        self.add_pose('finish', self.get_pose())
+
+        return is_ok
 
 
 def image_to_occupied_pixels(image):
@@ -438,7 +459,9 @@ def generate_map(*, seed, filename_map_png, filename_background_png_to_generate,
         convert_eps_to_png(fp.name, filename_map_png, image.width, image.height)
 
     with open(filename_locations, 'w') as file:
-        for name, pose in natsort.natsorted(drawer.name2pose.items()):
+        print('# Locations:', file=file)
+        print('# name', 'x_meters', 'y_meters', 'theta', sep='\t', file=file)
+        for name, pose in drawer.name2pose.items():
             print(name, *pose.to_coordination_oru_format(image.height), sep='\t', file=file)
 
     #screen.mainloop()
