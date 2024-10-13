@@ -17,6 +17,7 @@ import pathlib
 import random
 import sys
 import tempfile
+import textwrap
 import turtle
 from typing import Optional
 
@@ -403,7 +404,16 @@ def convert_eps_to_png(filename_eps, filename_png, width, height):
     pic.save(filename_png)
 
 
-def generate_map(*, seed, filename_map_png, filename_background_png_to_generate, filename_log, filename_locations):
+def generate_scenario(path_maps: pathlib.Path, index: int) -> None:
+    basename_map_png = f'map{index}.png'
+    basename_locations = f'locations{index}.tsv'
+
+    filename_scenario = str(path_maps / f'scenario{index}.yaml')
+    filename_map_png = str(path_maps / basename_map_png)
+    filename_locations = str(path_maps / basename_locations)
+    filename_background_png_to_generate = str(path_maps / f'background{index}.png')
+    filename_log = str(path_maps / f'log{index}.log')
+
     logger.remove()
     logger.add(
         sys.stdout,
@@ -416,9 +426,9 @@ def generate_map(*, seed, filename_map_png, filename_background_png_to_generate,
         format='<level>{level}:</level> {message}',
     )
 
-    logger.info(f'=== GENERATING {filename_map_png} ===')
+    logger.info(f'=== GENERATING {filename_scenario} ===')
 
-    random.seed(seed)
+    random.seed(index)
 
     background_generator.generate_background(filename_background_png_to_generate)
     image = Image.open(filename_background_png_to_generate)
@@ -464,6 +474,16 @@ def generate_map(*, seed, filename_map_png, filename_background_png_to_generate,
         for name, pose in drawer.name2pose.items():
             print(name, *pose.to_coordination_oru_format(image.height), sep='\t', file=file)
 
+    with open(filename_scenario, 'w') as file:
+        file.write(textwrap.dedent(f"""
+            image: {basename_map_png}
+            locations: {basename_locations}
+            resolution: 0.1
+            origin: [0, 0, 0]
+            negate: 0
+            occupied_thresh: 1.0
+            """).strip())
+
     #screen.mainloop()
 
 
@@ -480,13 +500,7 @@ def main():
 
     num_maps = 5
     for i in range(1, num_maps + 1):
-        generate_map(
-            seed=i,
-            filename_map_png=str(path_maps / f'map{i}.png'),
-            filename_background_png_to_generate=str(path_maps / f'background{i}.png'),
-            filename_log=str(path_maps / f'log{i}.log'),
-            filename_locations=str(path_maps / f'locations{i}.tsv'),
-        )
+        generate_scenario(path_maps, i)
 
 
 if __name__ == '__main__':
