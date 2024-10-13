@@ -95,10 +95,21 @@ public class DynamicMap {
                     else if (key.equals("origin")) {
                         String x = value.substring(1, value.indexOf(",")).trim();
                         String y = value.substring(
-                                value.indexOf(",") + 1,
-                                value.indexOf(",", value.indexOf(",") + 1)
+                        value.indexOf(",") + 1,
+                        value.indexOf(",", value.indexOf(",") + 1)
                         ).trim();
                         origin = new Coordinate(Double.parseDouble(x), Double.parseDouble(y));
+                    }
+                    else if (key.equals("locations")) {
+                        Missions.loadRoadMap(file.getParentFile() + File.separator + value);
+                    }
+                    else if (key.equals("negate")) {
+                        if (! value.equals("0")) {
+                            throw new RuntimeException("Non-zero negate is not supported here yet");
+                        }
+                    }
+                    else {
+                        throw new RuntimeException("Unknown key " + key + " in file " + mapYAMLFile);
                     }
                 }
             }
