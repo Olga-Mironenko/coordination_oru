@@ -4,10 +4,8 @@ import java.awt.Color;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 
-import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.*;
-import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.EmergencyBreaker;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
@@ -83,7 +81,7 @@ public class GridTest {
     protected static double computeDistanceToStop(double velocity, double acceleration) {
         // velocity = 12 m/s
         // deceleration = acceleration * coefAccelerationToDeceleration = 2 * 3 = 6 m/s^2
-        double deceleration = acceleration * AdaptiveTrajectoryEnvelopeTrackerRK4.coefAccelerationToDeceleration;
+        double deceleration = acceleration * AdaptiveTrajectoryEnvelopeTrackerRK4.coefRatioDecelerationToAcceleration;
         // => timeToStop = velocity / deceleration = 2 s (6 m/s^2 * 2 s = 12 m/s)
         double timeToStop = velocity / deceleration;
 

@@ -32,7 +32,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	public static double coefDeltaTimeForSlowdownProfile = 1;
 
-	public static double coefAccelerationToDeceleration = 1.7;
+	public static double coefRatioDecelerationToAcceleration = 1.7;
 	/**
 	 * https://www.sciencedirect.com/science/article/pii/S2352146517307937:
 	 * - mean acceleration of trucks: ~0.3 m/s^2
@@ -324,7 +324,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 
 	private TreeMap<Double,Double> computeSlowdownProfile() {
-		final double coef = 1.0; // slightly more than 1.0 to model speed which is greater than any actual speed
+		final double coef = 1.1; // because speed is sometimes slightly higher than the maximum speed
 
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
 
@@ -426,7 +426,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	) {
 		//assert MAX_VELOCITY_DAMPENING_FACTOR == 1.0; // this is just to check whether it can be different
 
-		double MAX_DECELERATION = MAX_ACCELERATION * coefAccelerationToDeceleration;
+		double MAX_DECELERATION = MAX_ACCELERATION * coefRatioDecelerationToAcceleration;
 
 		if (VehiclesHashMap.isHuman(robotID)) {
 			// maxAcc=2:  actual (observed) surplus 0.066 (during tests)

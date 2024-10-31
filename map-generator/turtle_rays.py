@@ -21,7 +21,7 @@ import subprocess
 import sys
 import textwrap
 import turtle
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from PIL import Image
 from loguru import logger
@@ -117,9 +117,8 @@ class Drawer:
         self.kind_pose_to_num: dict[str, int] = {}
         self.num_ops = 0
 
-    def add_pose(self, kind, pose):
+    def add_pose(self, kind, *, is_facing_dead_end=True):
         self.kind_pose_to_num[kind] = self.kind_pose_to_num.get(kind, 0) + 1
-
         if kind in ('start', 'finish'):
             assert self.kind_pose_to_num[kind] == 1
             name = kind
@@ -127,6 +126,21 @@ class Drawer:
             name = f'{kind}{self.kind_pose_to_num[kind]}'
         else:
             raise ValueError(f'Unknown kind {kind}')
+
+        delta = WIDTH_PEN // 2
+
+        self.turtle.penup()
+        if is_facing_dead_end:
+            self.turtle.backward(delta)
+        else:
+            self.turtle.forward(delta)
+        #self.turtle.dot(WIDTH_PEN // 2, "lightgray")
+        pose = self.get_pose()
+        if is_facing_dead_end:
+            self.turtle.forward(delta)
+        else:
+            self.turtle.backward(delta)
+        self.turtle.pendown()
 
         self.name2pose[name] = pose
         logger.info(f'Pose: {name}: {pose}')
@@ -292,6 +306,7 @@ class Drawer:
         is_horizontal = i_branch % 2 == 0
         heading_branch = tree.heading_horizontal if is_horizontal else tree.heading_vertical
         heading_ray = tree.heading_vertical if is_horizontal else tree.heading_horizontal
+        heading_original = self.turtle.heading()
 
         altitude: Optional[float] = None
         spans: list[tuple[float, float]] = []   # each pair: (altitude of the ray, altitude + length of the ray)
@@ -300,6 +315,8 @@ class Drawer:
             # Move to the beginning of the ray:
             self.turtle.setheading(heading_branch)
             if not self.forward_with_check(LENGTH_STEP):
+                if i_ray == 0:
+                    self.turtle.setheading(heading_original)
                 return False
             if i_ray == 0:
                 altitude = 0.0
@@ -311,10 +328,11 @@ class Drawer:
             self.turtle.setheading(heading_ray)
             ray_length = self.compute_ray_length() - WIDTH_GAP_RAY_OBSTACLE
             if ray_length < LENGTH_RAY_MIN:
+                self.turtle.setheading(heading_branch)
                 return False
             self.turtle.forward(ray_length)
 
-            self.add_pose('D', self.get_pose())  # draw point
+            self.add_pose('D')  # draw point
 
             spans.append((altitude, altitude + ray_length))
             if i_ray % 2 == 1 and random.random() < PROBABILITY_BRIDGE_PRESENCE:
@@ -327,8 +345,9 @@ class Drawer:
             if self.is_op_drawing_needed(i_tree, i_branch, i_ray):
                 self.turtle.left(180)
                 if not self.forward_with_check(LENGTH_OP):
+                    self.turtle.setheading(heading_branch)
                     return False
-                self.add_pose('OP', self.get_pose())  # ore point
+                self.add_pose('OP')  # ore point
                 self.turtle.backward(LENGTH_OP)
                 self.turtle.right(180)
                 self.num_ops += 1
@@ -346,7 +365,7 @@ class Drawer:
 
         return True
 
-    def home(self, width_image, height_image):
+    def home(self, width_image, height_image, heading):
         x = width_image - 1
         y = height_image - 1
 
@@ -358,13 +377,15 @@ class Drawer:
                          height_image // 2 - int(y))
         self.turtle.pendown()
 
-    def draw_trees(self, trees, width_image, height_image):
+        self.turtle.setheading(heading)
+
+    def draw_trees(self, trees: List[Tree], width_image: int, height_image: int) -> bool:
         assert trees
         assert self.trees is None
         self.trees = trees
 
-        self.home(width_image, height_image)
-        self.add_pose('start', self.get_pose())
+        self.home(width_image, height_image, trees[0].heading_horizontal)
+        self.add_pose('start', is_facing_dead_end=False)
 
         is_ok = True
         for i_tree, tree in enumerate(trees):
@@ -372,13 +393,13 @@ class Drawer:
                 is_ok = False
                 break
 
-        self.add_pose('finish', self.get_pose())
+        self.add_pose('finish')
 
         self.trees = None
         return is_ok
 
 
-def add_robots_to_name2pose(num_avs: int, name2pose: Dict[str, Pose]) -> Dict[str, Pose]:
+def add_robots_to_name2pose(num_auts: int, name2pose: Dict[str, Pose]) -> Dict[str, Pose]:
     # Make a copy of the original dictionary to avoid modifying the input
     new_name2pose = {}
 
@@ -386,7 +407,7 @@ def add_robots_to_name2pose(num_avs: int, name2pose: Dict[str, Pose]) -> Dict[st
     d_poses = {key: pose for key, pose in name2pose.items() if key.startswith('D')}
     op_poses = {key: pose for key, pose in name2pose.items() if key.startswith('OP')}
 
-    if len(d_poses) < num_avs:
+    if len(d_poses) < num_auts:
         raise ValueError("Not enough D poses to assign unique start positions for all automated vehicles.")
     if not op_poses:
         raise ValueError("No OP poses to assign finish positions for automated vehicles.")
@@ -394,11 +415,11 @@ def add_robots_to_name2pose(num_avs: int, name2pose: Dict[str, Pose]) -> Dict[st
     # Select unique D poses for each automated vehicle start
     available_d_keys = list(d_poses)
     random.shuffle(available_d_keys)
-    selected_d_keys = available_d_keys[:num_avs]
+    selected_d_keys = available_d_keys[:num_auts]
 
     # Assign start and nearest finish for each automated vehicle
     key2pairs = collections.defaultdict(list)
-    for i in range(num_avs):
+    for i in range(num_auts):
         start_name = f'aut{i + 1}_start'
         start_pose = d_poses[selected_d_keys[i]]
 
@@ -477,11 +498,11 @@ def make_screenshot(t: turtle.Turtle,
     t.showturtle()
 
 
-def save_locations(num_avs: int, filename_locations: str, drawer: Drawer, image_height: int) -> None:
+def save_locations(num_auts: int, filename_locations: str, drawer: Drawer, image_height: int) -> None:
     with open(filename_locations, 'w') as file:
         print('# Locations:', file=file)
         print('# name', 'x_meters', 'y_meters', 'theta', sep='\t', file=file)
-        name2pose_with_robots = add_robots_to_name2pose(num_avs, drawer.name2pose)
+        name2pose_with_robots = add_robots_to_name2pose(num_auts, drawer.name2pose)
         pose_prev = None
         for name, pose in name2pose_with_robots.items():
             if pose_prev is not None and pose != pose_prev:
@@ -559,8 +580,8 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
 
     make_screenshot(t, image.width, image.height, filename_map_png)
 
-    num_avs = 4
-    save_locations(num_avs, filename_locations, drawer, image.height)
+    num_auts = 4
+    save_locations(num_auts, filename_locations, drawer, image.height)
 
     with open(filename_mapconf, 'w') as file:
         file.write(textwrap.dedent(f"""
@@ -573,6 +594,7 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
     scenario = {
         'mapconf': basename_mapconf,
         'locations': basename_locations,
+        'num_auts': num_auts,
     }
 
     with open(filename_scenario, 'w') as file:

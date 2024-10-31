@@ -92,7 +92,7 @@ public class AutonomousVehicle extends AbstractVehicle {
         base += "_" + planningAlgorithm + (inversePath ? "_inv" : "");
 
         if (isPathCachingEnabled && robotIDsObstacles.length == 0) {
-            filenameCache = "paths/" + mapId + "/" + base + ".path";
+            filenameCache = "paths/" + mapId + "/" + base + ".path"; // TODO: add footprint
             if (new File(filenameCache).isFile()) {
                 path = Missions.loadPathFromFile(filenameCache);
             }

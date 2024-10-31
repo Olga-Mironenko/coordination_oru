@@ -1,6 +1,7 @@
 #ifndef CONDITIONS_H
 #define CONDITIONS_H
 
+#include <algorithm>
 #include <memory>
 
 #include <ompl/util/PPM.h>
@@ -35,7 +36,9 @@ public:
 
     std::string computeIdConstruction() const {
         std::stringstream ss;
-        ss << mapId_ << "_" << numIterationsConstruction_ << "_" << turningRadius_ << "_" << footprint_->computeId();
+        std::string s = mapId_;
+        std::replace(s.begin(), s.end(), '/', '-');
+        ss << s << "_" << numIterationsConstruction_ << "_" << turningRadius_ << "_" << footprint_->computeId();
         return ss.str();
     }
 
