@@ -11,6 +11,7 @@ The general idea::
         )
     )
 """
+import collections
 import datetime
 import json
 import math
@@ -20,7 +21,7 @@ import subprocess
 import sys
 import textwrap
 import turtle
-from typing import Optional
+from typing import Dict, Optional
 
 from PIL import Image
 from loguru import logger
@@ -31,7 +32,7 @@ LENGTH_STEP = 50
 WIDTH_PEN = LENGTH_STEP // 2
 assert WIDTH_PEN < LENGTH_STEP  # for a gap between rays
 
-I_RAY_BRANCH_ZERO_OP = 2
+I_RAY_OP = 2
 LENGTH_OP = LENGTH_STEP
 LENGTH_RAY_MIN = 1  # or LENGTH_STEP
 
@@ -42,13 +43,14 @@ WIDTH_GAP_RAY_OBSTACLE = WIDTH_PEN * 2
 X_WINDOW_START = 0
 Y_WINDOW_START = 0
 
-PROBABILITY_BRIDGE_PRESENCE = 0.5
+PROBABILITY_BRIDGE_PRESENCE = 0.8
 PROBABILITY_BRIDGE_SINGLE = 0.5
 
 MAP_RESOLUTION_COORDINATION_ORU = 0.1  # meters per pixel
 
 KIND_POSE_TO_COLOR_LABEL = {'D': 'gray', 'OP': 'yellow', 'start': None, 'finish': None}
 FONT_LABEL = ('Arial', 16, 'normal')
+HEIGHT_TEXT = 6 + FONT_LABEL[1]
 
 
 class Pose:
@@ -67,6 +69,9 @@ class Pose:
                          (image_height - self.y) * MAP_RESOLUTION_COORDINATION_ORU,
                          math.radians(self.heading),
                      ))
+
+    def distance_to(self, other: 'Pose') -> float:
+        return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
 
 
 class Tree:
@@ -96,13 +101,6 @@ class Tree:
                 if i_branch % 2 == 1:
                     assert branch == 0
 
-    def compute_height_before_op(self):
-        num_steps_before_op = I_RAY_BRANCH_ZERO_OP + 1
-        length_before_op = LENGTH_STEP * num_steps_before_op
-        alpha = math.radians(self.heading_horizontal - 180)
-        height_before_op = length_before_op * math.sin(alpha)
-        return height_before_op
-
 
 class Drawer:
     def __init__(self, t, occupied_pixels, canvas_width, canvas_height):
@@ -113,6 +111,7 @@ class Drawer:
 
         self.name2pose: dict[str, Pose] = {}
         self.kind_pose_to_num: dict[str, int] = {}
+        self.num_ops = 0
 
     def add_pose(self, kind, pose):
         self.kind_pose_to_num[kind] = self.kind_pose_to_num.get(kind, 0) + 1
@@ -137,13 +136,12 @@ class Drawer:
         x, y = position_orig
 
         width_text = FONT_LABEL[1] * len(label)
-        height_text = 6 + FONT_LABEL[1]
 
         heading = self.turtle.heading()
         if 90 - 45 <= heading <= 90 + 45:  # up
             y += WIDTH_PEN // 2
         elif 270 - 45 <= heading <= 270 + 45:  # down
-            y -= WIDTH_PEN // 2 + height_text + 10
+            y -= WIDTH_PEN // 2 + HEIGHT_TEXT + 10
         elif 90 + 45 <= heading <= 270 - 45:  # left
             x -= WIDTH_PEN // 2 + width_text // 2
             y -= WIDTH_PEN // 2
@@ -272,7 +270,7 @@ class Drawer:
         assert math.isclose(position_finish[0], position_start[0])
         assert math.isclose(position_finish[1], position_start[1])
 
-    def draw_branch(self, tree, num_rays, i_branch):
+    def draw_branch(self, i_tree, tree, num_rays, i_branch):
         is_horizontal = i_branch % 2 == 0
         heading_branch = tree.heading_horizontal if is_horizontal else tree.heading_vertical
         heading_ray = tree.heading_vertical if is_horizontal else tree.heading_horizontal
@@ -307,14 +305,17 @@ class Drawer:
 
             self.turtle.backward(ray_length)
 
-            # Draw the OP if needed:
-            if i_branch == 0 and i_ray == I_RAY_BRANCH_ZERO_OP:
+            # Draw the OP of the branch if needed:
+            if i_ray == I_RAY_OP and i_branch % 2 == 0 and not i_tree == i_branch == 0:
                 self.turtle.left(180)
                 if not self.forward_with_check(LENGTH_OP):
                     return False
                 self.add_pose('OP', self.get_pose())  # ore point
                 self.turtle.backward(LENGTH_OP)
                 self.turtle.right(180)
+                self.num_ops += 1
+
+            # TODO: don't draw if the previous branch (of the same or the previous tree) is zero
 
         self.turtle.setheading(heading_branch)
         if not self.forward_with_check(LENGTH_STEP):
@@ -322,22 +323,19 @@ class Drawer:
 
         return True
 
-    def draw_tree(self, tree):
+    def draw_tree(self, i_tree, tree):
         for i_branch, num_rays in enumerate(tree.branches):
-            if not self.draw_branch(tree, num_rays, i_branch):
+            if not self.draw_branch(i_tree, tree, num_rays, i_branch):
                 return False
 
         return True
 
-    def home(self, trees, width_image, height_image):
-        x = width_image
-        y = height_image
-
-        y -= trees[0].compute_height_before_op() + LENGTH_OP
-        y = min(height_image - 1, y)
+    def home(self, width_image, height_image):
+        x = width_image - 1
+        y = height_image - 1
 
         x -= WIDTH_PEN // 2
-        y -= WIDTH_PEN // 2
+        y -= WIDTH_PEN // 2 + HEIGHT_TEXT
 
         self.turtle.penup()
         self.turtle.goto(int(x) - width_image // 2,
@@ -346,19 +344,71 @@ class Drawer:
 
     def draw_trees(self, trees, width_image, height_image):
         assert trees
-        self.home(trees, width_image, height_image)
+        self.home(width_image, height_image)
 
         self.add_pose('start', self.get_pose())
 
         is_ok = True
-        for tree in trees:
-            if not self.draw_tree(tree):
+        for i_tree, tree in enumerate(trees):
+            if not self.draw_tree(i_tree, tree):
                 is_ok = False
                 break
 
         self.add_pose('finish', self.get_pose())
 
         return is_ok
+
+
+def add_robots_to_name2pose(num_avs: int, name2pose: Dict[str, Pose]) -> Dict[str, Pose]:
+    # Make a copy of the original dictionary to avoid modifying the input
+    new_name2pose = {}
+
+    # Get all D and OP poses
+    d_poses = {key: pose for key, pose in name2pose.items() if key.startswith('D')}
+    op_poses = {key: pose for key, pose in name2pose.items() if key.startswith('OP')}
+
+    if len(d_poses) < num_avs:
+        raise ValueError("Not enough D poses to assign unique start positions for all automated vehicles.")
+    if not op_poses:
+        raise ValueError("No OP poses to assign finish positions for automated vehicles.")
+
+    # Select unique D poses for each automated vehicle start
+    available_d_keys = list(d_poses)
+    random.shuffle(available_d_keys)
+    selected_d_keys = available_d_keys[:num_avs]
+
+    # Assign start and nearest finish for each automated vehicle
+    key2pairs = collections.defaultdict(list)
+    for i in range(num_avs):
+        start_name = f'aut{i + 1}_start'
+        start_pose = d_poses[selected_d_keys[i]]
+
+        finish_name = f'aut{i + 1}_finish'
+        # Find the nearest OP pose for the finish
+        nearest_op_key = min(op_poses, key=lambda k: start_pose.distance_to(op_poses[k]))
+        finish_pose = op_poses[nearest_op_key]
+
+        key2pairs[selected_d_keys[i]].append((start_name, start_pose))
+        key2pairs[nearest_op_key].append((finish_name, finish_pose))
+
+    # Iterate through original name2pose dictionary and add start/finish pairs after corresponding items
+    for key, value in name2pose.items():
+        new_name2pose[key] = value
+
+        # Insert 'hum1_start' after 'start'
+        if key == 'start':
+            new_name2pose['hum1_start'] = value
+
+        # Insert 'hum1_finish' after 'finish'
+        elif key == 'finish':
+            new_name2pose['hum1_finish'] = value
+
+        # Insert each automated vehicle's start and finish after the corresponding D pose and OP pose
+        elif key in key2pairs:
+            for name, pose in key2pairs[key]:
+                new_name2pose[name] = pose
+
+    return new_name2pose
 
 
 def image_to_occupied_pixels(image):
@@ -408,17 +458,31 @@ def make_screenshot(t: turtle.Turtle,
     t.showturtle()
 
 
-def generate_scenario(path_maps: pathlib.Path, index: int) -> None:
-    basename_map_png = f'map{index}.png'
-    basename_locations = f'locations{index}.tsv'
-    basename_mapconf = f'mapconf{index}.yaml'
+def save_locations(num_avs: int, filename_locations: str, drawer: Drawer, image_height: int) -> None:
+    with open(filename_locations, 'w') as file:
+        print('# Locations:', file=file)
+        print('# name', 'x_meters', 'y_meters', 'theta', sep='\t', file=file)
+        name2pose_with_robots = add_robots_to_name2pose(num_avs, drawer.name2pose)
+        pose_prev = None
+        for name, pose in name2pose_with_robots.items():
+            if pose_prev is not None and pose != pose_prev:
+                print(file=file)
+            print(name, *pose.to_coordination_oru_format(image_height), sep='\t', file=file)
+            pose_prev = pose
 
-    filename_scenario = str(path_maps / f'scenario{index}.json')
+
+def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) -> bool:
+    basename_map_png = f'map{i_map}.png'
+    basename_locations = f'locations{i_map}.tsv'
+    basename_mapconf = f'mapconf{i_map}.yaml'
+
+    filename_scenario = str(path_maps / f'scenario{i_map}.json')
     filename_mapconf = str(path_maps / basename_mapconf)
     filename_map_png = str(path_maps / basename_map_png)
     filename_locations = str(path_maps / basename_locations)
-    filename_background_png_to_generate = str(path_maps / f'background{index}.png')
-    filename_log = str(path_maps / f'log{index}.log')
+    # Note: `filename_background_png_to_generate` is made unique among all attempts to make `bgpic` work properly.
+    filename_background_png_to_generate = str(path_maps / f'background{i_map}_g{i_generation}.png')
+    filename_log = str(path_maps / f'log{i_map}_g{i_generation}.log')
 
     logger.remove()
     logger.add(
@@ -432,9 +496,9 @@ def generate_scenario(path_maps: pathlib.Path, index: int) -> None:
         format='<level>{level}:</level> {message}',
     )
 
-    logger.info(f'=== GENERATING {filename_mapconf} ===')
+    logger.info(f'=== GENERATING {filename_mapconf} (g{i_generation}) ===')
 
-    random.seed(index)
+    random.seed(i_generation)
 
     background_generator.generate_background(filename_background_png_to_generate)
     image = Image.open(filename_background_png_to_generate)
@@ -470,13 +534,14 @@ def generate_scenario(path_maps: pathlib.Path, index: int) -> None:
     else:
         logger.info('All trees are drawn')
 
+    if drawer.num_ops == 0:
+        logger.warning('No OP is drawn')
+        return False
+
     make_screenshot(t, image.width, image.height, filename_map_png)
 
-    with open(filename_locations, 'w') as file:
-        print('# Locations:', file=file)
-        print('# name', 'x_meters', 'y_meters', 'theta', sep='\t', file=file)
-        for name, pose in drawer.name2pose.items():
-            print(name, *pose.to_coordination_oru_format(image.height), sep='\t', file=file)
+    num_avs = 4
+    save_locations(num_avs, filename_locations, drawer, image.height)
 
     with open(filename_mapconf, 'w') as file:
         file.write(textwrap.dedent(f"""
@@ -495,6 +560,7 @@ def generate_scenario(path_maps: pathlib.Path, index: int) -> None:
         json.dump(scenario, file, indent=4, ensure_ascii=False)
 
     #screen.mainloop()
+    return True
 
 
 def main():
@@ -509,8 +575,13 @@ def main():
     path_current.symlink_to(subdir, target_is_directory=True)
 
     num_maps = 5
-    for i in range(1, num_maps + 1):
-        generate_scenario(path_maps, i)
+    i_generation = 1  # TODO: change to 0 to check the other TODO case
+    for i_map in range(1, num_maps + 1):
+        while True:
+            is_ok = generate_scenario(path_maps, i_map, i_generation)
+            i_generation += 1
+            if is_ok:
+                break
 
 
 if __name__ == '__main__':
