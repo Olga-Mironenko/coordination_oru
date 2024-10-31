@@ -94,6 +94,9 @@ class Tree:
     def __repr__(self):
         return f'Tree({self.branches}, {self.heading_horizontal}, {self.heading_vertical})'
 
+    def __getitem__(self, item):
+        return self.branches[item]
+
     def check(self, is_last):
         if not is_last:
             for i_branch, branch in enumerate(self.branches):
@@ -108,6 +111,7 @@ class Drawer:
         self.occupied_pixels: set[tuple[int, int]] = occupied_pixels
         self.canvas_width = canvas_width
         self.canvas_height = canvas_height
+        self.trees = None
 
         self.name2pose: dict[str, Pose] = {}
         self.kind_pose_to_num: dict[str, int] = {}
@@ -270,7 +274,21 @@ class Drawer:
         assert math.isclose(position_finish[0], position_start[0])
         assert math.isclose(position_finish[1], position_start[1])
 
-    def draw_branch(self, i_tree, tree, num_rays, i_branch):
+    def is_op_drawing_needed(self, i_tree, i_branch, i_ray) -> bool:
+        if i_ray == I_RAY_OP:
+            if i_branch % 2 == 0 and not i_tree == i_branch == 0:
+                if i_branch > 0:
+                    branch_prev = self.trees[i_tree][i_branch - 1]
+                else:
+                    assert i_tree > 0
+                    branch_prev = self.trees[i_tree - 1][-1]
+
+                if branch_prev == 0:
+                    return True
+
+        return False
+
+    def draw_branch(self, i_tree: int, tree: Tree, i_branch: int, num_rays: int) -> bool:
         is_horizontal = i_branch % 2 == 0
         heading_branch = tree.heading_horizontal if is_horizontal else tree.heading_vertical
         heading_ray = tree.heading_vertical if is_horizontal else tree.heading_horizontal
@@ -306,7 +324,7 @@ class Drawer:
             self.turtle.backward(ray_length)
 
             # Draw the OP of the branch if needed:
-            if i_ray == I_RAY_OP and i_branch % 2 == 0 and not i_tree == i_branch == 0:
+            if self.is_op_drawing_needed(i_tree, i_branch, i_ray):
                 self.turtle.left(180)
                 if not self.forward_with_check(LENGTH_OP):
                     return False
@@ -314,8 +332,6 @@ class Drawer:
                 self.turtle.backward(LENGTH_OP)
                 self.turtle.right(180)
                 self.num_ops += 1
-
-            # TODO: don't draw if the previous branch (of the same or the previous tree) is zero
 
         self.turtle.setheading(heading_branch)
         if not self.forward_with_check(LENGTH_STEP):
@@ -325,7 +341,7 @@ class Drawer:
 
     def draw_tree(self, i_tree, tree):
         for i_branch, num_rays in enumerate(tree.branches):
-            if not self.draw_branch(i_tree, tree, num_rays, i_branch):
+            if not self.draw_branch(i_tree, tree, i_branch, num_rays):
                 return False
 
         return True
@@ -344,8 +360,10 @@ class Drawer:
 
     def draw_trees(self, trees, width_image, height_image):
         assert trees
-        self.home(width_image, height_image)
+        assert self.trees is None
+        self.trees = trees
 
+        self.home(width_image, height_image)
         self.add_pose('start', self.get_pose())
 
         is_ok = True
@@ -356,6 +374,7 @@ class Drawer:
 
         self.add_pose('finish', self.get_pose())
 
+        self.trees = None
         return is_ok
 
 
@@ -575,7 +594,7 @@ def main():
     path_current.symlink_to(subdir, target_is_directory=True)
 
     num_maps = 5
-    i_generation = 1  # TODO: change to 0 to check the other TODO case
+    i_generation = 1
     for i_map in range(1, num_maps + 1):
         while True:
             is_ok = generate_scenario(path_maps, i_map, i_generation)
