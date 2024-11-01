@@ -25,7 +25,7 @@ import se.oru.coordination.coordination_oru.util.GeometrySmoother;
 import se.oru.coordination.coordination_oru.util.GeometrySmoother.SmootherControl;
 
 public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
-	public static enum PLANNING_ALGORITHM { RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT };
+	public enum PLANNING_ALGORITHM { RRTConnect, RRTstar, TRRT, SST, LBTRRT, PRMstar, SPARS, pRRT, LazyRRT, PRMcustom };
 	public static boolean isDumpingToDot = false;
 
 	private double robotRadius = 1.0;
@@ -38,9 +38,8 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	private int numIterationsPathSimplification = 500;
 	private String mapId;
 	private Coordinate[] collisionCircleCenters = null;
-	private PLANNING_ALGORITHM algo;
+	private PLANNING_ALGORITHM planningAlgorithm;
 
-	public static boolean isCachingPlanner = true;
 	public static ReedsSheppCarPlannerLib INSTANCE_SIMPLE;
 	public static CachingPlannerLib INSTANCE_CACHING;
 	static {
@@ -53,7 +52,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 
 	@Override
 	public AbstractMotionPlanner getCopy(boolean copyObstacles) {
-		ReedsSheppCarPlanner ret = new ReedsSheppCarPlanner(this.algo);
+		ReedsSheppCarPlanner ret = new ReedsSheppCarPlanner(this.planningAlgorithm);
 		ret.setRadius(this.robotRadius);
 		ret.setDistanceBetweenPathPoints(this.distanceBetweenPathPoints);
 		ret.setTurningRadius(this.turningRadius);
@@ -100,11 +99,11 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	}
 	
 	public ReedsSheppCarPlanner() {
-		this.algo = PLANNING_ALGORITHM.RRTConnect;
+		this.planningAlgorithm = PLANNING_ALGORITHM.RRTConnect;
 	}
 	
-	public ReedsSheppCarPlanner(PLANNING_ALGORITHM algo) {
-		this.algo = algo;
+	public ReedsSheppCarPlanner(PLANNING_ALGORITHM planningAlgorithm) {
+		this.planningAlgorithm = planningAlgorithm;
 	}
 
 	public void setCirclePositions(Coordinate ... circlePositions) {
@@ -184,7 +183,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 						throw new RuntimeException(e);
 					}
 				}
-				if (! isCachingPlanner) {
+				if (planningAlgorithm != ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom) {
 					if (!INSTANCE_SIMPLE.plan_multiple_circles(
 							occ, w, h, res,
 							mapOriginX, mapOriginY, 0, // TODO: robotRadius
@@ -193,7 +192,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 							goal_.getX(), goal_.getY(), goal_.getTheta(),
 							path, pathLength,
 							distanceBetweenPathPoints, turningRadius,
-							planningTimeInSecs, algo.ordinal()
+							planningTimeInSecs, planningAlgorithm.ordinal()
 					)) {
 						return false;
 					}
@@ -213,8 +212,8 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 				}
 			}
 			else {
-				assert !isCachingPlanner;
-				if (!INSTANCE_SIMPLE.plan_multiple_circles_nomap(xCoords, yCoords, numCoords, start_.getX(), start_.getY(), start_.getTheta(), goal_.getX(), goal_.getY(), goal_.getTheta(), path, pathLength, distanceBetweenPathPoints, turningRadius, planningTimeInSecs, algo.ordinal())) return false;
+				assert planningAlgorithm != ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom;
+				if (!INSTANCE_SIMPLE.plan_multiple_circles_nomap(xCoords, yCoords, numCoords, start_.getX(), start_.getY(), start_.getTheta(), goal_.getX(), goal_.getY(), goal_.getTheta(), path, pathLength, distanceBetweenPathPoints, turningRadius, planningTimeInSecs, planningAlgorithm.ordinal())) return false;
 			}
 
 			final Pointer pathVals = path.getValue();
@@ -226,7 +225,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 			if (i == 0) finalPath.add(new PoseSteering(pathPoses[0].x, pathPoses[0].y, pathPoses[0].theta, 0.0));
 			for (int j = 1; j < pathPoses.length; j++) finalPath.add(new PoseSteering(pathPoses[j].x, pathPoses[j].y, pathPoses[j].theta, 0.0));
 
-			if (! isCachingPlanner) {
+			if (planningAlgorithm != ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom) {
 				INSTANCE_SIMPLE.cleanupPath(pathVals);
 			} else {
 				INSTANCE_CACHING.cleanupPath(pathVals);

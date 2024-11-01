@@ -29,11 +29,8 @@ public abstract class Demo {
 
             AutonomousVehicle.isPathCachingEnabled = true;
 
-            ReedsSheppCarPlanner.isCachingPlanner = true;
-            if (! ReedsSheppCarPlanner.isCachingPlanner) {
-                AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.RRTConnect;
-            } else {
-                AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMstar;
+            AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom;
+            if (AutonomousVehicle.planningAlgorithm == ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom) {
                 AutonomousVehicle.numIterationsRoadmapConstruction = 4000;
                 AutonomousVehicle.numIterationsPathSimplification = 1000;
             }

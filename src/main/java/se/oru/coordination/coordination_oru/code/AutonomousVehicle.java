@@ -53,7 +53,7 @@ public class AutonomousVehicle extends AbstractVehicle {
             rsp.setTurningRadius(0.01); // TODO: this should be a vehicle attribute (and "1" is a more natural value)
             rsp.setDistanceBetweenPathPoints(0.1); // TODO: resolution?
 
-            if (! ReedsSheppCarPlanner.isCachingPlanner) {
+            if (planningAlgorithm != ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom) {
                 rsp.setPlanningTimeInSecs(15);
             } else {
                 rsp.setNumIterationsRoadmapConstruction(numIterationsRoadmapConstruction);
