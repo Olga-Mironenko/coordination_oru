@@ -85,18 +85,19 @@ public class AutonomousVehicle extends AbstractVehicle {
         String filenameCache = null;
         PoseSteering[] path = null;
 
-        String base = poseToString(initial);
-        for (Pose goal : goals) {
-            base += "_" + poseToString(goal);
-        }
-        base += "_" + planningAlgorithm + (inversePath ? "_inv" : "");
-
         if (isPathCachingEnabled && robotIDsObstacles.length == 0) {
-            filenameCache = "paths/" + mapId + "/" + base + ".path"; // TODO: add footprint
+            String base = poseToString(initial);
+            for (Pose goal : goals) {
+                base += "_" + poseToString(goal);
+            }
+            base += "_" + planningAlgorithm + (inversePath ? "_inv" : "");
+
+            filenameCache = "paths/" + mapId + "/" + base + ".path";
             if (new File(filenameCache).isFile()) {
                 path = Missions.loadPathFromFile(filenameCache);
             }
         }
+
 
         if (path == null) {
             var rsp = makePlanner(mapId, getFootprint());

@@ -13,6 +13,7 @@ The general idea::
 """
 import collections
 import datetime
+import hashlib
 import json
 import math
 import pathlib
@@ -488,7 +489,7 @@ def make_screenshot(t: turtle.Turtle,
     shift = WIDTH_GAP_IMAGE_CANVAS // 2 + 2
     subprocess.run(
         f'xwd -nobdrs -silent -id $(xdotool search --name "Python Turtle Graphics")'
-        f' | convert xwd:- -crop {image_width}x{image_height}+{shift}+{shift} {filename_map_png}',
+        f' | convert xwd:- -crop {image_width}x{image_height}+{shift}+{shift} -strip {filename_map_png}',
         shell=True,
         check=True,
     )
@@ -502,6 +503,8 @@ def save_locations(num_auts: int, filename_locations: str, drawer: Drawer, image
     with open(filename_locations, 'w') as file:
         print('# Locations:', file=file)
         print('# name', 'x_meters', 'y_meters', 'theta', sep='\t', file=file)
+        print(file=file)
+
         name2pose_with_robots = add_robots_to_name2pose(num_auts, drawer.name2pose)
         pose_prev = None
         for name, pose in name2pose_with_robots.items():
@@ -511,13 +514,24 @@ def save_locations(num_auts: int, filename_locations: str, drawer: Drawer, image
             pose_prev = pose
 
 
+def compute_hash_bytes(data_bytes: bytes) -> str:
+    return hashlib.sha1(data_bytes).hexdigest()[:8]
+
+
+def compute_hash_filename(filename_map_png: str) -> str:
+    with open(filename_map_png, 'rb') as file:
+        return compute_hash_bytes(file.read())
+
+
+def compute_hash_text(text_mapconf: str) -> str:
+    return compute_hash_bytes(text_mapconf.encode())
+
+
 def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) -> bool:
     basename_map_png = f'map{i_map}.png'
     basename_locations = f'locations{i_map}.tsv'
-    basename_mapconf = f'mapconf{i_map}.yaml'
 
     filename_scenario = str(path_maps / f'scenario{i_map}.json')
-    filename_mapconf = str(path_maps / basename_mapconf)
     filename_map_png = str(path_maps / basename_map_png)
     filename_locations = str(path_maps / basename_locations)
     # Note: `filename_background_png_to_generate` is made unique among all attempts to make `bgpic` work properly.
@@ -536,9 +550,11 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
         format='<level>{level}:</level> {message}',
     )
 
-    logger.info(f'=== GENERATING {filename_mapconf} (g{i_generation}) ===')
+    logger.info(f'=== GENERATING {filename_scenario} (g{i_generation}) ===')
 
     random.seed(i_generation)
+
+    dimensions_vehicle = (1.5, 1.0, 0, 0, 0, 0)  # see `VehicleSize.java`
 
     background_generator.generate_background(filename_background_png_to_generate)
     image = Image.open(filename_background_png_to_generate)
@@ -583,18 +599,31 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
     num_auts = 4
     save_locations(num_auts, filename_locations, drawer, image.height)
 
+    text_mapconf = textwrap.dedent(f"""
+        image: {basename_map_png}
+        resolution: 0.1
+        origin: [0, 0, 0]
+        occupied_thresh: 1.0
+        """).lstrip()
+
+    hexdigest_mapconf = compute_hash_text(
+        '-'.join((
+            compute_hash_filename(filename_map_png),
+            compute_hash_text(text_mapconf),
+            compute_hash_text(str(dimensions_vehicle))
+        ))
+    )
+    basename_mapconf = f'mapconf{i_map}-{hexdigest_mapconf}.yaml'
+    filename_mapconf = str(path_maps / basename_mapconf)
+
     with open(filename_mapconf, 'w') as file:
-        file.write(textwrap.dedent(f"""
-            image: {basename_map_png}
-            resolution: 0.1
-            origin: [0, 0, 0]
-            occupied_thresh: 1.0
-            """).strip())
+        file.write(text_mapconf)
 
     scenario = {
         'mapconf': basename_mapconf,
         'locations': basename_locations,
         'num_auts': num_auts,
+        'dimensions_vehicle': list(dimensions_vehicle),
     }
 
     with open(filename_scenario, 'w') as file:

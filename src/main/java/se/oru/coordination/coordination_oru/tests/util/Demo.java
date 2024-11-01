@@ -27,7 +27,7 @@ public abstract class Demo {
 
             GatedThread.millisArtificialSleep = 0;
 
-            AutonomousVehicle.isPathCachingEnabled = false;
+            AutonomousVehicle.isPathCachingEnabled = true;
 
             ReedsSheppCarPlanner.isCachingPlanner = true;
             if (! ReedsSheppCarPlanner.isCachingPlanner) {

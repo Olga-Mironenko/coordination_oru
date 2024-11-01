@@ -1,5 +1,6 @@
 package se.oru.coordination.coordination_oru.tests;
 
+import com.google.gson.JsonArray;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.code.*;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
@@ -40,6 +41,7 @@ public class GeneratedMapTest {
         }
 
         int numAuts;
+        int[] dimensionsVehicle;
         try (FileReader reader = new FileReader(scenarioString)) {
             JsonElement jsonElement = JsonParser.parseReader(reader);
 
@@ -54,6 +56,12 @@ public class GeneratedMapTest {
             Missions.setMap(file.getParentFile() + File.separator + basenameMapconf);
 
             numAuts = jsonObject.get("num_auts").getAsInt();
+
+            JsonArray dimensionsVehicleArray = jsonObject.getAsJsonArray("dimensions_vehicle");
+            dimensionsVehicle = new int[dimensionsVehicleArray.size()];
+            for (int i = 0; i < dimensionsVehicleArray.size(); i++) {
+                dimensionsVehicle[i] = dimensionsVehicleArray.get(i).getAsInt();
+            }
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -69,7 +77,12 @@ public class GeneratedMapTest {
             autsFinish[i] = GridMapConstants.turnAround(Missions.getLocationPose(name + "_finish"));
         }
 
-        VehicleSize vehicleSizeHum = new VehicleSize(1.5, 1.0, 0, 0, 0, 0);
+        assert dimensionsVehicle.length == 6;
+        VehicleSize vehicleSizeHum = new VehicleSize(
+                dimensionsVehicle[0], dimensionsVehicle[1],
+                dimensionsVehicle[2], dimensionsVehicle[3],
+                dimensionsVehicle[4], dimensionsVehicle[5]
+        );
         VehicleSize vehicleSizeAut = vehicleSizeHum;
 
         AutonomousVehicle hum = new HumanDrivenVehicle(
