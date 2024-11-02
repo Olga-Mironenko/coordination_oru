@@ -33,7 +33,7 @@ public class GridTestInteractive {
         Scenario scenario = Scenario.valueOf(scenarioString);
         AbstractVehicle.scenarioId = String.valueOf(scenario);
 
-        boolean isMapCleaning = true;
+        boolean isMapCleaning = false;
 
         HumanControl.isEnabledForBrowser = true;
 //        BrowserVisualization.isExtendedText = false;
@@ -53,7 +53,7 @@ public class GridTestInteractive {
         final Pose humStart = GridMapConstants.column2TopStart;
  //        final Pose humStart = GridMapConstants.turnAround(GridMapConstants.column2BottomStart);
 //        final Pose humFinish = GridMapConstants.column2Row1Right;
-        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.column2Row1Down);
+        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.column3Row2Down);
 
 //        final Pose humFinish = GridMapConstants.turnAround(GridMapConstants.row1RightStart);
 //        final Pose humFinish = GridMapConstants.turnAround(
@@ -70,13 +70,13 @@ public class GridTestInteractive {
 //                        -1.35
 //                )
 //        );
-        final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.column3Row1Down);
+        final Pose aut1Finish = GridMapConstants.turnAround(GridMapConstants.column3Row2Down);
 
         final Pose aut2Start = GridMapConstants.row2LeftStart;
         final Pose aut2Finish = GridMapConstants.turnAround(GridMapConstants.column3Row2Down);
 
         final Pose aut3Start = GridMapConstants.row3LeftStart;
-        final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.column3Row3Down);
+        final Pose aut3Finish = GridMapConstants.turnAround(GridMapConstants.column3Row2Down);
 
         final double maxVelocityHum = 3.0;
         final double maxAccelerationHum = 2.0;
@@ -151,7 +151,7 @@ public class GridTestInteractive {
 
                 Missions.loopMissions.put(aut1.getID(), ! isMapCleaning);
                 MissionBlueprint mb1 = new MissionBlueprint(aut1, aut1Start, aut1Finish).setDirection(
-                        MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                        MissionBlueprint.Direction.FORWARD_BACKWARD_SINGLE_MISSION
                 );
                 if (isMapCleaning) {
                     mb1.setIsToCleanForward(true).setRadiusClean(6).setDxClean(2).setXMaxClean(xMaxClean);
@@ -161,13 +161,13 @@ public class GridTestInteractive {
                 Missions.loopMissions.put(aut2.getID(), true);
                 Missions.enqueueMissions(
                         new MissionBlueprint(aut2, aut2Start, aut2Finish).setDirection(
-                                MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                                MissionBlueprint.Direction.FORWARD_BACKWARD_SINGLE_MISSION
                         )
                 );
 
                 Missions.loopMissions.put(aut3.getID(), ! isMapCleaning);
                 MissionBlueprint mb3 = new MissionBlueprint(aut3, aut3Start, aut3Finish).setDirection(
-                        MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS
+                        MissionBlueprint.Direction.FORWARD_BACKWARD_SINGLE_MISSION
                 );
                 if (isMapCleaning) {
                     mb3.setIsToCleanForward(true).setRadiusClean(5).setDxClean(1).setXMaxClean(xMaxClean);

@@ -324,12 +324,13 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 
 	private TreeMap<Double,Double> computeSlowdownProfile() {
-		final double coef = 1.1; // because speed is sometimes slightly higher than the maximum speed
-
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(te.getRobotID());
 
+		double maxVelocity = vehicle.getMaxVelocityOriginal() * 1.1;
+		// (because speed is sometimes slightly higher than the maximum speed)
+
 		TreeMap<Double,Double> ret = new TreeMap<Double, Double>();
-		State tempStateBW = new State(0.0, vehicle.getMaxVelocity()*coef);
+		State tempStateBW = new State(0.0, maxVelocity);
 		ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
 		double time = 0.0;
@@ -341,7 +342,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			//Use slightly conservative max deceleration (which is positive acceleration since we simulate FW dynamics).
 			// (This is regarding dampeningBW < 1?)
 
-			integrateRK4(tempStateBW, time, deltaTime, true, vehicle.getMaxVelocity()*coef, dampeningBW, vehicle.getMaxAcceleration(), -1);
+			integrateRK4(tempStateBW, time, deltaTime, true, maxVelocity, dampeningBW, vehicle.getMaxAcceleration(), -1);
 			ret.put(tempStateBW.getVelocity(), tempStateBW.getPosition());
 
 			time += deltaTime;
@@ -799,9 +800,11 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			return false;
 		}
 
+		final boolean mustBeSuperior = false;
+
 		HashSet<CriticalSection> criticalSections = getCriticalSectionsForRobot(null); // all
 		for (CriticalSection cs : criticalSections) {
-			if (cs.isSuperior(myRobotID) && VehiclesHashMap.isHuman(cs.getInferior())) {
+			if (VehiclesHashMap.isHuman(cs.getOtherRobotID(myRobotID)) && (! mustBeSuperior || cs.isSuperior(myRobotID))) {
 				return true;
 			}
 		}
@@ -908,7 +911,13 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		assert status == Status.DRIVING;
 		assert continueToStay;
 		if (criticalPoint == -1) { // The end of mission.
-			assert slowdownDebugEarlyFinishOverestimation <= totalDistance && totalDistance < slowdownDebugLateFinishOverestimation;
+			if (totalDistance == 0.0) {
+				assert slowdownDebugEarlyFinishOverestimation == 0.0;
+				assert slowdownDebugLateFinishOverestimation == 0.0;
+			} else {
+				assert slowdownDebugEarlyFinishOverestimation <= totalDistance;
+				assert totalDistance < slowdownDebugLateFinishOverestimation;
+			}
 
 			assert slowdownDebugEarlyFinishUnderestimation * 0.999 <= state.getPosition() && state.getPosition() <= slowdownDebugEarlyFinishOverestimation * 1.001;
 			// The multiplication is only because of a limited floating-point precision.

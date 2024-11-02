@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru.tests;
 
 import com.google.gson.JsonArray;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
+import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.code.*;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.tests.util.Demo;
@@ -22,6 +23,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import java.awt.*;
+import java.util.Comparator;
 
 public class GeneratedMapTest {
     public static void main(String[] args) {
@@ -32,13 +34,24 @@ public class GeneratedMapTest {
             }
         }.exec();
     }
+
     protected static void runDemo(String scenarioString) {
         HumanControl.isEnabledForBrowser = true;
-        Timekeeper.setVirtualMinutesPassedMax(60);
+        Timekeeper.setVirtualSecondsPassedMax(5);
+
+        Heuristics heuristics = new Heuristics();
+        Comparator<RobotAtCriticalSection> comparator = heuristics.humanFirst();
+//        Comparator<RobotAtCriticalSection> comparator = heuristics.automatedFirst();
+//        Comparator<RobotAtCriticalSection> comparator = heuristics.closest()
 
         if (scenarioString == null) {
-            scenarioString = "map-generator/generated-maps/current/scenario1.json";
+            scenarioString = "map-generator/generated-maps/current/scenario4.json";
         }
+        AbstractVehicle.scenarioId = String.format(
+                "%s, %s",
+                scenarioString,
+                heuristics.getHeuristicName()
+        );
 
         int numAuts;
         int[] dimensionsVehicle;
@@ -76,6 +89,10 @@ public class GeneratedMapTest {
             autsStart[i] = Missions.getLocationPose(name + "_start");
             autsFinish[i] = GridMapConstants.turnAround(Missions.getLocationPose(name + "_finish"));
         }
+//        autsStart[0] = Missions.getLocationPose("D1");
+//        autsFinish[0] = GridMapConstants.turnAround(Missions.getLocationPose("D2"));
+//        autsStart[1] = Missions.getLocationPose("D3");
+//        autsFinish[1] = GridMapConstants.turnAround(Missions.getLocationPose("D2"));
 
         assert dimensionsVehicle.length == 6;
         VehicleSize vehicleSizeHum = new VehicleSize(
@@ -88,14 +105,14 @@ public class GeneratedMapTest {
         AutonomousVehicle hum = new HumanDrivenVehicle(
                 0, 0,
                 Color.ORANGE, Color.ORANGE,
-                1.5, 0.3
+                1.5, 3.0
         );
         AutonomousVehicle[] auts = new AutonomousVehicle[numAuts];
         for (int i = 0; i < numAuts; i++) {
             auts[i] = new AutonomousVehicle(
                     i + 1, 0,
                     Color.BLUE, Color.BLUE,
-                    10.0, 0.3
+                    10.0, 3.0
             );
         }
 
@@ -112,9 +129,8 @@ public class GeneratedMapTest {
         for (int i = 0; i < numAuts; i++) {
             tec.placeRobot(auts[i].getID(), autsStart[i]);
         }
-
-        Heuristics heuristics = new Heuristics();
-        tec.addComparator(heuristics.humanFirst());
+;
+        tec.addComparator(comparator);
 
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(false);

@@ -10,3 +10,6 @@
       - `SCENARIO=FORCING_CS1_PRIORITIES_CHANGE ~/coordination_oru/logprocessing/run-demo.sh GridTest`
   - Multiple demos:
     - `~/coordination_oru/logprocessing/run-scenarios.sh 60m GridTest FORCING_CS1_PRIORITIES_CHANGE FORCING_CS1_WITH_STOPS`
+      - To interrupt: ^Z, `~/coordination_oru/logprocessing/stop-all-demos.sh`.
+- Consolidate (merge) CSV reports:
+  - `~/coordination_oru/logprocessing/consolidate-rundirs.sh ~/coordination_oru/logs/rundirs/...`

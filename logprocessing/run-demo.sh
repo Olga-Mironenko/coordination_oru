@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -eu -o pipefail
 
 [ $# = 1 ] || [ $# = 2 ]
 demo=$1
@@ -19,6 +19,6 @@ args_gradlew=(
    -Passert
    -Pdemo="$demo"
 )
-set -x
+set -x +o pipefail
 timeout --kill-after=10s "$timeout" ./gradlew "${args_gradlew[@]}" |&
   tee ./logs/entire/"$demo".log

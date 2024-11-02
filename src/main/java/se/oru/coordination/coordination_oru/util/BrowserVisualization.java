@@ -348,9 +348,9 @@ public class BrowserVisualization implements FleetVisualization {
 				}
 
 				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
-				row += String.format(" | %.1f | %d | ", vehicle.totalDistance, vehicle.getCycles());
-				thead1 += " |3 Efficiency";
-				thead2 += " | traveled, m | no. missions | transported ore, t";
+				row += String.format(" | %.1f | %d", vehicle.totalDistance, vehicle.getCycles());
+				thead1 += " |2 Efficiency";
+				thead2 += " | traveled, m | no. missions";
 
 				if (isExtendedText) {
 					text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());

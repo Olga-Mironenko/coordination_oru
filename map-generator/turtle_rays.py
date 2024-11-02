@@ -44,7 +44,7 @@ WIDTH_GAP_RAY_OBSTACLE = WIDTH_PEN * 2
 X_WINDOW_START = 0
 Y_WINDOW_START = 0
 
-PROBABILITY_BRIDGE_PRESENCE = 0.8
+PROBABILITY_BRIDGE_PRESENCE = 1.0
 PROBABILITY_BRIDGE_SINGLE = 0.5
 
 MAP_RESOLUTION_COORDINATION_ORU = 0.1  # meters per pixel
@@ -596,7 +596,7 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
 
     make_screenshot(t, image.width, image.height, filename_map_png)
 
-    num_auts = 4
+    num_auts = 3
     save_locations(num_auts, filename_locations, drawer, image.height)
 
     text_mapconf = textwrap.dedent(f"""

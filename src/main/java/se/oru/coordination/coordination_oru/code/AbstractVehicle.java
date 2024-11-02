@@ -210,7 +210,11 @@ public abstract class AbstractVehicle {
     public void writeStatistics() {
 
         try {
-            String subdir = dateString + (scenarioId == null ? "" : "_" + scenarioId);
+            String subdir = dateString + (
+                    scenarioId == null
+                            ? ""
+                            : "_" + scenarioId.replace('/', '_').replace(' ', '_')
+            );
             File dir = new File(rundirsRoot + "/" + subdir);
             if (!isRundirPrepared) {
                 dir.mkdirs();
@@ -228,7 +232,7 @@ public abstract class AbstractVehicle {
             BufferedWriter bw = new BufferedWriter(fw);
 
             bw.write("Date," + dateString + "\n");
-            bw.write("Scenario ID," + scenarioId + "\n");
+            bw.write("Scenario ID,\"" + scenarioId + "\"\n");
             bw.write("Vehicle ID," + this.getID() + "\n");
             bw.write("Vehicle type," + this.type + "\n");
 
@@ -238,7 +242,7 @@ public abstract class AbstractVehicle {
 
             bw.write("No. of stops," + this.stops + "\n");
             bw.write("No. of forcing events," + Forcing.robotIDToNumForcingEvents.getOrDefault(ID, 0) + "\n");
-            bw.write("No. of potential interactions," + TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
+            bw.write("No. of critical sections," + TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
             bw.write("Total waiting time (s)," + round(totalWaitingTime) + "\n");
             bw.write("Maximum waiting time (s)," + round(maxWaitingTime) + "\n");
             bw.write("Total real time (s)," + round(totalTime) + "\n");
@@ -349,6 +353,10 @@ public abstract class AbstractVehicle {
 
     public double getMaxVelocity() {
         return maxVelocity;
+    }
+
+    public double getMaxVelocityOriginal() {
+        return maxVelocityOriginal;
     }
 
     public void setMaxVelocity(double maxVelocity) {

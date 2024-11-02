@@ -13,5 +13,5 @@ if [ "$reference" ]; then
   find "$dir" -mindepth 1 -maxdepth 1 -type d -newer "$reference" -print0 |
     xargs -0 --no-run-if-empty "$root"/consolidate-rundirs.sh >"$file"
 else
-  "$root"/consolidate-rundirs.sh "$dir"/202* >"$file"
+  "$root"/consolidate-rundirs.sh "$dir"/2024* >"$file"
 fi

@@ -91,4 +91,4 @@ trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT
 
 set -x
 "$root"/run-scenarios.sh "$timeout" "$demo" "${scenarios[@]}"
-"$root"/consolidate-rundirs-to-sorted-csv.sh "$reference"
+"$root"/consolidate-rundirs-to-sorted-csv.sh "$reference"  # will consolidate everything created after the reference file

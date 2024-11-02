@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# See `$repo/notes/run-demos.md`.
+
 set -eu
 
 [ $# -gt 2 ]
