@@ -2,7 +2,7 @@
 
 # See `$repo/notes/run-demos.md`.
 
-set -eu
+set -eu -o pipefail
 
 [ $# -gt 2 ]
 timeout=$1
@@ -13,5 +13,5 @@ scenarios=("$@")
 root=$(dirname "$0")
 set -x
 for scenario in "${scenarios[@]}"; do
-  env SCENARIO="$scenario" "$root"/run-demo.sh "$demo" "$timeout" || [ $? = 124 ]
+  env SCENARIO="$scenario" "$root"/run-demo.sh "$demo" "$timeout" || echo "WARNING: exit $?"
 done

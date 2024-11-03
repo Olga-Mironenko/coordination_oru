@@ -45,6 +45,8 @@ public class Timekeeper extends GatedThread {
     }
 
     protected void interruptAllThreads() {
+        System.err.println("Timekeeper interruptAllThreads");
+
         for (Thread thread : Thread.getAllStackTraces().keySet()) {
             // TODO: skip the current thread for the further `sleep` before `kill` to work
             thread.interrupt();
@@ -60,6 +62,7 @@ public class Timekeeper extends GatedThread {
 
         long pid = ProcessHandle.current().pid();
         try {
+            System.err.println("Timekeeper: running kill " + pid);
             Runtime.getRuntime().exec("kill " + pid);
         } catch (IOException e) {
             throw new RuntimeException(e);

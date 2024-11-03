@@ -12,13 +12,15 @@ cd "$repo"
 
 args_gradlew=(
    --no-daemon
+   #--foreground
    --max-workers=1
    --no-parallel
    --no-scan
+   #--debug
    run
    -Passert
    -Pdemo="$demo"
 )
 set -x +o pipefail
-timeout --kill-after=10s "$timeout" ./gradlew "${args_gradlew[@]}" |&
+timeout --foreground --kill-after=10s "$timeout" ./gradlew "${args_gradlew[@]}" |&
   tee ./logs/entire/"$demo".log
