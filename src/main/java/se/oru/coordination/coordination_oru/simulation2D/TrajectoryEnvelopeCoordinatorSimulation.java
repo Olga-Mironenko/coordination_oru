@@ -40,11 +40,18 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	public HashMap<Integer, List<CollisionEvent>> robotIDToMajorCollisions = new HashMap<>();
 	protected Thread collisionThread = null;
 
+	public HashMap<Integer, Integer> robotIDToNumReroutingsNearParkedVehicle = new HashMap<>();
+	public HashMap<Integer, Integer> robotIDToNumReroutingsNearSlowVehicle = new HashMap<>();
+
 	protected AtomicInteger totalMsgsLost = new AtomicInteger(0);
 	protected AtomicInteger totalPacketsLost = new AtomicInteger(0);
 	
 	protected double DEFAULT_MAX_VELOCITY;
 	protected double DEFAULT_MAX_ACCELERATION;
+
+	public static void incrementForRobot(HashMap<Integer, Integer> robotIDToNum, int robotID) {
+		robotIDToNum.put(robotID, robotIDToNum.getOrDefault(robotID, 0) + 1);
+	}
 	
 	/**
 	 * The default footprint used for robots if none is specified.

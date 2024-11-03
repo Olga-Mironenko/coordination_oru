@@ -382,4 +382,8 @@ public abstract class AbstractVehicle {
     public int getCycles() {
         return cycles;
     }
+
+    public boolean isCautiousMode() {
+        return getMaxVelocity() < getMaxVelocityOriginal();
+    }
 }

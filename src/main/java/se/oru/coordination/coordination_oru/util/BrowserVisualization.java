@@ -297,6 +297,7 @@ public class BrowserVisualization implements FleetVisualization {
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 		for (int id : idToVehicle.keySet()) {
 			AbstractVehicle vehicle = idToVehicle.get(id);
+			boolean isHuman = VehiclesHashMap.isHuman(id);
 			TrajectoryEnvelope te = tec.trackers.get(id).getTrajectoryEnvelope();
 
 			text += "(V" + id + ", " + vehicle.getType() + ") ";
@@ -318,6 +319,20 @@ public class BrowserVisualization implements FleetVisualization {
 				thead1 += " |2 Velocity, m/s";
 				thead2 += " | current | max";
 
+				thead1 += " |4 Coordination features";
+				thead2 += " | cautious<br>mode | rerouting<br>(parked / slow) | change of<br>priorities | stops";
+				row += String.format(" | %s | %s |  |  ",
+						isHuman ? "" : vehicle.isCautiousMode() ? "yes" : "no",
+						isHuman ? "" : String.format("%s / %s",
+							! AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman
+								? "-"
+								: tec.robotIDToNumReroutingsNearParkedVehicle.getOrDefault(id, 0).toString(),
+							! AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman
+								? "-"
+								: tec.robotIDToNumReroutingsNearSlowVehicle.getOrDefault(id, 0).toString()
+						)
+				);
+
 				List<CollisionEvent> allCollisions = tec.robotIDToAllCollisions.getOrDefault(id, new ArrayList<>());
 				List<CollisionEvent> minorCollisions = tec.robotIDToMinorCollisions.getOrDefault(id, new ArrayList<>());
 				List<CollisionEvent> majorCollisions = tec.robotIDToMajorCollisions.getOrDefault(id, new ArrayList<>());
@@ -325,9 +340,9 @@ public class BrowserVisualization implements FleetVisualization {
 				assert allCollisions.size() == minorCollisions.size() + majorCollisions.size();
 
 				thead1 += " |3 Safety-critical events";
-				thead2 += " | violations | near misses | collisions";
+				thead2 += " | violations | near<br>misses | collisions";
 
-				if (! VehiclesHashMap.isHuman(id)) {
+				if (! isHuman) {
 					row += " | ";
 				} else {
 					int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(id, 0);
@@ -339,7 +354,7 @@ public class BrowserVisualization implements FleetVisualization {
 				text += String.format("; collision events: <b>%d</b> minor, <b>%d</b> major", minorCollisions.size(), majorCollisions.size());
 				row += String.format(" | %d</b> | %d", minorCollisions.size(), majorCollisions.size());
 
-				if (isCollisionInfo && ! VehiclesHashMap.isHuman(id)) {
+				if (isCollisionInfo && ! isHuman) {
 					if (allCollisions.size() != 0) {
 						for (CollisionEvent ce : allCollisions) {
 							text += "- " + ce.toCompactString(rr.getRobotID()) + "<br>";
@@ -356,7 +371,7 @@ public class BrowserVisualization implements FleetVisualization {
 					text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
 					row += String.format(" | (%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
 					thead1 += " |5 Tracker state (current mission)";
-					thead2 += " | position (x, y), m";
+					thead2 += " | position<br>(x, y), m";
 
 					text += String.format("; i=%d (CP=%d, %s)",
 							rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
