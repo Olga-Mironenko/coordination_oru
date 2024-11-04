@@ -606,8 +606,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		queueStopEvents.add(Timekeeper.getVirtualMillisPassed());
 		if (areThereTooManyStopEventsRecently()) {
 			tryToReplanNearVehicle(robotID, false);
-			TrajectoryEnvelopeCoordinatorSimulation.incrementForRobot(
-					TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumReroutingsNearSlowVehicle, robotID);
 			queueStopEvents.clear(); // don't try to reroute again in the nearest future
 		}
 	}
@@ -1012,8 +1010,13 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		PoseSteering[] psa = te.getTrajectory().getPoseSteering();
 		HumanControl.moveRobot(myRobotID, psa[psa.length - 1].getPose(), new int[] {superiorID});
+
 		TrajectoryEnvelopeCoordinatorSimulation.incrementForRobot(
-				TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumReroutingsNearParkedVehicle, myRobotID);
+				mustBeParked
+						? TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumReroutingsNearParkedVehicle
+						: TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumReroutingsNearSlowVehicle,
+				myRobotID
+		);
 		return true;
 	}
 

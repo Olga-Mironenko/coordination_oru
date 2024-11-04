@@ -322,7 +322,8 @@ public class BrowserVisualization implements FleetVisualization {
 				thead1 += " |4 Coordination features";
 				thead2 += " | cautious<br>mode | rerouting<br>(parked / slow) | change of<br>priorities | stops";
 				row += String.format(" | %s | %s |  |  ",
-						isHuman ? "" : vehicle.isCautiousMode() ? "yes" : "no",
+						isHuman ? "" : ! AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed ? "-" :
+								vehicle.isCautiousMode() ? "yes" : "no",
 						isHuman ? "" : String.format("%s / %s",
 							! AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman
 								? "-"
@@ -336,12 +337,10 @@ public class BrowserVisualization implements FleetVisualization {
 				List<CollisionEvent> allCollisions = tec.robotIDToAllCollisions.getOrDefault(id, new ArrayList<>());
 				List<CollisionEvent> minorCollisions = tec.robotIDToMinorCollisions.getOrDefault(id, new ArrayList<>());
 				List<CollisionEvent> majorCollisions = tec.robotIDToMajorCollisions.getOrDefault(id, new ArrayList<>());
-
 				assert allCollisions.size() == minorCollisions.size() + majorCollisions.size();
 
 				thead1 += " |3 Safety-critical events";
 				thead2 += " | violations | near<br>misses | collisions";
-
 				if (! isHuman) {
 					row += " | ";
 				} else {
@@ -350,7 +349,6 @@ public class BrowserVisualization implements FleetVisualization {
 					int numViolations = numForcings - numUselessForcings;
 					row += String.format(" | %d", numViolations);
 				}
-
 				text += String.format("; collision events: <b>%d</b> minor, <b>%d</b> major", minorCollisions.size(), majorCollisions.size());
 				row += String.format(" | %d</b> | %d", minorCollisions.size(), majorCollisions.size());
 

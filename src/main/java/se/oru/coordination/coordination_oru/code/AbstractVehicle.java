@@ -4,6 +4,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import org.apache.commons.io.FileUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
+import se.oru.coordination.coordination_oru.CollisionEvent;
 import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
@@ -18,8 +19,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -231,6 +234,8 @@ public abstract class AbstractVehicle {
             FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
             BufferedWriter bw = new BufferedWriter(fw);
 
+            TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+
             bw.write("Date," + dateString + "\n");
             bw.write("Scenario ID,\"" + scenarioId + "\"\n");
             bw.write("Vehicle ID," + this.getID() + "\n");
@@ -242,7 +247,11 @@ public abstract class AbstractVehicle {
 
             bw.write("No. of stops," + this.stops + "\n");
             bw.write("No. of forcing events," + Forcing.robotIDToNumForcingEvents.getOrDefault(ID, 0) + "\n");
-            bw.write("No. of critical sections," + TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
+            bw.write("No. of critical sections," + tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
+
+            bw.write("No. of near-misses," + tec.robotIDToMinorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
+            bw.write("No. of collisions," + tec.robotIDToMajorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
+
             bw.write("Total waiting time (s)," + round(totalWaitingTime) + "\n");
             bw.write("Maximum waiting time (s)," + round(maxWaitingTime) + "\n");
             bw.write("Total real time (s)," + round(totalTime) + "\n");

@@ -13,9 +13,10 @@ demo=GeneratedMapTest
 
 scenarios=()
 for i in {1..5}; do
-  scenario_simple=map-generator/generated-maps/current/scenario$i.json
-  scenario=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$scenario_simple")
-  scenarios+=("$scenario")
+  filename_simple=map-generator/generated-maps/current/scenario$i.json
+  filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
+  scenarios+=("$filename, with rerouting")
+  scenarios+=("$filename, without rerouting")
 done
 
 reference=$(mktemp --tmpdir run-and-consolidate.XXXX)

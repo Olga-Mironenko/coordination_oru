@@ -48,7 +48,7 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
 
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.deltaMaxVelocityCautious = -2.0;
             AdaptiveTrajectoryEnvelopeTrackerRK4.minMaxVelocityCautious = 1.0;
         }

@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.code.*;
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
@@ -37,7 +38,7 @@ public class GeneratedMapTest {
 
     protected static void runDemo(String scenarioString) {
         HumanControl.isEnabledForBrowser = true;
-//        Timekeeper.setVirtualSecondsPassedMax(5);
+        Timekeeper.setVirtualMinutesPassedMax(5);
 
         Heuristics heuristics = new Heuristics();
         Comparator<RobotAtCriticalSection> comparator = heuristics.humanFirst();
@@ -45,23 +46,45 @@ public class GeneratedMapTest {
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.closest()
 
         if (scenarioString == null) {
-            scenarioString = "map-generator/generated-maps/current/scenario4.json";
+            scenarioString = "map-generator/generated-maps/current/scenario4.json, without rerouting";
         }
         AbstractVehicle.scenarioId = String.format(
-                "%s, %s",
+                "%s; %s",
                 scenarioString,
                 heuristics.getHeuristicName()
         );
 
+        String[] scenarioTokens = scenarioString.split(", ");
+        assert scenarioTokens.length == 2;
+        String scenarioFilename = scenarioTokens[0];
+        String stringRerouting = scenarioTokens[1];
+        switch (stringRerouting) {
+            case "with rerouting":
+                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForHuman = false;
+                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = true;
+                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
+                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
+                break;
+            case "without rerouting":
+                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForHuman = false;
+                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = false;
+                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
+                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = false;
+                break;
+            default:
+                throw new IllegalArgumentException("Unrecognized rerouting string: " + stringRerouting);
+        }
+
+
         int numAuts;
         int[] dimensionsVehicle;
-        try (FileReader reader = new FileReader(scenarioString)) {
+        try (FileReader reader = new FileReader(scenarioFilename)) {
             JsonElement jsonElement = JsonParser.parseReader(reader);
 
             assert jsonElement.isJsonObject();
             JsonObject jsonObject = jsonElement.getAsJsonObject();
 
-            File file = new File(scenarioString);
+            File file = new File(scenarioFilename);
             String basenameLocations = jsonObject.get("locations").getAsString();
             Missions.loadRoadMap(file.getParentFile() + File.separator + basenameLocations);
 
