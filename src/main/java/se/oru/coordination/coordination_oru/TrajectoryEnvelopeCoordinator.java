@@ -35,6 +35,7 @@ import aima.core.util.datastructure.Pair;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
+import se.oru.coordination.coordination_oru.util.HumanControl;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
@@ -2080,24 +2081,37 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 								//it's too late for escaping. Let's create a deadlock: the parked robot should wait for the moving one,
 								//while the other should be commanded to do not proceed beyond its last communicated CP. Both the dependencies should be added to the current set.									
 
-								//The parked robot should wait for the other at its current path index till the moving robot has not been exited from its critical section.
-								int artWaitingPoint = communicatedCPs.containsKey(drivingTracker) ? communicatedCPs.get(drivingTracker).getFirst() :
-										(drivingRobotID == robotReport1.getRobotID() ? robotReport1.getPathIndex() : robotReport2.getPathIndex());
-								int artDrivingCSEnd = waitingRobotID == cs.getTe1().getRobotID() ? cs.getTe1End() : cs.getTe2End();
-								Dependency dep = new Dependency(drivingTracker.getTrajectoryEnvelope(),waitingTracker.getTrajectoryEnvelope(),Math.max(0, artWaitingPoint),artDrivingCSEnd);
-								if (!artificialDependencies.containsKey(drivingRobotID)) artificialDependencies.put(drivingRobotID, new HashSet<Dependency>());
-								artificialDependencies.get(drivingRobotID).add(dep);
-								askForReplan.add(drivingRobotID);
-
-								//update the global graph
-								if (!depsGraph.containsEdge(dep)) {
-									if (!depsGraph.containsVertex(dep.getWaitingRobotID())) depsGraph.addVertex(dep.getWaitingRobotID());
-									if (!depsGraph.containsVertex(dep.getDrivingRobotID())) depsGraph.addVertex(dep.getDrivingRobotID());
-									if (!depsGraph.addEdge(dep.getWaitingRobotID(), dep.getDrivingRobotID(), dep))
-										metaCSPLogger.severe("<<<<<<<<< Add dependency fails (5a). Dep: " + dep);
+								AbstractTrajectoryEnvelopeTracker humanTracker = null;
+								if (VehiclesHashMap.isHuman(drivingRobotID)) {
+									humanTracker = drivingTracker;
+								} else if (VehiclesHashMap.isHuman(waitingRobotID)) {
+									humanTracker = waitingTracker;
 								}
+								if (humanTracker != null) {
+									metaCSPLogger.severe(
+											"Robot" + humanTracker.getRobotReport().getRobotID() + " cannot escape from CS: " + cs + ". " +
+													"Just letting one robot to pass through another (to avoid deadlock)."
+									);
+								} else {
+									//The parked robot should wait for the other at its current path index till the moving robot has not been exited from its critical section.
+									int artWaitingPoint = communicatedCPs.containsKey(drivingTracker) ? communicatedCPs.get(drivingTracker).getFirst() :
+											(drivingRobotID == robotReport1.getRobotID() ? robotReport1.getPathIndex() : robotReport2.getPathIndex());
+									int artDrivingCSEnd = waitingRobotID == cs.getTe1().getRobotID() ? cs.getTe1End() : cs.getTe2End();
+									Dependency dep = new Dependency(drivingTracker.getTrajectoryEnvelope(),waitingTracker.getTrajectoryEnvelope(),Math.max(0, artWaitingPoint),artDrivingCSEnd);
+									if (!artificialDependencies.containsKey(drivingRobotID)) artificialDependencies.put(drivingRobotID, new HashSet<Dependency>());
+									artificialDependencies.get(drivingRobotID).add(dep);
+									askForReplan.add(drivingRobotID);
 
-								metaCSPLogger.info("Robot" + drivingRobotID + " cannot escape from CS: " + cs + ". Let's create a deadlock. Add artificial dependency for Robot" + drivingRobotID + " at " + dep.getWaitingPoint() + ".");
+									//update the global graph
+									if (!depsGraph.containsEdge(dep)) {
+										if (!depsGraph.containsVertex(dep.getWaitingRobotID())) depsGraph.addVertex(dep.getWaitingRobotID());
+										if (!depsGraph.containsVertex(dep.getDrivingRobotID())) depsGraph.addVertex(dep.getDrivingRobotID());
+										if (!depsGraph.addEdge(dep.getWaitingRobotID(), dep.getDrivingRobotID(), dep))
+											metaCSPLogger.severe("<<<<<<<<< Add dependency fails (5a). Dep: " + dep);
+									}
+
+									metaCSPLogger.info("Robot" + drivingRobotID + " cannot escape from CS: " + cs + ". Let's create a deadlock. Add artificial dependency for Robot" + drivingRobotID + " at " + dep.getWaitingPoint() + ".");
+								}
 							}
 							metaCSPLogger.finest("Both can't. Driving Robot" + drivingRobotID + " at " + drivingCurrentIndex + " makes " + waitingRobotID + " waiting at CS " + cs + ".");
 						}

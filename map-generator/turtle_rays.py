@@ -29,6 +29,15 @@ from loguru import logger
 
 import background_generator
 
+NUM_MAPS = 1
+NUM_AUTS = 2
+IS_HUMAN_STAYING = False
+IS_OP_TREE0_BRANCH0_ALLOWED = True
+
+IMAGE_WIDTH = 400
+IMAGE_HEIGHT = 300
+NUM_ELLIPSES = 0
+
 LENGTH_STEP = 50
 WIDTH_PEN = LENGTH_STEP // 2
 assert WIDTH_PEN < LENGTH_STEP  # for a gap between rays
@@ -291,12 +300,13 @@ class Drawer:
 
     def is_op_drawing_needed(self, i_tree, i_branch, i_ray) -> bool:
         if i_ray == I_RAY_OP:
-            if i_branch % 2 == 0 and not i_tree == i_branch == 0:
+            if i_branch % 2 == 0 and (IS_OP_TREE0_BRANCH0_ALLOWED or not i_tree == i_branch == 0):
                 if i_branch > 0:
                     branch_prev = self.trees[i_tree][i_branch - 1]
-                else:
-                    assert i_tree > 0
+                elif i_tree > 0:
                     branch_prev = self.trees[i_tree - 1][-1]
+                else:
+                    branch_prev = 0
 
                 if branch_prev == 0:
                     return True
@@ -439,10 +449,13 @@ def add_robots_to_name2pose(num_auts: int, name2pose: Dict[str, Pose]) -> Dict[s
         # Insert 'hum1_start' after 'start'
         if key == 'start':
             new_name2pose['hum1_start'] = value
+            if IS_HUMAN_STAYING:
+                new_name2pose['hum1_finish'] = value
 
         # Insert 'hum1_finish' after 'finish'
         elif key == 'finish':
-            new_name2pose['hum1_finish'] = value
+            if not IS_HUMAN_STAYING:
+                new_name2pose['hum1_finish'] = value
 
         # Insert each automated vehicle's start and finish after the corresponding D pose and OP pose
         elif key in key2pairs:
@@ -556,7 +569,12 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
 
     dimensions_vehicle = (1.5, 1.0, 0, 0, 0, 0)  # see `VehicleSize.java`
 
-    background_generator.generate_background(filename_background_png_to_generate)
+    background_generator.generate_background(
+        filename_background_png_to_generate,
+        image_width=IMAGE_WIDTH,
+        image_height=IMAGE_HEIGHT,
+        num_ellipses=NUM_ELLIPSES,
+    )
     image = Image.open(filename_background_png_to_generate)
     occupied_pixels = image_to_occupied_pixels(image)
 
@@ -596,8 +614,7 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
 
     make_screenshot(t, image.width, image.height, filename_map_png)
 
-    num_auts = 3
-    save_locations(num_auts, filename_locations, drawer, image.height)
+    save_locations(NUM_AUTS, filename_locations, drawer, image.height)
 
     text_mapconf = textwrap.dedent(f"""
         image: {basename_map_png}
@@ -622,7 +639,7 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
     scenario = {
         'mapconf': basename_mapconf,
         'locations': basename_locations,
-        'num_auts': num_auts,
+        'num_auts': NUM_AUTS,
         'dimensions_vehicle': list(dimensions_vehicle),
     }
 
@@ -644,9 +661,8 @@ def main():
     path_current.unlink(missing_ok=True)
     path_current.symlink_to(subdir, target_is_directory=True)
 
-    num_maps = 5
     i_generation = 1
-    for i_map in range(1, num_maps + 1):
+    for i_map in range(1, NUM_MAPS + 1):
         while True:
             is_ok = generate_scenario(path_maps, i_map, i_generation)
             i_generation += 1

@@ -46,7 +46,7 @@ public class GeneratedMapTest {
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.closest()
 
         if (scenarioString == null) {
-            scenarioString = "map-generator/generated-maps/current/scenario4.json, without rerouting";
+            scenarioString = "map-generator/generated-maps/current/scenario1.json, without rerouting";
         }
         AbstractVehicle.scenarioId = String.format(
                 "%s; %s",
@@ -75,9 +75,8 @@ public class GeneratedMapTest {
                 throw new IllegalArgumentException("Unrecognized rerouting string: " + stringRerouting);
         }
 
-
         int numAuts;
-        int[] dimensionsVehicle;
+        double[] dimensionsVehicle;
         try (FileReader reader = new FileReader(scenarioFilename)) {
             JsonElement jsonElement = JsonParser.parseReader(reader);
 
@@ -94,9 +93,9 @@ public class GeneratedMapTest {
             numAuts = jsonObject.get("num_auts").getAsInt();
 
             JsonArray dimensionsVehicleArray = jsonObject.getAsJsonArray("dimensions_vehicle");
-            dimensionsVehicle = new int[dimensionsVehicleArray.size()];
+            dimensionsVehicle = new double[dimensionsVehicleArray.size()];
             for (int i = 0; i < dimensionsVehicleArray.size(); i++) {
-                dimensionsVehicle[i] = dimensionsVehicleArray.get(i).getAsInt();
+                dimensionsVehicle[i] = dimensionsVehicleArray.get(i).getAsDouble();
             }
         } catch (IOException e) {
             e.printStackTrace();
