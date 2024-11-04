@@ -464,6 +464,8 @@ public class BrowserVisualization implements FleetVisualization {
 			html += String.format("Time passed (sim.): %s<br>", secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000));
 		}
 
+		html += String.format("canPassFirst: %b<br>", CriticalSection.isCanPassFirstActive);
+
 		if (HumanControl.status != null) {
 			html += HumanControl.status + "<br>";
 		}

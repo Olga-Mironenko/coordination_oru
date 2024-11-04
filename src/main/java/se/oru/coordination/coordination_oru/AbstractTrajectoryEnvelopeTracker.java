@@ -214,14 +214,6 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 	public int getReportCounter() {
 		return this.reportCounter;
 	}
-	
-	/**
-	 * Returns the current critical point.
-	 * @return The current critical point.
-	 */
-	public int getCriticalPoint() {
-		return this.criticalPoint;
-	}
 
 	protected void setFieldCriticalPoint(int criticalPoint) {
 		this.criticalPoint = criticalPoint;

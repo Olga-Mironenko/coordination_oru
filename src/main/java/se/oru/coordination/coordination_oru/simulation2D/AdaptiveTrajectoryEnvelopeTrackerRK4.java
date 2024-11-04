@@ -77,6 +77,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	private boolean isCautious = false;
 	private Double maxVelocityBeforeCautious = null;
 
+	private SortedSet<Integer> criticalPointsPostponed = new TreeSet<>(Collections.reverseOrder());
+
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
 	}
@@ -546,10 +548,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 			final int margin = AbstractTrajectoryEnvelopeCoordinator.TRAILING_PATH_POINTS;
 
-			if (
-					criticalPointToConsider == null ||
-							start - margin <= criticalPointToConsider && criticalPointToConsider <= end + margin
-			) {
+			// TODO: Rather than trying to guess the critical section of a saved critical point,
+			//       just save critical sections.
+			if (criticalPointToConsider == null || criticalPointToConsider == start - margin) {
 				criticalSections.add(cs);
 			}
 		}
@@ -649,6 +650,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			double positionToSlowDownTemporary = computePositionToSlowDown(targetDistance, true);
 
 			if (! isRacingThroughCrossroadAllowed || positionToSlowDownTemporary > state.getPosition()) {
+				if (this.criticalPoint != -1) {
+					criticalPointsPostponed.add(this.criticalPoint);
+				}
 				this.setFieldCriticalPoint(criticalPointToSet);
 
 				//assert criticalSectionsReal.size() == 1; // doesn't work when the other robot returns through the same intersection
@@ -788,7 +792,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	private CriticalSection getFirstOfCriticalSectionsOfInferior() {
 		ArrayList<CriticalSection> criticalSections = getCriticalSectionsOfInferior();
-		if (criticalSections == null || criticalSections.size() == 0) {
+		if (criticalSections == null || criticalSections.isEmpty()) {
 			return null;
 		}
 		return criticalSections.get(0);
@@ -875,8 +879,15 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		// `criticalPoint` yet (at least sometimes).
 
 		if (myRobotID == criticalSection.getSuperior() || criticalSection.canPassFirst(myRobotID)) {
-			setFieldCriticalPoint(-1);
-			onTrajectoryEnvelopeUpdate(); // reset `positionToSlowDown`, etc.
+			setCriticalPoint(-1);
+
+			SortedSet<Integer> criticalPointsPostponedOriginal = criticalPointsPostponed;
+			if (! criticalPointsPostponedOriginal.isEmpty()) {
+				criticalPointsPostponed = new TreeSet<>();
+				for (int cp : criticalPointsPostponedOriginal) {
+					setCriticalPoint(cp);
+				}
+			}
 		}
 	}
 
