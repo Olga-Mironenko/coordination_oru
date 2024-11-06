@@ -12,6 +12,7 @@ import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.util.Forcing;
+import se.oru.coordination.coordination_oru.util.ForcingMaintainer;
 import se.oru.coordination.coordination_oru.util.HumanControl;
 import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
@@ -1040,30 +1041,36 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(myRobotID);
 		Status status = Status.DRIVING;
 
+		boolean isHuman = VehiclesHashMap.isHuman(myRobotID);
+
 		boolean isReroutingNearParkedVehicleOK = true;
 		boolean isReroutingNearParkedVehicle =
-				VehiclesHashMap.isHuman(myRobotID) ?
+				isHuman ?
 						isReroutingNearParkedVehicleForHuman :
 						isReroutingNearParkedVehicleForNonHuman;
 
 		boolean isExpectingDistanceShrinking = true;
-		double thresholdDistanceShrinking = 20.0;
+		double thresholdDistanceShrinking = 5.0;
 		Double distanceToCPLast = null;
+		ForcingMaintainer forcingMaintainer = isHuman ? new ForcingMaintainer() : null;
 
 		while (true) {
 			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
 
 			distanceToCP = computeDistanceToCP();
-			if (myRobotID == 0) {
+			if (isHuman) {
+				boolean isForcingNow = false;
 				if (distanceToCP == null) {
 					isExpectingDistanceShrinking = true;
 				} else if (isExpectingDistanceShrinking) {
 					if (distanceToCP <= thresholdDistanceShrinking) {
 						if (distanceToCPLast == null || distanceToCPLast > thresholdDistanceShrinking) {
 							isExpectingDistanceShrinking = false;
+							isForcingNow = true;
 						}
 					}
 				}
+				forcingMaintainer.update(myRobotID, isForcingNow, false, false);
 			}
 			distanceToCPLast = distanceToCP;
 

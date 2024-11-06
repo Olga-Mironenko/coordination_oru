@@ -8,10 +8,7 @@ import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvel
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
-import se.oru.coordination.coordination_oru.util.BrowserVisualization;
-import se.oru.coordination.coordination_oru.util.HumanControl;
-import se.oru.coordination.coordination_oru.util.MissionBlueprint;
-import se.oru.coordination.coordination_oru.util.Missions;
+import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
@@ -38,7 +35,7 @@ public class GeneratedMapTest {
 
     protected static void runDemo(String scenarioString) {
         HumanControl.isEnabledForBrowser = true;
-        Timekeeper.setVirtualMinutesPassedMax(5);
+//        Timekeeper.setVirtualMinutesPassedMax(5);
 
         Heuristics heuristics = new Heuristics();
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.humanFirst();
@@ -74,6 +71,8 @@ public class GeneratedMapTest {
             default:
                 throw new IllegalArgumentException("Unrecognized rerouting string: " + stringRerouting);
         }
+
+        Forcing.priorityDistance = 10.0;
 
         int numAuts;
         double[] dimensionsVehicle;
