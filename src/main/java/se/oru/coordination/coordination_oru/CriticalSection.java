@@ -319,10 +319,14 @@ public class CriticalSection {
 			Dependency dep = tec.getCurrentDependencies().get(id);
 			if (dep != null) {
 				if (dep.getDrivingRobotID() == getTe1RobotID() && dep.getWaitingRobotID() == getTe2RobotID()) {
-					return true;
+					if (dep.getReleasingPoint() == getTe1End()) { // an extra check of whether the dependency relates to this CS
+						return true;
+					}
 				}
 				if (dep.getDrivingRobotID() == getTe2RobotID() && dep.getWaitingRobotID() == getTe1RobotID()) {
-					return false;
+					if (dep.getReleasingPoint() == getTe2End()) {
+						return false;
+					}
 				}
 			}
 		}
