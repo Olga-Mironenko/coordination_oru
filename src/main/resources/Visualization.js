@@ -328,7 +328,7 @@ class Visualization {
 			this.ctx.save();
 			this.ctx.scale(1,-1);
 			this.ctx.translate(0,-mapH);
-			this.ctx.globalAlpha = 0.4; // makes white tunnels gray
+			this.ctx.globalAlpha = 1.0; // values less than one make white tunnels gray
 			this.ctx.drawImage(this.map,this.mapOrigin.x,this.mapOrigin.y,mapW,mapH);
 			this.ctx.globalAlpha = 1.0;
 			this.ctx.restore();

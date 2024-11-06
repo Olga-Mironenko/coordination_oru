@@ -29,14 +29,31 @@ from loguru import logger
 
 import background_generator
 
-NUM_MAPS = 1
-NUM_AUTS = 2
-IS_HUMAN_STAYING = False
-IS_OP_TREE0_BRANCH0_ALLOWED = True
+MODE = 'normal'
+#MODE = 'minimal'
 
-IMAGE_WIDTH = 400
-IMAGE_HEIGHT = 300
-NUM_ELLIPSES = 0
+if MODE == 'normal':
+    NUM_MAPS = 5
+    NUM_AUTS = 4
+    IS_HUMAN_STAYING = False
+    IS_OP_TREE0_BRANCH0_ALLOWED = False
+
+    IMAGE_WIDTH = 800
+    IMAGE_HEIGHT = 600
+    NUM_ELLIPSES = 10
+
+elif MODE == 'minimal':
+    NUM_MAPS = 1
+    NUM_AUTS = 2
+    IS_HUMAN_STAYING = False
+    IS_OP_TREE0_BRANCH0_ALLOWED = True
+
+    IMAGE_WIDTH = 400
+    IMAGE_HEIGHT = 300
+    NUM_ELLIPSES = 0
+
+else:
+    raise ValueError(f'Unsupported mode: {MODE}')
 
 LENGTH_STEP = 50
 WIDTH_PEN = LENGTH_STEP // 2
@@ -427,6 +444,7 @@ def add_robots_to_name2pose(num_auts: int, name2pose: Dict[str, Pose]) -> Dict[s
     available_d_keys = list(d_poses)
     random.shuffle(available_d_keys)
     selected_d_keys = available_d_keys[:num_auts]
+    selected_d_keys.sort(reverse=True, key=lambda x: int(x[1:]))
 
     # Assign start and nearest finish for each automated vehicle
     key2pairs = collections.defaultdict(list)
@@ -591,7 +609,13 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
     screen.bgpic(filename_background_png_to_generate)
 
     t = turtle.Turtle()
-    t.pencolor('white')
+    t.pencolor('#' + f'{round(255 * 0.4):02x}' * 3)  # gray
+    # '#RRGGBB'
+    #  #000000 -- black
+    #  #FFFFFF -- white
+    #  #FF0000 -- red
+    #  #FF00FF -- violet
+    #  #82 = 8*16+2 = 130
     t.width(WIDTH_PEN)
     t.speed('fastest')
 
@@ -620,7 +644,7 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
         image: {basename_map_png}
         resolution: 0.1
         origin: [0, 0, 0]
-        occupied_thresh: 1.0
+        occupied_thresh: 0.1
         """).lstrip()
 
     hexdigest_mapconf = compute_hash_text(

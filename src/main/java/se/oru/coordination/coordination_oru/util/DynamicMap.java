@@ -17,6 +17,7 @@ public class DynamicMap {
     protected String textYAML = null;
     protected String imageFilename = null;
 
+    public BufferedImage mapImageOriginal = null;
     public BufferedImage mapImageGrayscale = null;
     public BufferedImage mapImageBlackAndWhite = null; // only two colors
     public double resolution = -1; // meters/pixel
@@ -116,8 +117,11 @@ public class DynamicMap {
                 threshold = 0.0;
             }
 
-            mapImageGrayscale = ImageIO.read(new File(imageFilename));
+            mapImageOriginal = ImageIO.read(new File(imageFilename));
+
+            mapImageGrayscale = deepCopy(mapImageOriginal);
             grayscaleImage(mapImageGrayscale);
+
             syncMapImageBlackAndWhite();
         } catch (IOException e) {
             e.printStackTrace();
