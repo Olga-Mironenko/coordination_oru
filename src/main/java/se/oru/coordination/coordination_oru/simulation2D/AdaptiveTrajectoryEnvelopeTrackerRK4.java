@@ -78,6 +78,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	private Double maxVelocityBeforeCautious = null;
 
 	private SortedSet<Integer> criticalPointsPostponed = new TreeSet<>(Collections.reverseOrder());
+	public Double distanceToCP;
 
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
@@ -534,8 +535,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	public HashSet<CriticalSection> getCriticalSectionsForRobot(Integer criticalPointToConsider) {
-		RobotReport rr = getRobotReport();
-		int robotID = rr.getRobotID();
+		int robotID = te.getRobotID();
 
 		HashSet<CriticalSection> criticalSections = new HashSet<>();
 		for (CriticalSection cs : tec.allCriticalSections) {
@@ -613,8 +613,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	public synchronized void setCriticalPoint(int criticalPointToSet) {
 		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
-		RobotReport rr = getRobotReport();
-		int robotID = rr.getRobotID();
+		int robotID = te.getRobotID();
 
 		/*
 		if (this.criticalPoint == criticalPointToSet) {
@@ -644,6 +643,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		rerouteBecauseOfSlowVehicleIfNeeded(robotID, criticalPointToSet, criticalSections);
 
+		RobotReport rr = getRobotReport();
 		if (! isRacingThroughCrossroadAllowed || criticalPointToSet > rr.getPathIndex()) {
 			//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
 			double targetDistance = computeDistance(0, criticalPointToSet);
@@ -1046,8 +1046,26 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 						isReroutingNearParkedVehicleForHuman :
 						isReroutingNearParkedVehicleForNonHuman;
 
+		boolean isExpectingDistanceShrinking = true;
+		double thresholdDistanceShrinking = 20.0;
+		Double distanceToCPLast = null;
+
 		while (true) {
 			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
+
+			distanceToCP = computeDistanceToCP();
+			if (myRobotID == 0) {
+				if (distanceToCP == null) {
+					isExpectingDistanceShrinking = true;
+				} else if (isExpectingDistanceShrinking) {
+					if (distanceToCP <= thresholdDistanceShrinking) {
+						if (distanceToCPLast == null || distanceToCPLast > thresholdDistanceShrinking) {
+							isExpectingDistanceShrinking = false;
+						}
+					}
+				}
+			}
+			distanceToCPLast = distanceToCP;
 
 			if (isCautiousModeAllowed) {
 				maintainCautiousMode(vehicle);
@@ -1115,6 +1133,16 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			catch (InterruptedException e) { e.printStackTrace(); return; }
 		}
 		metaCSPLogger.info("RK4 tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + te.getID() + ")");
+	}
+
+	private Double computeDistanceToCP() {
+		CriticalSection cs = getFirstOfCriticalSectionsOfInferior();
+		if (cs == null) {
+			return null;
+		}
+		int robotID = te.getRobotID();
+		int start = cs.getStart(robotID);
+		return computeDistance(getRobotReport().getPathIndex(), start);
 	}
 
 	public static double[] computeDTs(Trajectory traj, double maxVel, double maxAccel, int robotID) {

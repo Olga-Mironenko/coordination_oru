@@ -298,7 +298,8 @@ public class BrowserVisualization implements FleetVisualization {
 		for (int id : idToVehicle.keySet()) {
 			AbstractVehicle vehicle = idToVehicle.get(id);
 			boolean isHuman = VehiclesHashMap.isHuman(id);
-			TrajectoryEnvelope te = tec.trackers.get(id).getTrajectoryEnvelope();
+			AbstractTrajectoryEnvelopeTracker tracker = tec.trackers.get(id);
+			TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
 
 			text += "(V" + id + ", " + vehicle.getType() + ") ";
 			String row = "<div style=\"text-align: left;\"><b>V" + id + "</b>, " + vehicle.getType() + "</div>";
@@ -363,7 +364,7 @@ public class BrowserVisualization implements FleetVisualization {
 				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
 				row += String.format(" | %.1f | %d", vehicle.totalDistance, vehicle.getCycles());
 				thead1 += " |2 Efficiency";
-				thead2 += " | traveled, m | no. missions";
+				thead2 += " | traveled,<br>m | no.<br>missions";
 
 				if (isExtendedText) {
 					text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
@@ -374,13 +375,17 @@ public class BrowserVisualization implements FleetVisualization {
 					text += String.format("; i=%d (CP=%d, %s)",
 							rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
 					);
-					row += String.format(" | %d | %d | %d | <div style=\"text-align: left;\">%s</div>",
+					Double distanceToCP = ! (tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4)
+							? null
+							: ((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).distanceToCP;
+					row += String.format(" | %d | %d | %d | %s | <div style=\"text-align: left;\">%s</div>",
 							rr.getPathIndex(),
 							te.getPathLength(),
 							rr.getCriticalPoint(),
+							distanceToCP == null ? "" : String.format("%.1f", distanceToCP),
 							rr.statusString != null ? rr.statusString : "-"
 					);
-					thead2 += " | index | poses | CP | status";
+					thead2 += " | path<br>index | no.<br>poses | CP<br>(index) | distance<br>ToCP, m | status";
 
 					int numCalls = 0;
 					var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
@@ -464,7 +469,8 @@ public class BrowserVisualization implements FleetVisualization {
 			html += String.format("Time passed (sim.): %s<br>", secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000));
 		}
 
-		html += String.format("canPassFirst: %b<br>", CriticalSection.isCanPassFirstActive);
+		html += String.format("isCanPassFirstActive: %b<br>", CriticalSection.isCanPassFirstActive);
+		html += String.format("isRacingThroughCrossroadAllowed: %b<br>", AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed);
 
 		if (HumanControl.status != null) {
 			html += HumanControl.status + "<br>";

@@ -144,7 +144,7 @@ class Drawer:
         self.kind_pose_to_num: dict[str, int] = {}
         self.num_ops = 0
 
-    def add_pose(self, kind, *, is_facing_dead_end=True):
+    def add_pose(self, kind, *, is_moving_backwards_needed=True, is_facing_dead_end=True):
         self.kind_pose_to_num[kind] = self.kind_pose_to_num.get(kind, 0) + 1
         if kind in ('start', 'finish'):
             assert self.kind_pose_to_num[kind] == 1
@@ -155,19 +155,22 @@ class Drawer:
             raise ValueError(f'Unknown kind {kind}')
 
         delta = WIDTH_PEN // 2
+        if is_moving_backwards_needed:
+            self.turtle.penup()
+            if is_facing_dead_end:
+                self.turtle.backward(delta)
+            else:
+                self.turtle.forward(delta)
 
-        self.turtle.penup()
-        if is_facing_dead_end:
-            self.turtle.backward(delta)
-        else:
-            self.turtle.forward(delta)
         #self.turtle.dot(WIDTH_PEN // 2, "lightgray")
         pose = self.get_pose()
-        if is_facing_dead_end:
-            self.turtle.forward(delta)
-        else:
-            self.turtle.backward(delta)
-        self.turtle.pendown()
+
+        if is_moving_backwards_needed:
+            if is_facing_dead_end:
+                self.turtle.forward(delta)
+            else:
+                self.turtle.backward(delta)
+            self.turtle.pendown()
 
         self.name2pose[name] = pose
         logger.info(f'Pose: {name}: {pose}')

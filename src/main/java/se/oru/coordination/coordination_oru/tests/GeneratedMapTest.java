@@ -41,8 +41,8 @@ public class GeneratedMapTest {
         Timekeeper.setVirtualMinutesPassedMax(5);
 
         Heuristics heuristics = new Heuristics();
-        Comparator<RobotAtCriticalSection> comparator = heuristics.humanFirst();
-//        Comparator<RobotAtCriticalSection> comparator = heuristics.automatedFirst();
+//        Comparator<RobotAtCriticalSection> comparator = heuristics.humanFirst();
+        Comparator<RobotAtCriticalSection> comparator = heuristics.automatedFirst();
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.closest()
 
         if (scenarioString == null) {
