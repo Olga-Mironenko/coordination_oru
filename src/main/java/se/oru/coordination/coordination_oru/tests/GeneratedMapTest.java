@@ -10,7 +10,6 @@ import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
 import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
-import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -73,6 +72,9 @@ public class GeneratedMapTest {
         }
 
         Forcing.priorityDistance = 10.0;
+        Forcing.isDistanceToCPAddedToPriorityDistance = true;
+        Forcing.stopDistance = 10.0;
+        Forcing.isDistanceToCPAddedToStopDistance = true;
 
         int numAuts;
         double[] dimensionsVehicle;

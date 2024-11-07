@@ -5,6 +5,8 @@ package se.oru.coordination.coordination_oru.util;
  * Namely, to do it continuously and to stop it.
  */
 public abstract class KnobsAfterForcing {
+    public Double distanceToCP = null;
+
     public abstract boolean updateForcing(double distanceTraveled);
 
     public abstract void resumeRobots();

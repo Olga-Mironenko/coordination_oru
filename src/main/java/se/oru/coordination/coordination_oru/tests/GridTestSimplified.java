@@ -1,10 +1,8 @@
 package se.oru.coordination.coordination_oru.tests;
 
 import org.metacsp.multi.spatioTemporal.paths.Pose;
-import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.*;
-import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
@@ -152,6 +150,7 @@ public class GridTestSimplified {
                 }
 
                 assert(Forcing.priorityDistance == Double.NEGATIVE_INFINITY);
+                assert(! Forcing.isDistanceToCPAddedToPriorityDistance);
                 assert(Forcing.stopDistance == Double.NEGATIVE_INFINITY);
                 assert(! Forcing.isGlobalTemporaryStop);
                 assert(Forcing.isResetAfterCurrentCrossroad);

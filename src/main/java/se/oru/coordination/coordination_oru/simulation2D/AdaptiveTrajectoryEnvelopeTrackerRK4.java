@@ -1070,7 +1070,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 						}
 					}
 				}
-				forcingMaintainer.update(myRobotID, isForcingNow, false, false);
+				forcingMaintainer.update(myRobotID, distanceToCP, isForcingNow, false, false);
 			}
 			distanceToCPLast = distanceToCP;
 

@@ -289,6 +289,7 @@ public class GridTest {
                 }
 
                 assert(Forcing.priorityDistance == Double.NEGATIVE_INFINITY);
+                assert(! Forcing.isDistanceToCPAddedToPriorityDistance);
                 assert(Forcing.priorityDistanceMin == Double.NEGATIVE_INFINITY);
                 assert(Forcing.stopDistance == Double.NEGATIVE_INFINITY);
                 assert(Forcing.stopDistanceMin == Double.NEGATIVE_INFINITY);

@@ -28,13 +28,27 @@ public class Forcing {
      */
     public static HashMap<Integer, Integer> robotIDToPathIndexToStop = new HashMap<>();
 
-    // Distances between the current robot and intersections to check:
-    public static double priorityDistance = Double.NEGATIVE_INFINITY; // change the priority of that intersection?
+    /**
+     * Forcing parameters:
+     */
+    // - The priority effect of forcing will be the first `priorityDistance` (plus `distanceToCP`
+    //   with `isDistanceToCPForPriority`) meters after the forcing begins.
+    public static double priorityDistance = Double.NEGATIVE_INFINITY;
+    public static boolean isDistanceToCPAddedToPriorityDistance = false;
+    // - During forcing, its priority effect will affect only critical sections that are at least
+    //   `priorityDistanceMin` meters after the beginning of the forcing.
     public static double priorityDistanceMin = Double.NEGATIVE_INFINITY;
-    public static double stopDistance = Double.NEGATIVE_INFINITY; // stop the other robot of that intersection?
+    // - The stop effect of forcing will be the first `priorityDistance` meters after forcing begins.
+    public static double stopDistance = Double.NEGATIVE_INFINITY;
+    public static boolean isDistanceToCPAddedToStopDistance = false;
+    // - During forcing, its stop effect will affect only critical sections that are at least
+    //   `stopDistanceMin` meters after the beginning of the forcing.
+    //   Note that stop effect without priority effect makes little sense.
     public static double stopDistanceMin = Double.NEGATIVE_INFINITY;
-
+    // - If `isGlobalTemporaryStop` is true, then all other robots are stopped during forcing.
     public static boolean isGlobalTemporaryStop = false;
+    // - If `isResetAfterCurrentCrossroad` is true, then forcing finishes automatically when its priority and stop
+    //   effects end. If the flag is false, then it's needed to finish forcing manually
     public static boolean isResetAfterCurrentCrossroad = true;
 
     private final static int maxNumberOfHumans = 1;
@@ -82,10 +96,22 @@ public class Forcing {
 
         KnobsAfterForcing knobsAfterForcing = new KnobsAfterForcing() {
             @Override
-            public boolean updateForcing(double distanceTraveled) {
-                double priorityDistanceRemaining = Math.max(0, priorityDistance - distanceTraveled);
-                double stopDistanceRemaining = Math.max(0, stopDistance - distanceTraveled);
-                boolean isDone = priorityDistanceRemaining == 0 && (! isGlobalTemporaryStop && stopDistanceRemaining == 0);
+            public boolean updateForcing(double distanceTraveledAfterForcing) {
+                double priorityDistanceRemaining = priorityDistance - distanceTraveledAfterForcing;
+                if (isDistanceToCPAddedToPriorityDistance) {
+                    assert distanceToCP != null;
+                    priorityDistanceRemaining += distanceToCP;
+                }
+                priorityDistanceRemaining = Math.max(0, priorityDistanceRemaining);
+
+                double stopDistanceRemaining = stopDistance - distanceTraveledAfterForcing;
+                if (isDistanceToCPAddedToStopDistance) {
+                    assert distanceToCP != null;
+                    stopDistanceRemaining += distanceToCP;
+                }
+                stopDistanceRemaining = Math.max(0, stopDistanceRemaining);
+
+                boolean isDone = priorityDistanceRemaining == 0 && stopDistanceRemaining == 0 && ! isGlobalTemporaryStop;
 
                 if (isResetAfterCurrentCrossroad && isDone) {
                     boolean isEmpty = criticalSectionsToRestorePrioritiesLater.isEmpty() && robotsToResumeLater.isEmpty();
@@ -104,7 +130,7 @@ public class Forcing {
                             selectCriticalSections(
                                     robotID,
                                     tec.allCriticalSections,
-                                    Math.max(0, priorityDistanceMin - distanceTraveled),
+                                    Math.max(0, priorityDistanceMin - distanceTraveledAfterForcing),
                                     priorityDistanceRemaining,
                                     Integer.MAX_VALUE
                             );
@@ -122,31 +148,29 @@ public class Forcing {
                 if (isGlobalTemporaryStop) {
                     robotsToStop.addAll(VehiclesHashMap.getList().keySet());
                     robotsToStop.remove(robotID);
-                } else {
-                    if (stopDistanceRemaining > 0) {
-                        final ArrayList<CriticalSection> criticalSectionsForStop =
-                                selectCriticalSections(
-                                        robotID,
-                                        tec.allCriticalSections,
-                                        Math.max(0, stopDistanceMin - distanceTraveled),
-                                        stopDistanceRemaining,
-                                        Integer.MAX_VALUE
-                                );
+                } else if (stopDistanceRemaining > 0) {
+                    final ArrayList<CriticalSection> criticalSectionsForStop =
+                            selectCriticalSections(
+                                    robotID,
+                                    tec.allCriticalSections,
+                                    Math.max(0, stopDistanceMin - distanceTraveledAfterForcing),
+                                    stopDistanceRemaining,
+                                    Integer.MAX_VALUE
+                            );
 
-                        for (CriticalSection cs : criticalSectionsForStop) {
-                            int robotToStop;
-                            if (cs.isTe1(robotID)) {
-                                robotToStop = cs.getTe2RobotID();
-                            } else if (cs.isTe2(robotID)) {
-                                robotToStop = cs.getTe1RobotID();
-                            } else {
-                                throw new RuntimeException();
-                            }
-                            assert robotToStop != robotID;
+                    for (CriticalSection cs : criticalSectionsForStop) {
+                        int robotToStop;
+                        if (cs.isTe1(robotID)) {
+                            robotToStop = cs.getTe2RobotID();
+                        } else if (cs.isTe2(robotID)) {
+                            robotToStop = cs.getTe1RobotID();
+                        } else {
+                            throw new RuntimeException();
+                        }
+                        assert robotToStop != robotID;
 
-                            if (!cs.isRobotOnCS(robotToStop)) {
-                                robotsToStop.add(robotToStop);
-                            }
+                        if (!cs.isRobotOnCS(robotToStop)) {
+                            robotsToStop.add(robotToStop);
                         }
                     }
                 }
@@ -217,7 +241,7 @@ public class Forcing {
                 CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, robotID);
         ArrayList<CriticalSection> criticalSectionsSelected = new ArrayList<>();
 
-        double distance = 0.0;
+        double distanceUntilCS = 0.0;
 
         for (CriticalSection cs : criticalSectionsSorted) {
             if (cs.getTe1() == null || cs.getTe2() == null) {
@@ -236,18 +260,18 @@ public class Forcing {
                 PoseSteering poseNext = currentPath[indexCurrent + 1];
                 double step = BrowserVisualization.computeDistanceBetweenPoses(poseCurrent.getPose(), poseNext.getPose());
                 assert step >= 0.0;
-                distance += step;
+                distanceUntilCS += step;
                 indexCurrent += 1;
 
-                if (distance > maxDistance) {
+                if (distanceUntilCS > maxDistance) {
                     break;
                 }
             }
-            if (distance > maxDistance) {
+            if (distanceUntilCS > maxDistance) {
                 break;
             }
 
-            if (distance < minDistance) {
+            if (distanceUntilCS < minDistance) {
                 continue;
             }
 

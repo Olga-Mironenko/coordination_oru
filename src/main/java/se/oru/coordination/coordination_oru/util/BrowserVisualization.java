@@ -369,7 +369,7 @@ public class BrowserVisualization implements FleetVisualization {
 				if (isExtendedText) {
 					text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
 					row += String.format(" | (%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
-					thead1 += " |5 Tracker state (current mission)";
+					thead1 += " |6 Tracker state (current mission)";
 					thead2 += " | position<br>(x, y), m";
 
 					text += String.format("; i=%d (CP=%d, %s)",
@@ -378,10 +378,10 @@ public class BrowserVisualization implements FleetVisualization {
 					Double distanceToCP = ! (tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4)
 							? null
 							: ((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).distanceToCP;
-					row += String.format(" | %d | %d | %d | %s | <div style=\"text-align: left;\">%s</div>",
+					row += String.format(" | %d | %d | %s | %s | <div style=\"text-align: left;\">%s</div>",
 							rr.getPathIndex(),
 							te.getPathLength(),
-							rr.getCriticalPoint(),
+							rr.getCriticalPoint() == -1 ? "" : String.format("%d", rr.getCriticalPoint()),
 							distanceToCP == null ? "" : String.format("%.1f", distanceToCP),
 							rr.statusString != null ? rr.statusString : "-"
 					);
