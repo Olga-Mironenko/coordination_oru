@@ -42,7 +42,7 @@ public class GeneratedMapTest {
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.closest()
 
         if (scenarioString == null) {
-            scenarioString = "map-generator/generated-maps/current/scenario1.json, without rerouting";
+            scenarioString = "map-generator/generated-maps/current/scenario1.json, with rerouting";
         }
         AbstractVehicle.scenarioId = String.format(
                 "%s; %s",
@@ -76,6 +76,12 @@ public class GeneratedMapTest {
         Forcing.isDistanceToCPAddedToPriorityDistance = true;
 //        Forcing.stopDistance = 10.0;
 //        Forcing.isDistanceToCPAddedToStopDistance = true;
+
+        AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman = 0.5;
+        AdaptiveTrajectoryEnvelopeTrackerRK4.velocitySlowingDownForHuman = 1.5;
+        AdaptiveTrajectoryEnvelopeTrackerRK4.lengthIntervalSlowingDownForHuman = 10.0;
+        AdaptiveTrajectoryEnvelopeTrackerRK4.millisStopEvents = 3000; // rerouting (slow)
+        AdaptiveTrajectoryEnvelopeTrackerRK4.countStopEvents = 20; // rerouting (slow)
 
         int numAuts;
         double[] dimensionsVehicle;
@@ -129,7 +135,7 @@ public class GeneratedMapTest {
         AutonomousVehicle hum = new HumanDrivenVehicle(
                 0, 0,
                 Color.ORANGE, Color.ORANGE,
-                1.5, 3.0
+                10.0, 3.0
         );
         AutonomousVehicle[] auts = new AutonomousVehicle[numAuts];
         for (int i = 0; i < numAuts; i++) {

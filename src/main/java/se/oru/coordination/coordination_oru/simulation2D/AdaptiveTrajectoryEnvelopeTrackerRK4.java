@@ -11,10 +11,7 @@ import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
-import se.oru.coordination.coordination_oru.util.Forcing;
-import se.oru.coordination.coordination_oru.util.ForcingMaintainer;
-import se.oru.coordination.coordination_oru.util.HumanControl;
-import se.oru.coordination.coordination_oru.util.Missions;
+import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
@@ -72,8 +69,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public Status latestStatusForVisualization;
 
 	private Deque<Integer> queueStopEvents = new LinkedList<>();
-	private int millisStopEvents = 3000;
-	private int countStopEvents = 20;
+	public static int millisStopEvents = 3000;
+	public static int countStopEvents = 20;
 
 	private boolean isCautious = false;
 	private Double maxVelocityBeforeCautious = null;
@@ -82,6 +79,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public Double distanceToCP;
 	public static double probabilityForcingForHuman = 0.0;
 	public ForcingMaintainer forcingMaintainer;
+	public static double probabilitySlowingDownForHuman = 0.0;
+	public static double velocitySlowingDownForHuman = 1.0;
+	public static double lengthIntervalSlowingDownForHuman = 10.0;
 
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
@@ -1057,6 +1057,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		if (isHuman) {
 			forcingMaintainer = new ForcingMaintainer();
 		}
+		DistanceMonitor distanceMonitor = new DistanceMonitor();
 
 		while (true) {
 			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
@@ -1078,8 +1079,16 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 					}
 				}
 				forcingMaintainer.update(myRobotID, distanceToCP, isForcingNow, false, false);
+				distanceToCPLast = distanceToCP;
+
+				if (distanceMonitor.update(lengthIntervalSlowingDownForHuman, getLastRobotReport().getDistanceTraveled())) {
+					if (rand.nextDouble() < probabilitySlowingDownForHuman) {
+						vehicle.setMaxVelocity(velocitySlowingDownForHuman);
+					} else {
+						vehicle.resetMaxVelocity();
+					}
+				}
 			}
-			distanceToCPLast = distanceToCP;
 
 			if (isCautiousModeAllowed) {
 				maintainCautiousMode(vehicle);

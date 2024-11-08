@@ -330,15 +330,21 @@ public class BrowserVisualization implements FleetVisualization {
 							((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).forcingMaintainer != null &&
 							((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).forcingMaintainer.isForcingOngoing()
 					);
-					row += String.format(" | %s | %s | %s",
+					row += String.format(" | <div style=\"text-align: center;\">%s</div>",
 							! isForcingOngoing
 									? ""
 									: AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman < 1.0
-									? "temp.(random)"
-									: "constant",
-							"",
-							""
+									? "random"
+									: "constant"
 					);
+					row += String.format(" | <div style=\"text-align: center;\">%s</div>",
+							! vehicle.isMaxVelocityLowered()
+									? ""
+									: AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman < 1.0
+									? "temp.(random)"
+									: "constant"
+					);
+					row += " | ";
 				}
 
 				thead1 += " |5 Coordination features for AVs";
@@ -348,7 +354,7 @@ public class BrowserVisualization implements FleetVisualization {
 				);
 				row += String.format(" | %s | %s |  |  | ",
 						isHuman ? "" : ! AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed ? "-" :
-								vehicle.isCautiousMode() ? "yes" : "no",
+								vehicle.isMaxVelocityLowered() ? "yes" : "no",
 						isHuman ? "" : String.format("%s / %s",
 							! AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman
 								? "-"
@@ -388,13 +394,16 @@ public class BrowserVisualization implements FleetVisualization {
 				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
 				row += String.format(" | %.1f | %d", vehicle.totalDistance, vehicle.getCycles());
 				thead1 += " |2 Efficiency";
-				thead2 += " | traveled,<br>m | no.<br>missions";
+				thead2 += " | traveled<br>total, m | no.<br>missions";
 
 				if (isExtendedText) {
 					text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
-					row += String.format(" | (%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
-					thead1 += " |6 Tracker state (current mission)";
-					thead2 += " | position<br>(x, y), m";
+					row += String.format(" | (%.1f, %.1f) | %.1f",
+							rr.getPose().getX(), rr.getPose().getY(),
+							rr.getDistanceTraveled()
+					);
+					thead1 += " |7 Tracker state (current mission)";
+					thead2 += " | position<br>(x, y), m | traveled,<br>m";
 
 					text += String.format("; i=%d (CP=%d, %s)",
 							rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
@@ -402,8 +411,8 @@ public class BrowserVisualization implements FleetVisualization {
 					Double distanceToCP = ! (tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4)
 							? null
 							: ((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).distanceToCP;
-					row += String.format(" | %d | %d | %s | %s | <div style=\"text-align: left;\">%s</div>",
-							rr.getPathIndex(),
+					row += String.format(" | %s | %d | %s | %s | <div style=\"text-align: left;\">%s</div>",
+							rr.getPathIndex() == -1 ? "" : String.format("%d", rr.getPathIndex()),
 							te.getPathLength(),
 							rr.getCriticalPoint() == -1 ? "" : String.format("%d", rr.getCriticalPoint()),
 							distanceToCP == null ? "" : String.format("%.1f", distanceToCP),

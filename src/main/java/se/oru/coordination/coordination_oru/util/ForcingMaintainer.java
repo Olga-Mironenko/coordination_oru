@@ -25,12 +25,15 @@ public class ForcingMaintainer {
             assert ! isRestoringNow;
             // Because that's perhaps not fully supported.
 
-            knobsAfterForcing = Forcing.forceDriving(robotID);
-            if (knobsAfterForcing != null) {
+            KnobsAfterForcing knobsAfterForcingNew = Forcing.forceDriving(robotID);
+            if (knobsAfterForcingNew != null) {
+                knobsAfterForcing = knobsAfterForcingNew;
                 knobsAfterForcing.distanceToCP = distanceToCP;
                 rrAtForcingStart = human.getCurrentRobotReport();
             }
         }
+
+        assert (knobsAfterForcing != null) == (rrAtForcingStart != null);
 
         if (rrAtForcingStart == null) {
             return;
@@ -49,6 +52,7 @@ public class ForcingMaintainer {
             double distanceTraveled = rr.getDistanceTraveled() - rrAtForcingStart.getDistanceTraveled();
             assert distanceTraveled >= 0; // otherwise, we are in a new mission, but restoring/resuming hasn't happened
             if (!knobsAfterForcing.updateForcing(distanceTraveled)) {
+                knobsAfterForcing = null;
                 rrAtForcingStart = null;
             }
         }
