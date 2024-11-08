@@ -226,7 +226,7 @@ public class BrowserVisualization implements FleetVisualization {
 		String colorOuter = "#bbbbbb";
 
 		String colorInner = "#000000";
-		int vehicleCount = VehiclesHashMap.getInstance().getList().keySet().size();
+		int vehicleCount = VehiclesHashMap.getList().keySet().size();
 		if (vehicleCount != 0) colorInner = VehiclesHashMap.getVehicle(rr.getRobotID()).getColorCode();
 
 		drawRobotFootprint(x, y, theta, rr.getPose(), colorOuter, name, extraData, false, te.getFootprint());
@@ -287,13 +287,17 @@ public class BrowserVisualization implements FleetVisualization {
 		return String.format("%d:%02d:%02d", h, m, s);
 	}
 
+	protected String center(Object object) {
+		return "<div style=\"text-align: center;\">" + object.toString() + "</div>";
+	}
+
 	protected String makeVehicleTableHtml() {
 		String text = "";
 		String thead1 = "";
 		String thead2 = "";
 		String tbodyHtml = "";
 
-		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getInstance().getList();
+		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getList();
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 		for (int id : idToVehicle.keySet()) {
 			AbstractVehicle vehicle = idToVehicle.get(id);
@@ -323,26 +327,35 @@ public class BrowserVisualization implements FleetVisualization {
 				thead1 += " |3 Human (mis)behavior actions";
 				thead2 += " | violation of<br>priorities | moving<br>slowly | improper<br>parking";
 				if (! isHuman) {
-					row += " |  |  | ";
+					KnobsAfterForcing knobsAfterForcing = ForcingMaintainer.getKnobsOfTheHuman();
+					boolean isToRestore = knobsAfterForcing != null && knobsAfterForcing.isToRestore(id);
+					boolean isToResume = knobsAfterForcing != null && knobsAfterForcing.isToResume(id);
+					row += String.format(" | %s |  | ",
+							center(isToRestore || isToResume ? "affected" : "")
+					);
 				} else {
 					boolean isForcingOngoing = (
 							(tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4) &&
 							((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).forcingMaintainer != null &&
 							((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).forcingMaintainer.isForcingOngoing()
 					);
-					row += String.format(" | <div style=\"text-align: center;\">%s</div>",
-							! isForcingOngoing
-									? ""
-									: AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman < 1.0
-									? "random"
-									: "constant"
+					row += String.format(" | %s",
+							center(
+								! isForcingOngoing
+										? ""
+										: AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman < 1.0
+										? "random"
+										: "constant"
+							)
 					);
-					row += String.format(" | <div style=\"text-align: center;\">%s</div>",
-							! vehicle.isMaxVelocityLowered()
-									? ""
-									: AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman < 1.0
-									? "temp.(random)"
-									: "constant"
+					row += String.format(" | %s",
+							center(
+								! vehicle.isMaxVelocityLowered()
+										? ""
+										: AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman < 1.0
+										? "temp.(random)"
+										: "constant"
+							)
 					);
 					row += " | ";
 				}
@@ -352,18 +365,31 @@ public class BrowserVisualization implements FleetVisualization {
 						" | cautious<br>mode | rerouting<br>(parked / slow) | moving<br>backwards" +
 						" | change of<br>priorities | stops"
 				);
-				row += String.format(" | %s | %s |  |  | ",
-						isHuman ? "" : ! AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed ? "-" :
-								vehicle.isMaxVelocityLowered() ? "yes" : "no",
-						isHuman ? "" : String.format("%s / %s",
-							! AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman
-								? "-"
-								: tec.robotIDToNumReroutingsNearParkedVehicle.getOrDefault(id, 0).toString(),
-							! AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman
-								? "-"
-								: tec.robotIDToNumReroutingsNearSlowVehicle.getOrDefault(id, 0).toString()
-						)
-				);
+				if (isHuman) {
+					row += " |  |  |  |  | ";
+				} else {
+					KnobsAfterForcing knobsAfterForcing = ForcingMaintainer.getKnobsOfTheHuman();
+					boolean isToRestore = knobsAfterForcing != null && knobsAfterForcing.isToRestore(id);
+					boolean isToResume = knobsAfterForcing != null && knobsAfterForcing.isToResume(id);
+					row += String.format(" | %s | %s |  | %s | %s",
+							center(
+								!AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed ? "-" :
+										vehicle.isMaxVelocityLowered() ? "yes" : "no"
+							),
+							center(
+								String.format("%s / %s",
+										!AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman
+												? "-"
+												: tec.robotIDToNumReroutingsNearParkedVehicle.getOrDefault(id, 0).toString(),
+										!AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman
+												? "-"
+												: tec.robotIDToNumReroutingsNearSlowVehicle.getOrDefault(id, 0).toString()
+								)
+							),
+							center(isToRestore ? "temporary" : ""),
+							center(isToResume ? "temporary" : "")
+					);
+				}
 
 				List<CollisionEvent> allCollisions = tec.robotIDToAllCollisions.getOrDefault(id, new ArrayList<>());
 				List<CollisionEvent> minorCollisions = tec.robotIDToMinorCollisions.getOrDefault(id, new ArrayList<>());

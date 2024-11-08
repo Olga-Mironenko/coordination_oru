@@ -92,9 +92,20 @@ public class Forcing {
         final TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
         HashSet<CriticalSection> criticalSectionsToRestorePrioritiesLater = new HashSet<>();
+        TreeSet<Integer> robotsToRestoreLater = new TreeSet<>();
         TreeSet<Integer> robotsToResumeLater = new TreeSet<>();
 
         KnobsAfterForcing knobsAfterForcing = new KnobsAfterForcing() {
+            @Override
+            public boolean isToRestore(int robotID) {
+                return robotsToRestoreLater.contains(robotID);
+            }
+
+            @Override
+            public boolean isToResume(int robotID) {
+                return robotsToResumeLater.contains(robotID);
+            }
+
             @Override
             public boolean updateForcing(double distanceTraveledAfterForcing) {
                 double priorityDistanceRemaining = priorityDistance - distanceTraveledAfterForcing;
@@ -110,6 +121,8 @@ public class Forcing {
                     stopDistanceRemaining += distanceToCP;
                 }
                 stopDistanceRemaining = Math.max(0, stopDistanceRemaining);
+
+                assert criticalSectionsToRestorePrioritiesLater.isEmpty() == robotsToRestoreLater.isEmpty();
 
                 boolean isDone = priorityDistanceRemaining == 0 && stopDistanceRemaining == 0 && ! isGlobalTemporaryStop;
 
@@ -141,6 +154,7 @@ public class Forcing {
 
                         cs.setHigher(robotID, 3);
                         criticalSectionsToRestorePrioritiesLater.add(cs);
+                        robotsToRestoreLater.add(cs.getOtherRobotID(robotID));
                     }
                 }
 
@@ -206,6 +220,7 @@ public class Forcing {
                     }
                 }
                 criticalSectionsToRestorePrioritiesLater.clear();
+                robotsToRestoreLater.clear();
                 forcingSinceTimestep = -1;
             }
         };

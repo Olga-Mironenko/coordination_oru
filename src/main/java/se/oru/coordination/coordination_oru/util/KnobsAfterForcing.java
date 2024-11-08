@@ -7,6 +7,9 @@ package se.oru.coordination.coordination_oru.util;
 public abstract class KnobsAfterForcing {
     public Double distanceToCP = null;
 
+    public abstract boolean isToRestore(int robotID);
+    public abstract boolean isToResume(int robotID);
+
     public abstract boolean updateForcing(double distanceTraveled);
 
     public abstract void resumeRobots();

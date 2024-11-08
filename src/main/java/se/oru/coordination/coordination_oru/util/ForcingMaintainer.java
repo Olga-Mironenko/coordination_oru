@@ -1,12 +1,30 @@
 package se.oru.coordination.coordination_oru.util;
 
+import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.HumanDrivenVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 
 public class ForcingMaintainer {
-    private KnobsAfterForcing knobsAfterForcing;
+    public KnobsAfterForcing knobsAfterForcing;
     private RobotReport rrAtForcingStart;
+
+    public static KnobsAfterForcing getKnobsOfTheHuman() {
+        int humanID = VehiclesHashMap.getTheHuman().getID();
+        AbstractTrajectoryEnvelopeTracker trackerHuman = TrajectoryEnvelopeCoordinatorSimulation.tec.trackers.get(humanID);
+        if (! (trackerHuman instanceof AdaptiveTrajectoryEnvelopeTrackerRK4)) {
+            return null;
+        }
+
+        ForcingMaintainer forcingMaintainer = ((AdaptiveTrajectoryEnvelopeTrackerRK4) trackerHuman).forcingMaintainer;
+        if (forcingMaintainer == null) {
+            return null;
+        }
+
+        return forcingMaintainer.knobsAfterForcing;
+    }
 
     public ForcingMaintainer() {
         // Setting `Forcing.priorityDistance`, etc. should be done beforehand.

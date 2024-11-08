@@ -75,7 +75,7 @@ public class GridMedium {
         AutonomousVehicle aut5 = new AutonomousVehicle(0, Color.YELLOW, Color.YELLOW, maxVelocity, 2, 1.5, 1.5);
 
         // TODO: maxVelocity(2)=7, maxVelocity(tec)=15 -> v(2)=15
-        System.out.println(VehiclesHashMap.getInstance().getList());
+        System.out.println(VehiclesHashMap.getList());
 
         AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker = new EmergencyBreaker(false, false);
 
