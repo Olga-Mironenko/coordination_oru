@@ -320,9 +320,33 @@ public class BrowserVisualization implements FleetVisualization {
 				thead1 += " |2 Velocity, m/s";
 				thead2 += " | current | max";
 
-				thead1 += " |4 Coordination features";
-				thead2 += " | cautious<br>mode | rerouting<br>(parked / slow) | change of<br>priorities | stops";
-				row += String.format(" | %s | %s |  |  ",
+				thead1 += " |3 Human (mis)behavior actions";
+				thead2 += " | violation of<br>priorities | moving<br>slowly | improper<br>parking";
+				if (! isHuman) {
+					row += " |  |  | ";
+				} else {
+					boolean isForcingOngoing = (
+							(tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4) &&
+							((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).forcingMaintainer != null &&
+							((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).forcingMaintainer.isForcingOngoing()
+					);
+					row += String.format(" | %s | %s | %s",
+							! isForcingOngoing
+									? ""
+									: AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman < 1.0
+									? "temp.(random)"
+									: "constant",
+							"",
+							""
+					);
+				}
+
+				thead1 += " |5 Coordination features for AVs";
+				thead2 += (
+						" | cautious<br>mode | rerouting<br>(parked / slow) | moving<br>backwards" +
+						" | change of<br>priorities | stops"
+				);
+				row += String.format(" | %s | %s |  |  | ",
 						isHuman ? "" : ! AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed ? "-" :
 								vehicle.isCautiousMode() ? "yes" : "no",
 						isHuman ? "" : String.format("%s / %s",

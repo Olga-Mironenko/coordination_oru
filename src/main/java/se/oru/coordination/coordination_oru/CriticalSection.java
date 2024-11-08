@@ -199,7 +199,7 @@ public class CriticalSection {
 		int goalIndex;
 		int deltaIndexes;
 		double distance;
-		double velocity = Double.NaN;
+		double velocity = 0.0;
 		double time;
 
 		/**

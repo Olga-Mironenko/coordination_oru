@@ -60,7 +60,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	protected double[] curvatureDampening = null;
 	private ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
 	private int numberOfReplicas = 1;
-	private Random rand = new Random(1); //GatedCalendar.getInstance().getTimeInMillis());
+	private Random rand = new Random(GatedCalendar.getInstance().getTimeInMillis());
 	private TreeMap<Double,Double> slowDownProfile = null;
 	private boolean slowingDown = false;
 	private boolean useInternalCPs = true;
@@ -80,6 +80,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	private SortedSet<Integer> criticalPointsPostponed = new TreeSet<>(Collections.reverseOrder());
 	public Double distanceToCP;
+	public static double probabilityForcingForHuman = 0.0;
+	public ForcingMaintainer forcingMaintainer;
 
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
@@ -968,7 +970,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	private void updateState(double deltaTime, AbstractVehicle vehicle) {
-		double maxVelocity = vehicle.getMaxVelocity();
+ 		double maxVelocity = vehicle.getMaxVelocity();
 		double maxAcceleration = vehicle.getMaxAcceleration();
 
 		slowingDown = state.getPosition() >= positionToSlowDown || checkFreezing();
@@ -1052,7 +1054,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		boolean isExpectingDistanceShrinking = true;
 		double thresholdDistanceShrinking = 5.0;
 		Double distanceToCPLast = null;
-		ForcingMaintainer forcingMaintainer = isHuman ? new ForcingMaintainer() : null;
+		if (isHuman) {
+			forcingMaintainer = new ForcingMaintainer();
+		}
 
 		while (true) {
 			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
@@ -1066,7 +1070,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 					if (distanceToCP <= thresholdDistanceShrinking) {
 						if (distanceToCPLast == null || distanceToCPLast > thresholdDistanceShrinking) {
 							isExpectingDistanceShrinking = false;
-							isForcingNow = true;
+
+							if (rand.nextDouble() < probabilityForcingForHuman) {
+								isForcingNow = true;
+							}
 						}
 					}
 				}

@@ -71,10 +71,11 @@ public class GeneratedMapTest {
                 throw new IllegalArgumentException("Unrecognized rerouting string: " + stringRerouting);
         }
 
+        AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 0.5;
         Forcing.priorityDistance = 10.0;
         Forcing.isDistanceToCPAddedToPriorityDistance = true;
-        Forcing.stopDistance = 10.0;
-        Forcing.isDistanceToCPAddedToStopDistance = true;
+//        Forcing.stopDistance = 10.0;
+//        Forcing.isDistanceToCPAddedToStopDistance = true;
 
         int numAuts;
         double[] dimensionsVehicle;

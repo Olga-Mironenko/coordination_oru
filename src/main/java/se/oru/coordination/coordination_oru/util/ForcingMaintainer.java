@@ -12,6 +12,10 @@ public class ForcingMaintainer {
         // Setting `Forcing.priorityDistance`, etc. should be done beforehand.
     }
 
+    public boolean isForcingOngoing() {
+        return rrAtForcingStart != null;
+    }
+
     public void update(int robotID, Double distanceToCP, boolean isForcingNow, boolean isResumingNow, boolean isRestoringNow) {
         assert VehiclesHashMap.isHuman(robotID);
         HumanDrivenVehicle human = (HumanDrivenVehicle) VehiclesHashMap.getVehicle(robotID);
