@@ -103,12 +103,6 @@ public class HumanControl {
             if (maxVelocityNew != maxVelocityOld) {
                 vehicleHuman.setMaxVelocity(maxVelocityNew);
 
-                AbstractTrajectoryEnvelopeTracker tracker = TrajectoryEnvelopeCoordinatorSimulation.tec.trackers.get(robotID);
-                if (! (tracker instanceof TrajectoryEnvelopeTrackerDummy)) {
-                    assert tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4;
-                    ((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).onTrajectoryEnvelopeUpdate();
-                }
-
                 /* // It sometimes causes an infinite loop inside Meta-CSP.
                 PoseSteering[] currentPath = getCurrentPath(robotID);
                 if (currentPath != null) {

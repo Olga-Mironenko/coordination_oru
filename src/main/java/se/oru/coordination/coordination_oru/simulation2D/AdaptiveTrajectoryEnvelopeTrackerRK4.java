@@ -42,7 +42,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	protected static final double EPSILON = 0.01;
 	protected double overallDistance = 0.0; // to the end of the mission
 	protected double totalDistance = 0.0; // to the nearest critical point
-	protected double positionToSlowDown = Double.POSITIVE_INFINITY;
+	public double positionToSlowDown = Double.POSITIVE_INFINITY;
 
 	protected double slowdownDebugEarlyStart;
 	protected double slowdownDebugEarlyFinishUnderestimation;
@@ -832,8 +832,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 						minMaxVelocityCautious,
 						vehicle.getMaxVelocity() + deltaMaxVelocityCautious
 				));
-
-				setCriticalPoint(criticalPoint); // to re-run `computePositionToSlowDown`
 			}
 		} else {
 			if (! isCautiousSituation()) {
@@ -842,8 +840,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				assert maxVelocityBeforeCautious != null;
 				vehicle.setMaxVelocity(maxVelocityBeforeCautious);
 				maxVelocityBeforeCautious = null;
-
-				setCriticalPoint(criticalPoint); // to re-run `computePositionToSlowDown`
 			}
 		}
 	}

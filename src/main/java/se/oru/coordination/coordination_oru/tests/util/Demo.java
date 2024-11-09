@@ -4,9 +4,7 @@ import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
-import se.oru.coordination.coordination_oru.util.BrowserVisualization;
-import se.oru.coordination.coordination_oru.util.Missions;
-import se.oru.coordination.coordination_oru.util.Printer;
+import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
@@ -25,32 +23,47 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledGlobally = true;
             GatedThread.enable();
 
+            /// Appearance:
             GatedThread.millisArtificialSleep = 0;
+            HumanControl.isEnabledForBrowser = false;
+            BrowserVisualization.isExtendedText = true;
 
+            /// Path finding:
             AutonomousVehicle.isPathCachingEnabled = true;
-
             AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom;
             if (AutonomousVehicle.planningAlgorithm == ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom) {
                 AutonomousVehicle.numIterationsRoadmapConstruction = 4000;
                 AutonomousVehicle.numIterationsPathSimplification = 1000;
             }
 
-            // TODO: add sections "Pro-action", "Reaction", ...
+            /// Human (mis)behavior actions:
+            /// - Violation of priorities:
+            AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 0.5;
+            Forcing.priorityDistance = 10.0;
+            Forcing.isDistanceToCPAddedToPriorityDistance = true;
+//          Forcing.stopDistance = 10.0;
+//          Forcing.isDistanceToCPAddedToStopDistance = true;
+            /// - Moving slowly:
+            AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman = 0.5;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.velocitySlowingDownForHuman = 1.5;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.lengthIntervalSlowingDownForHuman = 10.0;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.millisStopEvents = 3000; // rerouting (slow)
+            AdaptiveTrajectoryEnvelopeTrackerRK4.countStopEvents = 20; // rerouting (slow)
 
-            //HumanControl.isEnabledForBrowser = true;
-            BrowserVisualization.isExtendedText = true;
-
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = false;
+            /// Coordination features for AVs:
+            /// - Can pass first:
             CriticalSection.isCanPassFirstActive = true;
-
+            /// - Racing through crossroad:
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = false;
+            /// - Cautious mode:
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed = false;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.deltaMaxVelocityCautious = -2.0;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.minMaxVelocityCautious = 1.0;
+            /// - Rerouting:
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForHuman = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = true;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
-
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed = false;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.deltaMaxVelocityCautious = -2.0;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.minMaxVelocityCautious = 1.0;
         }
 
         BrowserVisualization.isStatusText = true;

@@ -4,8 +4,11 @@ import com.vividsolutions.jts.geom.Coordinate;
 import org.apache.commons.io.FileUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
+import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
 import se.oru.coordination.coordination_oru.RobotReport;
+import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.Forcing;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
@@ -366,12 +369,21 @@ public abstract class AbstractVehicle {
         return maxVelocityOriginal;
     }
 
+    public void updateTracker() {
+        AbstractTrajectoryEnvelopeTracker tracker = TrajectoryEnvelopeCoordinatorSimulation.tec.trackers.get(getID());
+        if (! (tracker instanceof TrajectoryEnvelopeTrackerDummy)) {
+            assert tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4;
+            ((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).onTrajectoryEnvelopeUpdate();
+        }
+    }
+
     public void setMaxVelocity(double maxVelocity) {
         this.maxVelocity = maxVelocity;
+        updateTracker();
     }
 
     public void resetMaxVelocity() {
-        this.maxVelocity = this.maxVelocityOriginal;
+        setMaxVelocity(this.maxVelocityOriginal);
     }
 
     public double getMaxAcceleration() {

@@ -303,8 +303,12 @@ public class BrowserVisualization implements FleetVisualization {
 			AbstractVehicle vehicle = idToVehicle.get(id);
 			boolean isHuman = VehiclesHashMap.isHuman(id);
 			AbstractTrajectoryEnvelopeTracker tracker = tec.trackers.get(id);
-			TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
+			AdaptiveTrajectoryEnvelopeTrackerRK4 trackerAdaptive =
+					(tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4)
+							? (AdaptiveTrajectoryEnvelopeTrackerRK4) tracker
+							: null;
 
+			TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
 			text += "(V" + id + ", " + vehicle.getType() + ") ";
 			String row = "<div style=\"text-align: left;\"><b>V" + id + "</b>, " + vehicle.getType() + "</div>";
 			thead1 = "";
@@ -335,9 +339,9 @@ public class BrowserVisualization implements FleetVisualization {
 					);
 				} else {
 					boolean isForcingOngoing = (
-							(tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4) &&
-							((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).forcingMaintainer != null &&
-							((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).forcingMaintainer.isForcingOngoing()
+							trackerAdaptive != null &&
+							trackerAdaptive.forcingMaintainer != null &&
+							trackerAdaptive.forcingMaintainer.isForcingOngoing()
 					);
 					row += String.format(" | %s",
 							center(
@@ -352,9 +356,7 @@ public class BrowserVisualization implements FleetVisualization {
 							center(
 								! vehicle.isMaxVelocityLowered()
 										? ""
-										: AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman < 1.0
-										? "temp.(random)"
-										: "constant"
+										: "yes"
 							)
 					);
 					row += " | ";
@@ -428,32 +430,32 @@ public class BrowserVisualization implements FleetVisualization {
 							rr.getPose().getX(), rr.getPose().getY(),
 							rr.getDistanceTraveled()
 					);
-					thead1 += " |7 Tracker state (current mission)";
+					thead1 += " |8 Tracker state (current mission)";
 					thead2 += " | position<br>(x, y), m | traveled,<br>m";
 
 					text += String.format("; i=%d (CP=%d, %s)",
 							rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
 					);
-					Double distanceToCP = ! (tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4)
-							? null
-							: ((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).distanceToCP;
-					row += String.format(" | %s | %d | %s | %s | <div style=\"text-align: left;\">%s</div>",
+					Double positionToSlowDown = trackerAdaptive == null ? null : trackerAdaptive.positionToSlowDown;
+					Double distanceToCP = trackerAdaptive == null ? null : trackerAdaptive.distanceToCP;
+					row += String.format(" | %s | %d | %s | %s | %s | <div style=\"text-align: left;\">%s</div>",
 							rr.getPathIndex() == -1 ? "" : String.format("%d", rr.getPathIndex()),
 							te.getPathLength(),
 							rr.getCriticalPoint() == -1 ? "" : String.format("%d", rr.getCriticalPoint()),
+							positionToSlowDown == null ? "" : String.format("%.1f", positionToSlowDown),
 							distanceToCP == null ? "" : String.format("%.1f", distanceToCP),
-							rr.statusString != null ? rr.statusString : "-"
+							rr.statusString == null ? "-" : rr.statusString.replace("STOPPED_AT_CP", "STOP@CP")
 					);
-					thead2 += " | path<br>index | no.<br>poses | CP<br>(index) | distance<br>ToCP, m | status";
+					thead2 += " | path<br>index | no.<br>poses | CP<br>(index) | posTo<br>Slow, m | distance<br>ToCP, m | status";
 
-					int numCalls = 0;
-					var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
-					if (numIntegrateCalls.containsKey(id)) {
-						numCalls = numIntegrateCalls.get(id);
-					}
-					//text += "; numIntegrateCalls: " + numCalls;
+//					int numCalls = 0;
+//					var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
+//					if (numIntegrateCalls.containsKey(id)) {
+//						numCalls = numIntegrateCalls.get(id);
+//					}
+//					text += "; numIntegrateCalls: " + numCalls;
 
-					//text += "; traveled " + round(rr.getElapsedTrackingTime()) + " s (sim. time)";
+//					text += "; traveled " + round(rr.getElapsedTrackingTime()) + " s (sim. time)";
 				}
 			}
 
@@ -466,7 +468,7 @@ public class BrowserVisualization implements FleetVisualization {
 					text += "; " + missions.size() + " future missions: [";
 					row += " | <div style=\"text-align: left;\">" + missions.size() + ": [";
 					thead1 += " | Dispatcher";
-					thead2 += " | future missions";
+					thead2 += " | future<br>missions";
 					for (int i = 0; i < missions.size(); i++) {
 						if (i > 0) {
 							text += ", ";
@@ -474,7 +476,7 @@ public class BrowserVisualization implements FleetVisualization {
 						}
 						Mission mission = missions.get(i);
 						text += String.format("%d poses", mission.getPath().length);
-						row += String.format("%d poses", mission.getPath().length);
+						row += String.format("%d", mission.getPath().length);
 					}
 					text += "]";
 					row += "]</div>";

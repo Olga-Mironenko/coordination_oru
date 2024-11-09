@@ -71,18 +71,6 @@ public class GeneratedMapTest {
                 throw new IllegalArgumentException("Unrecognized rerouting string: " + stringRerouting);
         }
 
-        AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 0.5;
-        Forcing.priorityDistance = 10.0;
-        Forcing.isDistanceToCPAddedToPriorityDistance = true;
-//        Forcing.stopDistance = 10.0;
-//        Forcing.isDistanceToCPAddedToStopDistance = true;
-
-        AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman = 0.5;
-        AdaptiveTrajectoryEnvelopeTrackerRK4.velocitySlowingDownForHuman = 1.5;
-        AdaptiveTrajectoryEnvelopeTrackerRK4.lengthIntervalSlowingDownForHuman = 10.0;
-        AdaptiveTrajectoryEnvelopeTrackerRK4.millisStopEvents = 3000; // rerouting (slow)
-        AdaptiveTrajectoryEnvelopeTrackerRK4.countStopEvents = 20; // rerouting (slow)
-
         int numAuts;
         double[] dimensionsVehicle;
         try (FileReader reader = new FileReader(scenarioFilename)) {
