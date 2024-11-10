@@ -291,6 +291,41 @@ public class BrowserVisualization implements FleetVisualization {
 		return "<div style=\"text-align: center;\">" + object.toString() + "</div>";
 	}
 
+	protected Set<Integer> findDeadlockedRobotsImperfect() {
+		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+		TreeSet<Integer> robotIDsDeadlocked = new TreeSet<>();
+		for (CriticalSection cs : tec.allCriticalSections) {
+			int[] robotIDs = cs.getRobotIDs();
+			if (robotIDs.length == 0) {
+				continue;
+			}
+			assert robotIDs.length == 2;
+
+			boolean isDeadlocked = true;
+			for (int robotID : robotIDs) {
+				AdaptiveTrajectoryEnvelopeTrackerRK4 tracker = VehiclesHashMap.getVehicle(robotID).getAdaptiveTracker();
+				RobotReport rr = tec.getRobotReport(robotID);
+				boolean isStopped = (
+					tracker != null &&
+					rr.getVelocity() == 0.0 &&
+					// TODO: check that we are in the CP of the CS
+					(tracker.statusLast == AdaptiveTrajectoryEnvelopeTrackerRK4.Status.STOPPED_AT_CP
+						|| cs.getStart(robotID) <= rr.getPathIndex() && rr.getPathIndex() <= cs.getEnd(robotID)
+					)
+				);
+				if (! isStopped) {
+					isDeadlocked = false;
+					break;
+				}
+			}
+			if (isDeadlocked) {
+				robotIDsDeadlocked.add(robotIDs[0]);
+				robotIDsDeadlocked.add(robotIDs[1]);
+			}
+		}
+		return robotIDsDeadlocked;
+	}
+
 	protected String makeVehicleTableHtml() {
 		String text = "";
 		String thead1 = "";
@@ -299,6 +334,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getList();
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+
 		for (int id : idToVehicle.keySet()) {
 			AbstractVehicle vehicle = idToVehicle.get(id);
 			boolean isHuman = VehiclesHashMap.isHuman(id);
@@ -328,7 +364,7 @@ public class BrowserVisualization implements FleetVisualization {
 				thead1 += " |2 Velocity, m/s";
 				thead2 += " | current | max";
 
-				thead1 += " |3 Human (mis)behavior actions";
+				thead1 += " |3 Human (mis)behaviour actions";
 				thead2 += " | violation of<br>priorities | moving<br>slowly | improper<br>parking";
 				if (! isHuman) {
 					KnobsAfterForcing knobsAfterForcing = ForcingMaintainer.getKnobsOfTheHuman();
@@ -364,7 +400,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 				thead1 += " |5 Coordination features for AVs";
 				thead2 += (
-						" | cautious<br>mode | rerouting<br>(parked / slow) | moving<br>backwards" +
+						" | cautious<br>mode | rerouting at<br>parked / slow | moving<br>backwards" +
 						" | change of<br>priorities | stops"
 				);
 				if (isHuman) {
@@ -375,7 +411,7 @@ public class BrowserVisualization implements FleetVisualization {
 					boolean isToResume = knobsAfterForcing != null && knobsAfterForcing.isToResume(id);
 					row += String.format(" | %s | %s |  | %s | %s",
 							center(
-								!AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed ? "-" :
+								!AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed ? "" :
 										vehicle.isMaxVelocityLowered() ? "yes" : "no"
 							),
 							center(
@@ -388,8 +424,8 @@ public class BrowserVisualization implements FleetVisualization {
 												: tec.robotIDToNumReroutingsNearSlowVehicle.getOrDefault(id, 0).toString()
 								)
 							),
-							center(isToRestore ? "temporary" : ""),
-							center(isToResume ? "temporary" : "")
+							center(isToRestore && ! isToResume ? "temporary" : ""),
+							center(isToResume ? "local" : "")
 					);
 				}
 
@@ -412,7 +448,7 @@ public class BrowserVisualization implements FleetVisualization {
 				row += String.format(" | %d</b> | %d", minorCollisions.size(), majorCollisions.size());
 
 				if (isCollisionInfo && ! isHuman) {
-					if (allCollisions.size() != 0) {
+					if (!allCollisions.isEmpty()) {
 						for (CollisionEvent ce : allCollisions) {
 							text += "- " + ce.toCompactString(rr.getRobotID()) + "<br>";
 						}
@@ -420,9 +456,13 @@ public class BrowserVisualization implements FleetVisualization {
 				}
 
 				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
-				row += String.format(" | %.1f | %d", vehicle.totalDistance, vehicle.getCycles());
-				thead1 += " |2 Efficiency";
-				thead2 += " | traveled<br>total, m | no.<br>missions";
+				row += String.format(" | %.1f | %d | %s",
+						vehicle.totalDistance,
+						vehicle.getCycles(),
+						center(vehicle.isDeadlocked() ? "yes" : "")
+				);
+				thead1 += " |3 Efficiency";
+				thead2 += " | traveled<br>total, m | no.<br>missions | deadlock";
 
 				if (isExtendedText) {
 					text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());

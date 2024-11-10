@@ -369,11 +369,23 @@ public abstract class AbstractVehicle {
         return maxVelocityOriginal;
     }
 
+    public AbstractTrajectoryEnvelopeTracker getTracker() {
+        return TrajectoryEnvelopeCoordinatorSimulation.tec.trackers.get(getID());
+    }
+
+    public AdaptiveTrajectoryEnvelopeTrackerRK4 getAdaptiveTracker() {
+        AbstractTrajectoryEnvelopeTracker tracker = getTracker();
+        if (tracker instanceof TrajectoryEnvelopeTrackerDummy) {
+            return null;
+        }
+        assert tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4;
+        return ((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker);
+    }
+
     public void updateTracker() {
-        AbstractTrajectoryEnvelopeTracker tracker = TrajectoryEnvelopeCoordinatorSimulation.tec.trackers.get(getID());
-        if (! (tracker instanceof TrajectoryEnvelopeTrackerDummy)) {
-            assert tracker instanceof AdaptiveTrajectoryEnvelopeTrackerRK4;
-            ((AdaptiveTrajectoryEnvelopeTrackerRK4) tracker).onTrajectoryEnvelopeUpdate();
+        AdaptiveTrajectoryEnvelopeTrackerRK4 tracker = getAdaptiveTracker();
+        if (tracker != null) {
+            tracker.onTrajectoryEnvelopeUpdate();
         }
     }
 
@@ -384,6 +396,10 @@ public abstract class AbstractVehicle {
 
     public void resetMaxVelocity() {
         setMaxVelocity(this.maxVelocityOriginal);
+    }
+
+    public boolean isMaxVelocityLowered() {
+        return getMaxVelocity() < getMaxVelocityOriginal();
     }
 
     public double getMaxAcceleration() {
@@ -402,7 +418,11 @@ public abstract class AbstractVehicle {
         return cycles;
     }
 
-    public boolean isMaxVelocityLowered() {
-        return getMaxVelocity() < getMaxVelocityOriginal();
+    public boolean isDeadlocked() {
+        AdaptiveTrajectoryEnvelopeTrackerRK4 tracker = getAdaptiveTracker();
+        if (tracker == null) {
+            return false;
+        }
+        return tracker.isDeadlocked();
     }
 }

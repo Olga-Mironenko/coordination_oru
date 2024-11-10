@@ -36,13 +36,15 @@ public abstract class Demo {
                 AutonomousVehicle.numIterationsPathSimplification = 1000;
             }
 
+            AdaptiveTrajectoryEnvelopeTrackerRK4.durationStoppedMinForDeadlock = 5.0;
+
             /// Human (mis)behavior actions:
             /// - Violation of priorities:
             AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 0.5;
             Forcing.priorityDistance = 10.0;
             Forcing.isDistanceToCPAddedToPriorityDistance = true;
-//          Forcing.stopDistance = 10.0;
-//          Forcing.isDistanceToCPAddedToStopDistance = true;
+            Forcing.stopDistance = 10.0;
+            Forcing.isDistanceToCPAddedToStopDistance = true;
             /// - Moving slowly:
             AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman = 0.5;
             AdaptiveTrajectoryEnvelopeTrackerRK4.velocitySlowingDownForHuman = 1.5;
@@ -54,7 +56,7 @@ public abstract class Demo {
             /// - Can pass first:
             CriticalSection.isCanPassFirstActive = true;
             /// - Racing through crossroad:
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = false;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = true;
             /// - Cautious mode:
             AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.deltaMaxVelocityCautious = -2.0;

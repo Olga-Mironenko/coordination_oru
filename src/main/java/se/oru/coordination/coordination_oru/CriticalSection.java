@@ -141,6 +141,14 @@ public class CriticalSection {
 		return getTe2().getRobotID();
 	}
 
+	public int[] getRobotIDs() {
+		if (getTe1() == null) {
+			assert getTe2() == null;
+			return new int[0];
+		}
+		return new int[] {getTe1().getRobotID(), getTe2().getRobotID()};
+	}
+
 	public boolean isTe1(int robotID) {
 		return getTe1RobotID() == robotID;
 	}

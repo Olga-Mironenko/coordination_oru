@@ -66,7 +66,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	private HashMap<Integer,Integer> userCPReplacements = null;
 	public static EmergencyBreaker emergencyBreaker = new EmergencyBreaker(false, false);
-	public Status latestStatusForVisualization;
+	public Status statusLast;
 
 	private Deque<Integer> queueStopEvents = new LinkedList<>();
 	public static int millisStopEvents = 3000;
@@ -82,6 +82,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public static double probabilitySlowingDownForHuman = 0.0;
 	public static double velocitySlowingDownForHuman = 1.0;
 	public static double lengthIntervalSlowingDownForHuman = 10.0;
+	public static double durationStoppedMinForDeadlock = 60.0;
+
+	private double durationStopped;
 
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
@@ -723,7 +726,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				pose = poses[currentPathIndex];
 			}
 			RobotReport rr = new RobotReport(te.getRobotID(), pose, currentPathIndex, state.getVelocity(), state.getPosition(), elapsedTrackingTime, this.criticalPoint);
-			rr.statusString = latestStatusForVisualization == null ? null : latestStatusForVisualization.toString();
+			rr.statusString = statusLast == null ? null : statusLast.toString();
 			return rr;
 		}
 	}
@@ -890,10 +893,14 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 	}
 
-	enum Status {
+	public enum Status {
 		DRIVING,
 		STOPPED_AT_CP,
 		FULL_STOP
+	}
+
+	private boolean isStopped() {
+		return this.state.getVelocity() <= 0.0;
 	}
 
 	private Status checkIfStopped(Status status) {
@@ -901,7 +908,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		//End condition: passed the middle AND velocity < 0 AND no criticalPoint
 		//if (state.getPosition() >= totalDistance/2.0 && state.getVelocity() < 0.0) {
-		boolean continueToStay = this.state.getPosition() >= this.positionToSlowDown && this.state.getVelocity() <= 0.0;
+		boolean continueToStay = this.state.getPosition() >= this.positionToSlowDown && isStopped();
 
 		if (! continueToStay) {
 			if (status == Status.STOPPED_AT_CP) {
@@ -963,6 +970,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 
 		return Status.STOPPED_AT_CP;
+	}
+
+	public boolean isDeadlocked() {
+		return durationStopped >= durationStoppedMinForDeadlock;
 	}
 
 	private void updateState(double deltaTime, AbstractVehicle vehicle) {
@@ -1032,7 +1043,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	@Override
 	public void run() {
-		this.elapsedTrackingTime = 0.0;
+		elapsedTrackingTime = 0.0;
+		durationStopped = 0.0;
 
 		double deltaTime = 0.0;
 		int myRobotID = te.getRobotID();
@@ -1098,6 +1110,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				break;
 			}
 
+			if (isStopped()) {
+				durationStopped += deltaTime;
+			}
+
 			status = checkIfStopped(status);
 			if (status == Status.FULL_STOP) {
 				break;
@@ -1118,7 +1134,11 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				}
 			}
 
-			latestStatusForVisualization = status;
+			if (! isStopped()) {
+				durationStopped = 0.0;
+			}
+
+			statusLast = status;
 			//Do some user function on position update
 			onPositionUpdate();
 			enqueueOneReport();
