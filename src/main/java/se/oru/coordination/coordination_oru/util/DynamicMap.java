@@ -24,6 +24,7 @@ public class DynamicMap {
     public double threshold = 0.3;
     public static final double thresholdForOccupancyMap = 0.5;
     public Coordinate origin = null;
+    public Double alpha = null;
 
     public static BufferedImage deepCopy(BufferedImage bi) {
         // Source: https://stackoverflow.com/a/3514297.
@@ -101,6 +102,7 @@ public class DynamicMap {
                         ).trim();
                         origin = new Coordinate(Double.parseDouble(x), Double.parseDouble(y));
                     }
+                    else if (key.equals("alpha")) alpha = Double.parseDouble(value);
                     else if (key.equals("negate")) {
                         if (! value.equals("0")) {
                             throw new RuntimeException("Non-zero negate is not supported here yet");

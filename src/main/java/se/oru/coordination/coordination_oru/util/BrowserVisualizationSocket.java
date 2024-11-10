@@ -41,9 +41,12 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         assert dmap != null;
 
         System.out.println("Sending map metadata to newly connected client...");
-        String setMetadataString = "{ \"operation\" : \"setMapMetadata\","
-                + "\"data\" : "
-                + "{ \"resolution\" : " + dmap.resolution + ", \"x\" : " + dmap.origin.x + ", \"y\" : " + dmap.origin.y + "}}";
+        String setMetadataString = "{\"operation\": \"setMapMetadata\", \"data\": {"
+                + "\"resolution\" : " + dmap.resolution + ", \"x\" : " + dmap.origin.x + ", \"y\" : " + dmap.origin.y;
+        if (dmap.alpha != null) {
+            setMetadataString += ", \"alpha\": " + dmap.alpha;
+        }
+        setMetadataString += "}}";
         rep.sendString(setMetadataString);
 
         System.out.println("Sending map to newly connected client...");

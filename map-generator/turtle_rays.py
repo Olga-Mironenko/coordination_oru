@@ -646,8 +646,9 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
     text_mapconf = textwrap.dedent(f"""
         image: {basename_map_png}
         resolution: 0.1
-        origin: [0, 0, 0]
         occupied_thresh: 0.1
+        origin: [0, 0, 0]
+        alpha: 1.0
         """).lstrip()
 
     hexdigest_mapconf = compute_hash_text(

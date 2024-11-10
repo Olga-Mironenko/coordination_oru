@@ -106,6 +106,7 @@ class Visualization {
 		this.mapResolution = data.resolution;
 		this.mapOrigin.x = data.x;
 		this.mapOrigin.y = data.y;
+		this.mapAlpha = data.alpha !== undefined && data.alpha !== null ? data.mapAlpha : 0.4;
 	}
 	
 	setInitialTransform(data) {
@@ -328,7 +329,7 @@ class Visualization {
 			this.ctx.save();
 			this.ctx.scale(1,-1);
 			this.ctx.translate(0,-mapH);
-			this.ctx.globalAlpha = 1.0; // values less than one make white tunnels gray
+			this.ctx.globalAlpha = this.mapAlpha; // values less than one make white tunnels gray
 			this.ctx.drawImage(this.map,this.mapOrigin.x,this.mapOrigin.y,mapW,mapH);
 			this.ctx.globalAlpha = 1.0;
 			this.ctx.restore();

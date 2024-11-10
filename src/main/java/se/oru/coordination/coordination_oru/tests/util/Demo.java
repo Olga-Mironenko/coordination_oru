@@ -36,7 +36,7 @@ public abstract class Demo {
                 AutonomousVehicle.numIterationsPathSimplification = 1000;
             }
 
-            AdaptiveTrajectoryEnvelopeTrackerRK4.durationStoppedMinForDeadlock = 5.0;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.durationStoppedMinForDeadlock = 10.0;
 
             /// Human (mis)behavior actions:
             /// - Violation of priorities:
