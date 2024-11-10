@@ -366,7 +366,7 @@ class Drawer:
             self.add_pose('D')  # draw point
 
             spans.append((altitude, altitude + ray_length))
-            if i_ray % 2 == 1 and random.random() < PROBABILITY_BRIDGE_PRESENCE:
+            if i_ray != 0 and random.random() < PROBABILITY_BRIDGE_PRESENCE:
                 for i_bridge in range(1 if random.random() < PROBABILITY_BRIDGE_SINGLE else 2):
                     self.draw_bridge(altitude, spans, ray_length, heading_branch, heading_ray)
 
