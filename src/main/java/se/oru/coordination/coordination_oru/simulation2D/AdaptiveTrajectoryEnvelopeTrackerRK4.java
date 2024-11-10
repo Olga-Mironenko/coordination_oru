@@ -78,6 +78,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	private SortedSet<Integer> criticalPointsPostponed = new TreeSet<>(Collections.reverseOrder());
 	public Double distanceToCP;
 	public static double probabilityForcingForHuman = 0.0;
+	public static double distanceToCPForForcing = 5.0;
 	public ForcingMaintainer forcingMaintainer;
 	public static double probabilitySlowingDownForHuman = 0.0;
 	public static double velocitySlowingDownForHuman = 1.0;
@@ -1060,7 +1061,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 						isReroutingNearParkedVehicleForNonHuman;
 
 		boolean isExpectingDistanceShrinking = true;
-		double thresholdDistanceShrinking = 5.0;
 		Double distanceToCPLast = null;
 		if (isHuman) {
 			forcingMaintainer = new ForcingMaintainer();
@@ -1076,8 +1076,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				if (distanceToCP == null) {
 					isExpectingDistanceShrinking = true;
 				} else if (isExpectingDistanceShrinking) {
-					if (distanceToCP <= thresholdDistanceShrinking) {
-						if (distanceToCPLast == null || distanceToCPLast > thresholdDistanceShrinking) {
+					if (distanceToCP <= distanceToCPForForcing) {
+						if (distanceToCPLast == null || distanceToCPLast > distanceToCPForForcing) {
 							isExpectingDistanceShrinking = false;
 
 							if (rand.nextDouble() < probabilityForcingForHuman) {

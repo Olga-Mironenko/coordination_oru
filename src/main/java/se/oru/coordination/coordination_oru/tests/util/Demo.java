@@ -41,10 +41,7 @@ public abstract class Demo {
             /// Human (mis)behavior actions:
             /// - Violation of priorities:
             AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 0.5;
-            Forcing.priorityDistance = 10.0;
-            Forcing.isDistanceToCPAddedToPriorityDistance = true;
-            Forcing.stopDistance = 10.0;
-            Forcing.isDistanceToCPAddedToStopDistance = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.distanceToCPForForcing = 5.0;
             /// - Moving slowly:
             AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman = 0.5;
             AdaptiveTrajectoryEnvelopeTrackerRK4.velocitySlowingDownForHuman = 1.5;
@@ -66,6 +63,13 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = true;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
+            /// - Violation of priorities:
+            Forcing.priorityDistance = 10.0;
+            Forcing.isDistanceToCPAddedToPriorityDistance = true;
+            Forcing.stopDistance = 10.0;
+            Forcing.isDistanceToCPAddedToStopDistance = true;
+            Forcing.isGlobalTemporaryStop = true;
+            Forcing.isResetAfterCurrentCrossroad = true;
         }
 
         BrowserVisualization.isStatusText = true;

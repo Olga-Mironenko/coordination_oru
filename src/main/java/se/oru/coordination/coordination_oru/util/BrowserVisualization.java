@@ -425,7 +425,7 @@ public class BrowserVisualization implements FleetVisualization {
 								)
 							),
 							center(isToRestore && ! isToResume ? "temporary" : ""),
-							center(isToResume ? "local" : "")
+							center(isToResume ? Forcing.isGlobalTemporaryStop ? "global" : "local" : "")
 					);
 				}
 
