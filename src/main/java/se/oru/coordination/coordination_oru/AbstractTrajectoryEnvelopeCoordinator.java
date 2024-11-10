@@ -859,7 +859,10 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	 * @param index The stopping point.
 	 * @param duration Duration of the stopping.
 	 */
-	protected void spawnWaitingThread(final int robotID, final int index, final int duration) {
+	protected void spawnWaitingThread(final int robotID, final int stoppingPoint, final int duration) {
+		if (duration < 0) {
+			return;
+		}
 		Thread stoppingPointTimer = new GatedThread("stoppingPointTimer") {
 			private long startTime = GatedCalendar.getInstance().getTimeInMillis();
 			@Override
@@ -872,8 +875,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				metaCSPLogger.info("Waiting thread finishes for " + robotID);
 				synchronized(solver) {
 					synchronized(stoppingPoints) {
-						stoppingPoints.get(robotID).remove(index);
-						stoppingTimes.get(robotID).remove(index);
+						removeStoppingPoint(robotID, stoppingPoint);
 						stoppingPointTimers.remove(robotID);
 					}
 					updateDependencies();
@@ -1048,7 +1050,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		this.comparators = new ComparatorChain();
 	}
 
-	protected boolean createCriticalSection(CriticalSection cs) {
+	protected void createCriticalSection(CriticalSection cs) {
 		boolean isAdded = this.allCriticalSections.add(cs);
 		if (isAdded) {
 			Integer id1 = cs.getTe1RobotID();
@@ -1062,7 +1064,6 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				}
 			}
 		}
-		return isAdded;
 	}
 
 	/**
@@ -1611,6 +1612,23 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		);
 	}
 
+	public void addStoppingPoint(int robotID, int stoppingPoint, int duration) {
+		if (! stoppingPoints.containsKey(robotID)) {
+			stoppingPoints.put(robotID, new ArrayList<>());
+			stoppingTimes.put(robotID, new ArrayList<>());
+		}
+		if (! stoppingPoints.get(robotID).contains(stoppingPoint)) {
+			stoppingPoints.get(robotID).add(stoppingPoint);
+			stoppingTimes.get(robotID).add(duration);
+		}
+	}
+
+	public void removeStoppingPoint(int robotID, int stoppingPoint) {
+		int index = stoppingPoints.get(robotID).indexOf(stoppingPoint);
+		stoppingPoints.get(robotID).remove(index);
+		stoppingTimes.get(robotID).remove(index);
+	}
+
 	/**
 	 * Add one or more missions for one or more robots. If more than one mission is specified for
 	 * a robot <code>r</code>, then all the robot's missions are concatenated.
@@ -1675,14 +1693,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 							int stoppingPoint = te.getSequenceNumber(new Coordinate(stoppingPose.getX(), stoppingPose.getY()));
 							if (stoppingPoint == te.getPathLength()-1) stoppingPoint -= 2;
 							int duration = entry.getValue();
-							if (!stoppingPoints.keySet().contains(robotID)) {
-								stoppingPoints.put(robotID, new ArrayList<Integer>());
-								stoppingTimes.put(robotID, new ArrayList<Integer>());
-							}
-							if (!stoppingPoints.get(robotID).contains(stoppingPoint)) {
-								stoppingPoints.get(robotID).add(stoppingPoint);
-								stoppingTimes.get(robotID).add(duration);
-							}
+							addStoppingPoint(robotID, stoppingPoint, duration);
 						}
 					}
 

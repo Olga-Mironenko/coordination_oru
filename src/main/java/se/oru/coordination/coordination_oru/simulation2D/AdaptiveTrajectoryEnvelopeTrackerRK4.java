@@ -638,25 +638,31 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
 			return;
 		}
-
 		//A new intermediate index to stop at has been given
-		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+
 		Set<CriticalSection> criticalSections = getCriticalSectionsForRobot(criticalPointToSet);
 
 		//assert ! criticalSections.isEmpty();
-		if (criticalSections.isEmpty()) {
+		boolean isFreezingCP = criticalPointToSet == TrajectoryEnvelopeCoordinatorSimulation.CP_ASAP;
+		if (criticalSections.isEmpty() && ! isFreezingCP) {
 			return;
 		}
 
 		rerouteBecauseOfSlowVehicleIfNeeded(robotID, criticalPointToSet, criticalSections);
 
 		RobotReport rr = getRobotReport();
-		if (! isRacingThroughCrossroadAllowed || criticalPointToSet > rr.getPathIndex()) {
+		if (isFreezingCP || ! isRacingThroughCrossroadAllowed || criticalPointToSet >= rr.getPathIndex()) {
 			//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
 			double targetDistance = computeDistance(0, criticalPointToSet);
 			double positionToSlowDownTemporary = computePositionToSlowDown(targetDistance, true);
 
-			if (! isRacingThroughCrossroadAllowed || positionToSlowDownTemporary > state.getPosition()) {
+			// When we start executing this, the robot is a little bit further than what is written in `state`.
+			// Therefore, its path index may be still equal to the path index derived from `state`,
+			// but its position is greater than what is written in `state` (unless it's stopped).
+			if (isFreezingCP || ! isRacingThroughCrossroadAllowed || (
+					positionToSlowDownTemporary > state.getPosition() ||
+					positionToSlowDownTemporary == state.getPosition() && isStopped()
+			)) {
 				if (this.criticalPoint != -1) {
 					criticalPointsPostponed.add(this.criticalPoint);
 				}
@@ -848,7 +854,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 	}
 
-	private boolean checkFreezing() {
+	public boolean checkFreezing() {
+		return false;
+		/*
 		int myRobotID = te.getRobotID();
 
 		Integer pathIndexToStop = Forcing.robotIDToPathIndexToStop.get(myRobotID);
@@ -862,6 +870,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 
 		return Forcing.isRobotFrozen(myRobotID);
+		 */
 	}
 
 	private void checkIfCanPassFirst() {
@@ -1067,8 +1076,16 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 		DistanceMonitor distanceMonitor = new DistanceMonitor();
 
+//		if (myRobotID == 1) {
+//			TrajectoryEnvelopeCoordinatorSimulation.tec.addStoppingPoint(myRobotID, TrajectoryEnvelopeCoordinatorSimulation.CP_ASAP, 10000);
+//		}
+
 		while (true) {
 			long timeStart = GatedCalendar.getInstance().getTimeInMillis();
+
+//			if (myRobotID == 1 && timeStart == 3000) {
+//				TrajectoryEnvelopeCoordinatorSimulation.tec.removeStoppingPoint(myRobotID, TrajectoryEnvelopeCoordinatorSimulation.CP_ASAP);
+//			}
 
 			distanceToCP = computeDistanceToCP();
 			if (isHuman) {
@@ -1125,6 +1142,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 				//Update the robot's state via RK4 numerical integration
 				updateState(deltaTime, vehicle);
+				// TODO: Move `checkIfStopped` AFTER the `updateState` (because `updateState` just reflects
+				//       what the robot was ordered to do during the last `deltaTime`).
 
 			} else if (status == Status.STOPPED_AT_CP) {
 				if (isReroutingNearParkedVehicle && isReroutingNearParkedVehicleOK) {

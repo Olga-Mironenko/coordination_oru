@@ -30,7 +30,7 @@ public class Dependency implements Comparable<Dependency> {
 	
 	@Override
 	public int hashCode() {
-		long code = Long.parseLong(teWaiting.getRobotID()+"0"+waitingPoint+"0"+this.robotIDDriving+"0"+thresholdPoint);
+		long code = Long.parseLong(teWaiting.getRobotID()+"0"+Math.abs(waitingPoint)+"0"+this.robotIDDriving+"0"+thresholdPoint);
 		code = code%Integer.MAX_VALUE;
 		return (int)code;
 	}

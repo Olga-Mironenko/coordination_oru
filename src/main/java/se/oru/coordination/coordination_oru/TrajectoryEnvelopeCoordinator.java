@@ -32,9 +32,11 @@ import org.metacsp.utility.UI.Callback;
 import com.vividsolutions.jts.geom.Geometry;
 
 import aima.core.util.datastructure.Pair;
+import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.util.HumanControl;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
@@ -51,6 +53,7 @@ import static se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelo
  *
  */
 public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEnvelopeCoordinator {
+	public static final int CP_ASAP = -2;
 
 	public static boolean isCheckingStoppingPoints = false;
 
@@ -656,7 +659,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							//Start waiting thread if the stopping point has been reached
 							//if (Math.abs(robotReport.getPathIndex()-stoppingPoint) <= 1 && robotReport.getCriticalPoint() == stoppingPoint && !stoppingPointTimers.containsKey(robotID)) {
 							if (Math.abs(robotReport.getPathIndex()-stoppingPoint) <= 1 && robotReport.getCriticalPoint() <= stoppingPoint && !stoppingPointTimers.containsKey(robotID)) {
-								spawnWaitingThread(robotID, i, duration);
+								spawnWaitingThread(robotID, stoppingPoint, duration);
 							}
 						}
 					}
@@ -1831,7 +1834,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						for (int i = 0; i < stoppingPoints.get(robotID).size(); i++) {
 							int stoppingPoint = stoppingPoints.get(robotID).get(i);
 							int duration = stoppingTimes.get(robotID).get(i);
-							if (robotReport.getPathIndex() <= stoppingPoint) {
+							if (robotReport.getPathIndex() <= stoppingPoint || stoppingPoint == CP_ASAP) {
 								Dependency dep = new Dependency(robotTracker.getTrajectoryEnvelope(), null, stoppingPoint, 0);
 								if (!currentDeps.containsKey(robotID))
 									currentDeps.put(robotID, new HashSet<Dependency>());
@@ -1842,7 +1845,9 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							//Start waiting thread if the stopping point has been reached
 							//if (Math.abs(robotReport.getPathIndex()-stoppingPoint) <= 1 && robotReport.getCriticalPoint() == stoppingPoint && !stoppingPointTimers.containsKey(robotID)) {
 							if (Math.abs(robotReport.getPathIndex()-stoppingPoint) <= 1 && robotReport.getCriticalPoint() <= stoppingPoint && !stoppingPointTimers.containsKey(robotID)) {
-								spawnWaitingThread(robotID, i, duration);
+								// Note: `i` mustn't be used as an index to remove the element because by the time the element
+								// is about to be removed, it's index may change.
+								spawnWaitingThread(robotID, stoppingPoint, duration);
 							}
 						}
 					}

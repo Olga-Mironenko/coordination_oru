@@ -481,7 +481,11 @@ public class BrowserVisualization implements FleetVisualization {
 					row += String.format(" | %s | %d | %s | %s | %s | <div style=\"text-align: left;\">%s</div>",
 							rr.getPathIndex() == -1 ? "" : String.format("%d", rr.getPathIndex()),
 							te.getPathLength(),
-							rr.getCriticalPoint() == -1 ? "" : String.format("%d", rr.getCriticalPoint()),
+							rr.getCriticalPoint() == -1
+									? ""
+									: rr.getCriticalPoint() == TrajectoryEnvelopeCoordinatorSimulation.CP_ASAP
+									? "ASAP"
+									: String.format("%d", rr.getCriticalPoint()),
 							positionToSlowDown == null ? "" : String.format("%.1f", positionToSlowDown),
 							distanceToCP == null ? "" : String.format("%.1f", distanceToCP),
 							rr.statusString == null ? "-" : rr.statusString.replace("STOPPED_AT_CP", "STOP@CP")

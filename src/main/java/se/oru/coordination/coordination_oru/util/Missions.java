@@ -541,6 +541,13 @@ public class Missions {
 		missions.get(m.getRobotID()).add(m);
 	}
 
+	public static Mission enrichMission(Mission m) {
+//		if (m.getRobotID() == 1) {
+//			m.setStoppingPoint(m.getFromPose(), 3000);
+//		}
+		return m;
+	}
+
 	public static void enqueueMissions(MissionBlueprint blueprint) {
 		/*
 		Direction.FORWARD_ONLY:
@@ -593,7 +600,7 @@ public class Missions {
 			assert ! blueprint.isToCleanForward;
 
 			PoseSteering[] pathTotal = (PoseSteering[]) ArrayUtils.addAll(pathForward, pathBackward);
-			Missions.enqueueMission(new Mission(robotID, pathTotal));
+			Missions.enqueueMission(enrichMission(new Mission(robotID, pathTotal)));
 		} else {
 			Mission missionForward;
 			if (! blueprint.isToCleanForward) {
@@ -623,11 +630,11 @@ public class Missions {
 					}
 				};
 			}
-			Missions.enqueueMission(missionForward);
+			Missions.enqueueMission(enrichMission(missionForward));
 
 			if (blueprint.direction == MissionBlueprint.Direction.FORWARD_BACKWARD_SEPARATE_MISSIONS) {
 				Mission missionBackward = new Mission(robotID, pathBackward);
-				Missions.enqueueMission(missionBackward);
+				Missions.enqueueMission(enrichMission(missionBackward));
 			}
 		}
 	}

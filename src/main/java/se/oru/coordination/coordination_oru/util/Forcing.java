@@ -48,7 +48,7 @@ public class Forcing {
     // - If `isGlobalTemporaryStop` is true, then all other robots are stopped during forcing.
     public static boolean isGlobalTemporaryStop = false;
     // - If `isResetAfterCurrentCrossroad` is true, then forcing finishes automatically when its priority and stop
-    //   effects end. If the flag is false, then it's needed to finish forcing manually
+    //   effects end. If the flag is false, then it's needed to finish forcing manually.
     public static boolean isResetAfterCurrentCrossroad = true;
 
     private final static int maxNumberOfHumans = 1;
@@ -124,7 +124,7 @@ public class Forcing {
 
                 assert criticalSectionsToRestorePrioritiesLater.isEmpty() == robotsToRestoreLater.isEmpty();
 
-                boolean isDone = priorityDistanceRemaining == 0 && stopDistanceRemaining == 0 && ! isGlobalTemporaryStop;
+                boolean isDone = priorityDistanceRemaining == 0 && stopDistanceRemaining == 0;
 
                 if (isResetAfterCurrentCrossroad && isDone) {
                     boolean isEmpty = criticalSectionsToRestorePrioritiesLater.isEmpty() && robotsToResumeLater.isEmpty();
@@ -328,6 +328,9 @@ public class Forcing {
         int counter = robotIDToFreezingCounter.getOrDefault(robotID, 0);
         assert 0 <= counter && counter < maxNumberOfHumans;
         robotIDToFreezingCounter.put(robotID, counter + 1);
+        if (robotIDToFreezingCounter.get(robotID) == 1) {
+            TrajectoryEnvelopeCoordinatorSimulation.tec.addStoppingPoint(robotID, TrajectoryEnvelopeCoordinatorSimulation.CP_ASAP, -1);
+        }
     }
 
     public static void resumeRobot(int robotID) {
@@ -336,6 +339,9 @@ public class Forcing {
         int counter = robotIDToFreezingCounter.getOrDefault(robotID, 0);
         assert 0 < counter && counter <= maxNumberOfHumans;
         robotIDToFreezingCounter.put(robotID, counter - 1);
+        if (robotIDToFreezingCounter.get(robotID) == 0) {
+            TrajectoryEnvelopeCoordinatorSimulation.tec.removeStoppingPoint(robotID, TrajectoryEnvelopeCoordinatorSimulation.CP_ASAP);
+        }
     }
 
     public static boolean isRobotFrozen(int robotID) {

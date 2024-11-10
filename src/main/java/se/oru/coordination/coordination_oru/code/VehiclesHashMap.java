@@ -1,5 +1,6 @@
 package se.oru.coordination.coordination_oru.code;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 public class VehiclesHashMap {
@@ -12,16 +13,20 @@ public class VehiclesHashMap {
     }
 
     public static AbstractVehicle getVehicle(int key) {
-        return getList().get(key);
+        return map.get(key);
     }
 
     public static boolean isHuman(int key) {
         return getVehicle(key) instanceof HumanDrivenVehicle;
     }
 
+    public static Collection<AbstractVehicle> getVehicles() {
+        return map.values();
+    }
+
     public static HumanDrivenVehicle getTheHuman() {
         HumanDrivenVehicle humanDrivenVehicle = null;
-        for (AbstractVehicle vehicle : map.values()) {
+        for (AbstractVehicle vehicle : getVehicles()) {
             if (vehicle instanceof HumanDrivenVehicle) {
                 assert humanDrivenVehicle == null;
                 humanDrivenVehicle = (HumanDrivenVehicle) vehicle;
