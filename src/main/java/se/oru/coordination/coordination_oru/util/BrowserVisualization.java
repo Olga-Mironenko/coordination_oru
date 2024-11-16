@@ -668,18 +668,18 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 	
 	private String geometryToJSONString(String name, Geometry geom, String color, long age, boolean filled, String extraData) {
-		String ret = "{ \"name\" : \"" + name + "\", \"color\" : \"" + color + "\", ";
-		if (age > 0) ret += " \"age\" : " + age + ", ";
-		ret += " \"filled\" : " + filled + ", ";
-		if (extraData != null && !extraData.trim().equals("")) ret += " \"extraData\" : \"" + extraData + "\", ";		
-		ret += "\"coordinates\" : [";
+		StringBuilder ret = new StringBuilder("{ \"name\" : \"" + name + "\", \"color\" : \"" + color + "\", ");
+		if (age > 0) ret.append(" \"age\" : ").append(age).append(", ");
+		ret.append(" \"filled\" : ").append(filled).append(", ");
+		if (extraData != null && !extraData.trim().isEmpty()) ret.append(" \"extraData\" : \"").append(extraData).append("\", ");
+		ret.append("\"coordinates\" : [");
 		Coordinate[] coords = geom.getCoordinates();
 		for (int i = 0; i < coords.length; i++) {
-			ret += "{\"x\" : " + coords[i].x + ", \"y\" : " + coords[i].y + "}";
-			if (i < coords.length-1) ret += ", ";
+			ret.append("{\"x\" : ").append(coords[i].x).append(", \"y\" : ").append(coords[i].y).append("}");
+			if (i < coords.length-1) ret.append(", ");
 		}
-		ret += "]}";
-		return ret;
+		ret.append("]}");
+		return ret.toString();
 	}
 
 	@Override

@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 public class VehiclesHashMap {
-    private static HashMap<Integer, AbstractVehicle> map = new HashMap<>();
+    private static final HashMap<Integer, AbstractVehicle> map = new HashMap<>();
     
     private VehiclesHashMap() {}
 
