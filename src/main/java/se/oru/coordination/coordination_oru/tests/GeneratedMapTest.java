@@ -42,7 +42,7 @@ public class GeneratedMapTest {
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.closest()
 
         if (scenarioString == null) {
-            scenarioString = "map-generator/generated-maps/current/scenario1.json, with rerouting";
+            scenarioString = "map-generator/generated-maps/current/scenario1-2.json, with rerouting"; // TODO: add tracker's seed
         }
         AbstractVehicle.scenarioId = String.format(
                 "%s; %s",

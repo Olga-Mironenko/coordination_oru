@@ -22,7 +22,7 @@ import subprocess
 import sys
 import textwrap
 import turtle
-from typing import Dict, List, Optional
+from typing import Optional
 
 from PIL import Image
 from loguru import logger
@@ -33,8 +33,9 @@ MODE = 'normal'
 #MODE = 'minimal'
 
 if MODE == 'normal':
-    NUM_MAPS = 5
-    NUM_AUTS = 4
+    NUM_MAPS = 2
+    NUM_SCENARIOS_PER_MAP = 3
+    NUM_AUTS = 3
     IS_HUMAN_STAYING = False
     IS_OP_TREE0_BRANCH0_ALLOWED = False
 
@@ -44,6 +45,7 @@ if MODE == 'normal':
 
 elif MODE == 'minimal':
     NUM_MAPS = 1
+    NUM_SCENARIOS_PER_MAP = 1
     NUM_AUTS = 2
     IS_HUMAN_STAYING = False
     IS_OP_TREE0_BRANCH0_ALLOWED = True
@@ -410,7 +412,7 @@ class Drawer:
 
         self.turtle.setheading(heading)
 
-    def draw_trees(self, trees: List[Tree], width_image: int, height_image: int) -> bool:
+    def draw_trees(self, trees: list[Tree], width_image: int, height_image: int) -> bool:
         assert trees
         assert self.trees is None
         self.trees = trees
@@ -430,10 +432,7 @@ class Drawer:
         return is_ok
 
 
-def add_robots_to_name2pose(num_auts: int, name2pose: Dict[str, Pose]) -> Dict[str, Pose]:
-    # Make a copy of the original dictionary to avoid modifying the input
-    new_name2pose = {}
-
+def make_name2pose_with_robots(num_auts: int, name2pose: dict[str, Pose]) -> dict[str, Pose]:
     # Get all D and OP poses
     d_poses = {key: pose for key, pose in name2pose.items() if key.startswith('D')}
     op_poses = {key: pose for key, pose in name2pose.items() if key.startswith('OP')}
@@ -464,6 +463,7 @@ def add_robots_to_name2pose(num_auts: int, name2pose: Dict[str, Pose]) -> Dict[s
         key2pairs[nearest_op_key].append((finish_name, finish_pose))
 
     # Iterate through original name2pose dictionary and add start/finish pairs after corresponding items
+    new_name2pose = {}
     for key, value in name2pose.items():
         new_name2pose[key] = value
 
@@ -533,13 +533,13 @@ def make_screenshot(t: turtle.Turtle,
     t.showturtle()
 
 
-def save_locations(num_auts: int, filename_locations: str, drawer: Drawer, image_height: int) -> None:
+def save_locations(num_auts: int, filename_locations: str, name2pose: dict[str, Pose], image_height: int) -> None:
     with open(filename_locations, 'w') as file:
         print('# Locations:', file=file)
         print('# name', 'x_meters', 'y_meters', 'theta', sep='\t', file=file)
         print(file=file)
 
-        name2pose_with_robots = add_robots_to_name2pose(num_auts, drawer.name2pose)
+        name2pose_with_robots = make_name2pose_with_robots(num_auts, name2pose)
         pose_prev = None
         for name, pose in name2pose_with_robots.items():
             if pose_prev is not None and pose != pose_prev:
@@ -561,35 +561,7 @@ def compute_hash_text(text_mapconf: str) -> str:
     return compute_hash_bytes(text_mapconf.encode())
 
 
-def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) -> bool:
-    basename_map_png = f'map{i_map}.png'
-    basename_locations = f'locations{i_map}.tsv'
-
-    filename_scenario = str(path_maps / f'scenario{i_map}.json')
-    filename_map_png = str(path_maps / basename_map_png)
-    filename_locations = str(path_maps / basename_locations)
-    # Note: `filename_background_png_to_generate` is made unique among all attempts to make `bgpic` work properly.
-    filename_background_png_to_generate = str(path_maps / f'background{i_map}_g{i_generation}.png')
-    filename_log = str(path_maps / f'log{i_map}_g{i_generation}.log')
-
-    logger.remove()
-    logger.add(
-        sys.stdout,
-        level='INFO',
-        format='<green>{time:HH:mm:ss.SSS}:</green> <level>{level}:</level> {message}',
-    )
-    logger.add(
-        filename_log,
-        level='INFO',
-        format='<level>{level}:</level> {message}',
-    )
-
-    logger.info(f'=== GENERATING {filename_scenario} (g{i_generation}) ===')
-
-    random.seed(i_generation)
-
-    dimensions_vehicle = (1.5, 1.0, 0, 0, 0, 0)  # see `VehicleSize.java`
-
+def generate_map(filename_background_png_to_generate: str, filename_map_png: str) -> Optional[tuple[dict[str, Pose], Image]]:
     background_generator.generate_background(
         filename_background_png_to_generate,
         image_width=IMAGE_WIDTH,
@@ -631,26 +603,57 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
         tree.check(i_tree == len(trees) - 1)
 
     if not drawer.draw_trees(trees, image.width, image.height):
-        logger.warning('Not all trees are drawn')
+        logger.info('Not all trees are drawn')
     else:
         logger.info('All trees are drawn')
 
     if drawer.num_ops == 0:
         logger.warning('No OP is drawn')
-        return False
+        return None
 
     make_screenshot(t, image.width, image.height, filename_map_png)
+    return drawer.name2pose, image
 
-    save_locations(NUM_AUTS, filename_locations, drawer, image.height)
 
+def generate_scenarios(path_scenarios: pathlib.Path, i_map: int, i_generation: int) -> bool:
+    basename_map_png = f'map{i_map}.png'
+    filename_map_png = str(path_scenarios / basename_map_png)
+
+    # Note: `filename_background_png_to_generate` is made unique among all attempts to make `bgpic` work properly.
+    filename_background_png_to_generate = str(path_scenarios / f'background{i_map}_g{i_generation}.png')
+    filename_log = str(path_scenarios / f'log{i_map}_g{i_generation}.log')
+
+    logger.remove()
+    logger.add(
+        sys.stdout,
+        level='INFO',
+        format='<green>{time:HH:mm:ss.SSS}:</green> <level>{level}:</level> {message}',
+    )
+    logger.add(
+        filename_log,
+        level='INFO',
+        format='<level>{level}:</level> {message}',
+    )
+
+    logger.info(f'=== GENERATING SCENARIOS FOR MAP {i_map} (g{i_generation}) ===')
+
+    random.seed(i_generation)
+
+    # Map:
+    result = generate_map(filename_background_png_to_generate, filename_map_png)
+    if result is None:
+        return False
+    name2pose, image = result
+
+    # Mapconf:
     text_mapconf = textwrap.dedent(f"""
-        image: {basename_map_png}
-        resolution: 0.1
-        occupied_thresh: 0.1
-        origin: [0, 0, 0]
-        alpha: 1.0
-        """).lstrip()
-
+                image: {basename_map_png}
+                resolution: 0.1
+                occupied_thresh: 0.1
+                origin: [0, 0, 0]
+                alpha: 1.0
+                """).lstrip()
+    dimensions_vehicle = (1.0, 0.5, 0.25, 0.25, 0.25, 0.25)  # see `VehicleSize.java`
     hexdigest_mapconf = compute_hash_text(
         '-'.join((
             compute_hash_filename(filename_map_png),
@@ -659,20 +662,26 @@ def generate_scenario(path_maps: pathlib.Path, i_map: int, i_generation: int) ->
         ))
     )
     basename_mapconf = f'mapconf{i_map}-{hexdigest_mapconf}.yaml'
-    filename_mapconf = str(path_maps / basename_mapconf)
-
+    filename_mapconf = str(path_scenarios / basename_mapconf)
     with open(filename_mapconf, 'w') as file:
         file.write(text_mapconf)
 
-    scenario = {
-        'mapconf': basename_mapconf,
-        'locations': basename_locations,
-        'num_auts': NUM_AUTS,
-        'dimensions_vehicle': list(dimensions_vehicle),
-    }
+    for i_scenario in range(1, NUM_SCENARIOS_PER_MAP + 1):
+        # Locations:
+        basename_locations = f'locations{i_map}-{i_scenario}.tsv'
+        filename_locations = str(path_scenarios / basename_locations)
+        save_locations(NUM_AUTS, filename_locations, name2pose, image.height)
 
-    with open(filename_scenario, 'w') as file:
-        json.dump(scenario, file, indent=4, ensure_ascii=False)
+        # Scenario:
+        filename_scenario = str(path_scenarios / f'scenario{i_map}-{i_scenario}.json')
+        scenario = {
+            'mapconf': basename_mapconf,
+            'locations': basename_locations,
+            'num_auts': NUM_AUTS,
+            'dimensions_vehicle': list(dimensions_vehicle),
+        }
+        with open(filename_scenario, 'w') as file:
+            json.dump(scenario, file, indent=4, ensure_ascii=False)
 
     #screen.mainloop()
     return True
@@ -682,8 +691,8 @@ def main():
     path_root = pathlib.Path('generated-maps')
     subdir = datetime.datetime.now().isoformat(sep='_', timespec='seconds')
 
-    path_maps = path_root / subdir
-    path_maps.mkdir(exist_ok=False, parents=True)
+    path_scenarios = path_root / subdir
+    path_scenarios.mkdir(exist_ok=False, parents=True)
 
     path_current = path_root / 'current'
     path_current.unlink(missing_ok=True)
@@ -692,7 +701,7 @@ def main():
     i_generation = 1
     for i_map in range(1, NUM_MAPS + 1):
         while True:
-            is_ok = generate_scenario(path_maps, i_map, i_generation)
+            is_ok = generate_scenarios(path_scenarios, i_map, i_generation)
             i_generation += 1
             if is_ok:
                 break
