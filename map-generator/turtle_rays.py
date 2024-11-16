@@ -33,9 +33,9 @@ MODE = 'normal'
 #MODE = 'minimal'
 
 if MODE == 'normal':
-    NUM_MAPS = 2
-    NUM_SCENARIOS_PER_MAP = 3
-    NUM_AUTS = 3
+    NUM_MAPS = 1
+    NUM_SCENARIOS_PER_MAP = 10
+    NUM_AUTS = 4
     IS_HUMAN_STAYING = False
     IS_OP_TREE0_BRANCH0_ALLOWED = False
 

@@ -14,6 +14,7 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 import java.io.File;
 import java.io.FileReader;
@@ -34,7 +35,7 @@ public class GeneratedMapTest {
 
     protected static void runDemo(String scenarioString) {
         HumanControl.isEnabledForBrowser = true;
-//        Timekeeper.setVirtualMinutesPassedMax(5);
+//        Timekeeper.setVirtualSecondsPassedMax(10);
 
         Heuristics heuristics = new Heuristics();
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.humanFirst();
@@ -42,7 +43,7 @@ public class GeneratedMapTest {
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.closest()
 
         if (scenarioString == null) {
-            scenarioString = "map-generator/generated-maps/current/scenario1-2.json, with rerouting"; // TODO: add tracker's seed
+            scenarioString = "map-generator/generated-maps/current/scenario1-1.json, change of priorities, seed 1";
         }
         AbstractVehicle.scenarioId = String.format(
                 "%s; %s",
@@ -51,25 +52,23 @@ public class GeneratedMapTest {
         );
 
         String[] scenarioTokens = scenarioString.split(", ");
-        assert scenarioTokens.length == 2;
+        assert scenarioTokens.length == 3;
         String scenarioFilename = scenarioTokens[0];
-        String stringRerouting = scenarioTokens[1];
-        switch (stringRerouting) {
-            case "with rerouting":
-                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForHuman = false;
-                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = true;
-                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
-                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
+        String stringVariation = scenarioTokens[1];
+        String stringSeed = scenarioTokens[2];
+        switch (stringVariation) {
+            case "change of priorities":
+                Forcing.stopDistance = Double.NEGATIVE_INFINITY;
                 break;
-            case "without rerouting":
-                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForHuman = false;
-                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = false;
-                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
-                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = false;
+            case "stops":
+                Forcing.stopDistance = Forcing.priorityDistance;
                 break;
             default:
-                throw new IllegalArgumentException("Unrecognized rerouting string: " + stringRerouting);
+                throw new IllegalArgumentException("Unrecognized variation string: " + stringVariation);
         }
+        final String prefixSeed = "seed ";
+        assert stringSeed.startsWith(prefixSeed);
+        AdaptiveTrajectoryEnvelopeTrackerRK4.seedGlobal = Integer.parseInt(stringSeed.substring(prefixSeed.length()));
 
         int numAuts;
         double[] dimensionsVehicle;
