@@ -818,25 +818,43 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 			return Math.max(0, yieldingRobotStart-TRAILING_PATH_POINTS);
 		}
 
-		//Compute sweep of robot 1's footprint from current position to LOOKAHEAD
-		Pose leadingRobotPose = leadingRobotTE.getTrajectory().getPose()[leadingRobotCurrentPathIndex];
-		Geometry leadingRobotInPose = TrajectoryEnvelope.getFootprint(leadingRobotTE.getFootprint(), leadingRobotPose.getX(), leadingRobotPose.getY(), leadingRobotPose.getTheta());
-		if (leadingRobotCurrentPathIndex <= leadingRobotEnd) {
-			for (int i = leadingRobotCurrentPathIndex+1; i <= leadingRobotEnd; i++) {
-				Pose leadingRobotNextPose = leadingRobotTE.getTrajectory().getPose()[i];
-				try {
-					leadingRobotInPose = leadingRobotInPose.union(TrajectoryEnvelope.getFootprint(leadingRobotTE.getFootprint(), leadingRobotNextPose.getX(), leadingRobotNextPose.getY(), leadingRobotNextPose.getTheta()));			
-				} catch (Exception e) { e.printStackTrace(); }
+		final int method = 2;
+		if (method == 1) {
+			//Compute sweep of robot 1's footprint from current position to LOOKAHEAD
+			Geometry leadingRobotInPose = null;
+			for (int iLeading = leadingRobotCurrentPathIndex; iLeading <= leadingRobotEnd; iLeading++) {
+				Pose leadingRobotPose = leadingRobotTE.getTrajectory().getPose()[iLeading];
+				Geometry geometry = TrajectoryEnvelope.getFootprint(
+						leadingRobotTE.getFootprint(), leadingRobotPose.getX(), leadingRobotPose.getY(),
+						leadingRobotPose.getTheta());
+				leadingRobotInPose = leadingRobotInPose == null ? geometry : leadingRobotInPose.union(geometry);
 			}
-		}
+			assert leadingRobotInPose != null;
 
-		//Return pose at which yielding robot should stop given driving robot's projected sweep
-		for (int i = yieldingRobotStart; i <= yieldingRobotEnd; i++) {
-			Pose yieldingRobotPose = yieldingRobotTE.getTrajectory().getPose()[i];
-			Geometry yieldingRobotInPose = TrajectoryEnvelope.getFootprint(yieldingRobotTE.getFootprint(), yieldingRobotPose.getX(), yieldingRobotPose.getY(), yieldingRobotPose.getTheta());
-			if (leadingRobotInPose.intersects(yieldingRobotInPose)) {
-				return Math.max(0, i-TRAILING_PATH_POINTS);
+			//Return pose at which yielding robot should stop given driving robot's projected sweep
+			for (int iYielding = yieldingRobotStart; iYielding <= yieldingRobotEnd; iYielding++) {
+				Pose yieldingRobotPose = yieldingRobotTE.getTrajectory().getPose()[iYielding];
+				Geometry yieldingRobotInPose = TrajectoryEnvelope.getFootprint(yieldingRobotTE.getFootprint(), yieldingRobotPose.getX(), yieldingRobotPose.getY(), yieldingRobotPose.getTheta());
+				if (leadingRobotInPose.intersects(yieldingRobotInPose)) {
+					return Math.max(0, iYielding - TRAILING_PATH_POINTS);
+				}
 			}
+		} else if (method == 2) {
+			for (int iYielding = yieldingRobotStart; iYielding <= yieldingRobotEnd; iYielding++) {
+				Pose yieldingRobotPose = yieldingRobotTE.getTrajectory().getPoseSteering()[iYielding].getPose();
+				Geometry yieldingRobotInPose = TrajectoryEnvelope.getFootprint(yieldingRobotTE.getFootprint(), yieldingRobotPose.getX(), yieldingRobotPose.getY(), yieldingRobotPose.getTheta());
+				for (int iLeading = leadingRobotCurrentPathIndex; iLeading <= leadingRobotEnd; iLeading++) {
+					Pose leadingRobotPose = leadingRobotTE.getTrajectory().getPoseSteering()[iLeading].getPose();
+					Geometry geometry = TrajectoryEnvelope.getFootprint(
+							leadingRobotTE.getFootprint(), leadingRobotPose.getX(), leadingRobotPose.getY(),
+							leadingRobotPose.getTheta());
+					if (geometry.intersects(yieldingRobotInPose)) {
+						return Math.max(0, iYielding - TRAILING_PATH_POINTS);
+					}
+				}
+			}
+		} else {
+			throw new RuntimeException("Unknown method: " + method);
 		}
 
 		//The only situation where the above has not returned is when robot 2 should

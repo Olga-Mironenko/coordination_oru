@@ -134,6 +134,7 @@ public class GeneratedMapTest {
         }
 
         TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(2000, 1000, 0, 0);
+        tec.setQuiet(true);
         tec.setupSolver(0, 100000000);
         tec.startInference();
 

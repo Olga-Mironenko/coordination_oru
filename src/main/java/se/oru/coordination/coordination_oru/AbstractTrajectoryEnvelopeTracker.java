@@ -19,6 +19,7 @@ import org.metacsp.utility.logging.MetaCSPLogging;
 
 import se.oru.coordination.coordination_oru.simulation2D.State;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 /**
  * This class provides the basic functionalities of a {@link TrajectoryEnvelope} tracker. Implementing
@@ -248,7 +249,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 			extraRobotState = cb.onPositionUpdate();
 		}
 
-		if (tec.getVisualization() != null) {
+		if (tec.getVisualization() != null && Timekeeper.getTimestepsPassed() % 10 == 0) {
 			//Update the position of the robot in the GUI
 			RobotReport rr = getRobotReport();
 			tec.getVisualization().displayRobotState(te, rr, extraRobotState);
