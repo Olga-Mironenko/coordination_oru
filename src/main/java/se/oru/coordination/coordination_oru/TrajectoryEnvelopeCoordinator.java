@@ -1374,7 +1374,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					if (con instanceof AllenIntervalConstraint) {
 						AllenIntervalConstraint aic = (AllenIntervalConstraint)con;
 						if (aic.getTypes()[0].equals(AllenIntervalConstraint.Type.Meets)) {
-							TrajectoryEnvelope newEndParking = solver.createParkingEnvelope(robotID, getParkingDuration(robotID), newTE.getTrajectory().getPose()[newTE.getTrajectory().getPose().length-1], "whatever", getFootprint(robotID));
+							TrajectoryEnvelope newEndParking = solver.createParkingEnvelope(robotID, getParkingDuration(robotID), newTE.getTrajectory().getPoseSteering()[newTE.getTrajectory().getPose().length-1].getPose(), "whatever", getFootprint(robotID));
 							TrajectoryEnvelope oldEndParking = (TrajectoryEnvelope)aic.getTo();
 
 							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(te));
@@ -1512,7 +1512,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					if (con instanceof AllenIntervalConstraint) {
 						AllenIntervalConstraint aic = (AllenIntervalConstraint)con;
 						if (aic.getTypes()[0].equals(AllenIntervalConstraint.Type.Meets)) {
-							TrajectoryEnvelope newEndParking = solver.createParkingEnvelope(robotID, getParkingDuration(robotID), newTE.getTrajectory().getPose()[newTE.getTrajectory().getPose().length-1], "whatever", getFootprint(robotID));
+							TrajectoryEnvelope newEndParking = solver.createParkingEnvelope(robotID, getParkingDuration(robotID), newTE.getTrajectory().getPoseSteering()[newTE.getTrajectory().getPose().length-1].getPose(), "whatever", getFootprint(robotID));
 							TrajectoryEnvelope oldEndParking = (TrajectoryEnvelope)aic.getTo();
 
 							solver.removeConstraints(solver.getConstraintNetwork().getIncidentEdges(te));

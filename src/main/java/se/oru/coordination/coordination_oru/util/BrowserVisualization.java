@@ -204,9 +204,9 @@ public class BrowserVisualization implements FleetVisualization {
 
 	@Override
 	public void displayRobotState(TrajectoryEnvelope te, RobotReport rr, String... extraStatusInfo) {
-		double x = rr.getPathIndex() != -1 ? rr.getPose().getX() : te.getTrajectory().getPose()[0].getX();
-		double y = rr.getPathIndex() != -1 ? rr.getPose().getY() : te.getTrajectory().getPose()[0].getY();
-		double theta = rr.getPathIndex() != -1 ? rr.getPose().getTheta() : te.getTrajectory().getPose()[0].getTheta();
+		double x = rr.getPathIndex() != -1 ? rr.getPose().getX() : te.getTrajectory().getPoseSteering()[0].getPose().getX();
+		double y = rr.getPathIndex() != -1 ? rr.getPose().getY() : te.getTrajectory().getPoseSteering()[0].getPose().getY();
+		double theta = rr.getPathIndex() != -1 ? rr.getPose().getTheta() : te.getTrajectory().getPoseSteering()[0].getPose().getTheta();
 
 		String name = "V" + te.getRobotID();
 

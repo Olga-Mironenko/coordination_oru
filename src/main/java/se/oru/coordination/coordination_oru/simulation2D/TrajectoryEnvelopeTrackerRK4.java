@@ -154,7 +154,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 		double ret = 0.0;
 		assert endIndex <= traj.getPoseSteering().length - 1;
 		for (int i = startIndex; i < endIndex; i++) {
-			ret += traj.getPose()[i].distanceTo(traj.getPose()[i + 1]);
+			ret += traj.getPoseSteering()[i].getPose().distanceTo(traj.getPoseSteering()[i + 1].getPose());
 		}
 		return ret;
 	}
@@ -476,7 +476,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	@Override
 	public RobotReport getRobotReport() {
 		if (state == null) return null;
-		if (!this.th.isAlive()) return new RobotReport(te.getRobotID(), traj.getPose()[0], -1, 0.0, 0.0, -1);
+		if (!this.th.isAlive()) return new RobotReport(te.getRobotID(), traj.getPoseSteering()[0].getPose(), -1, 0.0, 0.0, -1);
 		synchronized(state) {
 			Pose pose = null;
 			int currentPathIndex = -1;

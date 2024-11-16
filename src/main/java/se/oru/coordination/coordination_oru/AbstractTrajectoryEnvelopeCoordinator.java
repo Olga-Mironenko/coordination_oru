@@ -697,7 +697,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 			//Can provide null parking or null currentPose, but not both
 			if (parking == null) parking = solver.createParkingEnvelope(robotID, getParkingDuration(robotID), currentPose, location, getFootprint(robotID));
-			else currentPose = parking.getTrajectory().getPose()[0];
+			else currentPose = parking.getTrajectory().getPoseSteering()[0].getPose();
 
 			this.isDriving.put(robotID,false);
 
@@ -823,7 +823,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 			//Compute sweep of robot 1's footprint from current position to LOOKAHEAD
 			Geometry leadingRobotInPose = null;
 			for (int iLeading = leadingRobotCurrentPathIndex; iLeading <= leadingRobotEnd; iLeading++) {
-				Pose leadingRobotPose = leadingRobotTE.getTrajectory().getPose()[iLeading];
+				Pose leadingRobotPose = leadingRobotTE.getTrajectory().getPoseSteering()[iLeading].getPose();
 				Geometry geometry = TrajectoryEnvelope.getFootprint(
 						leadingRobotTE.getFootprint(), leadingRobotPose.getX(), leadingRobotPose.getY(),
 						leadingRobotPose.getTheta());
@@ -833,7 +833,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 			//Return pose at which yielding robot should stop given driving robot's projected sweep
 			for (int iYielding = yieldingRobotStart; iYielding <= yieldingRobotEnd; iYielding++) {
-				Pose yieldingRobotPose = yieldingRobotTE.getTrajectory().getPose()[iYielding];
+				Pose yieldingRobotPose = yieldingRobotTE.getTrajectory().getPoseSteering()[iYielding].getPose();
 				Geometry yieldingRobotInPose = TrajectoryEnvelope.getFootprint(yieldingRobotTE.getFootprint(), yieldingRobotPose.getX(), yieldingRobotPose.getY(), yieldingRobotPose.getTheta());
 				if (leadingRobotInPose.intersects(yieldingRobotInPose)) {
 					return Math.max(0, iYielding - TRAILING_PATH_POINTS);
@@ -929,13 +929,13 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 			else {
 				HashMap<Integer, Dependency> currentDeps = getCurrentDependencies();
 				Dependency dep = currentDeps.containsKey(robotID) ? getCurrentDependencies().get(robotID) : null;
-				Pose waitingPose = (dep == null) ? tracker.getTrajectoryEnvelope().getTrajectory().getPose()[tracker.getTrajectoryEnvelope().getTrajectory().getPose().length-1] : dep.getWaitingPose();
+				Pose waitingPose = (dep == null) ? tracker.getTrajectoryEnvelope().getTrajectory().getPoseSteering()[tracker.getTrajectoryEnvelope().getTrajectory().getPose().length-1].getPose() : dep.getWaitingPose();
 				currentFP = makeObstacles(robotID, waitingPose)[0];
 
 				//In case the robot has stopped a little beyond the critical point
 				int currentPoint = this.getRobotReport(robotID).getPathIndex();
 				if (currentPoint != -1 && dep != null && currentPoint > dep.getWaitingPoint()) {
-					Pose currentPose = dep.getWaitingTrajectoryEnvelope().getTrajectory().getPose()[currentPoint];
+					Pose currentPose = dep.getWaitingTrajectoryEnvelope().getTrajectory().getPoseSteering()[currentPoint].getPose();
 					currentFP = makeObstacles(robotID, currentPose)[0];
 					System.out.println("Oops: " + dep.getWaitingPoint() + " < " + currentPoint);
 				}				
@@ -951,7 +951,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		HashMap<Integer, Dependency> currentDeps = getCurrentDependencies();
 		Dependency dep = currentDeps.containsKey(robotID) ? currentDeps.get(robotID) : null;
 		if (dep != null) {
-			Pose waitingPose  = dep.getWaitingTrajectoryEnvelope().getTrajectory().getPose()[dep.getWaitingPoint()];
+			Pose waitingPose  = dep.getWaitingTrajectoryEnvelope().getTrajectory().getPoseSteering()[dep.getWaitingPoint()].getPose();
 			ret.add(makeObstacles(robotID, waitingPose)[0]);
 		}
 		return ret.toArray(new Geometry[ret.size()]);
@@ -1476,7 +1476,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 				}
 				final TrajectoryEnvelope startParking = startParkingTracker.getTrajectoryEnvelope();
 				//Create end parking envelope
-				final TrajectoryEnvelope endParking = solver.createParkingEnvelope(te.getRobotID(), getParkingDuration(te.getRobotID()), te.getTrajectory().getPose()[te.getTrajectory().getPose().length-1], "whatever", getFootprint(te.getRobotID()));
+				final TrajectoryEnvelope endParking = solver.createParkingEnvelope(te.getRobotID(), getParkingDuration(te.getRobotID()), te.getTrajectory().getPoseSteering()[te.getTrajectory().getPose().length-1].getPose(), "whatever", getFootprint(te.getRobotID()));
 
 				//Driving meets final parking
 				AllenIntervalConstraint meets1 = new AllenIntervalConstraint(AllenIntervalConstraint.Type.Meets);

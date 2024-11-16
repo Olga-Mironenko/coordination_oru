@@ -74,11 +74,11 @@ public class Dependency implements Comparable<Dependency> {
 	}
 	
 	public Pose getWaitingPose() {
-		return teWaiting.getTrajectory().getPose()[this.getWaitingPoint()];
+		return teWaiting.getTrajectory().getPoseSteering()[this.getWaitingPoint()].getPose();
 	}
 	
 	public Pose getReleasingPose() {
-		return teDriving.getTrajectory().getPose()[this.getReleasingPoint()];
+		return teDriving.getTrajectory().getPoseSteering()[this.getReleasingPoint()].getPose();
 	}
 	
 	public TrajectoryEnvelope getWaitingTrajectoryEnvelope() {
