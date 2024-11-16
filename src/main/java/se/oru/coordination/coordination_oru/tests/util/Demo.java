@@ -63,12 +63,13 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = true;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
-            /// - Violation of priorities:
+            /// - Change of priorities:
             Forcing.priorityDistance = 10.0;
             Forcing.isDistanceToCPAddedToPriorityDistance = true;
+            /// - Stops:
             Forcing.stopDistance = 10.0;
             Forcing.isDistanceToCPAddedToStopDistance = true;
-            Forcing.isGlobalTemporaryStop = true;
+            Forcing.isGlobalTemporaryStop = true; // true for Global, false for Local
             Forcing.isResetAfterCurrentCrossroad = true;
         }
 
