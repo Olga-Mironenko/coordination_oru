@@ -53,7 +53,7 @@ public abstract class AbstractVehicle {
     public RobotReport lastRobotReport = new RobotReport(-1, null, -1, 0.0, 0.0, 0.0, -1);
     public double totalDistance;
     private double totalTime;
-    private int cycles;
+    private int numMissions;
     private double maxWaitingTime;
     private double currentWaitingTime;
     private double totalWaitingTime;
@@ -192,7 +192,7 @@ public abstract class AbstractVehicle {
     public synchronized void updateStatistics() {
         // Loading and unloading times and stoppages are not considered
         if ((this.currentRobotReport.getPathIndex() == -1) && (this.lastRobotReport.getPathIndex() != -1))
-            this.cycles++;
+            this.numMissions++;
 
         double totalTimeNew = (GatedCalendar.getInstance().getTimeInMillis() - startTime) / 1000;
         double delta = totalTimeNew - totalTime;
@@ -243,7 +243,7 @@ public abstract class AbstractVehicle {
             bw.write("Vehicle type," + this.type + "\n");
 
             bw.write("Cycle distance (m)," + this.pathLength + "\n");
-            bw.write("No. of completed cycles," + this.cycles + "\n");
+            bw.write("No. of completed missions," + this.numMissions + "\n");
             bw.write("Total distance traveled (m)," + round(totalDistance) + "\n");
 
             bw.write("No. of stops," + this.stops + "\n");
@@ -252,10 +252,11 @@ public abstract class AbstractVehicle {
 
             bw.write("No. of near-misses," + tec.robotIDToMinorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
             bw.write("No. of collisions," + tec.robotIDToMajorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
+            bw.write("Is deadlocked," + (VehiclesHashMap.getVehicle(ID).isDeadlocked() ? 1 : 0) + "\n");
 
             bw.write("Total waiting time (s)," + round(totalWaitingTime) + "\n");
             bw.write("Maximum waiting time (s)," + round(maxWaitingTime) + "\n");
-            bw.write("Total real time (s)," + round(totalTime) + "\n");
+            bw.write("Total time (s)," + round(totalTime) + "\n");
 
             bw.write("Maximum acceleration (m/s^2)," + round(maxAcceleration) + "\n");
             bw.write("Maximum speed (m/s)," + round(maxVelocity) + "\n");
@@ -414,8 +415,8 @@ public abstract class AbstractVehicle {
         return color;
     }
 
-    public int getCycles() {
-        return cycles;
+    public int getNumMissions() {
+        return numMissions;
     }
 
     public boolean isDeadlocked() {

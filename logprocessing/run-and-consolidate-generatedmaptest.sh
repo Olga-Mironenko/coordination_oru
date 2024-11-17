@@ -8,7 +8,7 @@ root=$(dirname "$0")
 
 "$root"/stop-all-demos.sh
 
-timeout_hard=60s
+timeout_hard=60m
 demo=GeneratedMapTest
 
 scenarios=()
@@ -28,5 +28,5 @@ trap 'rm -f "$reference"' EXIT
 trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT
 
 set -x
-"$root"/run-scenarios.sh "$timeout_hard" "$demo" "${scenarios[@]}"
+"$root"/run-scenarios.sh "$timeout_hard" "$demo" "${scenarios[@]}" || echo "[exit $?]"
 "$root"/consolidate-rundirs-to-sorted-csv.sh "$reference"  # will consolidate everything created after the reference file

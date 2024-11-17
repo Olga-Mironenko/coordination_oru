@@ -458,7 +458,7 @@ public class BrowserVisualization implements FleetVisualization {
 				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
 				row += String.format(" | %.1f | %d | %s",
 						vehicle.totalDistance,
-						vehicle.getCycles(),
+ 						vehicle.getNumMissions(),
 						center(vehicle.isDeadlocked() ? "yes" : "")
 				);
 				thead1 += " |3 Efficiency";
