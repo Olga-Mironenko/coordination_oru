@@ -211,13 +211,20 @@ public abstract class AbstractVehicle {
         this.maxWaitingTime = Math.max(currentWaitingTime, maxWaitingTime);
     }
 
+    public static String getScenarioIdAsBasename() {
+        if (scenarioId == null) {
+            return "null";
+        }
+        return scenarioId.replace('/', '_').replace(' ', '_');
+    }
+
     public void writeStatistics() {
 
         try {
             String subdir = dateString + (
                     scenarioId == null
                             ? ""
-                            : "_" + scenarioId.replace('/', '_').replace(' ', '_')
+                            : "_" + getScenarioIdAsBasename()
             );
             File dir = new File(rundirsRoot + "/" + subdir);
             if (!isRundirPrepared) {

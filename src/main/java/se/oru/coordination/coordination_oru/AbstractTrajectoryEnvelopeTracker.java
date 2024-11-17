@@ -18,6 +18,7 @@ import org.metacsp.utility.UI.Callback;
 import org.metacsp.utility.logging.MetaCSPLogging;
 
 import se.oru.coordination.coordination_oru.simulation2D.State;
+import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
@@ -243,17 +244,26 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 	public abstract RobotReport getRobotReport();
 
 	protected void onPositionUpdate() {
-	
+		if (tec.getVisualization() == null) {
+			return;
+		}
+
 		String[] extraRobotState = null;
 		if (cb != null) {
 			extraRobotState = cb.onPositionUpdate();
 		}
 
-		if (tec.getVisualization() != null && Timekeeper.getTimestepsPassed() % 10 == 0) {
+		boolean isThrottled = Timekeeper.getTimestepsPassed() % 10 != 0;
+		boolean isSomethingDone = false;
+
+		if (! BrowserVisualization.areAllVehiclesStarted || ! isThrottled) {
 			//Update the position of the robot in the GUI
 			RobotReport rr = getRobotReport();
 			tec.getVisualization().displayRobotState(te, rr, extraRobotState);
-			
+			isSomethingDone = true;
+		}
+
+		if (BrowserVisualization.areAllVehiclesStarted && ! isThrottled) {
 			//Draw an arrow if there is a critical point
 			RobotReport rrWaiting = getRobotReport();
 			synchronized (tec.getCurrentDependencies()) {
@@ -265,14 +275,17 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 						if (waitingTrackers.equals(this)) {
 							if (drivingTrackers != null) {
 								RobotReport rrDriving = drivingTrackers.getRobotReport();
-								String arrowIdentifier = "_"+dep.getWaitingRobotID()+"-"+dep.getDrivingRobotID();
+								String arrowIdentifier = "_" + dep.getWaitingRobotID() + "-" + dep.getDrivingRobotID();
 								tec.getVisualization().displayDependency(rrWaiting, rrDriving, arrowIdentifier);
+								isSomethingDone = true;
 							}
 						}
 					}
-				}							
+				}
 			}
+		}
 
+		if (isSomethingDone) {
 			tec.getVisualization().updateVisualization();
 		}
 	}

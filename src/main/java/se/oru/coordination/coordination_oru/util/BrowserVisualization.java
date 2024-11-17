@@ -47,6 +47,27 @@ public class BrowserVisualization implements FleetVisualization {
 	public static boolean isExtendedText = false;
 	public static boolean isCollisionInfo = false;
 
+	public static boolean areAllVehiclesStarted = false;
+
+	public static void makeScreenshot() {
+        Process process;
+        try {
+            process = Runtime.getRuntime().exec(new String[] {
+					"screenshotting/make-screenshot.sh",
+					"screenshotting/screenshots/" + AbstractVehicle.getScenarioIdAsBasename() + ".png",
+			});
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        int code;
+        try {
+            code = process.waitFor();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        assert code == 0;
+	}
+
 	public BrowserVisualization() {
 		this("localhost", 30);
 	}
@@ -75,6 +96,28 @@ public class BrowserVisualization implements FleetVisualization {
         updateThread.start();
         BrowserVisualization.setupVizServer(serverHostNameOrIP);
         startOpenInBrowser(serverHostNameOrIP);
+
+		new GatedThread("screenshot thread") { // path planning takes a while
+			@Override
+			public void runCore() {
+				while (true) {
+					boolean isReady = true;
+					for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
+						AdaptiveTrajectoryEnvelopeTrackerRK4 tracker = vehicle.getAdaptiveTracker();
+						if (tracker == null || ! tracker.isRunCalled) {
+							isReady = false;
+							break;
+						}
+					}
+					if (isReady) {
+						areAllVehiclesStarted = true;
+						makeScreenshot();
+						break;
+					}
+					GatedThread.skipTimesteps(1);
+				}
+			}
+		}.start();
 	}
 	
 	private void startOpenInBrowser(String serverHostNameOrIP) {
@@ -616,7 +659,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 		html += makeVehicleTableHtml();
 
-		if (isExtendedText) {
+		if (isExtendedText && areAllVehiclesStarted) {
 //			html += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
 			html += stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections);
 		}

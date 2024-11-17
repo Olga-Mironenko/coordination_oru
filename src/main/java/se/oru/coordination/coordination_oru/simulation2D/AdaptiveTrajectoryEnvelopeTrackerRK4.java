@@ -51,6 +51,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	protected double slowdownDebugLateFinishUnderestimation;
 	protected double slowdownDebugLateFinishOverestimation;
 
+	public boolean isRunCalled = false;
 	protected double elapsedTrackingTime = 0.0;
 	private Thread th = null;
 	protected State state = null;
@@ -1054,6 +1055,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	@Override
 	public void run() {
+		isRunCalled = true;
+
 		elapsedTrackingTime = 0.0;
 		durationStopped = 0.0;
 

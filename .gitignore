@@ -67,6 +67,7 @@ ompl-test/original-ompl-examples/
 
 map-generator/generated-maps
 map-generator/old
+screenshotting/screenshots
 
 # Result .txt files
 src/main/java/se/oru/coordination/coordination_oru/results/*
