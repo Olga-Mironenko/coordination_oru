@@ -17,7 +17,8 @@ public class VehiclesHashMap {
     }
 
     public static boolean isHuman(int key) {
-        return getVehicle(key) instanceof HumanDrivenVehicle;
+//        return getVehicle(key) instanceof HumanDrivenVehicle;
+        return key == 0; // to speed up
     }
 
     public static Collection<AbstractVehicle> getVehicles() {

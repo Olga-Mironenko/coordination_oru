@@ -1,5 +1,6 @@
 package se.oru.coordination.coordination_oru.tests.util;
 
+import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
@@ -27,6 +28,7 @@ public abstract class Demo {
             GatedThread.millisArtificialSleep = 0;
             HumanControl.isEnabledForBrowser = false;
             BrowserVisualization.isExtendedText = true;
+            AbstractTrajectoryEnvelopeTracker.kToRenderEveryKthFrame = 1;
 
             /// Path finding:
             AutonomousVehicle.isPathCachingEnabled = true;

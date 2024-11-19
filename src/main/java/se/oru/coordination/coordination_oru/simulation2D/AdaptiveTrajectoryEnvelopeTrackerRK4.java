@@ -450,8 +450,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			}
 		}
 
-		var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
-		numIntegrateCalls.put(robotID, numIntegrateCalls.getOrDefault(robotID, 0) + 1);
+//		var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
+//		numIntegrateCalls.put(robotID, numIntegrateCalls.getOrDefault(robotID, 0) + 1);
 
 		synchronized(state) {
 			Derivative a = Derivative.evaluate(state, time, 0.0, new Derivative(), slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION, MAX_DECELERATION);

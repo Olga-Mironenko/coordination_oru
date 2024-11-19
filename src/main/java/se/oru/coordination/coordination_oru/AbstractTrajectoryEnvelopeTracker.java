@@ -52,6 +52,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 	protected long startingTimeInMillis = -1;
 	
 	protected Logger metaCSPLogger = MetaCSPLogging.getLogger(AbstractTrajectoryEnvelopeTracker.class);
+	public static int kToRenderEveryKthFrame = 1;
 
 	/**
 	 * Create a new {@link AbstractTrajectoryEnvelopeTracker} to track a given {@link TrajectoryEnvelope},
@@ -253,7 +254,8 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 			extraRobotState = cb.onPositionUpdate();
 		}
 
-		boolean isThrottled = Timekeeper.getTimestepsPassed() % 10 != 0;
+		assert kToRenderEveryKthFrame > 0;
+		boolean isThrottled = Timekeeper.getTimestepsPassed() % kToRenderEveryKthFrame != 0;
 		boolean isSomethingDone = false;
 
 		if (! BrowserVisualization.areAllVehiclesStarted || ! isThrottled) {

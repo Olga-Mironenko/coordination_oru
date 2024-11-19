@@ -21,6 +21,7 @@ import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope.SpatialEnvelope;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelopeSolver;
+import org.metacsp.throwables.VariableNotFound;
 import org.metacsp.time.Bounds;
 import org.metacsp.utility.UI.Callback;
 import org.metacsp.utility.logging.MetaCSPLogging;
@@ -101,6 +102,7 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	});
 	protected ArrayList<TrajectoryEnvelope> envelopesToTrack = new ArrayList<>();
 	protected HashMap<Integer, Mission> robotIDToMission = new HashMap<>();
+	protected HashMap<String, TrajectoryEnvelope> signatureToTE = new HashMap<>();
 
 	protected ArrayList<TrajectoryEnvelope> currentParkingEnvelopes = new ArrayList<TrajectoryEnvelope>();
 	public HashSet<CriticalSection> allCriticalSections = new HashSet<CriticalSection>();
@@ -1624,10 +1626,34 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 		}
 	}
 
-	public TrajectoryEnvelope pathToTE(int robotID, PoseSteering[] path, Coordinate[] robotFootprint) {
+	public TrajectoryEnvelope pathToTECore(int robotID, PoseSteering[] path, Coordinate[] robotFootprint) {
 		return solver.createEnvelopeNoParking(
 				robotID, path, "Driving", robotFootprint
 		);
+	}
+
+	public TrajectoryEnvelope pathToTE(int robotID, PoseSteering[] path, Coordinate[] robotFootprint) {
+		final boolean isCaching = false;
+
+		if (! isCaching) {
+			return pathToTECore(robotID, path, robotFootprint);
+		}
+		// Caching leads to errors: it seems that TE cannot be re-used easily.
+
+		StringBuilder signatureBuilder = new StringBuilder(robotID + "|");
+		for (PoseSteering ps : path) {
+			signatureBuilder.append(ps.toString()).append(" ");
+		}
+		signatureBuilder.append("|");
+		for (Coordinate c : robotFootprint) {
+			signatureBuilder.append(c.toString()).append(" ");
+		}
+		String signature = signatureBuilder.toString();
+
+		if (! signatureToTE.containsKey(signature)) {
+			signatureToTE.put(signature, pathToTECore(robotID, path, robotFootprint));
+		}
+		return signatureToTE.get(signature);
 	}
 
 	public void addStoppingPoint(int robotID, int stoppingPoint, int duration) {
