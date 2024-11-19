@@ -442,7 +442,7 @@ public class BrowserVisualization implements FleetVisualization {
 					row += " | ";
 				}
 
-				thead1 += " |5 Coordination features for AVs";
+				thead1 += " |5 Coordination strategies for AVs";
 				thead2 += (
 						" | cautious<br>mode | rerouting at<br>parked / slow | moving<br>backwards" +
 						" | change of<br>priorities | stops"
@@ -503,10 +503,10 @@ public class BrowserVisualization implements FleetVisualization {
 				row += String.format(" | %.1f | %d | %s",
 						vehicle.totalDistance,
  						vehicle.getNumMissions(),
-						center(vehicle.isDeadlocked() ? "yes" : "")
+						center(vehicle.isBlocked() ? "yes" : "")
 				);
 				thead1 += " |3 Efficiency";
-				thead2 += " | traveled<br>total, m | no.<br>missions | deadlock";
+				thead2 += " | traveled<br>total, m | no.<br>missions | blocked";
 
 				if (isExtendedText) {
 					text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());

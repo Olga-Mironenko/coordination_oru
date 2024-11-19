@@ -155,7 +155,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		this.overallDistance = totalDistance;
 		this.computeInternalCriticalPoints();
 		this.slowDownProfile = this.computeSlowdownProfile();
-		this.positionToSlowDown = this.computePositionToSlowDown(totalDistance, false);
+		Double pos = this.computePositionToSlowDown(totalDistance, false);
+		assert pos != null;
+		this.positionToSlowDown = pos;
 		AdaptiveTrajectoryEnvelopeTrackerRK4 self = this;
 		this.th = new GatedThread("RK4 tracker " + te.getComponent()) {
 			@Override
@@ -174,7 +176,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			this.internalCriticalPoints.clear();
 			this.computeInternalCriticalPoints();
 			this.slowDownProfile = this.computeSlowdownProfile();
-			this.positionToSlowDown = this.computePositionToSlowDown(totalDistance, false);
+			Double pos = this.computePositionToSlowDown(totalDistance, false);
+			assert pos != null;
+			this.positionToSlowDown = pos;
 			reportsList.clear();
 			reportTimeLists.clear(); //semplify to avoid discontinuities ... to be fixed.
 
@@ -369,7 +373,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return ret; // map each speed to the stopping distance for it
 	}
 
-	private double computePositionToSlowDown(double targetDistance, boolean isRealCriticalPoint) {
+	/** `null` means: "It's too late to slow down". */
+	private Double computePositionToSlowDown(double targetDistance, boolean isRealCriticalPoint) {
 		if (state.getPosition() >= targetDistance) {
 			return state.getPosition(); // essentially force slowing down
 		}
@@ -409,7 +414,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				slowdownDebugLateFinishOverestimation = landingPositionOverestimation;
 
 				if (prevPosition == null) {
-					return state.getPosition();
+					return null;
 				}
 				return prevPosition; // at `prevPosition`, `landingPosition <= totalDistance`
 			}
@@ -429,7 +434,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 //		throw new RuntimeException("we should have returned a value in the loop");
 //		assert Math.abs(state.getVelocity()) < 0.5;
-		return state.getPosition(); // essentially force slowing down
+		return null; // essentially force slowing down
 	}
 
 	public static void integrateRK4(
@@ -636,7 +641,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			//The critical point has been reset, go to the end
 			this.setFieldCriticalPoint(-1);
 			this.totalDistance = traj.getPathLength();
-			this.positionToSlowDown = computePositionToSlowDown(totalDistance, false);
+			Double pos = this.computePositionToSlowDown(totalDistance, false);
+			assert pos != null;
+			this.positionToSlowDown = pos;
 			metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet);
 			return;
 		}
@@ -656,14 +663,14 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		if (isFreezingCP || ! isRacingThroughCrossroadAllowed || criticalPointToSet >= rr.getPathIndex()) {
 			//TOTDIST: ---(state.getPosition)--->x--(computeDist)--->CP
 			double targetDistance = computeDistance(0, criticalPointToSet);
-			double positionToSlowDownTemporary = computePositionToSlowDown(targetDistance, true);
+			Double positionToSlowDownTemporary = computePositionToSlowDown(targetDistance, true);
 
 			// When we start executing this, the robot is a little bit further than what is written in `state`.
 			// Therefore, its path index may be still equal to the path index derived from `state`,
 			// but its position is greater than what is written in `state` (unless it's stopped).
 			if (isFreezingCP || ! isRacingThroughCrossroadAllowed || (
-					positionToSlowDownTemporary > state.getPosition() ||
-					positionToSlowDownTemporary == state.getPosition() && isStopped()
+					positionToSlowDownTemporary != null && positionToSlowDownTemporary >= state.getPosition() ||
+					positionToSlowDownTemporary == null && isStopped()
 			)) {
 				if (this.criticalPoint != -1) {
 					criticalPointsPostponed.add(this.criticalPoint);
@@ -677,7 +684,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				// then they can be combined into a single artificial `this.criticalSection`.
 
 				this.totalDistance = targetDistance;
-				this.positionToSlowDown = positionToSlowDownTemporary;
+				this.positionToSlowDown = positionToSlowDownTemporary == null ? state.getPosition() : positionToSlowDownTemporary;
 
 				metaCSPLogger.finest("Set critical point (" + te.getComponent() + "): " + criticalPointToSet + ", currently at point " + this.getRobotReport().getPathIndex() + ", distance " + state.getPosition() + ", will slow down at distance " + this.positionToSlowDown);
 				return;

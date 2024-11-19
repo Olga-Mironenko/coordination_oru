@@ -259,7 +259,7 @@ public abstract class AbstractVehicle {
 
             bw.write("No. of near-misses," + tec.robotIDToMinorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
             bw.write("No. of collisions," + tec.robotIDToMajorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
-            bw.write("Is deadlocked," + (VehiclesHashMap.getVehicle(ID).isDeadlocked() ? 1 : 0) + "\n");
+            bw.write("Is blocked," + (VehiclesHashMap.getVehicle(ID).isBlocked() ? 1 : 0) + "\n");
 
             bw.write("Total waiting time (s)," + round(totalWaitingTime) + "\n");
             bw.write("Maximum waiting time (s)," + round(maxWaitingTime) + "\n");
@@ -398,6 +398,11 @@ public abstract class AbstractVehicle {
     }
 
     public void setMaxVelocity(double maxVelocity) {
+        // Note: Comment this to force `setCriticalPoint` from time to time
+        // (to reveal bugs):
+        if (maxVelocity == this.maxVelocity) {
+            return;
+        }
         this.maxVelocity = maxVelocity;
         updateTracker();
     }
@@ -426,7 +431,7 @@ public abstract class AbstractVehicle {
         return numMissions;
     }
 
-    public boolean isDeadlocked() {
+    public boolean isBlocked() {
         AdaptiveTrajectoryEnvelopeTrackerRK4 tracker = getAdaptiveTracker();
         if (tracker == null) {
             return false;

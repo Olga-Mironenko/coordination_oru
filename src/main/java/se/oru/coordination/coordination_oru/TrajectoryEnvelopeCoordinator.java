@@ -32,12 +32,9 @@ import org.metacsp.utility.UI.Callback;
 import com.vividsolutions.jts.geom.Geometry;
 
 import aima.core.util.datastructure.Pair;
-import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
-import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
-import se.oru.coordination.coordination_oru.util.HumanControl;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
@@ -78,7 +75,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 	//True if waiting for deadlocks to happen.
 	protected boolean staticReplan = false;
-	protected boolean isBlocked = false;
+	protected boolean isBlockedNearParkedVehicle = false;
 	protected boolean isDeadlocked = false;
 	protected HashMap<Integer, Integer> robotToReplanningTrials = new HashMap<>();
 
@@ -91,8 +88,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	 * Get whether there is a robot in a blocked situation (waiting for a parked robot).
 	 * @return <code>true</code> iff a robot is waiting for another robot that is parked.
 	 */
-	public boolean isBlocked() {
-		return this.isBlocked;
+	public boolean isBlockedNearParkedVehicle() {
+		return this.isBlockedNearParkedVehicle;
 	}
 
 
@@ -647,7 +644,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				currentReports.put(robotID, robotReport);
 				synchronized(stoppingPoints) {
 					if (stoppingPoints.containsKey(robotID)) {
-						metaCSPLogger.info("Stopping points Robot"+robotID+": "+stoppingPoints.get(robotID).toString());
+//						metaCSPLogger.info("Stopping points Robot"+robotID+": "+stoppingPoints.get(robotID).toString());
 						for (int i = 0; i < stoppingPoints.get(robotID).size(); i++) {
 							int stoppingPoint = stoppingPoints.get(robotID).get(i);
 							int duration = stoppingTimes.get(robotID).get(i);
@@ -684,7 +681,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						earliestStoppingPoints.put(robotID, getForwardModel(robotID).getEarliestStoppingPathIndex(trackers.get(robotID).getTrajectoryEnvelope(), currentReports.get(robotID)));
 
 				depsToCS.clear();
-				this.isBlocked = false;
+				this.isBlockedNearParkedVehicle = false;
 
 				HashSet<CriticalSection> toRemove = new HashSet<CriticalSection>();
 				for (CriticalSection cs : this.allCriticalSections) {
@@ -714,7 +711,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					if (robotTracker1 instanceof TrajectoryEnvelopeTrackerDummy || robotTracker2 instanceof TrajectoryEnvelopeTrackerDummy) {
 
 						boolean createAParkingDep = false;
-						this.isBlocked = true;
+						this.isBlockedNearParkedVehicle = true;
 
 						//Robot1 is parking in critical section. If it is the driver, make robot 2 wait.
 						if (robotTracker1 instanceof TrajectoryEnvelopeTrackerDummy) {
@@ -1830,7 +1827,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				currentReports.put(robotID, robotReport);
 				synchronized(stoppingPoints) {
 					if (stoppingPoints.containsKey(robotID)) {
-						metaCSPLogger.info("Stopping points Robot"+robotID+": "+stoppingPoints.get(robotID).toString());
+//						metaCSPLogger.info("Stopping points Robot"+robotID+": "+stoppingPoints.get(robotID).toString());
 						for (int i = 0; i < stoppingPoints.get(robotID).size(); i++) {
 							int stoppingPoint = stoppingPoints.get(robotID).get(i);
 							int duration = stoppingTimes.get(robotID).get(i);
@@ -1874,7 +1871,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						earliestStoppingPoints.put(robotID, getForwardModel(robotID).getEarliestStoppingPathIndex(trackers.get(robotID).getTrajectoryEnvelope(), currentReports.get(robotID)));
 
 				depsToCS.clear();
-				this.isBlocked = false;
+				this.isBlockedNearParkedVehicle = false;
 
 				HashSet<CriticalSection> toRemove = new HashSet<CriticalSection>();
 				for (CriticalSection cs : this.allCriticalSections) {
@@ -1901,7 +1898,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					if (robotTracker1 instanceof TrajectoryEnvelopeTrackerDummy || robotTracker2 instanceof TrajectoryEnvelopeTrackerDummy) {
 
 						boolean createAParkingDep = false;
-						this.isBlocked = true;
+						this.isBlockedNearParkedVehicle = true;
 
 						//Robot1 is parking in critical section. If it is the driver, make robot 2 wait.
 						if (robotTracker1 instanceof TrajectoryEnvelopeTrackerDummy) {

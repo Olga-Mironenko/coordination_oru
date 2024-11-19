@@ -51,7 +51,7 @@ public class LookAheadVehicle extends AbstractVehicle {
     public synchronized void updateLookAheadRobotPath(TrajectoryEnvelopeCoordinator tec, LookAheadVehicle lookAheadVehicle) {
 //        System.out.println("Free " + tec.isFree(lookAheadVehicle.getID()));
 //        System.out.println("Driving " + tec.isDriving(lookAheadVehicle.getID()));
-//        System.out.println("Blocked " + tec.isBlocked());
+//        System.out.println("Blocked " + tec.isBlockedNearParkedVehicle());
 //        System.out.println("Deadlocked " + tec.isDeadlocked());
 //        System.out.println("Parked " + tec.isParked(lookAheadVehicle.getID()));
         if (tec.isDriving(lookAheadVehicle.getID()) && lookAheadVehicle.getLookAheadDistance() != -1) {
