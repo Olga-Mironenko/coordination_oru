@@ -35,8 +35,8 @@ public class GeneratedMapTest {
 
     protected static void runDemo(String scenarioString) {
         HumanControl.isEnabledForBrowser = true;
-        Timekeeper.setVirtualSecondsPassedMax(2);
-//        Timekeeper.setVirtualMinutesPassedMax(30);
+//        Timekeeper.setVirtualSecondsPassedMax(2);
+        Timekeeper.setVirtualMinutesPassedMax(10);
 
         Heuristics heuristics = new Heuristics();
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.humanFirst();
@@ -44,7 +44,10 @@ public class GeneratedMapTest {
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.closest()
 
         if (scenarioString == null) {
-            scenarioString = "map-generator/generated-maps/current/scenario1-1.json, change of priorities, seed 1";
+            scenarioString = (
+                    "map-generator/generated-maps/current/scenario1-1.json, stops, seed 1, " +
+                    "probabilityForcingForHuman 0.5"
+            );
         }
         AbstractVehicle.scenarioId = String.format(
                 "%s; %s",
@@ -53,11 +56,21 @@ public class GeneratedMapTest {
         );
 
         String[] scenarioTokens = scenarioString.split(", ");
-        assert scenarioTokens.length == 3;
+        assert scenarioTokens.length == 4;
+
         String scenarioFilename = scenarioTokens[0];
+
+        String stringProb = scenarioTokens[3];
+        final String prefixProb = "probabilityForcingForHuman ";
+        assert stringProb.startsWith(prefixProb);
+        AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = Double.parseDouble(
+                stringProb.substring(prefixProb.length()));
+
         String stringVariation = scenarioTokens[1];
-        String stringSeed = scenarioTokens[2];
         switch (stringVariation) {
+            case "baseline":
+                assert AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman == 0.0;
+                break;
             case "change of priorities":
                 Forcing.stopDistance = Double.NEGATIVE_INFINITY;
                 break;
@@ -67,6 +80,8 @@ public class GeneratedMapTest {
             default:
                 throw new IllegalArgumentException("Unrecognized variation string: " + stringVariation);
         }
+
+        String stringSeed = scenarioTokens[2];
         final String prefixSeed = "seed ";
         assert stringSeed.startsWith(prefixSeed);
         AdaptiveTrajectoryEnvelopeTrackerRK4.seedGlobal = Integer.parseInt(stringSeed.substring(prefixSeed.length()));
@@ -123,14 +138,14 @@ public class GeneratedMapTest {
         AutonomousVehicle hum = new HumanDrivenVehicle(
                 0, 0,
                 Color.ORANGE, Color.ORANGE,
-                10.0, 3.0
+                10.0, 0.3
         );
         AutonomousVehicle[] auts = new AutonomousVehicle[numAuts];
         for (int i = 0; i < numAuts; i++) {
             auts[i] = new AutonomousVehicle(
                     i + 1, 0,
                     Color.BLUE, Color.BLUE,
-                    10.0, 3.0
+                    10.0, 0.3
             );
         }
 
@@ -150,6 +165,7 @@ public class GeneratedMapTest {
         }
 ;
         tec.addComparator(comparator);
+        tec.addComparator(new Heuristics().closest());
 
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(false);

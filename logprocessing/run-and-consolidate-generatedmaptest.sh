@@ -16,16 +16,30 @@ for i_locations in {1..10}; do
   filename_simple=map-generator/generated-maps/current/scenario1-$i_locations.json
   filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
   for seed in {1..1}; do
-    for variation in "change of priorities" "stops"; do
-      scenarios+=("$filename, $variation, seed $seed")
+    for probabilityForcingForHuman in 0 1; do
+      case $probabilityForcingForHuman in
+        0 | 0.0)
+          variations=("baseline")
+          ;;
+        *)
+          variations=("change of priorities" "stops")
+          ;;
+      esac
+
+      for variation in "${variations[@]}"; do
+        scenarios+=("$filename, $variation, seed $seed, probabilityForcingForHuman $probabilityForcingForHuman")
+      done
     done
   done
 done
 
-reference=$(mktemp --tmpdir run-and-consolidate.XXXX)
-trap 'rm -f "$reference"' EXIT
+echo "Scenarios:"
+printf -- "- %s\n" "${scenarios[@]}"
 
-trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT
+reference=$(mktemp --tmpdir run-and-consolidate.XXXX)
+trap 'ls -l "$reference"; rm -f "$reference"' EXIT
+
+trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT TERM
 
 set -x
 "$root"/run-scenarios.sh "$timeout_hard" "$demo" "${scenarios[@]}" || echo "[exit $?]"

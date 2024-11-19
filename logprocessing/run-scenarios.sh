@@ -10,6 +10,8 @@ demo=$2
 shift 2
 scenarios=("$@")
 
+trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT TERM
+
 root=$(dirname "$0")
 set -x
 for scenario in "${scenarios[@]}"; do

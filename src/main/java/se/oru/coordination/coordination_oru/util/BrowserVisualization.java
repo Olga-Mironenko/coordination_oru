@@ -52,10 +52,11 @@ public class BrowserVisualization implements FleetVisualization {
 	public static void makeScreenshot() {
         Process process;
         try {
-            process = Runtime.getRuntime().exec(new String[] {
-					"screenshotting/make-screenshot.sh",
-					"screenshotting/screenshots/" + AbstractVehicle.getScenarioIdAsBasename() + ".png",
-			});
+			ProcessBuilder builder = new ProcessBuilder("screenshotting/make-screenshot.sh",
+					"screenshotting/screenshots/" + AbstractVehicle.getScenarioIdAsBasename() + ".png");
+			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
+			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            process = builder.start();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
