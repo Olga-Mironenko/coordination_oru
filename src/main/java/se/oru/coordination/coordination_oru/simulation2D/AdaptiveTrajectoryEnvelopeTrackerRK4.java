@@ -85,7 +85,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public static double probabilitySlowingDownForHuman = 0.0;
 	public static double velocitySlowingDownForHuman = 1.0;
 	public static double lengthIntervalSlowingDownForHuman = 10.0;
-	public static double durationStoppedMinForDeadlock = 60.0;
+	public static double durationStoppedMinForBlock = 60.0;
 
 	private double durationStopped;
 
@@ -488,7 +488,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		final int numberOfReplicas = this.numberOfReplicas;
 
 		//Define a thread that will send the information
-		Thread waitToTXThread = new GatedThread("Wait to TX thread for robot " + te.getRobotID()) {
+		GatedThread waitToTXThread = new GatedThread("Wait to TX thread for robot " + te.getRobotID()) {
 
             @Override
             public void runCore() {
@@ -500,9 +500,11 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 					delayTx = NetworkConfiguration.getMinimumTxDelay() + delay;
 				}
 
-				//Sleep for delay in communication
-				try { GatedThread.sleep(delayTx); }
-				catch (InterruptedException e) { e.printStackTrace(); return; }
+				if (! GatedThread.isEnabled()) {
+					//Sleep for delay in communication
+					try { GatedThread.sleep(delayTx); }
+					catch (InterruptedException e) { e.printStackTrace(); return; }
+				}
 
 				//if possible (according to packet loss, send
 				synchronized (externalCPCounter)
@@ -544,7 +546,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			}
 		};
 		//let's start the thread
-		waitToTXThread.start();
+		waitToTXThread.runCore();
 
 	}
 
@@ -562,6 +564,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 			final int margin = AbstractTrajectoryEnvelopeCoordinator.TRAILING_PATH_POINTS;
 
+			// TODO: A CP is sometimes inside a CS, not before it.
 			// TODO: Rather than trying to guess the critical section of a saved critical point,
 			//       just save critical sections.
 			if (criticalPointToConsider == null || criticalPointToConsider == start - margin) {
@@ -653,9 +656,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		//assert ! criticalSections.isEmpty();
 		boolean isFreezingCP = criticalPointToSet == TrajectoryEnvelopeCoordinatorSimulation.CP_ASAP;
-		if (criticalSections.isEmpty() && ! isFreezingCP) {
-			return;
-		}
+//		if (criticalSections.isEmpty() && ! isFreezingCP) {
+//			return;
+//		}
 
 		rerouteBecauseOfSlowVehicleIfNeeded(robotID, criticalPointToSet, criticalSections);
 
@@ -992,7 +995,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	public boolean isDeadlocked() {
-		return durationStopped >= durationStoppedMinForDeadlock;
+		return durationStopped >= durationStoppedMinForBlock;
 	}
 
 	private void updateState(double deltaTime, AbstractVehicle vehicle) {
