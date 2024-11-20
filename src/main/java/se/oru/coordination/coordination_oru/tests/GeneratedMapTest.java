@@ -138,14 +138,14 @@ public class GeneratedMapTest {
         AutonomousVehicle hum = new HumanDrivenVehicle(
                 0, 0,
                 Color.ORANGE, Color.ORANGE,
-                10.0, 0.3
+                5.6, 0.3
         );
         AutonomousVehicle[] auts = new AutonomousVehicle[numAuts];
         for (int i = 0; i < numAuts; i++) {
             auts[i] = new AutonomousVehicle(
                     i + 1, 0,
                     Color.BLUE, Color.BLUE,
-                    10.0, 0.3
+                    5.6, 0.3
             );
         }
 
