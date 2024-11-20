@@ -53,9 +53,9 @@ public abstract class Demo {
 
             /// Coordination features for AVs:
             /// - Can pass first:
-            CriticalSection.isCanPassFirstActive = true;
+            CriticalSection.isCanPassFirstActive = false;
             /// - Racing through crossroad:
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = false;
             /// - Cautious mode:
             AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.deltaMaxVelocityCautious = -2.0;

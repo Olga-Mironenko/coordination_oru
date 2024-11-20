@@ -1,10 +1,19 @@
 #!/bin/bash
 
-set -eu -o pipefail
+set -eux -o pipefail
 
 [ $# = 1 ]
 file_png=$1
 
-id_window=$(xdotool search --name "localhost:8080 - Google Chrome")
+set +e
+for _ in {1..5}; do  # https://github.com/jordansissel/xdotool/issues/60
+  id_window=$(xdotool search --onlyvisible --name 'localhost:8080 - Google Chrome' | tail -n1)
+  if [ "$id_window" ]; then
+    break
+  fi
+done
+set -e
+
+[ "$id_window" ]
 xwd -nobdrs -silent -id "$id_window" |
   convert xwd:- -strip "$file_png"

@@ -40,6 +40,19 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         DynamicMap dmap = getDynamicMap();
         assert dmap != null;
 
+        assert BrowserVisualizationSocket.initialTranslation != null;
+        System.out.println("Sending initial transform to newly connected client...");
+        String setInitialTransformString = "{ \"operation\" : \"setInitialTransform\","
+                + "\"data\" : "
+                + "{ \"scale\" : " + initialScale + ", \"x\" : " + initialTranslation.x + ", \"y\" : " + initialTranslation.y + "}}";
+        rep.sendString(setInitialTransformString);
+
+        System.out.println("Sending initial font scale to newly connected client...");
+        String setFontScaleString = "{ \"operation\" : \"setFontScale\","
+                + "\"data\" : "
+                + "{ \"scale\" : " + fontScale + "}}";
+        rep.sendString(setFontScaleString);
+
         System.out.println("Sending map metadata to newly connected client...");
         String setMetadataString = "{\"operation\": \"setMapMetadata\", \"data\": {"
                 + "\"resolution\" : " + dmap.resolution + ", \"x\" : " + dmap.origin.x + ", \"y\" : " + dmap.origin.y;
@@ -57,19 +70,6 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         baos.close();
         ByteBuffer bb = ByteBuffer.wrap(imageInBytes);
         rep.sendBytes(bb);
-
-        assert BrowserVisualizationSocket.initialTranslation != null;
-        System.out.println("Sending initial transform to newly connected client...");
-        String setInitialTransformString = "{ \"operation\" : \"setInitialTransform\","
-                + "\"data\" : "
-                + "{ \"scale\" : " + initialScale + ", \"x\" : " + initialTranslation.x + ", \"y\" : " + initialTranslation.y + "}}";
-        rep.sendString(setInitialTransformString);
-
-        System.out.println("Sending initial font scale to newly connected client...");
-        String setFontScaleString = "{ \"operation\" : \"setFontScale\","
-                + "\"data\" : "
-                + "{ \"scale\" : " + fontScale + "}}";
-        rep.sendString(setFontScaleString);
     }
 
     public static void sendMapToAll() {
@@ -92,13 +92,13 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         RemoteEndpoint rep = super.getRemote();
         synchronized (ENDPOINTS) {
             ENDPOINTS.add(rep);
-        }
 
-        //Send map and map parameters if present
-        try {
-            sendMap(rep);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            //Send map and map parameters if present
+            try {
+                sendMap(rep);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

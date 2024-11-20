@@ -8,7 +8,9 @@ public class VehicleSize {
     public double leftSafeDistance;
     public double rightSafeDistance;
 
-    public VehicleSize(double length, double width, double frontSafeDistance, double backSafeDistance, double leftSafeDistance, double rightSafeDistance) {
+    public VehicleSize(double length, double width,
+                       double frontSafeDistance, double backSafeDistance,
+                       double leftSafeDistance, double rightSafeDistance) {
         this.length = length;
         this.width = width;
         this.frontSafeDistance = frontSafeDistance;

@@ -45,8 +45,8 @@ public class GeneratedMapTest {
 
         if (scenarioString == null) {
             scenarioString = (
-                    "map-generator/generated-maps/current/scenario1-3.json, stops, seed 1, " +
-                    "probabilityForcingForHuman 1"
+                    "map-generator/generated-maps/current/scenario1-3.json, baseline, seed 1, " +
+                    "probabilityForcingForHuman 0"
             );
         }
         AbstractVehicle.scenarioId = String.format(
@@ -180,6 +180,8 @@ public class GeneratedMapTest {
         new GatedThread("enqueue thread") { // path planning takes a while
             @Override
             public void runCore() {
+//                GatedThread.skipTimesteps(100);
+
                 Missions.loopMissions.put(hum.getID(), true);
                 Missions.enqueueMissions(
                         new MissionBlueprint(hum, humStart, humFinish).setDirection(

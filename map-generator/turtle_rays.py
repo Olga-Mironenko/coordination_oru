@@ -646,14 +646,22 @@ def generate_scenarios(path_scenarios: pathlib.Path, i_map: int, i_generation: i
     name2pose, image = result
 
     # Mapconf:
+    resolution = 0.1
     text_mapconf = textwrap.dedent(f"""
                 image: {basename_map_png}
-                resolution: 0.1
+                resolution: {resolution}
                 occupied_thresh: 0.1
                 origin: [0, 0, 0]
                 alpha: 1.0
                 """).lstrip()
-    dimensions_vehicle = (1.0, 0.5, 0.25, 0.25, 0.25, 0.25)  # see `VehicleSize.java`
+
+    # see `VehicleSize.java` (
+    dimensions_vehicle = (
+        10.0, 10.0,  # length, width
+        5.0, 5.0,  # frontSafeDistance, backSafeDistance
+        1.0, 1.0,  # leftSafeDistance, rightSafeDistance
+    )
+    dimensions_vehicle = tuple(x * resolution for x in dimensions_vehicle)
     hexdigest_mapconf = compute_hash_text(
         '-'.join((
             compute_hash_filename(filename_map_png),
