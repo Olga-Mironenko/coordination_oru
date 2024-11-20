@@ -13,21 +13,23 @@ demo=GeneratedMapTest
 
 scenarios=()
 for i_locations in {1..10}; do
-  filename_simple=map-generator/generated-maps/current/scenario1-$i_locations.json
-  filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
-  for seed in {1..1}; do
-    for probabilityForcingForHuman in 0 1; do
-      case $probabilityForcingForHuman in
-        0 | 0.0)
-          variations=("baseline")
-          ;;
-        *)
-          variations=("change of priorities" "stops")
-          ;;
-      esac
+  for dir_maps in 2024-11-20_14:24:09 2024-11-20_14:24:28; do
+    filename_simple=map-generator/generated-maps/$dir_maps/scenario1-$i_locations.json
+    filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
+    for seed in {1..1}; do
+      for probabilityForcingForHuman in 0 1; do
+        case $probabilityForcingForHuman in
+          0 | 0.0)
+            variations=("baseline")
+            ;;
+          *)
+            variations=("change of priorities" "stops")
+            ;;
+        esac
 
-      for variation in "${variations[@]}"; do
-        scenarios+=("$filename, $variation, seed $seed, probabilityForcingForHuman $probabilityForcingForHuman")
+        for variation in "${variations[@]}"; do
+          scenarios+=("$filename, $variation, seed $seed, probabilityForcingForHuman $probabilityForcingForHuman")
+        done
       done
     done
   done

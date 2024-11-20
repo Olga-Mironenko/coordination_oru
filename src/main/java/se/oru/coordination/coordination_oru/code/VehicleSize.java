@@ -19,6 +19,12 @@ public class VehicleSize {
         this.rightSafeDistance = rightSafeDistance;
     }
 
+    public String toString() {
+        return "[length=" + length + ", width=" + width + ", safe distance: " +
+                "front=" + frontSafeDistance + ", back=" + backSafeDistance +
+                ", left=" + leftSafeDistance + ", right=" + rightSafeDistance + "]";
+    }
+
     public double calcCircumradius() {
         // Calculate the radius of the circumscribed circle.
         // In other words, the radius of the minimal circle big enough to turn around in any direction.

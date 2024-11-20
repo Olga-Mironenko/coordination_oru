@@ -72,7 +72,7 @@ WIDTH_GAP_RAY_OBSTACLE = WIDTH_PEN * 2
 X_WINDOW_START = 0
 Y_WINDOW_START = 0
 
-PROBABILITY_BRIDGE_PRESENCE = 1.0
+PROBABILITY_BRIDGE_PRESENCE = 0.0
 PROBABILITY_BRIDGE_SINGLE = 0.5
 
 MAP_RESOLUTION_COORDINATION_ORU = 0.1  # meters per pixel
@@ -673,6 +673,8 @@ def generate_scenarios(path_scenarios: pathlib.Path, i_map: int, i_generation: i
     filename_mapconf = str(path_scenarios / basename_mapconf)
     with open(filename_mapconf, 'w') as file:
         file.write(text_mapconf)
+
+    random.seed(-i_generation)
 
     for i_scenario in range(1, NUM_SCENARIOS_PER_MAP + 1):
         # Locations:

@@ -66,6 +66,7 @@ public abstract class AbstractVehicle {
     private static final String dateString = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
     private static final String rundirCurrent = rundirsRoot + "/current";
     public static String scenarioId;
+    public VehicleSize vehicleSize;
 
     /**
      * Constructs an AbstractRobot object with the specified parameters.
@@ -148,6 +149,8 @@ public abstract class AbstractVehicle {
 
     public void registerInTec(TrajectoryEnvelopeCoordinatorSimulation tec,
                               VehicleSize vehicleSize) {
+        this.vehicleSize = vehicleSize;
+
         // E.g.: vehicleSize = {length: 3, frontSafeDistance: 1, backSafeDistance: 1}:
         double xLengthInner = vehicleSize.length / 2; // -> inner footprint: x = -1.5 .. 1.5
         // total length: 3 + 1*2 = 5 -> (outer) footprint (computed below): x = -2.5 .. 2.5

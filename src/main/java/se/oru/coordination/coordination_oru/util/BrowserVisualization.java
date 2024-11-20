@@ -658,6 +658,8 @@ public class BrowserVisualization implements FleetVisualization {
 			html += "EmergencyBreaker: " + textEmergencyBreaker + "<br>";
 		}
 
+		html += "Vehicle size (m): " + VehiclesHashMap.getTheHuman().vehicleSize + "<br>";
+
 		html += makeVehicleTableHtml();
 
 		if (isExtendedText && areAllVehiclesStarted) {
