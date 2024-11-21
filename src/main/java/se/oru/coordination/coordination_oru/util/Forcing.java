@@ -154,7 +154,11 @@ public class Forcing {
 
                         cs.setHigher(robotID, 3);
                         criticalSectionsToRestorePrioritiesLater.add(cs);
-                        robotsToRestoreLater.add(cs.getOtherRobotID(robotID));
+                        int otherID = cs.getOtherRobotID(robotID);
+                        if (TrajectoryEnvelopeCoordinatorSimulation.isCPForcingHack) {
+                            TrajectoryEnvelopeCoordinatorSimulation.tec.addStoppingPoint(otherID, TrajectoryEnvelopeCoordinatorSimulation.CP_FORCING_HACK, -1);
+                        }
+                        robotsToRestoreLater.add(otherID);
                     }
                 }
 
@@ -220,6 +224,11 @@ public class Forcing {
                     }
                 }
                 criticalSectionsToRestorePrioritiesLater.clear();
+                if (TrajectoryEnvelopeCoordinatorSimulation.isCPForcingHack) {
+                    for (int otherID : robotsToRestoreLater) {
+                        TrajectoryEnvelopeCoordinatorSimulation.tec.removeStoppingPoint(otherID, TrajectoryEnvelopeCoordinatorSimulation.CP_FORCING_HACK);
+                    }
+                }
                 robotsToRestoreLater.clear();
                 forcingSinceTimestep = -1;
             }

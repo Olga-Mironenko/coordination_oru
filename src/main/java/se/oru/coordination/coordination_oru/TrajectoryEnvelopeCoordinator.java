@@ -51,6 +51,8 @@ import static se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelo
  */
 public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEnvelopeCoordinator {
 	public static final int CP_ASAP = -2;
+	public static final boolean isCPForcingHack = false;
+	public static final Integer CP_FORCING_HACK = -3;
 
 	public static boolean isCheckingStoppingPoints = false;
 
@@ -1831,7 +1833,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						for (int i = 0; i < stoppingPoints.get(robotID).size(); i++) {
 							int stoppingPoint = stoppingPoints.get(robotID).get(i);
 							int duration = stoppingTimes.get(robotID).get(i);
-							if (robotReport.getPathIndex() <= stoppingPoint || stoppingPoint == CP_ASAP) {
+							if (robotReport.getPathIndex() <= stoppingPoint || stoppingPoint == CP_ASAP || stoppingPoint == CP_FORCING_HACK) {
 								Dependency dep = new Dependency(robotTracker.getTrajectoryEnvelope(), null, stoppingPoint, 0);
 								if (!currentDeps.containsKey(robotID))
 									currentDeps.put(robotID, new HashSet<Dependency>());
@@ -1961,6 +1963,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						boolean wakeUpinCSRobot1 = false;
 						boolean wakeUpinCSRobot2 = false;
 
+						int robotID1 = robotReport1.getRobotID();
+						int robotID2 = robotReport2.getRobotID();
 
 						//Force the dependency for the robot footprint
 						if (//the last critical point was before the critical section (can stop by induction)
@@ -1969,16 +1973,20 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							canStopRobot1 = true;
 						else
 							//Due to temporal delays we cannot trust the velocity.
-							canStopRobot1 = earliestStoppingPoints.get(robotReport1.getRobotID()) < cs.getTe1Start();
+							canStopRobot1 = earliestStoppingPoints.get(robotID1) < cs.getTe1Start();
 						if ((communicatedCPs.containsKey(robotTracker2) && communicatedCPs.get(robotTracker2).getFirst() != -1 && communicatedCPs.get(robotTracker2).getFirst() < cs.getTe2Start())
 								|| !communicatedCPs.containsKey(robotTracker2) && Math.max(0, robotReport2.getPathIndex()) < cs.getTe2Start())
 							canStopRobot2 = true;
-						else canStopRobot2 = earliestStoppingPoints.get(robotReport2.getRobotID()) < cs.getTe2Start();
+						else canStopRobot2 = earliestStoppingPoints.get(robotID2) < cs.getTe2Start();
 
+						boolean isHuman1 = VehiclesHashMap.isHuman(robotID1);
+						boolean isHuman2 = VehiclesHashMap.isHuman(robotID2);
 
 						//For each reversible constraint, we pre-load the precedence according to the FCFS heuristic or to the previous decided ones.
 						//We will check if the heuristic after.
-						if (canStopRobot1 && canStopRobot2) {
+						if (canStopRobot1 && canStopRobot2 || ! canStopRobot1 && isHuman2 || ! canStopRobot2 && isHuman1) {
+							// The `isHuman` part is because otherwise `cs.setHigher(...)` (during forcing) affects nothing
+							// (since `getOrder` is called only for reversible CSes).
 							reversibleCS.add(cs);
 							boolean robot2Yields;
 							if (!CSToDepsOrder.containsKey(cs)) {

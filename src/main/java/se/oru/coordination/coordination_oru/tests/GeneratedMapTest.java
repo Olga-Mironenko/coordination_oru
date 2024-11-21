@@ -45,7 +45,7 @@ public class GeneratedMapTest {
 
         if (scenarioString == null) {
             scenarioString = (
-                    "map-generator/generated-maps/2024-11-20_14:24:09/scenario1-5.json, stops, seed 1, " +
+                    "map-generator/generated-maps/2024-11-20_14:24:09/scenario1-9.json, change of priorities, seed 1, " +
                     "probabilityForcingForHuman 1"
             );
         }

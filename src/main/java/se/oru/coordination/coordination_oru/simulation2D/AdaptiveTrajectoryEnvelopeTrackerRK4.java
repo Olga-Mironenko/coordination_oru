@@ -632,6 +632,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
 		int robotID = te.getRobotID();
 
+		if (criticalPointToSet == TrajectoryEnvelopeCoordinator.CP_FORCING_HACK) {
+			return;
+		}
+
 		/*
 		if (this.criticalPoint == criticalPointToSet) {
 			//Same critical point was already set
