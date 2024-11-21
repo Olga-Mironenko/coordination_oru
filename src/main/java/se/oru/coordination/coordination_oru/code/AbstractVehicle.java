@@ -256,8 +256,13 @@ public abstract class AbstractVehicle {
             bw.write("No. of completed missions," + this.numMissions + "\n");
             bw.write("Total distance traveled (m)," + round(totalDistance) + "\n");
 
+            int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(ID, 0);
+            int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(ID, 0);
+            int numViolations = numForcings - numUselessForcings;
+
             bw.write("No. of stops," + this.stops + "\n");
-            bw.write("No. of forcing events," + Forcing.robotIDToNumForcingEvents.getOrDefault(ID, 0) + "\n");
+            bw.write("No. of forcing events," + numForcings + "\n");
+            bw.write("No. of violations," + numViolations + "\n");
             bw.write("No. of critical sections," + tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
 
             bw.write("No. of near-misses," + tec.robotIDToMinorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
