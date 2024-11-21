@@ -78,7 +78,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	private Double maxVelocityBeforeCautious = null;
 
 	private SortedSet<Integer> criticalPointsPostponed = new TreeSet<>(Collections.reverseOrder());
-	public Double distanceToCP;
+	public double distanceToCP;
 	public static double probabilityForcingForHuman = 0.0;
 	public static double distanceToCPForForcing = 5.0;
 	public ForcingMaintainer forcingMaintainer;
@@ -1084,7 +1084,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 						isReroutingNearParkedVehicleForNonHuman;
 
 		boolean isExpectingDistanceShrinking = true;
-		Double distanceToCPLast = null;
+		double distanceToCPLast = Double.POSITIVE_INFINITY;
 		if (isHuman) {
 			forcingMaintainer = new ForcingMaintainer();
 		}
@@ -1102,24 +1102,24 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 //			}
 
 			distanceToCP = computeDistanceToCP();
-			if (isHuman) {
+			if (isHuman) { // forcing
 				boolean isForcingNow = false;
-				if (distanceToCP == null) {
+				if (distanceToCP > distanceToCPLast) {
 					isExpectingDistanceShrinking = true;
-				} else if (isExpectingDistanceShrinking) {
-					if (distanceToCP <= distanceToCPForForcing) {
-						if (distanceToCPLast == null || distanceToCPLast > distanceToCPForForcing) {
-							isExpectingDistanceShrinking = false;
+				}
+				if (isExpectingDistanceShrinking &&
+						distanceToCP <= distanceToCPForForcing && distanceToCPForForcing < distanceToCPLast
+				) {
+					isExpectingDistanceShrinking = false;
 
-							if (rand.nextDouble() < probabilityForcingForHuman) {
-								isForcingNow = true;
-							}
-						}
+					if (rand.nextDouble() < probabilityForcingForHuman) {
+						isForcingNow = true;
 					}
 				}
 				forcingMaintainer.update(myRobotID, distanceToCP, isForcingNow, false, false);
 				distanceToCPLast = distanceToCP;
-
+			}
+			if (isHuman) { // slowing down
 				if (distanceMonitor.update(lengthIntervalSlowingDownForHuman, getLastRobotReport().getDistanceTraveled())) {
 					if (rand.nextDouble() < probabilitySlowingDownForHuman) {
 						vehicle.setMaxVelocity(velocitySlowingDownForHuman);
@@ -1207,10 +1207,10 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		metaCSPLogger.info("RK4 tracking thread terminates (Robot " + myRobotID + ", TrajectoryEnvelope " + te.getID() + ")");
 	}
 
-	private Double computeDistanceToCP() {
+	private double computeDistanceToCP() {
 		CriticalSection cs = getFirstOfCriticalSectionsOfInferior();
 		if (cs == null) {
-			return null;
+			return Double.POSITIVE_INFINITY;
 		}
 		int robotID = te.getRobotID();
 		int start = cs.getStart(robotID);

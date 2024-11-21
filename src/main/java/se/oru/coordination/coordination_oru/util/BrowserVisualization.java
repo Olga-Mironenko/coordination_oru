@@ -521,7 +521,8 @@ public class BrowserVisualization implements FleetVisualization {
 							rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
 					);
 					Double positionToSlowDown = trackerAdaptive == null ? null : trackerAdaptive.positionToSlowDown;
-					Double distanceToCP = trackerAdaptive == null ? null : trackerAdaptive.distanceToCP;
+					double distanceToCP =
+							trackerAdaptive == null ? Double.POSITIVE_INFINITY : trackerAdaptive.distanceToCP;
 					row += String.format(" | %s | %d | %s | %s | %s | <div style=\"text-align: left;\">%s</div>",
 							rr.getPathIndex() == -1 ? "" : String.format("%d", rr.getPathIndex()),
 							te.getPathLength(),
@@ -531,7 +532,7 @@ public class BrowserVisualization implements FleetVisualization {
 									? "ASAP"
 									: String.format("%d", rr.getCriticalPoint()),
 							positionToSlowDown == null ? "" : String.format("%.1f", positionToSlowDown),
-							distanceToCP == null ? "" : String.format("%.1f", distanceToCP),
+							Double.isInfinite(distanceToCP) ? "" : String.format("%.1f", distanceToCP),
 							rr.statusString == null ? "-" : rr.statusString.replace("STOPPED_AT_CP", "STOP@CP")
 					);
 					thead2 += " | path<br>index | no.<br>poses | CP<br>(index) | posTo<br>Slow, m | distance<br>ToCP, m | status";
