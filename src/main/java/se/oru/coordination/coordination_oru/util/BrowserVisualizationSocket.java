@@ -26,7 +26,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
     public static DynamicMap dynamicMap = null;
 
     public static double initialScale = 1;
-    public static double fontScale = 0.8;
+    public static double fontScale = 2.4;
     public static Coordinate initialTranslation = null;
 
     public static DynamicMap getDynamicMap() {
@@ -50,7 +50,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         System.out.println("Sending initial font scale to newly connected client...");
         String setFontScaleString = "{ \"operation\" : \"setFontScale\","
                 + "\"data\" : "
-                + "{ \"scale\" : " + fontScale + "}}";
+                + "{ \"scale\" : " + fontScale * Math.sqrt(dmap.resolution) + "}}";
         rep.sendString(setFontScaleString);
 
         System.out.println("Sending map metadata to newly connected client...");

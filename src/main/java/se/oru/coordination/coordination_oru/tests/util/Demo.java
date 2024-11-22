@@ -43,11 +43,11 @@ public abstract class Demo {
             /// Human (mis)behavior actions:
             /// - Violation of priorities:
             AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 0.5;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.distanceToCPForForcing = 5.0;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.distanceToCPForForcing = 30.0;
             /// - Moving slowly:
             AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman = 0.0;
             AdaptiveTrajectoryEnvelopeTrackerRK4.velocitySlowingDownForHuman = 1.5;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.lengthIntervalSlowingDownForHuman = 10.0;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.lengthIntervalSlowingDownForHuman = 100.0;
             AdaptiveTrajectoryEnvelopeTrackerRK4.millisStopEvents = 3000; // rerouting (slow)
             AdaptiveTrajectoryEnvelopeTrackerRK4.countStopEvents = 20; // rerouting (slow)
 
@@ -66,10 +66,10 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = false;
             /// - Change of priorities:
-            Forcing.priorityDistance = 10.0;
+            Forcing.priorityDistance = 50.0;
             Forcing.isDistanceToCPAddedToPriorityDistance = true;
             /// - Stops:
-            Forcing.stopDistance = 10.0;
+            Forcing.stopDistance = 50.0;
             Forcing.isDistanceToCPAddedToStopDistance = true;
             Forcing.isGlobalTemporaryStop = false; // true for Global, false for Local
             Forcing.isResetAfterCurrentCrossroad = true;

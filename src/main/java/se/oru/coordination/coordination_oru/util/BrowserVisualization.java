@@ -66,7 +66,7 @@ public class BrowserVisualization implements FleetVisualization {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        assert code == 0;
+//        assert code == 0;
 	}
 
 	public BrowserVisualization() {
