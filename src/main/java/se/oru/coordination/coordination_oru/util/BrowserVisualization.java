@@ -801,12 +801,12 @@ public class BrowserVisualization implements FleetVisualization {
 		return Math.sqrt(Math.pow((pose2.getX()-pose1.getX()),2)+Math.pow((pose2.getY()-pose1.getY()),2));
 	}
 	
-	private Geometry createArrow(Pose pose1, Pose pose2) {		
+	private Geometry createArrow(Pose pose1, Pose pose2) {
 		GeometryFactory gf = new GeometryFactory();
 		double aux = 1.8;
 		double aux1 = 0.8;
 		double aux2 = 0.3;
-		double factor = 1.5;
+		double factor = 10.0 * Missions.getDynamicMap().resolution;
 		double distance = computeDistanceBetweenPoses(pose1, pose2)/factor;
 		double theta = Math.atan2(pose2.getY() - pose1.getY(), pose2.getX() - pose1.getX());
 		Coordinate[] coords = new Coordinate[8];

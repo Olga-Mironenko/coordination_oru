@@ -13,7 +13,7 @@ demo=GeneratedMapTest
 
 scenarios=()
 for i_locations in {1..10}; do
-  for dir_maps in 2024-11-20_14:24:09 2024-11-20_14:24:28; do
+  for dir_maps in 2024-11-22_11:26:14_with_bridges 2024-11-22_11:27:17_without_bridges; do
     filename_simple=map-generator/generated-maps/$dir_maps/scenario1-$i_locations.json
     filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
     for seed in {1..1}; do

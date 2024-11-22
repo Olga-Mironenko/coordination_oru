@@ -75,7 +75,7 @@ Y_WINDOW_START = 0
 PROBABILITY_BRIDGE_PRESENCE = 1.0
 PROBABILITY_BRIDGE_SINGLE = 0.5
 
-MAP_RESOLUTION_COORDINATION_ORU = 0.1  # meters per pixel
+RESOLUTION_MAP = 1.0  # meters per pixel
 
 KIND_POSE_TO_COLOR_LABEL = {'D': 'gray', 'OP': 'yellow', 'start': None, 'finish': None}
 FONT_LABEL = ('Arial', 16, 'normal')
@@ -94,8 +94,8 @@ class Pose:
     def to_coordination_oru_format(self, image_height):
         return tuple(round(value, 3)
                      for value in (
-                         self.x * MAP_RESOLUTION_COORDINATION_ORU,
-                         (image_height - self.y) * MAP_RESOLUTION_COORDINATION_ORU,
+                         self.x * RESOLUTION_MAP,
+                         (image_height - self.y) * RESOLUTION_MAP,
                          math.radians(self.heading),
                      ))
 
@@ -646,10 +646,9 @@ def generate_scenarios(path_scenarios: pathlib.Path, i_map: int, i_generation: i
     name2pose, image = result
 
     # Mapconf:
-    resolution = 0.1
     text_mapconf = textwrap.dedent(f"""
                 image: {basename_map_png}
-                resolution: {resolution}
+                resolution: {RESOLUTION_MAP}
                 occupied_thresh: 0.1
                 origin: [0, 0, 0]
                 alpha: 1.0
@@ -661,7 +660,7 @@ def generate_scenarios(path_scenarios: pathlib.Path, i_map: int, i_generation: i
         5.0, 5.0,  # frontSafeDistance, backSafeDistance
         1.0, 1.0,  # leftSafeDistance, rightSafeDistance
     )
-    dimensions_vehicle = tuple(x * resolution for x in dimensions_vehicle)
+    dimensions_vehicle = tuple(x * RESOLUTION_MAP for x in dimensions_vehicle)
     hexdigest_mapconf = compute_hash_text(
         '-'.join((
             compute_hash_filename(filename_map_png),

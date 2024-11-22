@@ -45,13 +45,13 @@ public class AutonomousVehicle extends AbstractVehicle {
     }
 
     public ReedsSheppCarPlanner makePlanner(String mapId, Coordinate[] footprint) {
-//        if (true) {
         if (rsp == null) {
             rsp = new ReedsSheppCarPlanner(planningAlgorithm);
-            rsp.setRadius(0.25); // TODO (the greater the value, the less is the number of robot circles)
+            double resolution = Missions.getDynamicMap().resolution;
+            rsp.setRadius(2.5 * resolution); // the greater the value, the less is the number of robot circles
             rsp.setFootprint(footprint);
-            rsp.setTurningRadius(0.01); // TODO: this should be a vehicle attribute (and "1" is a more natural value)
-            rsp.setDistanceBetweenPathPoints(0.1); // TODO: resolution?
+            rsp.setTurningRadius(0.1 * resolution); // TODO: this should be a vehicle attribute (and "1" is a more natural value)
+            rsp.setDistanceBetweenPathPoints(resolution);
 
             if (planningAlgorithm != ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom) {
                 rsp.setPlanningTimeInSecs(15);

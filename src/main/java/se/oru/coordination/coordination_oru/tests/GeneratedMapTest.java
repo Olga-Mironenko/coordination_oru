@@ -45,7 +45,7 @@ public class GeneratedMapTest {
 
         if (scenarioString == null) {
             scenarioString = (
-                    "map-generator/generated-maps/2024-11-20_14:24:09/scenario1-9.json, " +
+                    "map-generator/generated-maps/2024-11-22_11:26:14_with_bridges/scenario1-1.json, " +
                             "baseline, seed 1, probabilityForcingForHuman 0"
             );
         }
@@ -172,7 +172,10 @@ public class GeneratedMapTest {
         tec.setBreakDeadlocks(true, false, false);
 
         var viz = new BrowserVisualization();
-        viz.setInitialTransform(7.0, 5.0, 5.0);
+        double resolution = Missions.getDynamicMap().resolution;
+        int xTransPixel = 60; // left margin
+        int yTransPixel = 30; // bottom margin
+        viz.setInitialTransform(0.7 / resolution, xTransPixel * resolution, yTransPixel * resolution);
         tec.setVisualization(viz);
 
         Missions.startMissionDispatcher(tec);
