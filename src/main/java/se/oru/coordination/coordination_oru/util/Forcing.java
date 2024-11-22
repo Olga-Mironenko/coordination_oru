@@ -82,8 +82,12 @@ public class Forcing {
         }.start();
     }
 
+    public static boolean isForcingActive() {
+        return forcingSinceTimestep != -1;
+    }
+
     public static KnobsAfterForcing forceDriving(int robotID) {
-        if (forcingSinceTimestep != -1) { // another forcing is already in progress
+        if (isForcingActive()) { // another forcing is already in progress
             return null;
         }
         forcingSinceTimestep = Timekeeper.getTimestepsPassed();

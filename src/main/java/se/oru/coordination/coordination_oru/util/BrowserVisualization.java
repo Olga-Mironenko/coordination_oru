@@ -642,7 +642,7 @@ public class BrowserVisualization implements FleetVisualization {
 					id,
 					numForcings
 			);
-			if (isExtendedText && Forcing.forcingSinceTimestep != -1) {
+			if (isExtendedText && Forcing.isForcingActive()) {
 				html += " (forcing is active since step " + Forcing.forcingSinceTimestep + ")";
 			}
 			html += "<br>";

@@ -35,6 +35,7 @@ import aima.core.util.datastructure.Pair;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
+import se.oru.coordination.coordination_oru.util.Forcing;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
@@ -1979,12 +1980,16 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							canStopRobot2 = true;
 						else canStopRobot2 = earliestStoppingPoints.get(robotID2) < cs.getTe2Start();
 
-						boolean isHuman1 = VehiclesHashMap.isHuman(robotID1);
-						boolean isHuman2 = VehiclesHashMap.isHuman(robotID2);
+						boolean isForcing = Forcing.isForcingActive();
+						boolean isHuman1Forcing = isForcing && VehiclesHashMap.isHuman(robotID1);
+						boolean isHuman2Forcing = isForcing && VehiclesHashMap.isHuman(robotID2);
 
 						//For each reversible constraint, we pre-load the precedence according to the FCFS heuristic or to the previous decided ones.
 						//We will check if the heuristic after.
-						if (canStopRobot1 && canStopRobot2 || ! canStopRobot1 && isHuman2 || ! canStopRobot2 && isHuman1) {
+						if (canStopRobot1 && canStopRobot2 ||
+								! canStopRobot1 && isHuman2Forcing ||
+								! canStopRobot2 && isHuman1Forcing
+						) {
 							// The `isHuman` part is because otherwise `cs.setHigher(...)` (during forcing) affects nothing
 							// (since `getOrder` is called only for reversible CSes).
 							reversibleCS.add(cs);
