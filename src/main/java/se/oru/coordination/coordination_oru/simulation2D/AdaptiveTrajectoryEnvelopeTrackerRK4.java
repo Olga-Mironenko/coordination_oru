@@ -905,9 +905,19 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		//assert criticalSection.getInferior() == myRobotID;
 		// After forcing ends, priority change affects `criticalSection` but doesn't propagate to
 		// `criticalPoint` yet (at least sometimes).
+		if (myRobotID != criticalSection.getInferior()) {
+			return;
+		}
 
-		if (myRobotID == criticalSection.getSuperior() || criticalSection.canPassFirst(myRobotID)) {
+		if (criticalSection.canPassFirst(myRobotID)) {
 			setCriticalPoint(-1);
+
+			HashMap<Integer, HashSet<CriticalSection>> robotIDToCSes =
+					TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToCriticalSectionsPassFirstAffected;
+			if (! robotIDToCSes.containsKey(myRobotID)) {
+				robotIDToCSes.put(myRobotID, new HashSet<>());
+			}
+			robotIDToCSes.get(myRobotID).add(criticalSection);
 
 			SortedSet<Integer> criticalPointsPostponedOriginal = criticalPointsPostponed;
 			if (! criticalPointsPostponedOriginal.isEmpty()) {

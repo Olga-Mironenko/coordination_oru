@@ -432,6 +432,17 @@ public abstract class AbstractVehicle {
         return type;
     }
 
+    public String getTypeForVisualization() {
+        switch (type) {
+            case "HumanDrivenVehicle":
+                return "human-controlled";
+            case "AutonomousVehicle":
+                return "automated";
+            default:
+                return "unknown";
+        }
+    }
+
     public Color getColor() {
         return color;
     }

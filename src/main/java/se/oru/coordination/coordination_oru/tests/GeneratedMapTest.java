@@ -46,7 +46,7 @@ public class GeneratedMapTest {
         if (scenarioString == null) {
             scenarioString = (
                     "map-generator/generated-maps/2024-11-22_11:27:17_without_bridges/scenario1-1.json, " +
-                            "change of priorities, seed 1, probabilityForcingForHuman 1"
+                            "change of priorities, seed 1, probabilityForcingForHuman 0"
             );
         }
         AbstractVehicle.scenarioId = String.format(
@@ -139,7 +139,7 @@ public class GeneratedMapTest {
         AutonomousVehicle hum = new HumanDrivenVehicle(
                 0, 0,
                 Color.ORANGE, Color.ORANGE,
-                5.6, 0.3
+                5.6, 3.0
         );
         AutonomousVehicle[] auts = new AutonomousVehicle[numAuts];
         for (int i = 0; i < numAuts; i++) {

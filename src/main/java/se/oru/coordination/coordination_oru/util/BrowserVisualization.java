@@ -401,6 +401,17 @@ public class BrowserVisualization implements FleetVisualization {
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getList();
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
+		HashSet<Integer> robotIDsPassFirstAffect = new HashSet<>();
+		HashSet<Integer> robotIDsPassFirstAffected = new HashSet<>();
+		for (CriticalSection cs : tec.allCriticalSections) {
+			for (Map.Entry<Integer, HashSet<CriticalSection>> entry : tec.robotIDToCriticalSectionsPassFirstAffected.entrySet()) {
+				if (entry.getValue().contains(cs)) {
+					robotIDsPassFirstAffect.add(entry.getKey());
+					robotIDsPassFirstAffected.add(cs.getOtherRobotID(entry.getKey()));
+				}
+			}
+		}
+
 		for (int id : idToVehicle.keySet()) {
 			AbstractVehicle vehicle = idToVehicle.get(id);
 			boolean isHuman = VehiclesHashMap.isHuman(id);
@@ -412,7 +423,9 @@ public class BrowserVisualization implements FleetVisualization {
 
 			TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
 			text += "(V" + id + ", " + vehicle.getType() + ") ";
-			String row = "<div style=\"text-align: left;\"><b>V" + id + "</b>, " + vehicle.getType() + "</div>";
+			String row = "<div style=\"text-align: left;\"><b>V" + id + "</b>, " +
+					vehicle.getTypeForVisualization() +
+					"</div>";
 			thead1 = "";
 			thead2 = "Vehicle ID and type";
 
@@ -430,13 +443,14 @@ public class BrowserVisualization implements FleetVisualization {
 				thead1 += " |2 Velocity, m/s";
 				thead2 += " | current | max";
 
-				thead1 += " |3 Human (mis)behaviour actions";
-				thead2 += " | violation of<br>priorities | moving<br>slowly | improper<br>parking";
+				thead1 += " |4 Human (mis)behaviour actions";
+				thead2 += " | can pass<br>first | violation of<br>priorities | moving<br>slowly | improper<br>parking";
 				if (! isHuman) {
 					KnobsAfterForcing knobsAfterForcing = ForcingMaintainer.getKnobsOfTheHuman();
 					boolean isToRestore = knobsAfterForcing != null && knobsAfterForcing.isToRestore(id);
 					boolean isToResume = knobsAfterForcing != null && knobsAfterForcing.isToResume(id);
-					row += String.format(" | %s |  | ",
+					row += String.format(" | %s | %s |  | ",
+							center(robotIDsPassFirstAffected.contains(id) ? "affected" : ""),
 							center(isToRestore || isToResume ? "affected" : "")
 					);
 				} else {
@@ -445,7 +459,8 @@ public class BrowserVisualization implements FleetVisualization {
 							trackerAdaptive.forcingMaintainer != null &&
 							trackerAdaptive.forcingMaintainer.isForcingOngoing()
 					);
-					row += String.format(" | %s",
+					row += String.format(" | %s | %s",
+							center(robotIDsPassFirstAffect.contains(id) ? "yes" : ""),
 							center(
 								! isForcingOngoing
 										? ""
