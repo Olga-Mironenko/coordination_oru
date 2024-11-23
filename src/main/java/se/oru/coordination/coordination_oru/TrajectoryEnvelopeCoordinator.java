@@ -601,7 +601,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 		boolean ret = false;
 
 		if (cs.te1HigherWeight != cs.te2HigherWeight)
-			ret = cs.te1HigherWeight > cs.te2HigherWeight;
+			ret = cs.te1HigherWeight.ordinal() > cs.te2HigherWeight.ordinal();
 		else if (this.comparators.size() > 0)
 			ret = (this.comparators.compare(r1atcs, r2atcs) < 0);
 		else

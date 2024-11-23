@@ -720,7 +720,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			Forcing.robotIDToPathIndexToStop.put(robotID, positionToStop);
 		}
 		for (CriticalSection cs : criticalSections) {
-			cs.setHigher(robotID, 2);
+			cs.setHigher(robotID, CriticalSection.Weight.WEIGHT_RACING);
 			// So the current robot gets higher priority.
 		}
 	}
@@ -890,7 +890,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	private void checkIfCanPassFirst() {
-		if (! CriticalSection.isCanPassFirstActive) {
+		if (! CriticalSection.isCanPassFirstActiveForRobot(te.getRobotID())) {
 			return;
 		}
 

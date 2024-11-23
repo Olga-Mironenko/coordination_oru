@@ -5,8 +5,6 @@ import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
-import se.oru.coordination.coordination_oru.util.Forcing;
-import se.oru.coordination.coordination_oru.util.HumanControl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,7 +22,8 @@ import java.util.function.Function;
  *
  */
 public class CriticalSection {
-	public static boolean isCanPassFirstActive = true;
+	public static boolean isCanPassFirstActiveHum = true;
+	public static boolean isCanPassFirstActiveAut = false;
 
 	private TrajectoryEnvelope te1;
 	private TrajectoryEnvelope te2;
@@ -34,8 +33,13 @@ public class CriticalSection {
 	private int te2End = -1;
 	private int te1Break = -1;
 	private int te2Break = -1;
-	public int te1HigherWeight = 0;
-	public int te2HigherWeight = 0;
+	public enum Weight { WEIGHT_NORMAL, WEIGHT_UNUSED, WEIGHT_RACING, WEIGHT_FORCING }
+	public Weight te1HigherWeight = Weight.WEIGHT_NORMAL;
+	public Weight te2HigherWeight = Weight.WEIGHT_NORMAL;
+
+	public static boolean isCanPassFirstActiveForRobot(int robotID) {
+		return VehiclesHashMap.isHuman(robotID) ? isCanPassFirstActiveHum : isCanPassFirstActiveAut;
+	}
 
 	public CriticalSection(TrajectoryEnvelope te1, TrajectoryEnvelope te2, int te1Start, int te2Start, int te1End, int te2End) {
 		this.te1 = te1;
@@ -186,7 +190,7 @@ public class CriticalSection {
 		return getStart(robotID) <= index && index <= getEnd(robotID);
 	}
 
-	public void setHigher(int robotID, int weight) {
+	public void setHigher(int robotID, Weight weight) {
 		if (isTe1(robotID)) {
 			te1HigherWeight = weight;
 		} else if (isTe2(robotID)) {
@@ -294,7 +298,7 @@ public class CriticalSection {
 		ret += robot2 + makeStars(te2HigherWeight) + " [" + getTe2Start() + ";" + getTe2End() + "]";
 
 		if (isExtra) {
-			if (! isCanPassFirstActive) {
+			if (! isCanPassFirstActiveForRobot(getInferior())) {
 				ret += String.format(
 						" (inferior %d)",
 						getInferior()
@@ -313,7 +317,7 @@ public class CriticalSection {
 	}
 
 	public boolean canPassFirst(int myID) {
-		if (! isCanPassFirstActive) {
+		if (! (isCanPassFirstActiveHum || isCanPassFirstActiveAut)) {
 			return false;
 		}
 
@@ -366,8 +370,8 @@ public class CriticalSection {
 		return is1Before2() ? getTe1RobotID() : getTe2RobotID();
 	}
 
-	private String makeStars(int count) {
-		return new String(new char[count]).replace("\0", "*");
+	private String makeStars(Weight count) {
+		return new String(new char[count.ordinal()]).replace("\0", "*");
 	}
 
 	public static ArrayList<CriticalSection> sortCriticalSections(Collection<CriticalSection> criticalSectionsUnsorted) {
