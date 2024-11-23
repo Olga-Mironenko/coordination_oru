@@ -15,5 +15,4 @@ done
 set -e
 
 [ "$id_window" ]
-xwd -nobdrs -silent -id "$id_window" |
-  convert xwd:- -strip "$file_png"
+import -window "$id_window" "$file_png"

@@ -66,6 +66,7 @@ public abstract class AbstractVehicle {
     private static final String dateString = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
     private static final String rundirCurrent = rundirsRoot + "/current";
     public static String scenarioId;
+    public static String scenarioFilename;
     public VehicleSize vehicleSize;
 
     /**

@@ -521,6 +521,8 @@ def make_screenshot(t: turtle.Turtle,
     t.hideturtle()
 
     shift = WIDTH_GAP_IMAGE_CANVAS // 2 + 2
+    # Note: On the current dev machine, `import` can capture even windows in background but doesn't support
+    # something like `xwd -nobdrs` directly.
     subprocess.run(
         f'xwd -nobdrs -silent -id $(xdotool search --name "Python Turtle Graphics")'
         f' | convert xwd:- -crop {image_width}x{image_height}+{shift}+{shift} -strip {filename_map_png}',

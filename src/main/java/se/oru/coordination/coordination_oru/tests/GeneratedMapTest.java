@@ -35,8 +35,8 @@ public class GeneratedMapTest {
 
     protected static void runDemo(String scenarioString) {
         HumanControl.isEnabledForBrowser = true;
-//        Timekeeper.setVirtualSecondsPassedMax(2);
-        Timekeeper.setVirtualMinutesPassedMax(10);
+        Timekeeper.setVirtualSecondsPassedMax(2);
+//        Timekeeper.setVirtualMinutesPassedMax(10);
 
         Heuristics heuristics = new Heuristics();
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.humanFirst();
@@ -59,6 +59,7 @@ public class GeneratedMapTest {
         assert scenarioTokens.length == 4;
 
         String scenarioFilename = scenarioTokens[0];
+        AbstractVehicle.scenarioFilename = scenarioFilename;
 
         String stringProb = scenarioTokens[3];
         final String prefixProb = "probabilityForcingForHuman ";

@@ -1,8 +1,8 @@
 package se.oru.coordination.coordination_oru.util;
 
-
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -12,6 +12,7 @@ import java.util.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -49,24 +50,45 @@ public class BrowserVisualization implements FleetVisualization {
 
 	public static boolean areAllVehiclesStarted = false;
 
-	public static void makeScreenshot() {
-        Process process;
-        try {
-			ProcessBuilder builder = new ProcessBuilder("screenshotting/make-screenshot.sh",
-					"screenshotting/screenshots/" + AbstractVehicle.getScenarioIdAsBasename() + ".png");
+	public static int runProcess(String... args) {
+		Process process;
+		try {
+			ProcessBuilder builder = new ProcessBuilder(args);
 			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
 			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-            process = builder.start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        int code;
-        try {
-            code = process.waitFor();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-//        assert code == 0;
+			process = builder.start();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		int code;
+		try {
+			code = process.waitFor();
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		return code;
+	}
+
+	public static void makeScreenshot() {
+		File fileScenario = new File(AbstractVehicle.scenarioFilename);
+		File dirScreenshots = new File(fileScenario.getParent() + "/screenshots");
+		if (! dirScreenshots.exists()) {
+			boolean isCreated = dirScreenshots.mkdir();
+			assert isCreated;
+		}
+
+		String basename = FilenameUtils.getBaseName(fileScenario.getName());
+		File fileScreenshotFull = new File(String.format("%s/fullscreen_%s.png", dirScreenshots, basename));
+		File fileScreenshotCropped = new File(String.format("%s/%s.png", dirScreenshots, basename));
+		if (fileScreenshotCropped.exists()) {
+			return;
+		}
+
+		int codeMake = runProcess("screenshotting/make-screenshot.sh", fileScreenshotFull.toString());
+		assert codeMake == 0;
+		int codeCrop = runProcess("screenshotting/crop-screenshot.sh",
+				fileScreenshotFull.toString(), fileScreenshotCropped.toString());
+		assert codeCrop == 0;
 	}
 
 	public BrowserVisualization() {
