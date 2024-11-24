@@ -217,7 +217,7 @@ public class BrowserVisualization implements FleetVisualization {
         Server server = new Server();
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(8081);
-		connector.setIdleTimeout(30 * 60 * 1000); // 30 min. (for long pauses inside the debugger)
+		connector.setIdleTimeout(300 * 60 * 1000); // 300 min. (for long pauses inside the debugger)
         server.addConnector(connector);
 
         // Setup the basic application "context" for this application at "/"
@@ -393,8 +393,9 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 
 	protected String makeVehicleTableHtml() {
-        StringBuilder thead1 = new StringBuilder();
-		StringBuilder thead3 = new StringBuilder();
+        StringBuilder thead1 = null;
+        StringBuilder thead2 = null;
+		StringBuilder thead3 = null;
 		StringBuilder tbodyHtml = new StringBuilder();
 
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getList();
@@ -425,6 +426,7 @@ public class BrowserVisualization implements FleetVisualization {
                     vehicle.getTypeForVisualization() +
                     "</div>");
 			thead1 = new StringBuilder();
+			thead2 = new StringBuilder();
 			thead3 = new StringBuilder("Vehicle ID and type");
 
 			RobotReport rr = tec.getRobotReport(id);
@@ -578,6 +580,7 @@ public class BrowserVisualization implements FleetVisualization {
 				synchronized (missions) {
                     row.append(" | <div style=\"text-align: left;\">").append(missions.size()).append(": [");
 					thead1.append(" | Dispatcher");
+					thead2.append(""); // TODO
 					thead3.append(" | future<br>missions");
 					for (int i = 0; i < missions.size(); i++) {
 						if (i > 0) {
@@ -594,9 +597,10 @@ public class BrowserVisualization implements FleetVisualization {
 		}
 
 		StringBuilder theadHtml = new StringBuilder();
-		for (String thead : List.of(thead1.toString(), thead3.toString())) {
+		assert thead1 != null;
+        for (StringBuilder thead : List.of(thead1, thead2, thead3)) {
 			theadHtml.append("<tr> <th>");
-			theadHtml.append(thead.replaceAll(" [|]([2-9]?) ", "</th> <th colspan=\"$1\">"));
+			theadHtml.append(thead.toString().replaceAll(" [|]([2-9]?) ", "</th> <th colspan=\"$1\">"));
 			theadHtml.append("</th> </tr>\n");
 		}
 		return "<style>\n" +
@@ -637,7 +641,10 @@ public class BrowserVisualization implements FleetVisualization {
 		));
 		if (Timekeeper.isTimekeeperActive()) {
 			html += String.format("Time passed (real): %s<br>", secondsToHMS(Timekeeper.getRealMillisPassed() / 1000));
-			html += String.format("Time passed (sim.): %s<br>", secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000));
+			html += String.format("Time passed (sim.): %s (x%.1f)<br>",
+					secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000),
+					(double) Timekeeper.getVirtualMillisPassed() / Timekeeper.getRealMillisPassed()
+			);
 		}
 
 		html += String.format("isCanPassFirstActive: hum=%b, aut=%b<br>",

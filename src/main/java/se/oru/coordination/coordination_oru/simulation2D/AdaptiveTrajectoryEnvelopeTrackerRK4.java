@@ -56,6 +56,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	private Thread th = null;
 	protected State state = null;
 	protected double[] curvatureDampening = null;
+	protected boolean hasCurvatureDampeningEqualValues = false;
 	private ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
 	private int numberOfReplicas = 1;
 	public static int seedGlobal = 0;
@@ -94,6 +95,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	private void computeInternalCriticalPoints() {
+		this.hasCurvatureDampeningEqualValues = true;
 		this.curvatureDampening = new double[te.getTrajectory().getPose().length];
 		this.curvatureDampening[0] = 1.0;
 		Pose[] poses = this.traj.getPose();
@@ -108,6 +110,9 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				metaCSPLogger.info("Found internal critical point (" + te.getComponent() + "): " + (i));
 			}
 			this.curvatureDampening[i+1] = 1.0;
+			if (this.curvatureDampening[i+1] != this.curvatureDampening[0]) {
+				this.hasCurvatureDampeningEqualValues = false;
+			}
 		}
 	}
 
@@ -354,7 +359,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		//Compute where to slow down (can do forward here for both states...)
 
 		while (tempStateBW.getVelocity() > 0.0) {
-			double dampeningBW = getCurvatureDampening(getRobotReport(tempStateBW).getPathIndex(), true);
+			double dampeningBW = hasCurvatureDampeningEqualValues ? curvatureDampening[0] :
+					getCurvatureDampening(getRobotReport(tempStateBW).getPathIndex(), true);
 			//Use slightly conservative max deceleration (which is positive acceleration since we simulate FW dynamics).
 			// (This is regarding dampeningBW < 1?)
 
@@ -425,7 +431,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 			prevPosition = stateToBe.getPosition();
 
-			double dampeningFW = getCurvatureDampening(getRobotReport(stateToBe).getPathIndex(), true); // backwards should be `false`?
+			double dampeningFW = hasCurvatureDampeningEqualValues ? curvatureDampening[0] :
+					getCurvatureDampening(getRobotReport(stateToBe).getPathIndex(), true); // backwards should be `false`?
 			integrateRK4(stateToBe, time, deltaTime, false, vehicle.getMaxVelocity(), dampeningFW, vehicle.getMaxAcceleration(), te.getRobotID());
 			assert stateToBe.getPosition() > prevPosition;
 
@@ -1017,7 +1024,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		double maxAcceleration = vehicle.getMaxAcceleration();
 
 		slowingDown = state.getPosition() >= positionToSlowDown || checkFreezing();
-		double dampening = getCurvatureDampening(getRobotReport().getPathIndex(), false);
+		double dampening = hasCurvatureDampeningEqualValues ? curvatureDampening[0] :
+				getCurvatureDampening(getRobotReport().getPathIndex(), false);
 
 		double positionOld = state.getPosition();
 

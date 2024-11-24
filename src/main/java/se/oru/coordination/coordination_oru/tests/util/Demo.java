@@ -28,7 +28,7 @@ public abstract class Demo {
             GatedThread.millisArtificialSleep = 0;
             HumanControl.isEnabledForBrowser = false;
             BrowserVisualization.isExtendedText = true;
-            AbstractTrajectoryEnvelopeTracker.kToRenderEveryKthFrame = 1;
+            AbstractTrajectoryEnvelopeTracker.kToRenderEveryKthFrame = 5;
 
             /// Path finding:
             AutonomousVehicle.isPathCachingEnabled = true;
