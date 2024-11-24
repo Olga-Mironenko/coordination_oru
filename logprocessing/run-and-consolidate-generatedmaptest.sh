@@ -16,7 +16,7 @@ dirs_maps=(
   '2024-11-22_11:27:17_without_bridges'
 )
 indexes_maps=(
-  1
+#  1
   3
 )
 scenarios=()
@@ -26,7 +26,7 @@ for i_map in "${indexes_maps[@]}"; do
       filename_simple=map-generator/generated-maps/$dir_maps/scenario$i_map-$i_locations.json
       filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
       for seed in {1..1}; do
-        for probabilityForcingForHuman in 0; do
+        for probabilityForcingForHuman in 0 1; do
           case $probabilityForcingForHuman in
             0 | 0.0)
               variations=("baseline")
