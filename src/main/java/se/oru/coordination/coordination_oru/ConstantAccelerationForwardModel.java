@@ -76,7 +76,7 @@ public class ConstantAccelerationForwardModel implements ForwardModel {
 	public int getEarliestStoppingPathIndex(TrajectoryEnvelope te, RobotReport currentState) {
 		State state = new State(currentState.getDistanceTraveled(), currentState.getVelocity());
 		double time = 0.0;
-		double deltaTime = 0.0001; // TODO: increase for efficiency?
+		double deltaTime = 0.1; // the same as in AdaptiveTrajectoryEnvelopeTrackerRK4
 //		long lookaheadInMillis = this.controlPeriodInMillis + 2*(TrajectoryEnvelopeCoordinator.MAX_TX_DELAY + trackingPeriodInMillis);
 		long lookaheadInMillis = 0; // because in the loop, `slowDown` should be not `false` but `tracker.slowingDown`
 		if (lookaheadInMillis > 0) {

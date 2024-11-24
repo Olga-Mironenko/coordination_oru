@@ -1746,7 +1746,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				sccs.add(subG);
 			}
 
-			metaCSPLogger.info("Connected components: " + sccs.toString());
+//			metaCSPLogger.info("Connected components: " + sccs);
 
 			//update the cycle list. Use a map to avoid recomputing cycles of each connected component.
 			for (Pair<Integer,Integer> pair : toAdd) {
@@ -1870,8 +1870,16 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 				//FIXME Add a CriticalSectionManager class
 				if (allCriticalSections.size() > 0)
-					for (int robotID : robotIDs)
-						earliestStoppingPoints.put(robotID, getForwardModel(robotID).getEarliestStoppingPathIndex(trackers.get(robotID).getTrajectoryEnvelope(), currentReports.get(robotID)));
+					for (int robotID : robotIDs) {
+						AbstractTrajectoryEnvelopeTracker tracker = trackers.get(robotID);
+						earliestStoppingPoints.put(
+								robotID,
+								getForwardModel(robotID).getEarliestStoppingPathIndex(
+										tracker.getTrajectoryEnvelope(),
+										currentReports.get(robotID)
+								)
+						);
+					}
 
 				depsToCS.clear();
 				this.isBlockedNearParkedVehicle = false;
