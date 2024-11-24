@@ -393,10 +393,9 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 
 	protected String makeVehicleTableHtml() {
-		String text = "";
-		String thead1 = "";
-		String thead2 = "";
-		String tbodyHtml = "";
+        StringBuilder thead1 = new StringBuilder();
+		StringBuilder thead3 = new StringBuilder();
+		StringBuilder tbodyHtml = new StringBuilder();
 
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getList();
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
@@ -422,92 +421,85 @@ public class BrowserVisualization implements FleetVisualization {
 							: null;
 
 			TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
-			text += "(V" + id + ", " + vehicle.getType() + ") ";
-			String row = "<div style=\"text-align: left;\"><b>V" + id + "</b>, " +
-					vehicle.getTypeForVisualization() +
-					"</div>";
-			thead1 = "";
-			thead2 = "Vehicle ID and type";
+            StringBuilder row = new StringBuilder("<div style=\"text-align: left;\"><b>V" + id + "</b>, " +
+                    vehicle.getTypeForVisualization() +
+                    "</div>");
+			thead1 = new StringBuilder();
+			thead3 = new StringBuilder("Vehicle ID and type");
 
 			RobotReport rr = tec.getRobotReport(id);
-			if (rr == null) {
-				text += "no robot report";
-			} else {
+            if (rr != null) {
 				double velocity = rr.getVelocity();
-				text += String.format("v=<b>%.1f</b> m/s (max: %.1f m/s)", velocity, vehicle.getMaxVelocity());
-				row += String.format(" | %s%.1f | %.1f",
-						String.format("%.1f", velocity).equals("0.0") && velocity != 0.0 ? "~" : "",
-						velocity,
-						vehicle.getMaxVelocity()
-				);
-				thead1 += " |2 Velocity, m/s";
-				thead2 += " | current | max";
+                row.append(String.format(" | %s%.1f | %.1f",
+                        String.format("%.1f", velocity).equals("0.0") && velocity != 0.0 ? "~" : "",
+                        velocity,
+                        vehicle.getMaxVelocity()
+                ));
+				thead1.append(" |2 Velocity, m/s");
+				thead3.append(" | current | max");
 
-				thead1 += " |4 Human (mis)behaviour actions";
-				thead2 += " | can pass<br>first | violation of<br>priorities | moving<br>slowly | improper<br>parking";
+				thead1.append(" |4 Human (mis)behaviour actions");
+				thead3.append(" | can pass<br>first | violation of<br>priorities | moving<br>slowly | improper<br>parking");
 				if (! isHuman) {
 					KnobsAfterForcing knobsAfterForcing = ForcingMaintainer.getKnobsOfTheHuman();
 					boolean isToRestore = knobsAfterForcing != null && knobsAfterForcing.isToRestore(id);
 					boolean isToResume = knobsAfterForcing != null && knobsAfterForcing.isToResume(id);
-					row += String.format(" | %s | %s |  | ",
-							center(robotIDsPassFirstAffected.contains(id) ? "affected" : ""),
-							center(isToRestore || isToResume ? "affected" : "")
-					);
+					row.append(String.format(" | %s | %s |  | ",
+                            center(robotIDsPassFirstAffected.contains(id) ? "affected" : ""),
+                            center(isToRestore || isToResume ? "affected" : "")
+                    ));
 				} else {
 					boolean isForcingOngoing = (
 							trackerAdaptive != null &&
 							trackerAdaptive.forcingMaintainer != null &&
 							trackerAdaptive.forcingMaintainer.isForcingOngoing()
 					);
-					row += String.format(" | %s | %s",
-							center(robotIDsPassFirstAffect.contains(id) ? "yes" : ""),
-							center(
-								! isForcingOngoing
-										? ""
-										: AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman < 1.0
-										? "random"
-										: "constant"
-							)
-					);
-					row += String.format(" | %s",
-							center(
-								! vehicle.isMaxVelocityLowered()
-										? ""
-										: "yes"
-							)
-					);
-					row += " | ";
+					row.append(String.format(" | %s | %s",
+                            center(robotIDsPassFirstAffect.contains(id) ? "yes" : ""),
+                            center(
+                                    !isForcingOngoing
+                                            ? ""
+                                            : AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman < 1.0
+                                            ? "random"
+                                            : "constant"
+                            )
+                    ));
+					row.append(String.format(" | %s",
+                            center(
+                                    !vehicle.isMaxVelocityLowered()
+                                            ? ""
+                                            : "yes"
+                            )
+                    ));
+					row.append(" | ");
 				}
 
-				thead1 += " |5 Coordination strategies for AVs";
-				thead2 += (
-						" | cautious<br>mode | rerouting at<br>parked / slow | moving<br>backwards" +
-						" | change of<br>priorities | stops"
-				);
+				thead1.append(" |5 Coordination strategies for AVs");
+				thead3.append(" | cautious<br>mode | rerouting at<br>parked / slow | moving<br>backwards" + " | change of<br>priorities | stops");
 				if (isHuman) {
-					row += " |  |  |  |  | ";
+					row.append(" |  |  |  |  | ");
 				} else {
 					KnobsAfterForcing knobsAfterForcing = ForcingMaintainer.getKnobsOfTheHuman();
 					boolean isToRestore = knobsAfterForcing != null && knobsAfterForcing.isToRestore(id);
 					boolean isToResume = knobsAfterForcing != null && knobsAfterForcing.isToResume(id);
-					row += String.format(" | %s | %s |  | %s | %s",
-							center(
-								!AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed ? "" :
-										vehicle.isMaxVelocityLowered() ? "yes" : "no"
-							),
-							center(
-								String.format("%s / %s",
-										!AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman
-												? "-"
-												: tec.robotIDToNumReroutingsNearParkedVehicle.getOrDefault(id, 0).toString(),
-										!AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman
-												? "-"
-												: tec.robotIDToNumReroutingsNearSlowVehicle.getOrDefault(id, 0).toString()
-								)
-							),
-							center(isToRestore && ! isToResume ? "temporary" : ""),
-							center(isToResume ? Forcing.isGlobalTemporaryStop ? "global" : "local" : "")
-					);
+					row.append(String.format(" | %s | %s |  | %s | %s",
+                            center(
+                                    !AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed ? "" :
+                                            vehicle.isMaxVelocityLowered() ? "yes" : "no"
+                            ),
+                            center(
+                                    String.format("%s / %s",
+                                            !AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman
+                                                    ? "-"
+                                                    : tec.robotIDToNumReroutingsNearParkedVehicle.getOrDefault(id, 0).toString(),
+                                            !AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman
+                                                    ? "-"
+                                                    : tec.robotIDToNumReroutingsNearSlowVehicle.getOrDefault(id, 0).toString()
+                                    )
+                            ),
+                            center(isToRestore && !isToResume ? "temporary" : ""),
+                            center(isToResume ? Forcing.isGlobalTemporaryStop ? "global" : "local" : "")
+                    ));
 				}
 
 				List<CollisionEvent> allCollisions = tec.robotIDToAllCollisions.getOrDefault(id, new ArrayList<>());
@@ -515,64 +507,57 @@ public class BrowserVisualization implements FleetVisualization {
 				List<CollisionEvent> majorCollisions = tec.robotIDToMajorCollisions.getOrDefault(id, new ArrayList<>());
 				assert allCollisions.size() == minorCollisions.size() + majorCollisions.size();
 
-				thead1 += " |3 Safety-critical events";
-				thead2 += " | violations | near<br>misses | collisions";
+				thead1.append(" |3 Safety-critical events");
+				thead3.append(" | violations | near<br>misses | collisions");
 				if (! isHuman) {
-					row += " | ";
+					row.append(" | ");
 				} else {
 					int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(id, 0);
 					int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(id, 0);
 					int numViolations = numForcings - numUselessForcings;
-					row += String.format(" | %d", numViolations);
+					row.append(String.format(" | %d", numViolations));
 				}
-				text += String.format("; collision events: <b>%d</b> minor, <b>%d</b> major", minorCollisions.size(), majorCollisions.size());
-				row += String.format(" | %d</b> | %d", minorCollisions.size(), majorCollisions.size());
+                row.append(String.format(" | %d</b> | %d", minorCollisions.size(), majorCollisions.size()));
 
 				if (isCollisionInfo && ! isHuman) {
 					if (!allCollisions.isEmpty()) {
 						for (CollisionEvent ce : allCollisions) {
-							text += "- " + ce.toCompactString(rr.getRobotID()) + "<br>";
-						}
+                        }
 					}
 				}
 
-				text += String.format("; traveled <b>%.1f m</b>", vehicle.totalDistance);
-				row += String.format(" | %.1f | %d | %s",
-						vehicle.totalDistance,
- 						vehicle.getNumMissions(),
-						center(vehicle.isBlocked() ? "yes" : "")
-				);
-				thead1 += " |3 Efficiency";
-				thead2 += " | traveled<br>total, m | no.<br>missions | blocked";
+                row.append(String.format(" | %.1f | %d | %s",
+                        vehicle.totalDistance,
+                        vehicle.getNumMissions(),
+                        center(vehicle.isBlocked() ? "yes" : "")
+                ));
+				thead1.append(" |3 Efficiency");
+				thead3.append(" | traveled<br>total, m | no.<br>missions | blocked");
 
 				if (isExtendedText) {
-					text += String.format("; p=(%.1f, %.1f)", rr.getPose().getX(), rr.getPose().getY());
-					row += String.format(" | (%.1f, %.1f) | %.1f",
-							rr.getPose().getX(), rr.getPose().getY(),
-							rr.getDistanceTraveled()
-					);
-					thead1 += " |8 Tracker state (current mission)";
-					thead2 += " | position<br>(x, y), m | traveled,<br>m";
+                    row.append(String.format(" | (%.1f, %.1f) | %.1f",
+                            rr.getPose().getX(), rr.getPose().getY(),
+                            rr.getDistanceTraveled()
+                    ));
+					thead1.append(" |8 Tracker state (current mission)");
+					thead3.append(" | position<br>(x, y), m | traveled,<br>m");
 
-					text += String.format("; i=%d (CP=%d, %s)",
-							rr.getPathIndex(), rr.getCriticalPoint(), rr.statusString != null ? rr.statusString : "-"
-					);
-					Double positionToSlowDown = trackerAdaptive == null ? null : trackerAdaptive.positionToSlowDown;
+                    Double positionToSlowDown = trackerAdaptive == null ? null : trackerAdaptive.positionToSlowDown;
 					double distanceToCP =
 							trackerAdaptive == null ? Double.POSITIVE_INFINITY : trackerAdaptive.distanceToCP;
-					row += String.format(" | %s | %d | %s | %s | %s | <div style=\"text-align: left;\">%s</div>",
-							rr.getPathIndex() == -1 ? "" : String.format("%d", rr.getPathIndex()),
-							te.getPathLength(),
-							rr.getCriticalPoint() == -1
-									? ""
-									: rr.getCriticalPoint() == TrajectoryEnvelopeCoordinatorSimulation.CP_ASAP
-									? "ASAP"
-									: String.format("%d", rr.getCriticalPoint()),
-							positionToSlowDown == null ? "" : String.format("%.1f", positionToSlowDown),
-							Double.isInfinite(distanceToCP) ? "" : String.format("%.1f", distanceToCP),
-							rr.statusString == null ? "-" : rr.statusString.replace("STOPPED_AT_CP", "STOP@CP")
-					);
-					thead2 += " | path<br>index | no.<br>poses | CP<br>(index) | posTo<br>Slow, m | distance<br>ToCP, m | status";
+					row.append(String.format(" | %s | %d | %s | %s | %s | <div style=\"text-align: left;\">%s</div>",
+                            rr.getPathIndex() == -1 ? "" : String.format("%d", rr.getPathIndex()),
+                            te.getPathLength(),
+                            rr.getCriticalPoint() == -1
+                                    ? ""
+                                    : rr.getCriticalPoint() == TrajectoryEnvelopeCoordinatorSimulation.CP_ASAP
+                                    ? "ASAP"
+                                    : String.format("%d", rr.getCriticalPoint()),
+                            positionToSlowDown == null ? "" : String.format("%.1f", positionToSlowDown),
+                            Double.isInfinite(distanceToCP) ? "" : String.format("%.1f", distanceToCP),
+                            rr.statusString == null ? "-" : rr.statusString.replace("STOPPED_AT_CP", "STOP@CP")
+                    ));
+					thead3.append(" | path<br>index | no.<br>poses | CP<br>(index) | posTo<br>Slow, m | distance<br>ToCP, m | status");
 
 //					int numCalls = 0;
 //					var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
@@ -585,36 +570,35 @@ public class BrowserVisualization implements FleetVisualization {
 				}
 			}
 
-			if (isExtendedText) {
+            if (isExtendedText) {
 				ArrayList<Mission> missions = Missions.getMissions(id);
 				if (missions == null) {
 					missions = new ArrayList<Mission>();
 				}
 				synchronized (missions) {
-					text += "; " + missions.size() + " future missions: [";
-					row += " | <div style=\"text-align: left;\">" + missions.size() + ": [";
-					thead1 += " | Dispatcher";
-					thead2 += " | future<br>missions";
+                    row.append(" | <div style=\"text-align: left;\">").append(missions.size()).append(": [");
+					thead1.append(" | Dispatcher");
+					thead3.append(" | future<br>missions");
 					for (int i = 0; i < missions.size(); i++) {
 						if (i > 0) {
-							text += ", ";
-							row += ", ";
+                            row.append(", ");
 						}
 						Mission mission = missions.get(i);
-						text += String.format("%d poses", mission.getPath().length);
-						row += String.format("%d", mission.getPath().length);
+                        row.append(String.format("%d", mission.getPath().length));
 					}
-					text += "]";
-					row += "]</div>";
+                    row.append("]</div>");
 				}
 			}
 
-			text += "<br>";
-			tbodyHtml += "<tr> <td>" + row.replace(" | ", "</td> <td>") + "</td> </tr>\n";
+            tbodyHtml.append("<tr> <td>").append(row.toString().replace(" | ", "</td> <td>")).append("</td> </tr>\n");
 		}
 
-		String thead2Html = "<tr> <th>" + thead2.replace(" | ", "</th> <th>") + "</th> </tr>\n";
-		String thead1Html = "<tr> <th>" + thead1.replaceAll(" [|]([2-9]?) ", "</th> <th colspan=\"$1\">") + "</th> </tr>\n";
+		StringBuilder theadHtml = new StringBuilder();
+		for (String thead : List.of(thead1.toString(), thead3.toString())) {
+			theadHtml.append("<tr> <th>");
+			theadHtml.append(thead.replaceAll(" [|]([2-9]?) ", "</th> <th colspan=\"$1\">"));
+			theadHtml.append("</th> </tr>\n");
+		}
 		return "<style>\n" +
 				"  table.info td {\n" +
 				"    text-align: right;\n" +
@@ -631,7 +615,7 @@ public class BrowserVisualization implements FleetVisualization {
 				"  }\n" +
 				"</style>\n" +
 				"<table class=\"info\">\n" +
-				"  <thead>\n" + thead1Html + thead2Html +
+				"  <thead> " + theadHtml +
 				"  </thead>\n" +
 				"\n" +
 				"  <tbody>\n" + tbodyHtml +
