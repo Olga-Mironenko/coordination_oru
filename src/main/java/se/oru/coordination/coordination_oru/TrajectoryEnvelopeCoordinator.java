@@ -33,11 +33,13 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import aima.core.util.datastructure.Pair;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
+import se.oru.coordination.coordination_oru.code.VehicleSize;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.util.Forcing;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
+import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 import static se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation.tec;
 
@@ -2364,10 +2366,14 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 											safe = true;
 											Dependency dep1 = depList.get(i);
 											Dependency dep2 = depList.get(i < depList.size()-1 ? i+1 : 0);
-											if (nonlivePair(dep1,dep2)) safe = false;
+											if (nonlivePair(dep1,dep2)) {
+												if (! cs.isWithForcing()) {
+													safe = false;
+												}
+											}
 											if (safe) break; //if one pair in the cycle is safe, then the cycle is safe
 										}
-										//  If there exists almost one nonlive cycle, then the precedence cannot be reversed.	
+										//  If there exists at least one nonlive cycle, then the precedence cannot be reversed.
 										if(!safe) {
 											metaCSPLogger.finest("A nonlive cycle: " + depList + ".");
 											break;

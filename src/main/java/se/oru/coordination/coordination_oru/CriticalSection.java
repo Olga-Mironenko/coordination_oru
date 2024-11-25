@@ -294,8 +294,8 @@ public class CriticalSection {
 		String ret = "";
 		String robot1 = getTe1() == null ? "null" : String.valueOf(getTe1().getRobotID());
 		String robot2 = getTe2() == null ? "null" : String.valueOf(getTe2().getRobotID());
-		ret += robot1 + makeStars(te1HigherWeight) + " [" + getTe1Start() + ";" + getTe1End() + "], ";
-		ret += robot2 + makeStars(te2HigherWeight) + " [" + getTe2Start() + ";" + getTe2End() + "]";
+		ret += robot1 + makeLabel(te1HigherWeight) + " [" + getTe1Start() + ";" + getTe1End() + "], ";
+		ret += robot2 + makeLabel(te2HigherWeight) + " [" + getTe2Start() + ";" + getTe2End() + "]";
 
 		if (isExtra) {
 			if (! isCanPassFirstActiveForRobot(getInferior())) {
@@ -370,8 +370,17 @@ public class CriticalSection {
 		return is1Before2() ? getTe1RobotID() : getTe2RobotID();
 	}
 
-	private String makeStars(Weight count) {
-		return new String(new char[count.ordinal()]).replace("\0", "*");
+	private String makeLabel(Weight weight) {
+		switch (weight) {
+			case WEIGHT_NORMAL: return "";
+			case WEIGHT_RACING: return "(r)";
+			case WEIGHT_FORCING: return "(f)";
+			default: return "(?)";
+		}
+	}
+
+	public boolean isWithForcing() {
+		return te1HigherWeight == Weight.WEIGHT_FORCING || te2HigherWeight == Weight.WEIGHT_FORCING;
 	}
 
 	public static ArrayList<CriticalSection> sortCriticalSections(Collection<CriticalSection> criticalSectionsUnsorted) {
