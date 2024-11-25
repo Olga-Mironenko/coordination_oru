@@ -48,11 +48,11 @@ done
 echo "Scenarios:"
 printf -- "- %s\n" "${scenarios[@]}"
 
-reference=$(mktemp --tmpdir run-and-consolidate.XXXX)
-trap 'ls -l "$reference"; rm -f "$reference"' EXIT
-
 trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT TERM
 
 set -x
+reference=$(mktemp --tmpdir run-and-consolidate.XXXX)
+#trap 'ls -l "$reference"; rm -f "$reference"' EXIT
+
 "$root"/run-scenarios.sh "$timeout_hard" "$demo" "${scenarios[@]}" || echo "[exit $?]"
 "$root"/consolidate-rundirs-to-sorted-csv.sh "$reference"  # will consolidate everything created after the reference file

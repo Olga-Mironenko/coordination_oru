@@ -15,6 +15,6 @@ for dir in "${dirs[@]}"; do
 done
 
 root=$(dirname "$0")
-"$root"/multijoin.sh "${files[@]}" |
-  "$root"/csvtk -d, transpose |
-  "$root"/csvtk -d, sort -k3,1
+"$root"/multijoin.sh "${files[@]}" |  # cat >&2
+  "$root"/csvtk -d$'\t' transpose |
+  "$root"/csvtk -d, sort -k2,3

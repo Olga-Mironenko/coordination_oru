@@ -3,7 +3,7 @@
 set -eu -o pipefail
 
 run_join() {
-  join -t, "$@"
+  join -t$'\t' "$@"
 }
 
 run_join_multi() {

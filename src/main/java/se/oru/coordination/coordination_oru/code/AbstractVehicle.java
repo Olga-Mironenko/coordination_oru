@@ -10,6 +10,7 @@ import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Forcing;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 
@@ -232,8 +233,9 @@ public abstract class AbstractVehicle {
             );
             File dir = new File(rundirsRoot + "/" + subdir);
             if (!isRundirPrepared) {
-                dir.mkdirs();
-                FileUtils.cleanDirectory(dir);
+                if (! dir.mkdirs()) {
+                    FileUtils.cleanDirectory(dir);
+                }
 
                 Path current = Path.of(rundirCurrent);
                 Files.deleteIfExists(current);
@@ -242,41 +244,48 @@ public abstract class AbstractVehicle {
                 isRundirPrepared = true;
             }
 
-            File file = new File(dir.toString() + "/" + this.ID + ".csv");
+            File file = new File(dir + "/" + this.ID + ".csv");
             FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
             BufferedWriter bw = new BufferedWriter(fw);
 
             TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-            bw.write("Date," + dateString + "\n");
-            bw.write("Scenario ID,\"" + scenarioId + "\"\n");
-            bw.write("Vehicle ID," + this.getID() + "\n");
-            bw.write("Vehicle type," + this.type + "\n");
+            bw.write("Date\t" + dateString + "\n");
+            bw.write("Scenario ID\t" + scenarioId + "\n");
+            bw.write("Vehicle ID\t" + this.getID() + "\n");
+            bw.write("Vehicle type\t" + this.type + "\n");
 
-            bw.write("Cycle distance (m)," + this.pathLength + "\n");
-            bw.write("No. of completed missions," + this.numMissions + "\n");
-            bw.write("Total distance traveled (m)," + round(totalDistance) + "\n");
+            bw.write("Cycle distance (m)\t" + this.pathLength + "\n");
+            bw.write("No. of completed missions\t" + this.numMissions + "\n");
+            bw.write("Total distance traveled (m)\t" + round(totalDistance) + "\n");
 
             int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(ID, 0);
             int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(ID, 0);
             int numViolations = numForcings - numUselessForcings;
 
-            bw.write("No. of stops," + this.stops + "\n");
-            bw.write("No. of forcing events," + numForcings + "\n");
-            bw.write("No. of violations," + numViolations + "\n");
-            bw.write("No. of critical sections," + tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
+            bw.write("No. of stops\t" + this.stops + "\n");
+            bw.write("No. of forcing events\t" + numForcings + "\n");
+            bw.write("No. of violations\t" + numViolations + "\n");
+            bw.write("No. of critical sections\t" + tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
 
-            bw.write("No. of near-misses," + tec.robotIDToMinorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
-            bw.write("No. of collisions," + tec.robotIDToMajorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
-            bw.write("Is blocked," + (VehiclesHashMap.getVehicle(ID).isBlocked() ? 1 : 0) + "\n");
+            bw.write("No. of near-misses\t" + tec.robotIDToMinorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
+            bw.write("No. of collisions\t" + tec.robotIDToMajorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
+            bw.write("Is blocked\t" + (VehiclesHashMap.getVehicle(ID).isBlocked() ? 1 : 0) + "\n");
 
-            bw.write("Total waiting time (s)," + round(totalWaitingTime) + "\n");
-            bw.write("Maximum waiting time (s)," + round(maxWaitingTime) + "\n");
-            bw.write("Total time (s)," + round(totalTime) + "\n");
+            bw.write("Total waiting time (s)\t" + round(totalWaitingTime) + "\n");
+            bw.write("Maximum waiting time (s)\t" + round(maxWaitingTime) + "\n");
+            bw.write("Total time (s)\t" + round(totalTime) + "\n");
 
-            bw.write("Maximum acceleration (m/s^2)," + round(maxAcceleration) + "\n");
-            bw.write("Maximum speed (m/s)," + round(maxVelocity) + "\n");
-            bw.write("Average speed (m/s)," + round(totalDistance / totalTime) + "\n");
+            bw.write("Maximum acceleration (m/s^2)\t" + round(maxAcceleration) + "\n");
+            bw.write("Maximum speed (m/s)\t" + round(maxVelocity) + "\n");
+            bw.write("Average speed (m/s)\t" + round(totalDistance / totalTime) + "\n");
+
+            String[] columns = BrowserVisualization.statsColumns;
+            String[] rows = BrowserVisualization.statsIdToRow.get(ID);
+            assert columns.length == rows.length;
+            for (int i = 1; i < columns.length; i++) {
+                bw.write(columns[i] + "\t" + rows[i] + "\n");
+            }
 
             bw.close();
 
