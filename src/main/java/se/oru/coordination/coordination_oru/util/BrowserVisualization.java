@@ -405,6 +405,69 @@ public class BrowserVisualization implements FleetVisualization {
 		return "\"" + text.replace("\"", "\"\"") + "\"";
 	}
 
+	public static StringBuilder[] makeHeaderHtmls(String input) {
+		String[] parts = input.split(" [|]");
+		StringBuilder[] htmls = new StringBuilder[parts.length];
+
+		int colIndex = 0;
+		for (int i = 0; i < parts.length; i++) {
+			String part = parts[i];
+
+			int lengthNumber = 0;
+			while (lengthNumber < part.length() && Character.isDigit(part.charAt(lengthNumber))) {
+				lengthNumber++;
+			}
+
+			int numCols = 1;
+			String style = null;
+			if (lengthNumber > 0) {
+				numCols = Integer.parseInt(part.substring(0, lengthNumber));
+				if (part.charAt(lengthNumber) == ' ') {
+					part = part.substring(lengthNumber + 1);
+				} else if (part.charAt(lengthNumber) == '{') {
+					int end = part.indexOf('}', lengthNumber + 1);
+					assert end > 0;
+					style = part.substring(lengthNumber, end + 1);
+					assert part.charAt(end + 1) == ' ';
+					part = part.substring(end + 2);
+				} else {
+					throw new RuntimeException();
+				}
+			}
+
+			StringBuilder builderHtml = new StringBuilder("<th class=\"");
+			StringBuilder builderCssHeader = style == null ? null : new StringBuilder();
+			for (int j = 0; j < numCols; j++) {
+				if (j > 0) {
+					builderHtml.append(" ");
+					if (builderCssHeader != null) {
+						builderCssHeader.append(", ");
+					}
+				}
+				builderHtml.append("col").append(colIndex);
+				if (builderCssHeader != null) {
+					builderCssHeader.append("table.info .col").append(colIndex);
+				}
+				colIndex++;
+			}
+			builderHtml.append("\"");
+			if (numCols > 1) {
+				builderHtml.append(" colspan=").append(numCols);
+			}
+			builderHtml.append(">");
+			builderHtml.append(part);
+			builderHtml.append("</th>");
+
+			if (builderCssHeader != null) {
+				builderHtml.append("<style>").append(builderCssHeader).append(" ").append(style).append("</style>");
+			}
+
+			htmls[i] = builderHtml;
+		}
+
+		return htmls;
+	}
+
 	protected String makeVehicleTableHtml() {
         StringBuilder thead1 = null;
         StringBuilder theadHints = null;
@@ -455,7 +518,7 @@ public class BrowserVisualization implements FleetVisualization {
 				theadHints.append(" |2 ");
 				thead2.append(" | [v_]current | [v_]max");
 
-				thead1.append(" |4 Human (mis)behaviour actions");
+				thead1.append(" |4{border-color: yellow;} Human (mis)behaviour actions");
 				theadHints.append(" |4 ");
 				thead2.append(" | can pass<br>first | violation of<br>priorities | moving<br>slowly | improper<br>parking");
 				if (! isHuman) {
@@ -492,7 +555,7 @@ public class BrowserVisualization implements FleetVisualization {
 					row.append(" | ");
 				}
 
-				thead1.append(" |5 Coordination strategies for AVs");
+				thead1.append(" |5{border-color: blue;} Coordination strategies for AVs");
 				theadHints.append(" | proactive |4 reactive");
 				thead2.append(" | cautious<br>mode | rerouting at<br>parked / slow | moving<br>backwards" + " | change of<br>priorities | stops");
 				if (isHuman) {
@@ -526,7 +589,7 @@ public class BrowserVisualization implements FleetVisualization {
 				List<CollisionEvent> majorCollisions = tec.robotIDToMajorCollisions.getOrDefault(id, new ArrayList<>());
 				assert allCollisions.size() == minorCollisions.size() + majorCollisions.size();
 
-				thead1.append(" |3 Safety-critical events");
+				thead1.append(" |3{border-color: red;} Safety-critical events");
 				theadHints.append(" |3 ");
 				thead2.append(" | violations | near<br>misses | collisions");
 				if (! isHuman) {
@@ -544,7 +607,7 @@ public class BrowserVisualization implements FleetVisualization {
                         vehicle.getNumMissions(),
                         center(vehicle.isBlocked() ? "yes" : "")
                 ));
-				thead1.append(" |3 Efficiency");
+				thead1.append(" |3{border-color: green;} Efficiency");
 				theadHints.append(" |3 ");
 				thead2.append(" | traveled<br>total, m | no.<br>missions | blocked");
 
@@ -597,9 +660,12 @@ public class BrowserVisualization implements FleetVisualization {
 				}
 			}
 
-            tbodyHtml.append("<tr> <td>");
-			tbodyHtml.append(row.toString().replace(" | ", "</td> <td>"));
-			tbodyHtml.append("</td> </tr>\n");
+            tbodyHtml.append("<tr>");
+			String[] parts = row.toString().split(" [|] ");
+			for (int i = 0; i < parts.length; i++) {
+				tbodyHtml.append("<td class=col").append(i).append(">").append(parts[i]).append("</td>");
+			}
+			tbodyHtml.append("</tr>\n");
 
 			String[] rowData = row.toString().split(" [|] ");
 			for (int i = 0; i < rowData.length; i++) {
@@ -623,13 +689,12 @@ public class BrowserVisualization implements FleetVisualization {
 
 		StringBuilder theadHtml = new StringBuilder();
 		for (StringBuilder thead : List.of(thead1, thead2, theadHints)) {
-			theadHtml.append("<tr> <th>");
-			theadHtml.append(
-					thead.toString()
-							.replaceAll("\\[.*?]", "")
-							.replaceAll(" [|]([2-9]?) ", "</th> <th colspan=\"$1\">")
-			);
-			theadHtml.append("</th> </tr>\n");
+			theadHtml.append("<tr>");
+			String text = thead.toString().replaceAll("\\[.*?]", "");
+			for (StringBuilder html : makeHeaderHtmls(text)) {
+				theadHtml.append(html);
+			}
+			theadHtml.append("</tr>\n");
 		}
 		return "<style>\n" +
 				"  table.info td {\n" +
