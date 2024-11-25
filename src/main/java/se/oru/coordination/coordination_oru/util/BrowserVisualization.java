@@ -394,8 +394,8 @@ public class BrowserVisualization implements FleetVisualization {
 
 	protected String makeVehicleTableHtml() {
         StringBuilder thead1 = null;
-        StringBuilder thead2 = null;
-		StringBuilder thead3 = null;
+        StringBuilder theadHints = null;
+		StringBuilder thead2 = null;
 		StringBuilder tbodyHtml = new StringBuilder();
 
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getList();
@@ -426,8 +426,8 @@ public class BrowserVisualization implements FleetVisualization {
                     vehicle.getTypeForVisualization() +
                     "</div>");
 			thead1 = new StringBuilder();
-			thead2 = new StringBuilder();
-			thead3 = new StringBuilder("Vehicle ID and type");
+			theadHints = new StringBuilder();
+			thead2 = new StringBuilder("Vehicle ID and type");
 
 			RobotReport rr = tec.getRobotReport(id);
             if (rr != null) {
@@ -438,10 +438,12 @@ public class BrowserVisualization implements FleetVisualization {
                         vehicle.getMaxVelocity()
                 ));
 				thead1.append(" |2 Velocity, m/s");
-				thead3.append(" | current | max");
+				theadHints.append(" |2 ");
+				thead2.append(" | current | max");
 
 				thead1.append(" |4 Human (mis)behaviour actions");
-				thead3.append(" | can pass<br>first | violation of<br>priorities | moving<br>slowly | improper<br>parking");
+				theadHints.append(" |4 ");
+				thead2.append(" | can pass<br>first | violation of<br>priorities | moving<br>slowly | improper<br>parking");
 				if (! isHuman) {
 					KnobsAfterForcing knobsAfterForcing = ForcingMaintainer.getKnobsOfTheHuman();
 					boolean isToRestore = knobsAfterForcing != null && knobsAfterForcing.isToRestore(id);
@@ -477,7 +479,8 @@ public class BrowserVisualization implements FleetVisualization {
 				}
 
 				thead1.append(" |5 Coordination strategies for AVs");
-				thead3.append(" | cautious<br>mode | rerouting at<br>parked / slow | moving<br>backwards" + " | change of<br>priorities | stops");
+				theadHints.append(" | proactive |4 reactive");
+				thead2.append(" | cautious<br>mode | rerouting at<br>parked / slow | moving<br>backwards" + " | change of<br>priorities | stops");
 				if (isHuman) {
 					row.append(" |  |  |  |  | ");
 				} else {
@@ -510,7 +513,8 @@ public class BrowserVisualization implements FleetVisualization {
 				assert allCollisions.size() == minorCollisions.size() + majorCollisions.size();
 
 				thead1.append(" |3 Safety-critical events");
-				thead3.append(" | violations | near<br>misses | collisions");
+				theadHints.append(" |3 ");
+				thead2.append(" | violations | near<br>misses | collisions");
 				if (! isHuman) {
 					row.append(" | ");
 				} else {
@@ -534,7 +538,8 @@ public class BrowserVisualization implements FleetVisualization {
                         center(vehicle.isBlocked() ? "yes" : "")
                 ));
 				thead1.append(" |3 Efficiency");
-				thead3.append(" | traveled<br>total, m | no.<br>missions | blocked");
+				theadHints.append(" |3 ");
+				thead2.append(" | traveled<br>total, m | no.<br>missions | blocked");
 
 				if (isExtendedText) {
                     row.append(String.format(" | (%.1f, %.1f) | %.1f",
@@ -542,7 +547,8 @@ public class BrowserVisualization implements FleetVisualization {
                             rr.getDistanceTraveled()
                     ));
 					thead1.append(" |8 Tracker state (current mission)");
-					thead3.append(" | position<br>(x, y), m | traveled,<br>m");
+					theadHints.append(" |8 ");
+					thead2.append(" | position<br>(x, y), m | traveled,<br>m");
 
                     Double positionToSlowDown = trackerAdaptive == null ? null : trackerAdaptive.positionToSlowDown;
 					double distanceToCP =
@@ -559,7 +565,7 @@ public class BrowserVisualization implements FleetVisualization {
                             Double.isInfinite(distanceToCP) ? "" : String.format("%.1f", distanceToCP),
                             rr.statusString == null ? "-" : rr.statusString.replace("STOPPED_AT_CP", "STOP@CP")
                     ));
-					thead3.append(" | path<br>index | no.<br>poses | CP<br>(index) | posTo<br>Slow, m | distance<br>ToCP, m | status");
+					thead2.append(" | path<br>index | no.<br>poses | CP<br>(index) | posTo<br>Slow, m | distance<br>ToCP, m | status");
 
 //					int numCalls = 0;
 //					var numIntegrateCalls = TrajectoryEnvelopeCoordinatorSimulation.tec.numIntegrateCalls;
@@ -580,8 +586,8 @@ public class BrowserVisualization implements FleetVisualization {
 				synchronized (missions) {
                     row.append(" | <div style=\"text-align: left;\">").append(missions.size()).append(": [");
 					thead1.append(" | Dispatcher");
-					thead2.append(""); // TODO
-					thead3.append(" | future<br>missions");
+					theadHints.append(" | ");
+					thead2.append(" | future<br>missions");
 					for (int i = 0; i < missions.size(); i++) {
 						if (i > 0) {
                             row.append(", ");
@@ -598,7 +604,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 		StringBuilder theadHtml = new StringBuilder();
 		assert thead1 != null;
-        for (StringBuilder thead : List.of(thead1, thead2, thead3)) {
+        for (StringBuilder thead : List.of(thead1, thead2, theadHints)) {
 			theadHtml.append("<tr> <th>");
 			theadHtml.append(thead.toString().replaceAll(" [|]([2-9]?) ", "</th> <th colspan=\"$1\">"));
 			theadHtml.append("</th> </tr>\n");
