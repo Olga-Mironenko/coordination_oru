@@ -10,6 +10,7 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 public class ForcingMaintainer {
     public KnobsAfterForcing knobsAfterForcing;
     private RobotReport rrAtForcingStart;
+    private double distanceOfLastForcingStart;
 
     public static KnobsAfterForcing getKnobsOfTheHuman() {
         int humanID = VehiclesHashMap.getTheHuman().getID();
@@ -43,11 +44,16 @@ public class ForcingMaintainer {
             assert ! isRestoringNow;
             // Because that's perhaps not fully supported.
 
-            KnobsAfterForcing knobsAfterForcingNew = Forcing.forceDriving(robotID);
-            if (knobsAfterForcingNew != null) {
-                knobsAfterForcing = knobsAfterForcingNew;
-                knobsAfterForcing.distanceToCP = distanceToCP;
-                rrAtForcingStart = human.getCurrentRobotReport();
+            if (knobsAfterForcing != null) {
+                distanceOfLastForcingStart = human.getCurrentRobotReport().getDistanceTraveled(); // renewing the forcing
+            } else {
+                KnobsAfterForcing knobsAfterForcingNew = Forcing.forceDriving(robotID);
+                if (knobsAfterForcingNew != null) {
+                    knobsAfterForcing = knobsAfterForcingNew;
+                    knobsAfterForcing.distanceToCP = distanceToCP;
+                    rrAtForcingStart = human.getCurrentRobotReport();
+                    distanceOfLastForcingStart = rrAtForcingStart.getDistanceTraveled();
+                }
             }
         }
 
@@ -67,7 +73,7 @@ public class ForcingMaintainer {
             knobsAfterForcing.resumeRobots();
             knobsAfterForcing.restorePriorities();
         } else {
-            double distanceTraveled = rr.getDistanceTraveled() - rrAtForcingStart.getDistanceTraveled();
+            double distanceTraveled = rr.getDistanceTraveled() - distanceOfLastForcingStart;
             assert distanceTraveled >= 0; // otherwise, we are in a new mission, but restoring/resuming hasn't happened
             if (!knobsAfterForcing.updateForcing(distanceTraveled)) {
                 knobsAfterForcing = null;

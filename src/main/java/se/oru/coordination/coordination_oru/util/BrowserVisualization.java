@@ -766,7 +766,9 @@ public class BrowserVisualization implements FleetVisualization {
                     numForcings
             ));
 			if (isExtendedText && Forcing.isForcingActive()) {
-				html.append(" (forcing is active since step ").append(Forcing.forcingSinceTimestep).append(")");
+				html.append(" (forcing is active since ").append(
+						secondsToHMS((long) Forcing.forcingSinceTimestep * Timekeeper.virtualMillisPerTimestep / 1000)
+				).append(")");
 			}
 			html.append("<br>");
 		}
