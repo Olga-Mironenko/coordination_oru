@@ -761,45 +761,30 @@ public class BrowserVisualization implements FleetVisualization {
 	protected StringBuilder makePretable() {
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-		StringBuilder html = new StringBuilder();
 		Map<String, String> map = new LinkedHashMap<>();
 
 		if (AbstractVehicle.scenarioId != null) {
-			html.append("Scenario: ").append(AbstractVehicle.scenarioId).append("<br>");
 			map.put("Scenario", AbstractVehicle.scenarioId);
 		}
 
-		html.append(String.format("Current datetime: %s<br>", java.time.LocalDateTime.now().format(
-				DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-		)));
 		map.put("Current datetime", java.time.LocalDateTime.now().format(
 				DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 		));
 
 		if (Timekeeper.isTimekeeperActive()) {
-			html.append(String.format("Time passed (real): %s<br>", secondsToHMS(Timekeeper.getRealMillisPassed() / 1000)));
 			map.put("Time passed (real)", secondsToHMS(Timekeeper.getRealMillisPassed() / 1000));
-			html.append(String.format("Time passed (sim.): %s (x%.1f)<br>",
-					secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000),
-					(double) Timekeeper.getVirtualMillisPassed() / Timekeeper.getRealMillisPassed()
-			));
 			map.put("Time passed (sim.)", String.format("%s (x%.1f)",
 					secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000),
 					(double) Timekeeper.getVirtualMillisPassed() / Timekeeper.getRealMillisPassed()
 			));
 		}
 
-		html.append(String.format("isCanPassFirstActive: hum=%b, aut=%b<br>",
-				CriticalSection.isCanPassFirstActiveHum,
-				CriticalSection.isCanPassFirstActiveAut));
 		map.put("isCanPassFirstActive", String.format("hum=%b, aut=%b",
 				CriticalSection.isCanPassFirstActiveHum,
 				CriticalSection.isCanPassFirstActiveAut));
-		html.append(String.format("isRacingThroughCrossroadAllowed: %b<br>", AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed));
 		map.put("isRacingThroughCrossroadAllowed", String.format("%b", AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed));
 
 		if (HumanControl.status != null) {
-			html.append("Human control status: ").append(HumanControl.status).append("<br>");
 			map.put("Human control status", HumanControl.status);
 		}
 
@@ -823,21 +808,11 @@ public class BrowserVisualization implements FleetVisualization {
 				;
 			}
 
-			html.append(String.format(
-					"Human V%d: <b>%d</b> forcing events",
-					id,
-					numForcings
-			)).append(comment).append("<br>");
 			map.put("Human V" + id, String.format("<b>%d</b> forcing events",
 					numForcings
 			) + comment);
 		}
 
-		html.append(String.format(
-				"Collision events total: <b>%d</b> minor, <b>%d</b> major<br>",
-				tec.allCollisionsList.size() - tec.majorCollisionsList.size(),
-				tec.majorCollisionsList.size()
-		));
 		map.put("Collision events total", String.format("<b>%d</b> minor, <b>%d</b> major",
 				tec.allCollisionsList.size() - tec.majorCollisionsList.size(),
 				tec.majorCollisionsList.size()
@@ -845,22 +820,17 @@ public class BrowserVisualization implements FleetVisualization {
 
 		String textEmergencyBreaker = AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
 		if (isExtendedText && textEmergencyBreaker != null) {
-			html.append("EmergencyBreaker: ").append(textEmergencyBreaker).append("<br>");
 			map.put("EmergencyBreaker", textEmergencyBreaker);
 		}
 
-		html.append("Vehicle size (m): ").append(VehiclesHashMap.getTheHuman().vehicleSize).append("<br>");
 		map.put("Vehicle size (m)", VehiclesHashMap.getTheHuman().vehicleSize.toString());
 
-		StringBuilder htmlCheck = new StringBuilder();
 		StringBuilder htmlOutput = new StringBuilder();
 		Map<String, String> mapCsv = new LinkedHashMap<>();
 		for (Map.Entry<String, String> entry : map.entrySet()) {
-			htmlCheck.append(entry.getKey()).append(": ").append(entry.getValue()).append("<br>");
 			htmlOutput.append("<b>").append(entry.getKey()).append("</b>: ").append(entry.getValue()).append("<br>");
 			mapCsv.put(htmlToCsv(entry.getKey()), htmlToCsv(entry.getValue()));
 		}
-		assert htmlCheck.toString().contentEquals(html);
 		BrowserVisualization.mapPretable = mapCsv;
 
 		return htmlOutput;
