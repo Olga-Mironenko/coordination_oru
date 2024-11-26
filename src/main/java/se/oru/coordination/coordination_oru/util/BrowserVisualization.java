@@ -477,13 +477,21 @@ public class BrowserVisualization implements FleetVisualization {
 		HashMap<Integer, AbstractVehicle> idToVehicle = VehiclesHashMap.getList();
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-		HashSet<Integer> robotIDsPassFirstAffect = new HashSet<>();
+		HashSet<Integer> robotIDsPassFirstCan = new HashSet<>();
 		HashSet<Integer> robotIDsPassFirstAffected = new HashSet<>();
+		HashSet<Integer> robotIDsPassFirstCannot = new HashSet<>();
+		HashSet<Integer> robotIDsPassFirstUnaffected = new HashSet<>();
 		for (CriticalSection cs : tec.allCriticalSections) {
 			for (Map.Entry<Integer, HashSet<CriticalSection>> entry : tec.robotIDToCriticalSectionsPassFirstAffected.entrySet()) {
 				if (entry.getValue().contains(cs)) {
-					robotIDsPassFirstAffect.add(entry.getKey());
+					robotIDsPassFirstCan.add(entry.getKey());
 					robotIDsPassFirstAffected.add(cs.getOtherRobotID(entry.getKey()));
+				}
+			}
+			for (Map.Entry<Integer, HashSet<CriticalSection>> entry : tec.robotIDToCriticalSectionsPassFirstUnaffected.entrySet()) {
+				if (entry.getValue().contains(cs)) {
+					robotIDsPassFirstCannot.add(entry.getKey());
+					robotIDsPassFirstUnaffected.add(cs.getOtherRobotID(entry.getKey()));
 				}
 			}
 		}
@@ -526,7 +534,13 @@ public class BrowserVisualization implements FleetVisualization {
 					boolean isToRestore = knobsAfterForcing != null && knobsAfterForcing.isToRestore(id);
 					boolean isToResume = knobsAfterForcing != null && knobsAfterForcing.isToResume(id);
 					row.append(String.format(" | %s | %s |  | ",
-                            center(robotIDsPassFirstAffected.contains(id) ? "affected" : ""),
+                            center(
+									robotIDsPassFirstAffected.contains(id)
+											? "affected"
+											: robotIDsPassFirstUnaffected.contains(id)
+											? "*"
+											: ""
+							),
                             center(isToRestore || isToResume ? "affected" : "")
                     ));
 				} else {
@@ -536,7 +550,13 @@ public class BrowserVisualization implements FleetVisualization {
 							trackerAdaptive.forcingMaintainer.isForcingOngoing()
 					);
 					row.append(String.format(" | %s | %s",
-                            center(robotIDsPassFirstAffect.contains(id) ? "yes" : ""),
+                            center(
+									robotIDsPassFirstCan.contains(id)
+											? "yes"
+											: robotIDsPassFirstCannot.contains(id)
+											? "no"
+											: ""
+							),
                             center(
                                     !isForcingOngoing
                                             ? ""
@@ -719,7 +739,19 @@ public class BrowserVisualization implements FleetVisualization {
 				"  </tbody>\n" +
 				"</table>\n";
 	}
-	
+
+	private boolean isAnyCSWithHuman() {
+		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+		for (CriticalSection cs : tec.allCriticalSections) {
+			for (int id : cs.getRobotIDs()) {
+				if (VehiclesHashMap.isHuman(id)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	protected void setStatusText() {
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 

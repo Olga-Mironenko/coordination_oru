@@ -316,9 +316,9 @@ public class CriticalSection {
 		return ret;
 	}
 
-	public boolean canPassFirst(int myID) {
+	public Boolean canPassFirst(int myID) {
 		if (! (isCanPassFirstActiveHum || isCanPassFirstActiveAut)) {
-			return false;
+			return null;
 		}
 
 		boolean isInferior = ! isSuperior(myID);

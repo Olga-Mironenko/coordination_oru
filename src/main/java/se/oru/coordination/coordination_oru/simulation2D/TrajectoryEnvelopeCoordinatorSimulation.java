@@ -44,6 +44,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	public HashMap<Integer, Integer> robotIDToNumReroutingsNearSlowVehicle = new HashMap<>();
 
 	public HashMap<Integer, HashSet<CriticalSection>> robotIDToCriticalSectionsPassFirstAffected = new HashMap<>();
+	public HashMap<Integer, HashSet<CriticalSection>> robotIDToCriticalSectionsPassFirstUnaffected = new HashMap<>();
 
 	protected AtomicInteger totalMsgsLost = new AtomicInteger(0);
 	protected AtomicInteger totalPacketsLost = new AtomicInteger(0);

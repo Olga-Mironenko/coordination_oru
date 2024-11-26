@@ -916,15 +916,21 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			return;
 		}
 
-		if (criticalSection.canPassFirst(myRobotID)) {
-			setCriticalPoint(-1);
+		Boolean can = criticalSection.canPassFirst(myRobotID);
+		if (can == null) {
+			return;
+		}
 
-			HashMap<Integer, HashSet<CriticalSection>> robotIDToCSes =
-					TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToCriticalSectionsPassFirstAffected;
-			if (! robotIDToCSes.containsKey(myRobotID)) {
-				robotIDToCSes.put(myRobotID, new HashSet<>());
-			}
-			robotIDToCSes.get(myRobotID).add(criticalSection);
+		HashMap<Integer, HashSet<CriticalSection>> robotIDToCSes = can
+				? TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToCriticalSectionsPassFirstAffected
+				: TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToCriticalSectionsPassFirstUnaffected;
+		if (! robotIDToCSes.containsKey(myRobotID)) {
+			robotIDToCSes.put(myRobotID, new HashSet<>());
+		}
+		robotIDToCSes.get(myRobotID).add(criticalSection);
+
+		if (can) {
+			setCriticalPoint(-1);
 
 			SortedSet<Integer> criticalPointsPostponedOriginal = criticalPointsPostponed;
 			if (! criticalPointsPostponedOriginal.isEmpty()) {
