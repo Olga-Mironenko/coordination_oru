@@ -50,6 +50,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 	public static boolean areAllVehiclesStarted = false;
 
+	public static Map<String, String> mapPretable = null;
 	public static String[] statsColumns = null;
 	public static TreeMap<Integer, String[]> statsIdToRow = null;
 
@@ -468,7 +469,7 @@ public class BrowserVisualization implements FleetVisualization {
 		return htmls;
 	}
 
-	protected String makeVehicleTableHtml() {
+	protected StringBuilder makeVehicleTableHtml() {
         StringBuilder thead1 = null;
         StringBuilder theadHints = null;
 		StringBuilder thead2 = null;
@@ -716,7 +717,9 @@ public class BrowserVisualization implements FleetVisualization {
 			}
 			theadHtml.append("</tr>\n");
 		}
-		return "<style>\n" +
+
+		return new StringBuilder(
+				"<style>\n" +
 				"  table.info td {\n" +
 				"    text-align: right;\n" +
 				"  }\n" +
@@ -732,12 +735,15 @@ public class BrowserVisualization implements FleetVisualization {
 				"  }\n" +
 				"</style>\n" +
 				"<table class=\"info\">\n" +
-				"  <thead> " + theadHtml +
+				"  <thead>\n"
+		).append(theadHtml).append(
 				"  </thead>\n" +
 				"\n" +
-				"  <tbody>\n" + tbodyHtml +
+				"  <tbody>\n"
+		).append(tbodyHtml).append(
 				"  </tbody>\n" +
-				"</table>\n";
+				"</table>\n"
+		);
 	}
 
 	private boolean isAnyCSWithHuman() {
@@ -752,37 +758,53 @@ public class BrowserVisualization implements FleetVisualization {
 		return false;
 	}
 
-	protected void setStatusText() {
+	protected StringBuilder makePretable() {
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
 		StringBuilder html = new StringBuilder();
+		Map<String, String> map = new LinkedHashMap<>();
 
 		if (AbstractVehicle.scenarioId != null) {
 			html.append("Scenario: ").append(AbstractVehicle.scenarioId).append("<br>");
+			map.put("Scenario", AbstractVehicle.scenarioId);
 		}
 
 		html.append(String.format("Current datetime: %s<br>", java.time.LocalDateTime.now().format(
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-        )));
+				DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+		)));
+		map.put("Current datetime", java.time.LocalDateTime.now().format(
+				DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+		));
+
 		if (Timekeeper.isTimekeeperActive()) {
 			html.append(String.format("Time passed (real): %s<br>", secondsToHMS(Timekeeper.getRealMillisPassed() / 1000)));
+			map.put("Time passed (real)", secondsToHMS(Timekeeper.getRealMillisPassed() / 1000));
 			html.append(String.format("Time passed (sim.): %s (x%.1f)<br>",
-                    secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000),
-                    (double) Timekeeper.getVirtualMillisPassed() / Timekeeper.getRealMillisPassed()
-            ));
+					secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000),
+					(double) Timekeeper.getVirtualMillisPassed() / Timekeeper.getRealMillisPassed()
+			));
+			map.put("Time passed (sim.)", String.format("%s (x%.1f)",
+					secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000),
+					(double) Timekeeper.getVirtualMillisPassed() / Timekeeper.getRealMillisPassed()
+			));
 		}
 
 		html.append(String.format("isCanPassFirstActive: hum=%b, aut=%b<br>",
-                CriticalSection.isCanPassFirstActiveHum,
-                CriticalSection.isCanPassFirstActiveAut));
+				CriticalSection.isCanPassFirstActiveHum,
+				CriticalSection.isCanPassFirstActiveAut));
+		map.put("isCanPassFirstActive", String.format("hum=%b, aut=%b",
+				CriticalSection.isCanPassFirstActiveHum,
+				CriticalSection.isCanPassFirstActiveAut));
 		html.append(String.format("isRacingThroughCrossroadAllowed: %b<br>", AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed));
+		map.put("isRacingThroughCrossroadAllowed", String.format("%b", AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed));
 
 		if (HumanControl.status != null) {
-			html.append(HumanControl.status).append("<br>");
+			html.append("Human control status: ").append(HumanControl.status).append("<br>");
+			map.put("Human control status", HumanControl.status);
 		}
 
 		for (int id : new TreeSet<>(VehiclesHashMap.getList().keySet())) {
-			if (! VehiclesHashMap.isHuman(id)) {
+			if (!VehiclesHashMap.isHuman(id)) {
 				continue;
 			}
 
@@ -792,43 +814,71 @@ public class BrowserVisualization implements FleetVisualization {
 			}
 
 			int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(id, 0);
-			html.append(String.format(
-                    "Human V%d: <b>%d</b> forcing events",
-                    id,
-                    numForcings
-            ));
+
+			String comment = "";
 			if (isExtendedText && Forcing.isForcingActive()) {
-				html.append(" (forcing is active since ").append(
-						secondsToHMS((long) Forcing.forcingSinceTimestep * Timekeeper.virtualMillisPerTimestep / 1000)
-				).append(")");
+				comment = " (forcing is active since " +
+						secondsToHMS((long) Forcing.forcingSinceTimestep * Timekeeper.virtualMillisPerTimestep / 1000) +
+						")";
+				;
 			}
-			html.append("<br>");
+
+			html.append(String.format(
+					"Human V%d: <b>%d</b> forcing events",
+					id,
+					numForcings
+			)).append(comment).append("<br>");
+			map.put("Human V" + id, String.format("<b>%d</b> forcing events",
+					numForcings
+			) + comment);
 		}
 
 		html.append(String.format(
-                "Collision events total: <b>%d</b> minor, <b>%d</b> major<br>",
-                tec.allCollisionsList.size() - tec.majorCollisionsList.size(),
-                tec.majorCollisionsList.size()
-        ));
+				"Collision events total: <b>%d</b> minor, <b>%d</b> major<br>",
+				tec.allCollisionsList.size() - tec.majorCollisionsList.size(),
+				tec.majorCollisionsList.size()
+		));
+		map.put("Collision events total", String.format("<b>%d</b> minor, <b>%d</b> major",
+				tec.allCollisionsList.size() - tec.majorCollisionsList.size(),
+				tec.majorCollisionsList.size()
+		));
 
 		String textEmergencyBreaker = AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
 		if (isExtendedText && textEmergencyBreaker != null) {
 			html.append("EmergencyBreaker: ").append(textEmergencyBreaker).append("<br>");
+			map.put("EmergencyBreaker", textEmergencyBreaker);
 		}
 
 		html.append("Vehicle size (m): ").append(VehiclesHashMap.getTheHuman().vehicleSize).append("<br>");
+		map.put("Vehicle size (m)", VehiclesHashMap.getTheHuman().vehicleSize.toString());
 
-		html.append(makeVehicleTableHtml());
+		StringBuilder htmlCheck = new StringBuilder();
+		StringBuilder htmlOutput = new StringBuilder();
+		Map<String, String> mapCsv = new LinkedHashMap<>();
+		for (Map.Entry<String, String> entry : map.entrySet()) {
+			htmlCheck.append(entry.getKey()).append(": ").append(entry.getValue()).append("<br>");
+			htmlOutput.append("<b>").append(entry.getKey()).append("</b>: ").append(entry.getValue()).append("<br>");
+			mapCsv.put(htmlToCsv(entry.getKey()), htmlToCsv(entry.getValue()));
+		}
+		assert htmlCheck.toString().contentEquals(html);
+		BrowserVisualization.mapPretable = mapCsv;
+
+		return htmlOutput;
+	}
+
+	protected void setStatusText() {
+		StringBuilder output = new StringBuilder(makePretable());
+		output.append(makeVehicleTableHtml());
 
 		if (isExtendedText && areAllVehiclesStarted) {
 //			html += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
-			html.append(stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections));
+			output.append(stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections));
 		}
 
-		setOverlayText(html.toString());
+		setOverlayText(output.toString());
 	}
 
-	protected static String stringifyCriticalSections(HashSet<CriticalSection> allCriticalSections) {
+	protected static StringBuilder stringifyCriticalSections(HashSet<CriticalSection> allCriticalSections) {
 		Integer robotID = null;
 
 		ArrayList<CriticalSection> criticalSections =
@@ -846,7 +896,7 @@ public class BrowserVisualization implements FleetVisualization {
 			}
 			text.append("</ul>\n");
 		}
-		return text.toString();
+		return text;
 	}
 	
 	public void addPath(String pathName, PoseSteering[] ps, double arrowLength, String color) {

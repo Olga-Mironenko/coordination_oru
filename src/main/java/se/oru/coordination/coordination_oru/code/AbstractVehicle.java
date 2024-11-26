@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -280,11 +281,19 @@ public abstract class AbstractVehicle {
             bw.write("Maximum speed (m/s)\t" + round(maxVelocity) + "\n");
             bw.write("Average speed (m/s)\t" + round(totalDistance / totalTime) + "\n");
 
+            if (BrowserVisualization.mapPretable != null) {
+                for (Map.Entry<String, String> entry : BrowserVisualization.mapPretable.entrySet()) {
+                    bw.write(entry.getKey() + "\t" + entry.getValue() + "\n");
+                }
+            }
+
             String[] columns = BrowserVisualization.statsColumns;
-            String[] rows = BrowserVisualization.statsIdToRow.get(ID);
-            assert columns.length == rows.length;
-            for (int i = 1; i < columns.length; i++) {
-                bw.write(columns[i] + "\t" + rows[i] + "\n");
+            if (columns != null) {
+                String[] rows = BrowserVisualization.statsIdToRow.get(ID);
+                assert columns.length == rows.length;
+                for (int i = 1; i < columns.length; i++) {
+                    bw.write(columns[i] + "\t" + rows[i] + "\n");
+                }
             }
 
             bw.close();
