@@ -526,7 +526,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 									collisionsList.add(ce);
 
 									HashMap<Integer, List<CollisionEvent>> robotIDToCollisions = isMajor ? robotIDToMajorCollisions : robotIDToAllCollisions;
-									for (int robotID : Arrays.asList(cs.getTe1RobotID(), cs.getTe2RobotID())) {
+									for (int robotID : Arrays.asList(cs.getTe1RobotID(), cs.getTe2RobotID(), -1)) {
 										// Prepare a list of collisions:
 										if (! robotIDToCollisions.containsKey(robotID)) {
 											robotIDToCollisions.put(robotID, new ArrayList<>());

@@ -813,9 +813,13 @@ public class BrowserVisualization implements FleetVisualization {
 			) + comment);
 		}
 
-		map.put("Collision events total", String.format("<b>%d</b> minor, <b>%d</b> major",
+		List<CollisionEvent> minorCollisions = tec.robotIDToMinorCollisions.getOrDefault(-1, new ArrayList<>());
+		List<CollisionEvent> majorCollisions = tec.robotIDToMajorCollisions.getOrDefault(-1, new ArrayList<>());
+		map.put("Collision events", String.format("<b>%d</b> minor%s, <b>%d</b> major%s",
 				tec.allCollisionsList.size() - tec.majorCollisionsList.size(),
-				tec.majorCollisionsList.size()
+				stringifyCollisions(minorCollisions),
+				tec.majorCollisionsList.size(),
+				stringifyCollisions(majorCollisions)
 		));
 
 		String textEmergencyBreaker = AdaptiveTrajectoryEnvelopeTrackerRK4.emergencyBreaker.toString();
@@ -825,15 +829,38 @@ public class BrowserVisualization implements FleetVisualization {
 
 		map.put("Vehicle size (m)", VehiclesHashMap.getTheHuman().vehicleSize.toString());
 
-		StringBuilder htmlOutput = new StringBuilder();
+		StringBuilder htmlOutput = new StringBuilder("<ul>");
 		Map<String, String> mapCsv = new LinkedHashMap<>();
 		for (Map.Entry<String, String> entry : map.entrySet()) {
-			htmlOutput.append("<b>").append(entry.getKey()).append("</b>: ").append(entry.getValue()).append("<br>");
+			htmlOutput.append("<li><b>").append(entry.getKey()).append("</b>: ").append(entry.getValue()).append("</li>");
 			mapCsv.put(htmlToCsv(entry.getKey()), htmlToCsv(entry.getValue()));
 		}
+		htmlOutput.append("</ul>");
 		BrowserVisualization.mapPretable = mapCsv;
 
 		return htmlOutput;
+	}
+
+	private String stringifyCollisions(List<CollisionEvent> collisions) {
+		if (collisions.isEmpty()) {
+			return "";
+		}
+		StringBuilder output = new StringBuilder(" (");
+		for (int i = 0; i < collisions.size(); i++) {
+			CollisionEvent collision = collisions.get(i);
+			if (i > 0) {
+				output.append(", ");
+			}
+			output.append(String.format("%s: <b>V%d</b>[%d]-<b>V%d</b>[%d]",
+					secondsToHMS(collision.getMillis() / 1000),
+					collision.getReports()[0].getRobotID(),
+					collision.getReports()[0].getPathIndex(),
+					collision.getReports()[1].getRobotID(),
+					collision.getReports()[1].getPathIndex()
+			));
+		}
+		output.append(")");
+		return output.toString();
 	}
 
 	protected void setStatusText() {

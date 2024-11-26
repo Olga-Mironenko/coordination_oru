@@ -1,35 +1,32 @@
 package se.oru.coordination.coordination_oru;
 
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
-import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class CollisionEvent {
-	protected long time = 0;
+	protected long millis = 0;
 	protected RobotReport[] reports = new RobotReport[2];
 	public CriticalSection cs;
 	public boolean isMajor;
-	public long millis;
 
 	/**
 	 * Create a {@link CollisionEvent} with information on time and robots involved.
-	 * @param time The time when the collision happens.
-	 * @param reports The reports of the robots where the collision happens (the current ones, without delays).
+	 * @param millis The time when the collision happens.
+	 * @param report1 The reports of the robots where the collision happens (the current ones, without delays).
 	 */
-	public CollisionEvent(long time, RobotReport report1, RobotReport report2, CriticalSection cs, boolean isMajor) {
-		this.time = time;
+	public CollisionEvent(long millis, RobotReport report1, RobotReport report2, CriticalSection cs, boolean isMajor) {
+		this.millis = millis;
 		this.reports[0] = report1;
 		this.reports[1] = report2;
 		this.cs = cs;
 		this.isMajor = isMajor;
-		this.millis = Timekeeper.getVirtualMillisPassed();
 	};
 	
 	/**
 	 * Get the time when the collision happens.
 	 * @return The time when the collision happens.
 	 */
-	public long getTime() {
-		return this.time;
+	public long getMillis() {
+		return this.millis;
 	};
 	
 	/**
