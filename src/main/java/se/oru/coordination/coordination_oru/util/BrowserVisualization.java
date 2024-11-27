@@ -785,6 +785,7 @@ public class BrowserVisualization implements FleetVisualization {
 				CriticalSection.isCanPassFirstActiveHum,
 				CriticalSection.isCanPassFirstActiveAut));
 		map.put("isRacingThroughCrossroadAllowed", String.format("%b", AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed));
+		map.put("probabilitySlowingDownForHuman", String.valueOf(AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman));
 
 		if (HumanControl.status != null) {
 			map.put("Human control status", HumanControl.status);
