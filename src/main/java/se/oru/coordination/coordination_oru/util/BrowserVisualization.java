@@ -760,6 +760,22 @@ public class BrowserVisualization implements FleetVisualization {
 		return false;
 	}
 
+	public static String escapeHTML(String s) {
+		// https://stackoverflow.com/a/25228492
+		StringBuilder out = new StringBuilder(Math.max(16, s.length()));
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c > 127 || c == '"' || c == '\'' || c == '<' || c == '>' || c == '&') {
+				out.append("&#");
+				out.append((int) c);
+				out.append(';');
+			} else {
+				out.append(c);
+			}
+		}
+		return out.toString();
+	}
+
 	protected StringBuilder makePretable() {
 		TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
@@ -832,11 +848,17 @@ public class BrowserVisualization implements FleetVisualization {
 
 		map.put("Vehicle size (m)", VehiclesHashMap.getTheHuman().vehicleSize.toString());
 
-		StringBuilder htmlOutput = new StringBuilder("<ul>");
+		StringBuilder htmlOutput = new StringBuilder(
+				"<style>ul.pretable li { white-space: nowrap; }</style>\n<ul class=\"pretable\">"
+		);
 		Map<String, String> mapCsv = new LinkedHashMap<>();
 		for (Map.Entry<String, String> entry : map.entrySet()) {
-			htmlOutput.append("<li><b>").append(entry.getKey()).append("</b>: ").append(entry.getValue()).append("</li>");
-			mapCsv.put(htmlToCsv(entry.getKey()), htmlToCsv(entry.getValue()));
+			String csv = htmlToCsv(entry.getValue());
+			String title = escapeHTML(csv);
+			htmlOutput.append("<li title=\"").append(title).append("\"><b>").append(
+					entry.getKey()
+			).append("</b>: ").append(entry.getValue()).append("</li>");
+			mapCsv.put(htmlToCsv(entry.getKey()), csv);
 		}
 		htmlOutput.append("</ul>");
 		BrowserVisualization.mapPretable = mapCsv;
