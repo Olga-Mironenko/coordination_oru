@@ -86,9 +86,11 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public static double probabilitySlowingDownForHuman = 0.0;
 	public static double velocitySlowingDownForHuman = 1.0;
 	public static double lengthIntervalSlowingDownForHuman = 10.0;
-	public static double durationStoppedMinForBlock = 60.0;
+	public static HashMap<Integer, Double> robotIDToDurationStoppedMinimumForBlock = new HashMap<>();
+	public static double durationStoppedMinimumForBlockDefault = 60.0;
+	public static double deltaDurationStoppedMinimumForBlock = 60.0;
 
-	private double durationStopped;
+	public double durationStopped;
 
 	public void setUseInternalCriticalPoints(boolean value) {
 		this.useInternalCPs = value;
@@ -949,7 +951,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	private boolean isStopped() {
-		return this.state.getVelocity() <= 0.0;
+		assert this.state.getVelocity() >= 0.0;
+		return this.state.getVelocity() == 0.0;
 	}
 
 	private Status checkIfStopped(Status status) {
@@ -1021,8 +1024,14 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return Status.STOPPED_AT_CP;
 	}
 
-	public boolean isDeadlocked() {
-		return durationStopped >= durationStoppedMinForBlock;
+	public double getDurationStoppedMinimumForBlock() {
+		return robotIDToDurationStoppedMinimumForBlock.getOrDefault(
+				te.getRobotID(), durationStoppedMinimumForBlockDefault
+		);
+	}
+
+	public boolean isBlocked() {
+		return durationStopped >= getDurationStoppedMinimumForBlock();
 	}
 
 	private void updateState(double deltaTime, AbstractVehicle vehicle) {
@@ -1196,6 +1205,12 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			}
 
 			if (! isStopped()) {
+				if (isBlocked()) {
+					robotIDToDurationStoppedMinimumForBlock.put(
+							te.getRobotID(),
+							getDurationStoppedMinimumForBlock() + deltaDurationStoppedMinimumForBlock
+					);
+				}
 				durationStopped = 0.0;
 			}
 

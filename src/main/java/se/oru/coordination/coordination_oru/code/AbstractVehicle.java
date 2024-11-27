@@ -192,7 +192,8 @@ public abstract class AbstractVehicle {
     public abstract void getPlan(Pose initial, Pose[] goals, String map, Boolean inversePath);
 
     private static boolean isStopped(RobotReport rr) {
-        return rr.getVelocity() < 1e-3;
+        assert rr.getVelocity() >= 0.0;
+        return rr.getVelocity() == 0.0;
     }
 
     public synchronized void updateStatistics() {
@@ -225,7 +226,6 @@ public abstract class AbstractVehicle {
     }
 
     public void writeStatistics() {
-
         try {
             String subdir = dateString + (
                     scenarioId == null
@@ -474,6 +474,6 @@ public abstract class AbstractVehicle {
         if (tracker == null) {
             return false;
         }
-        return tracker.isDeadlocked();
+        return tracker.isBlocked();
     }
 }

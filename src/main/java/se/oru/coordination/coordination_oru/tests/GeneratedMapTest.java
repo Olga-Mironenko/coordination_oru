@@ -45,8 +45,8 @@ public class GeneratedMapTest {
 
         if (scenarioString == null) {
             scenarioString = (
-                    "map-generator/generated-maps/2024-11-22_11:27:17_without_bridges/scenario1-4.json, " +
-                            "stops, seed 1, probabilityForcingForHuman 1"
+                    "map-generator/generated-maps/2024-11-22_11:27:17_without_bridges/scenario3-4.json, " +
+                            "baseline, seed 1, probabilityForcingForHuman 0"
             );
         }
         AbstractVehicle.scenarioId = String.format(

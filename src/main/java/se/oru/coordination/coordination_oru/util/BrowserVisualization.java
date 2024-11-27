@@ -626,7 +626,9 @@ public class BrowserVisualization implements FleetVisualization {
                 row.append(String.format(" | %.1f | %d | %s",
                         vehicle.totalDistance,
                         vehicle.getNumMissions(),
-                        center(vehicle.isBlocked() ? "yes" : "")
+                        center(vehicle.isBlocked()
+								? secondsToHMS((int) vehicle.getAdaptiveTracker().durationStopped)
+								: "")
                 ));
 				thead1.append(" |3{border-color: green;} Efficiency");
 				theadHints.append(" |3 ");
