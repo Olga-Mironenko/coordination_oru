@@ -11,14 +11,23 @@ root=$(dirname "$0")
 timeout_hard=60m
 demo=GeneratedMapTest
 
+## 4 robots:
+#dirs_maps=(
+#  '2024-11-22_11:26:14_with_bridges'
+#  '2024-11-22_11:27:17_without_bridges'
+#)
+
+# 3 robots:
 dirs_maps=(
-  '2024-11-22_11:26:14_with_bridges'
-  '2024-11-22_11:27:17_without_bridges'
+  '2024-11-28_13:17:39_with_bridges'
+  '2024-11-28_13:19:18_without_bridges'
 )
+
 indexes_maps=(
 #  1
   3
 )
+
 scenarios=()
 for i_map in "${indexes_maps[@]}"; do
   for i_locations in {1..10}; do

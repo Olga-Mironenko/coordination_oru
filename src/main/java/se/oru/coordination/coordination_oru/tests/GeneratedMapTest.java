@@ -45,7 +45,7 @@ public class GeneratedMapTest {
 
         if (scenarioString == null) {
             scenarioString = (
-                    "map-generator/generated-maps/2024-11-22_11:27:17_without_bridges/scenario3-4.json, " +
+                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario3-4.json, " +
                             "baseline, seed 1, probabilityForcingForHuman 0"
             );
         }
