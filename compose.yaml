@@ -6,10 +6,14 @@ volumes:
 services:
   coordination_oru:
     build: .
+    ports:
+      - "5900:5900"
     volumes:
       - ./:/coordination_oru/
       - project-gradle:/coordination_oru/.gradle/
       - project-build:/coordination_oru/build/
       - gradle:/root/.gradle/
     working_dir: /coordination_oru/
-    command: ./gradlew run -Passert -Pdemo=GeneratedMapTest
+    shm_size: '4gb'
+#    command: ./gradlew run -Passert -Pdemo=GeneratedMapTest
+    command: container/index.sh
