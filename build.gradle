@@ -35,6 +35,7 @@ repositories {
   jcenter()
   maven { url 'https://jitpack.io' }
   maven { url 'https://github.com/rosjava/rosjava_mvn_repo/raw/master/' }
+  maven { url 'https://artifacts.camunda.com/artifactory/public/' }  // for `commons-lang:commons-lang:2.4.0`, etc.
 }
 
 configurations.all {
@@ -66,7 +67,7 @@ dependencies {
   implementation 'org.ros.rosjava_messages:nav_msgs:[1.12,1.13)'
   implementation 'org.ros.rosjava_messages:geometry_msgs:[1.12,1.13)'
   implementation 'org.ros.rosjava_messages:std_msgs:[0.5.0,0.6.0)'
-  
+
   //For BrowserVisualization
   implementation 'org.eclipse.jetty.websocket:websocket-api:9.4.12.v20180830'
   implementation 'org.eclipse.jetty.websocket:websocket-server:9.4.12.v20180830'
