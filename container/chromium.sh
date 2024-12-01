@@ -2,6 +2,7 @@
 
 set -eux -o pipefail
 
-[ $# = 0 ]
+[ $# -ge 0 ]
+args=("$@")
 
-gosu nonroot chromium --no-sandbox --test-type
+exec gosu nonroot chromium --no-sandbox --test-type "${args[@]}"

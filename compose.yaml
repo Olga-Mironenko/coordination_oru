@@ -14,6 +14,5 @@ services:
       - project-build:/coordination_oru/build/
       - gradle:/root/.gradle/
     working_dir: /coordination_oru/
-    shm_size: '4gb'
-#    command: ./gradlew run -Passert -Pdemo=GeneratedMapTest
     command: container/index.sh
+    shm_size: '4gb'  # for Chromium

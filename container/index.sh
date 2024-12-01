@@ -14,6 +14,9 @@ sleep 1
 
 "$prefixer" x11vnc "$root"/x11vnc.sh &
 "$prefixer" fluxbox fluxbox &
-"$prefixer" chromium "$root"/chromium.sh &
+"$prefixer" chromium "$root"/chromium.sh --start-maximized &
+sleep 1
+
+"$prefixer" scenario "$root"/scenario.sh &
 
 wait

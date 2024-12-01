@@ -11,4 +11,6 @@ RUN set -ex; \
 
 RUN rm /usr/share/images/fluxbox/debian-squared.jpg  # "fbsetbg: I can't find an app to set the wallpaper with."
 
+ENV IS_CONTAINER=1
+
 EXPOSE 5900

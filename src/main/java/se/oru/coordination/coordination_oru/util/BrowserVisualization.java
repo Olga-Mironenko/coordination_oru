@@ -148,8 +148,12 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 	
 	private void startOpenInBrowser(String serverHostNameOrIP) {
-		if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-			try { Desktop.getDesktop().browse(new URI("http://" + serverHostNameOrIP + ":8080")); }
+		String url = "http://" + serverHostNameOrIP + ":8080";
+		if (System.getenv("IS_CONTAINER") != null) {
+			int code = runProcess("container/chromium.sh", url);
+			assert code == 0;
+		} else if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+			try { Desktop.getDesktop().browse(new URI(url)); }
 			catch (IOException e) { e.printStackTrace(); }
 			catch (URISyntaxException e) { e.printStackTrace(); }
 		}
