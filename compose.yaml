@@ -1,5 +1,5 @@
 volumes:
-  gradle:
+  root-gradle:
   project-gradle:
   project-build:
 
@@ -12,7 +12,7 @@ services:
       - ./:/coordination_oru/
       - project-gradle:/coordination_oru/.gradle/
       - project-build:/coordination_oru/build/
-      - gradle:/root/.gradle/
-    working_dir: /coordination_oru/
+      - root-gradle:/root/.gradle/
     command: container/index.sh
     shm_size: '4gb'  # for Chromium
+    network_mode: bridge
