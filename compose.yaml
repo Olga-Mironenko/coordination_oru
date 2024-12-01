@@ -1,18 +1,44 @@
-volumes:
-  root-gradle:
-  project-gradle:
-  project-build:
-
-services:
-  coordination_oru:
-    build: .
-    ports:
-      - "5900:5900"
-    volumes:
-      - ./:/coordination_oru/
-      - project-gradle:/coordination_oru/.gradle/
-      - project-build:/coordination_oru/build/
-      - root-gradle:/root/.gradle/
-    command: container/index.sh
-    shm_size: '4gb'  # for Chromium
-    network_mode: bridge
+{
+    "volumes": {
+        "root-gradle-1": null,
+        "project-gradle-1": null,
+        "project-build-1": null,
+        "root-gradle-2": null,
+        "project-gradle-2": null,
+        "project-build-2": null
+    },
+    "services": {
+        "oru-1": {
+            "container_name": "oru-1",
+            "build": ".",
+            "ports": [
+                "5901:5900"
+            ],
+            "volumes": [
+                "./:/coordination_oru/",
+                "project-gradle-1:/coordination_oru/.gradle/",
+                "project-build-1:/coordination_oru/build/",
+                "root-gradle-1:/root/.gradle/"
+            ],
+            "command": "container/index.sh",
+            "network_mode": "bridge",
+            "shm_size": "4gb"
+        },
+        "oru-2": {
+            "container_name": "oru-2",
+            "build": ".",
+            "ports": [
+                "5902:5900"
+            ],
+            "volumes": [
+                "./:/coordination_oru/",
+                "project-gradle-2:/coordination_oru/.gradle/",
+                "project-build-2:/coordination_oru/build/",
+                "root-gradle-2:/root/.gradle/"
+            ],
+            "command": "container/index.sh",
+            "network_mode": "bridge",
+            "shm_size": "4gb"
+        }
+    }
+}
