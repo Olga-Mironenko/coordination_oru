@@ -17,6 +17,8 @@ public class Gatekeeper {
     public boolean hasSomeoneDied = false;
     public final boolean trackDeath = false;
 
+    public boolean isOver = false;
+
     /**
      * This method passes control from a gated thread to the gatekeeper.
      */

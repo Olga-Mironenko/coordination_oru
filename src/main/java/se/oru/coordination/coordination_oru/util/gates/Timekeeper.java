@@ -1,6 +1,5 @@
 package se.oru.coordination.coordination_oru.util.gates;
 
-import java.io.IOException;
 import java.util.Calendar;
 
 public class Timekeeper extends GatedThread {
@@ -47,25 +46,9 @@ public class Timekeeper extends GatedThread {
     protected void interruptAllThreads() {
         System.err.println("Timekeeper interruptAllThreads");
 
+        GatedThread.gatekeeper.isOver = true;
         for (Thread thread : Thread.getAllStackTraces().keySet()) {
-            // TODO: skip the current thread for the further `sleep` before `kill` to work
             thread.interrupt();
-        }
-
-        /*
-        try {
-            Thread.sleep(5000); // wait for everyone to finish
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-         */
-
-        long pid = ProcessHandle.current().pid();
-        try {
-            System.err.println("Timekeeper: running kill " + pid);
-            Runtime.getRuntime().exec("kill " + pid);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -87,6 +70,7 @@ public class Timekeeper extends GatedThread {
 
             if (isOver()) {
                 interruptAllThreads();
+                return;
             }
 
             int millisToSleep = isSingleSleep ? getVirtualMillisPassed() - getRealMillisPassed() * 2 : 0;

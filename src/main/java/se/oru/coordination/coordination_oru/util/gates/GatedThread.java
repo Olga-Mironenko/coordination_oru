@@ -17,7 +17,7 @@ abstract public class GatedThread extends Thread {
     /**
      * The synchronizer of `GatedThread`s.
      */
-    protected static Gatekeeper gatekeeper;
+    public static Gatekeeper gatekeeper;
 
     /**
      * This makes `gatedThread.start()` not to return until the thread has started and added itself to
@@ -230,7 +230,9 @@ abstract public class GatedThread extends Thread {
     public static void moveToNextGate() {
         if (isGated) {
             Printer.print("finished");
-            gatekeeper.processNextGate();
+            if (! gatekeeper.isOver) {
+                gatekeeper.processNextGate();
+            }
         }
     }
 }
