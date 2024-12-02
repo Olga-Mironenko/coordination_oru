@@ -31,7 +31,7 @@ public abstract class Demo {
             AbstractTrajectoryEnvelopeTracker.kToRenderEveryKthFrame = 5;
 
             /// Path finding:
-            AutonomousVehicle.isPathCachingEnabled = true;
+            AutonomousVehicle.isPathCachingEnabled = false;
             AutonomousVehicle.planningAlgorithm = ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom;
             if (AutonomousVehicle.planningAlgorithm == ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom) {
                 AutonomousVehicle.numIterationsRoadmapConstruction = 4000;

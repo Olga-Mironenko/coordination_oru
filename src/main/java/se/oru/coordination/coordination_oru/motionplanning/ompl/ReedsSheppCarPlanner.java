@@ -21,6 +21,7 @@ import com.vividsolutions.jts.geom.Polygon;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.motionplanning.OccupancyMap;
 import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlannerLib.PathPose;
+import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.GeometrySmoother;
 import se.oru.coordination.coordination_oru.util.GeometrySmoother.SmootherControl;
 
@@ -43,10 +44,13 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	public static ReedsSheppCarPlannerLib INSTANCE_SIMPLE;
 	public static CachingPlannerLib INSTANCE_CACHING;
 	static {
-		NativeLibrary.addSearchPath("simplereedssheppcarplanner", "SimpleReedsSheppCarPlanner");
+		String worker = ! BrowserVisualization.IS_CONTAINER ? "host" : "c" + BrowserVisualization.I_CONTAINER;
+		String path = "SimpleReedsSheppCarPlanner/build-" + worker;
+
+		NativeLibrary.addSearchPath("simplereedssheppcarplanner", path);
 		INSTANCE_SIMPLE = Native.loadLibrary("simplereedssheppcarplanner", ReedsSheppCarPlannerLib.class);
 
-		NativeLibrary.addSearchPath("cachingplanner", "SimpleReedsSheppCarPlanner");
+		NativeLibrary.addSearchPath("cachingplanner", path);
 		INSTANCE_CACHING = Native.loadLibrary("cachingplanner", CachingPlannerLib.class);
 	}
 

@@ -17,6 +17,8 @@ sleep 1
 "$prefixer" chromium "$root"/chromium.sh --start-maximized &
 sleep 1
 
+"$root"/build-planners.sh
+
 "$prefixer" scenario "$root"/scenario.sh &
 
 wait

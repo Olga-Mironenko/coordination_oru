@@ -11,16 +11,24 @@ RUN set -ex; \
 
 RUN rm /usr/share/images/fluxbox/debian-squared.jpg  # "fbsetbg: I can't find an app to set the wallpaper with."
 
-RUN mkdir -p /coordination_oru/gradle/wrapper/
-WORKDIR /coordination_oru/
-COPY gradle* *gradle ./
-COPY gradle/wrapper/* gradle/wrapper/
-RUN ./gradlew wrapper
-VOLUME .gradle/
-VOLUME /root/.gradle/
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
+    libompl-dev git g++ cmake make libboost-all-dev
+RUN set -eux; \
+    cd /opt; \
+    git clone https://github.com/ompl/ompl; \
+    cd ompl; \
+    git reset --hard 02c1139ede4bfbbf26fedcae735631540a15235d; \
+    mkdir -p build/Release; \
+    cd build/Release; \
+    cmake ../..; \
+    make -j 4 install; \
+    cd ..; \
+    rm -rf ompl
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends util-linux  # for `flock`
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends iproute2
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends iputils-ping
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends iproute2 iputils-ping
+
+WORKDIR /coordination_oru/
 
 CMD ["bash"]
 
