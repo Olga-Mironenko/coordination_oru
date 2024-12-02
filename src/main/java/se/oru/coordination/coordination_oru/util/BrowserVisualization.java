@@ -39,10 +39,10 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class BrowserVisualization implements FleetVisualization {
-	public static final boolean IS_CONTAINER = System.getenv().containsKey("I_CONTAINER");
-	public static final Integer I_CONTAINER = ! IS_CONTAINER ? null : Integer.valueOf(System.getenv("I_CONTAINER"));
+	public static final boolean IS_CONTAINER = System.getenv().containsKey("WORKER");
+	public static final String WORKER = ! IS_CONTAINER ? "host" : System.getenv("WORKER");
 
-	private ArrayList<String> msgQueue = new ArrayList<String>();
+	private final ArrayList<String> msgQueue = new ArrayList<String>();
 	private static int UPDATE_PERIOD = 30;
 	private String overlayText = null;
 
@@ -156,9 +156,8 @@ public class BrowserVisualization implements FleetVisualization {
 			assert code == 0;
 		} else if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 			try { Desktop.getDesktop().browse(new URI(url)); }
-			catch (IOException e) { e.printStackTrace(); }
-			catch (URISyntaxException e) { e.printStackTrace(); }
-		}
+			catch (IOException | URISyntaxException e) { e.printStackTrace(); }
+        }
 	}
 	
 	private void updateOverlayText() {

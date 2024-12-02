@@ -44,8 +44,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 	public static ReedsSheppCarPlannerLib INSTANCE_SIMPLE;
 	public static CachingPlannerLib INSTANCE_CACHING;
 	static {
-		String worker = ! BrowserVisualization.IS_CONTAINER ? "host" : "c" + BrowserVisualization.I_CONTAINER;
-		String path = "SimpleReedsSheppCarPlanner/build-" + worker;
+		String path = "SimpleReedsSheppCarPlanner/build-" + BrowserVisualization.WORKER ;
 
 		NativeLibrary.addSearchPath("simplereedssheppcarplanner", path);
 		INSTANCE_SIMPLE = Native.loadLibrary("simplereedssheppcarplanner", ReedsSheppCarPlannerLib.class);

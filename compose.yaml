@@ -9,7 +9,7 @@
     },
     "services": {
         "oru-1": {
-            "container_name": "oru-1",
+            "container_name": "c1",
             "build": ".",
             "ports": [
                 "5901:5900"
@@ -28,7 +28,7 @@
             "shm_size": "4gb"
         },
         "oru-2": {
-            "container_name": "oru-2",
+            "container_name": "c2",
             "build": ".",
             "ports": [
                 "5902:5900"

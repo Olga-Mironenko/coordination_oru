@@ -15,7 +15,7 @@ def main():
     services = {}
     for i in RANGE_SERVICES:
         service = {
-            'container_name': f'oru-{i}',
+            'container_name': f'c{i}',
             'build': '.',
             'ports': [f'{5900 + i}:5900'],
             'volumes': [
