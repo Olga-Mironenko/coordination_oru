@@ -39,9 +39,6 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 public class BrowserVisualization implements FleetVisualization {
-	public static final boolean IS_CONTAINER = System.getenv().containsKey("WORKER");
-	public static final String WORKER = ! IS_CONTAINER ? "host" : System.getenv("WORKER");
-
 	private final ArrayList<String> msgQueue = new ArrayList<String>();
 	private static int UPDATE_PERIOD = 30;
 	private String overlayText = null;
@@ -151,7 +148,7 @@ public class BrowserVisualization implements FleetVisualization {
 	
 	private void startOpenInBrowser(String serverHostNameOrIP) {
 		String url = "http://" + serverHostNameOrIP + ":8080";
-		if (IS_CONTAINER) {
+		if (Containerization.IS_CONTAINER) {
 			int code = runProcess("container/chromium.sh", url);
 			assert code == 0;
 		} else if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {

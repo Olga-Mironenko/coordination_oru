@@ -11,6 +11,7 @@ import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
+import se.oru.coordination.coordination_oru.util.Containerization;
 import se.oru.coordination.coordination_oru.util.Forcing;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 
@@ -227,7 +228,7 @@ public abstract class AbstractVehicle {
 
     public void writeStatistics() {
         try {
-            String subdir = dateString + "_" + BrowserVisualization.WORKER + (
+            String subdir = dateString + "_" + Containerization.WORKER + (
                     scenarioId == null
                             ? ""
                             : "_" + getScenarioIdAsBasename()

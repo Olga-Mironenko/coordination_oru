@@ -1,5 +1,8 @@
 package se.oru.coordination.coordination_oru.util.gates;
 
+import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.Missions;
+
 import java.util.Calendar;
 
 public class Timekeeper extends GatedThread {
@@ -43,7 +46,7 @@ public class Timekeeper extends GatedThread {
         setVirtualSecondsPassedMax(minutes * 60);
     }
 
-    protected void interruptAllThreads() {
+    protected static void interruptAllThreads() {
         System.err.println("Timekeeper interruptAllThreads");
 
         GatedThread.gatekeeper.isOver = true;
@@ -60,6 +63,14 @@ public class Timekeeper extends GatedThread {
         return realMillisPassedMax != null && realMillisPassed >= realMillisPassedMax;
     }
 
+    protected static void finishProgram() {
+        interruptAllThreads();
+        if (Missions.isStatisticsFinal) {
+            Missions.writeStatistics(TrajectoryEnvelopeCoordinatorSimulation.tec);
+        }
+        System.exit(0);
+    }
+
     @Override
     public void runCore() {
         long millisStarted = Calendar.getInstance().getTimeInMillis();
@@ -69,8 +80,7 @@ public class Timekeeper extends GatedThread {
             realMillisPassed = (int) (Calendar.getInstance().getTimeInMillis() - millisStarted);
 
             if (isOver()) {
-                interruptAllThreads();
-                System.exit(0);
+                finishProgram();
                 return;
             }
 

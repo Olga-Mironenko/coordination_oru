@@ -77,7 +77,8 @@ public abstract class Demo {
         }
 
         BrowserVisualization.isStatusText = true;
-        Missions.isStatistics = true;
+        Missions.isStatisticsPeriodical = ! Containerization.IS_CONTAINER;
+        Missions.isStatisticsFinal = true;
 
         Demo thisDemo = this;
 
@@ -92,8 +93,7 @@ public abstract class Demo {
 
         try {
             GatedThread.runGatekeeper();
-        } catch (InterruptedException e) {
-            return;
+        } catch (InterruptedException ignored) {
         }
     }
 

@@ -59,7 +59,8 @@ public class Missions {
 	protected static HashMap<Mission,ArrayList<Mission>> concatenatedMissions = new HashMap<Mission, ArrayList<Mission>>();
 	//protected static String pathPrefix = "";
 	protected static SimpleDirectedWeightedGraph<String, DefaultWeightedEdge> graph = new SimpleDirectedWeightedGraph<String, DefaultWeightedEdge>(DefaultWeightedEdge.class);
-	public static boolean isStatistics = false;
+	public static boolean isStatisticsPeriodical = false;
+	public static boolean isStatisticsFinal = false;
 
 	protected static double minPathDistance = -1;
 	
@@ -1404,7 +1405,7 @@ public class Missions {
 						//Sleep for a little (0.5 sec)
 						try { GatedThread.sleep(500); }
 						catch (InterruptedException e) { e.printStackTrace(); return; }
-						if (isStatistics) {
+						if (isStatisticsPeriodical) {
 							updateRobotReports(tec); // Call to update all the robot reports
 							writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
 						}
@@ -1460,9 +1461,9 @@ public class Missions {
 						return;
 					}
 
-					// TODO: Move out from here.
-					if (isStatistics) {
-						updateRobotReports(tec); // Call to update all the robot reports
+					updateRobotReports(tec); // Call to update all the robot reports
+
+					if (isStatisticsPeriodical) {
 						writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
 					}
 				}
@@ -1577,7 +1578,7 @@ public class Missions {
 		}
 	}
 
-	private static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
+	public static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
 		synchronized (tec.trackers) {
 			for (int robotID : tec.getAllRobotIDs()) {
 				VehiclesHashMap.getVehicle(robotID).writeStatistics();
