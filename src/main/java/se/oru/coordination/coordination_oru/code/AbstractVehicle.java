@@ -228,6 +228,10 @@ public abstract class AbstractVehicle {
     public void writeStatistics() {
         try {
             String subdir = dateString + (
+                    ! BrowserVisualization.IS_CONTAINER
+                            ? "_host"
+                            : "_c" + BrowserVisualization.I_CONTAINER
+            ) + (
                     scenarioId == null
                             ? ""
                             : "_" + getScenarioIdAsBasename()

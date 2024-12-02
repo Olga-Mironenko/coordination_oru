@@ -89,6 +89,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	//Set if inferring precedence constraints
 	protected boolean fake = false;
 
+	private static final boolean isCoordinatorStat = false;
+
 	/**
 	 * Get whether there is a robot in a blocked situation (waiting for a parked robot).
 	 * @return <code>true</code> iff a robot is waiting for another robot that is parked.
@@ -167,7 +169,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			//make window from row 8 to bottom (200)
 			System.out.printf(((char) 0x1b) + "[8;200r");
 		}
-		setupLogging();
+//		setupLogging();
 	}
 
 	@Override
@@ -1151,14 +1153,18 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 			@Override
 			public void runCore() {
-
-				String fileName = new String(System.getProperty("user.home")+File.separator+"coordinator_stat.txt");
-				initStat(fileName, "Init statistics: @"+ Calendar.getInstance().getTimeInMillis() + "\n");
-				String stat = new String(//"Legend: at each control period\n\t 1. elapsed time to compute critical sections\n\t 2.elapsed time to update dependencies\n\t 3. number of new critical sections\n\t"
-						"elapsedTimeComputeCriticalSections\t elapsedTimeUpdateDependencies\t numberNewCriticalSections\t numberAllCriticalSections\t numberNewAddedMissions \t numberDrivingRobots\t expectedSleepingTime\t effectiveSleepingTime\t printStatisticsTime\t effectiveTc");
-				if (avoidDeadlockGlobally.get()) stat = stat + new String("\t numberReversedPrecedenceOrder\t numberCurrentCycles");
-				stat.concat("\n");
-				writeStat(fileName, stat);
+				String fileName =
+						! isCoordinatorStat
+								? null
+								: new String(System.getProperty("user.home")+File.separator+"coordinator_stat.txt");
+				if (isCoordinatorStat) {
+					initStat(fileName, "Init statistics: @"+ Calendar.getInstance().getTimeInMillis() + "\n");
+					String stat = new String(//"Legend: at each control period\n\t 1. elapsed time to compute critical sections\n\t 2.elapsed time to update dependencies\n\t 3. number of new critical sections\n\t"
+							"elapsedTimeComputeCriticalSections\t elapsedTimeUpdateDependencies\t numberNewCriticalSections\t numberAllCriticalSections\t numberNewAddedMissions \t numberDrivingRobots\t expectedSleepingTime\t effectiveSleepingTime\t printStatisticsTime\t effectiveTc");
+					if (avoidDeadlockGlobally.get()) stat = stat + new String("\t numberReversedPrecedenceOrder\t numberCurrentCycles");
+					stat.concat("\n");
+					writeStat(fileName, stat);
+				}
 
 				long threadLastUpdate = GatedCalendar.getInstance().getTimeInMillis();
 				long elapsedTimeComputeCriticalSections = -1;
@@ -1248,11 +1254,14 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 					if (inferenceCallback != null) inferenceCallback.performOperation();
 
-					stat = new String(elapsedTimeComputeCriticalSections + "\t" + elapsedTimeUpdateDependencies + "\t" + numberNewCriticalSections + "\t" + numberAllCriticalSections + "\t" + numberNewAddedMissions + "\t" + numberDrivingRobots
-							+ "\t" + expectedSleepingTime + "\t" + effectiveSleepingTime + "\t" + printStatisticsTime + "\t" + EFFECTIVE_CONTROL_PERIOD);
-					if (avoidDeadlockGlobally.get()) stat = stat + new String("\t" + currentOrdersHeurusticallyDecided.get() + "\t" + currentCyclesList.size());
-					stat.concat("\n");
-					writeStat(fileName, stat);
+					if (isCoordinatorStat) {
+						String stat = new String(elapsedTimeComputeCriticalSections + "\t" + elapsedTimeUpdateDependencies + "\t" + numberNewCriticalSections + "\t" + numberAllCriticalSections + "\t" + numberNewAddedMissions + "\t" + numberDrivingRobots
+								+ "\t" + expectedSleepingTime + "\t" + effectiveSleepingTime + "\t" + printStatisticsTime + "\t" + EFFECTIVE_CONTROL_PERIOD);
+						if (avoidDeadlockGlobally.get())
+							stat = stat + new String("\t" + currentOrdersHeurusticallyDecided.get() + "\t" + currentCyclesList.size());
+						stat.concat("\n");
+						writeStat(fileName, stat);
+					}
 				}
 
 			}

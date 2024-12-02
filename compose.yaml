@@ -20,6 +20,9 @@
                 "project-build-1:/coordination_oru/build/",
                 "root-gradle-1:/root/.gradle/"
             ],
+            "environment": {
+                "I_CONTAINER": "1"
+            },
             "command": "container/index.sh",
             "network_mode": "bridge",
             "shm_size": "4gb"
@@ -36,6 +39,9 @@
                 "project-build-2:/coordination_oru/build/",
                 "root-gradle-2:/root/.gradle/"
             ],
+            "environment": {
+                "I_CONTAINER": "2"
+            },
             "command": "container/index.sh",
             "network_mode": "bridge",
             "shm_size": "4gb"

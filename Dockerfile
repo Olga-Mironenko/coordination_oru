@@ -22,8 +22,6 @@ VOLUME /root/.gradle/
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends iproute2
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends iputils-ping
 
-ENV IS_CONTAINER=1
-
 CMD ["bash"]
 
 EXPOSE 5900

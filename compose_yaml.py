@@ -24,6 +24,9 @@ def main():
                 f'project-build-{i}:/coordination_oru/build/',
                 f'root-gradle-{i}:/root/.gradle/',
             ],
+            'environment': {
+                'I_CONTAINER': str(i),
+            },
             'command': 'container/index.sh',
             'network_mode': 'bridge',  # for the Internet to work
             'shm_size': '4gb',  # for Chromium

@@ -22,5 +22,4 @@ args_gradlew=(
    -Pdemo="$demo"
 )
 set -x +o pipefail
-timeout --foreground --kill-after=10s "$timeout" ./gradlew "${args_gradlew[@]}" |&
-  tee ./logs/entire/"$demo".log
+timeout --foreground --kill-after=10s "$timeout" ./gradlew "${args_gradlew[@]}"  # |& tee ./logs/entire/"$demo".log
