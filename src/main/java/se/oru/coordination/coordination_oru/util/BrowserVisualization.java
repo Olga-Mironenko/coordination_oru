@@ -215,6 +215,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 	private static void setupVizServer(String serverHostNameOrIP) {
 		Server server = new Server(8080);
+		server.setStopAtShutdown(true);
 		server.setHandler(new BrowserVisualizationServer(serverHostNameOrIP));
 		try {
 			server.start();
@@ -225,6 +226,7 @@ public class BrowserVisualization implements FleetVisualization {
 	
 	private static void setupVizMessageServer() {
         Server server = new Server();
+		server.setStopAtShutdown(true);
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(8081);
 		connector.setIdleTimeout(300 * 60 * 1000); // 300 min. (for long pauses inside the debugger)

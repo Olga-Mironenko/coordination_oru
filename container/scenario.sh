@@ -6,4 +6,4 @@ set -eux -o pipefail
 
 root=$(dirname "$0")
 cd "$root"/..
-exec ./gradlew run -Passert -Pdemo=GeneratedMapTest
+exec \time ./gradlew run -Passert -Pdemo=GeneratedMapTest

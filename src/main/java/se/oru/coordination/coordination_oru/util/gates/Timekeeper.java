@@ -70,6 +70,7 @@ public class Timekeeper extends GatedThread {
 
             if (isOver()) {
                 interruptAllThreads();
+                System.exit(0);
                 return;
             }
 

@@ -26,7 +26,7 @@ RUN set -eux; \
     rm -rf ompl
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends util-linux  # for `flock`
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends iproute2 iputils-ping
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends iproute2 iputils-ping time
 
 WORKDIR /coordination_oru/
 
