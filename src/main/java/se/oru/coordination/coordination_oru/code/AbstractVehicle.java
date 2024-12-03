@@ -13,7 +13,9 @@ import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoord
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Containerization;
 import se.oru.coordination.coordination_oru.util.Forcing;
+import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
+import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 
 import java.awt.*;
 import java.io.BufferedWriter;
@@ -28,6 +30,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * AbstractRobot is an abstract class representing a generic robot with common attributes and methods.
@@ -295,6 +298,14 @@ public abstract class AbstractVehicle {
                 for (int i = 1; i < columns.length; i++) {
                     bw.write(columns[i] + "\t" + rows[i] + "\n");
                 }
+            }
+
+            if (GatedThread.gatekeeper.isOver) {
+                int[] linearization = Missions.robotIDToMissionLinearization.get(ID);
+                String result = Arrays.stream(linearization)
+                        .mapToObj(String::valueOf) // Convert each int to String
+                        .collect(Collectors.joining(" "));
+                bw.write("Linearization" + "\t" + result + "\n");
             }
 
             bw.close();

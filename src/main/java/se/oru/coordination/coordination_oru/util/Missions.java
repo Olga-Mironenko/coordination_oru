@@ -1708,4 +1708,24 @@ public class Missions {
 
 		BrowserVisualizationSocket.sendMapToAll();
 	}
+
+	public static TreeMap<Integer, int[]> robotIDToMissionLinearization = new TreeMap<>();
+
+	public static void computeMissionLinearizations() {
+		robotIDToMissionLinearization.clear();
+		for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
+			AbstractTrajectoryEnvelopeTracker tracker = vehicle.getTracker();
+			TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
+			robotIDToMissionLinearization.put(vehicle.getID(), new int[te.getPathLength()]);
+		}
+
+		for (CriticalSection cs : TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections) {
+			for (int robotID : cs.getRobotIDs()) {
+				int[] linearization = robotIDToMissionLinearization.get(robotID);
+				for (int i = cs.getStart(robotID); i <= cs.getEnd(robotID); i++) {
+					linearization[i] += 1;
+				}
+			}
+		}
+	}
 }
