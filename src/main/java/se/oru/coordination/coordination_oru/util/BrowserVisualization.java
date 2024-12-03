@@ -120,9 +120,11 @@ public class BrowserVisualization implements FleetVisualization {
         };
         updateThread.start();
         BrowserVisualization.setupVizServer(serverHostNameOrIP);
-        startOpenInBrowser(serverHostNameOrIP);
+		if (! System.getenv("IS_VISUALIZATION").isEmpty()) {
+			startOpenInBrowser(serverHostNameOrIP);
+		}
 
-		new GatedThread("screenshot thread") { // path planning takes a while
+		new GatedThread("waiting for readiness") { // path planning takes a while
 			@Override
 			public void runCore() {
 				while (true) {

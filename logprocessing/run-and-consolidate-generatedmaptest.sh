@@ -23,16 +23,22 @@ dirs_maps=(
   '2024-11-28_13:19:18_without_bridges'
 )
 
-indexes_maps=(
-#  1
-  3
-)
+indexes_maps=({1..10})
+
+case ${WORKER:-host} in
+  host) positions=({1..10});;
+  c1) positions=({1..2});;
+  c2) positions=({3..4});;
+  c3) positions=({5..6});;
+  c4) positions=({7..8});;
+  c5) positions=({9..10});;
+esac
 
 scenarios=()
 for i_map in "${indexes_maps[@]}"; do
-  for i_locations in {1..10}; do
+  for position in "${positions[@]}"; do
     for dir_maps in "${dirs_maps[@]}"; do
-      filename_simple=map-generator/generated-maps/$dir_maps/scenario$i_map-$i_locations.json
+      filename_simple=map-generator/generated-maps/$dir_maps/scenario$i_map-$position.json
       filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
       for seed in {1..1}; do
         for probabilityForcingForHuman in 0 1; do
@@ -63,5 +69,5 @@ set -x
 reference=$(mktemp --tmpdir run-and-consolidate.XXXX)
 #trap 'ls -l "$reference"; rm -f "$reference"' EXIT
 
-"$root"/run-scenarios.sh "$timeout_hard" "$demo" "${scenarios[@]}" || echo "[exit $?]"
+"$root"/run-scenarios.sh "$timeout_hard" "$demo" "${scenarios[@]}" || echo "WARNING: exit $?"
 "$root"/consolidate-rundirs-to-sorted-csv.sh "$reference"  # will consolidate everything created after the reference file

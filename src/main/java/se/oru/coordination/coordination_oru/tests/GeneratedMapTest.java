@@ -36,7 +36,8 @@ public class GeneratedMapTest {
     protected static void runDemo(String scenarioString) {
         HumanControl.isEnabledForBrowser = true;
 //        Timekeeper.setVirtualSecondsPassedMax(2);
-//        Timekeeper.setVirtualMinutesPassedMax(30);
+        Timekeeper.setVirtualMinutesPassedMax(30);
+//        Timekeeper.setVirtualMinutesPassedMax(1);
 
         Heuristics heuristics = new Heuristics();
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.humanFirst();

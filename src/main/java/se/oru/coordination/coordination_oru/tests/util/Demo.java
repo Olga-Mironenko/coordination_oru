@@ -77,7 +77,7 @@ public abstract class Demo {
         }
 
         BrowserVisualization.isStatusText = true;
-        Missions.isStatisticsPeriodical = ! Containerization.IS_CONTAINER;
+        Missions.isStatisticsPeriodical = true;
         Missions.isStatisticsFinal = true;
 
         Demo thisDemo = this;

@@ -3,7 +3,7 @@
 import json
 
 
-N_SERVICES = 2
+N_SERVICES = 5
 RANGE_SERVICES = range(1, N_SERVICES + 1)
 
 def main():
@@ -26,6 +26,7 @@ def main():
             ],
             'environment': {
                 'WORKER': f'c{i}',
+                'IS_VISUALIZATION': '',
             },
             'command': 'container/index.sh',
             'network_mode': 'bridge',  # for the Internet to work

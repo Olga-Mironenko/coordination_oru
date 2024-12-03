@@ -16,11 +16,11 @@ h_video=$((h_screen - h_top_panel - h_bottom_panel))
 
 args=(
   -video_size "${w_video}x${h_video}"
-  -framerate 30
+  -framerate 15
   -f x11grab
   -i ":0+0,$h_top_panel"
   -y  # "yes, overwrite"
   "$file"
 )
 
-exec ffmpeg "${args[@]}"
+exec nice ffmpeg "${args[@]}"

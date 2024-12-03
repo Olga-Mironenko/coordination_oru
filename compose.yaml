@@ -5,7 +5,16 @@
         "project-build-1": null,
         "root-gradle-2": null,
         "project-gradle-2": null,
-        "project-build-2": null
+        "project-build-2": null,
+        "root-gradle-3": null,
+        "project-gradle-3": null,
+        "project-build-3": null,
+        "root-gradle-4": null,
+        "project-gradle-4": null,
+        "project-build-4": null,
+        "root-gradle-5": null,
+        "project-gradle-5": null,
+        "project-build-5": null
     },
     "services": {
         "oru-1": {
@@ -21,7 +30,8 @@
                 "root-gradle-1:/root/.gradle/"
             ],
             "environment": {
-                "WORKER": "c1"
+                "WORKER": "c1",
+                "IS_VISUALIZATION": ""
             },
             "command": "container/index.sh",
             "network_mode": "bridge",
@@ -40,7 +50,68 @@
                 "root-gradle-2:/root/.gradle/"
             ],
             "environment": {
-                "WORKER": "c2"
+                "WORKER": "c2",
+                "IS_VISUALIZATION": ""
+            },
+            "command": "container/index.sh",
+            "network_mode": "bridge",
+            "shm_size": "4gb"
+        },
+        "oru-3": {
+            "container_name": "c3",
+            "build": ".",
+            "ports": [
+                "5903:5900"
+            ],
+            "volumes": [
+                "./:/coordination_oru/",
+                "project-gradle-3:/coordination_oru/.gradle/",
+                "project-build-3:/coordination_oru/build/",
+                "root-gradle-3:/root/.gradle/"
+            ],
+            "environment": {
+                "WORKER": "c3",
+                "IS_VISUALIZATION": ""
+            },
+            "command": "container/index.sh",
+            "network_mode": "bridge",
+            "shm_size": "4gb"
+        },
+        "oru-4": {
+            "container_name": "c4",
+            "build": ".",
+            "ports": [
+                "5904:5900"
+            ],
+            "volumes": [
+                "./:/coordination_oru/",
+                "project-gradle-4:/coordination_oru/.gradle/",
+                "project-build-4:/coordination_oru/build/",
+                "root-gradle-4:/root/.gradle/"
+            ],
+            "environment": {
+                "WORKER": "c4",
+                "IS_VISUALIZATION": ""
+            },
+            "command": "container/index.sh",
+            "network_mode": "bridge",
+            "shm_size": "4gb"
+        },
+        "oru-5": {
+            "container_name": "c5",
+            "build": ".",
+            "ports": [
+                "5905:5900"
+            ],
+            "volumes": [
+                "./:/coordination_oru/",
+                "project-gradle-5:/coordination_oru/.gradle/",
+                "project-build-5:/coordination_oru/build/",
+                "root-gradle-5:/root/.gradle/"
+            ],
+            "environment": {
+                "WORKER": "c5",
+                "IS_VISUALIZATION": ""
             },
             "command": "container/index.sh",
             "network_mode": "bridge",
