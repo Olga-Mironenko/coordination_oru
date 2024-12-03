@@ -25,7 +25,7 @@ def main():
                 f'root-gradle-{i}:/root/.gradle/',
             ],
             'environment': {
-                'I_CONTAINER': str(i),
+                'WORKER': f'c{i}',
             },
             'command': 'container/index.sh',
             'network_mode': 'bridge',  # for the Internet to work

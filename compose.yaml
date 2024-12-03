@@ -21,7 +21,7 @@
                 "root-gradle-1:/root/.gradle/"
             ],
             "environment": {
-                "I_CONTAINER": "1"
+                "WORKER": "c1"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",
@@ -40,7 +40,7 @@
                 "root-gradle-2:/root/.gradle/"
             ],
             "environment": {
-                "I_CONTAINER": "2"
+                "WORKER": "c2"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",

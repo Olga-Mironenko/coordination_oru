@@ -45,7 +45,6 @@ public class BrowserVisualization implements FleetVisualization {
 
 	public static boolean isStatusText = false;
 	public static boolean isExtendedText = false;
-	public static boolean isCollisionInfo = false;
 
 	public static boolean areAllVehiclesStarted = false;
 

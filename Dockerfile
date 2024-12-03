@@ -27,6 +27,7 @@ RUN set -eux; \
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends util-linux  # for `flock`
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends iproute2 iputils-ping time
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends ffmpeg
 
 WORKDIR /coordination_oru/
 

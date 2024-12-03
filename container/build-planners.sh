@@ -10,6 +10,6 @@ cd SimpleReedsSheppCarPlanner
   flock 9
 
   rm -f CMakeCache.txt
-  cmake -DOUTPUT_DIR="build-c${I_CONTAINER}" .
+  cmake -DOUTPUT_DIR="build-$WORKER" .
   make
 ) 9>build-planners.flock

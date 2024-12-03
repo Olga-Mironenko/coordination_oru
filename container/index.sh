@@ -19,6 +19,11 @@ sleep 1
 
 "$root"/build-planners.sh
 
+"$prefixer" record-screen "$root"/record-screen.sh "screen-$WORKER.mp4" &
+# TODO: Call the script at the beginning of simulation and send it SIGTERM/...
+# at the end of simulation.
+
 "$prefixer" scenario "$root"/scenario.sh &
 
 wait
+# TODO: SIGINT to the container should stop everything. (Use `supervisor(1)`?)
