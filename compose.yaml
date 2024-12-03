@@ -31,7 +31,8 @@
             ],
             "environment": {
                 "WORKER": "c1",
-                "IS_VISUALIZATION": "1"
+                "IS_VISUALIZATION": "",
+                "RUNDIRS": "$RUNDIRS"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",
@@ -51,7 +52,8 @@
             ],
             "environment": {
                 "WORKER": "c2",
-                "IS_VISUALIZATION": "1"
+                "IS_VISUALIZATION": "",
+                "RUNDIRS": "$RUNDIRS"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",
@@ -71,7 +73,8 @@
             ],
             "environment": {
                 "WORKER": "c3",
-                "IS_VISUALIZATION": "1"
+                "IS_VISUALIZATION": "",
+                "RUNDIRS": "$RUNDIRS"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",
@@ -91,7 +94,8 @@
             ],
             "environment": {
                 "WORKER": "c4",
-                "IS_VISUALIZATION": "1"
+                "IS_VISUALIZATION": "",
+                "RUNDIRS": "$RUNDIRS"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",
@@ -111,7 +115,8 @@
             ],
             "environment": {
                 "WORKER": "c5",
-                "IS_VISUALIZATION": "1"
+                "IS_VISUALIZATION": "",
+                "RUNDIRS": "$RUNDIRS"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",

@@ -68,7 +68,8 @@ public abstract class AbstractVehicle {
     private double pathLength;
     private boolean isRundirPrepared = false;
     public boolean isAdaptiveTracker = false;
-    private static final String rundirsRoot = "logs/rundirs";
+    private static final String rundirsRoot =
+            System.getenv("RUNDIRS") != null ? System.getenv("RUNDIRS") : "logs/rundirs";
     private static final String dateString = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
     private static final String rundirCurrent = rundirsRoot + "/current";
     public static String scenarioId;

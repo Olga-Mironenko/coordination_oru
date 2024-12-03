@@ -1,5 +1,5 @@
 up: compose.yaml
-	docker compose up --build --force-recreate --remove-orphans
+	container/compose-up.sh
 
 compose.yaml: compose_yaml.py
 	./compose_yaml.py

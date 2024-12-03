@@ -8,7 +8,7 @@ root=$(dirname "$0")
 
 "$root"/stop-all-demos.sh
 
-timeout_hard=60m
+timeout_hard=20m
 demo=GeneratedMapTest
 
 ## 4 robots:
@@ -23,7 +23,7 @@ dirs_maps=(
   '2024-11-28_13:19:18_without_bridges'
 )
 
-indexes_maps=({1..10})
+indexes_maps=(3 2 {4..10} 1)
 
 case ${WORKER:-host} in
   host) positions=({1..10});;
