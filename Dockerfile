@@ -28,8 +28,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends u
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends iproute2 iputils-ping time
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends ffmpeg
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends imagemagick xdotool  # for screenshots
 
 WORKDIR /coordination_oru/
+
+ENV DISPLAY=:0
 
 CMD ["bash"]
 

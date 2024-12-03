@@ -138,7 +138,9 @@ public class BrowserVisualization implements FleetVisualization {
 					}
 					if (isReady) {
 						areAllVehiclesStarted = true;
-						makeScreenshot();
+						if (! System.getenv("IS_VISUALIZATION").isEmpty()) {
+							makeScreenshot();
+						}
 						Missions.computeMissionLinearizations();
 						break;
 					}

@@ -31,7 +31,7 @@
             ],
             "environment": {
                 "WORKER": "c1",
-                "IS_VISUALIZATION": ""
+                "IS_VISUALIZATION": "1"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",
@@ -51,7 +51,7 @@
             ],
             "environment": {
                 "WORKER": "c2",
-                "IS_VISUALIZATION": ""
+                "IS_VISUALIZATION": "1"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",
@@ -71,7 +71,7 @@
             ],
             "environment": {
                 "WORKER": "c3",
-                "IS_VISUALIZATION": ""
+                "IS_VISUALIZATION": "1"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",
@@ -91,7 +91,7 @@
             ],
             "environment": {
                 "WORKER": "c4",
-                "IS_VISUALIZATION": ""
+                "IS_VISUALIZATION": "1"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",
@@ -111,7 +111,7 @@
             ],
             "environment": {
                 "WORKER": "c5",
-                "IS_VISUALIZATION": ""
+                "IS_VISUALIZATION": "1"
             },
             "command": "container/index.sh",
             "network_mode": "bridge",

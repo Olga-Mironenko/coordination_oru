@@ -26,7 +26,7 @@ def main():
             ],
             'environment': {
                 'WORKER': f'c{i}',
-                'IS_VISUALIZATION': '',
+                'IS_VISUALIZATION': '1',
             },
             'command': 'container/index.sh',
             'network_mode': 'bridge',  # for the Internet to work

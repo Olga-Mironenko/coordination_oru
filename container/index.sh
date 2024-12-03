@@ -4,8 +4,6 @@ set -eux -o pipefail
 
 [ $# = 0 ]
 
-export DISPLAY=:0
-
 root=$(dirname "$0")
 prefixer=$root/prefixer.sh
 
