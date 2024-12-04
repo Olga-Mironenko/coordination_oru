@@ -120,7 +120,7 @@ public class BrowserVisualization implements FleetVisualization {
         };
         updateThread.start();
         BrowserVisualization.setupVizServer(serverHostNameOrIP);
-		if (! System.getenv("IS_VISUALIZATION").isEmpty()) {
+		if (Containerization.IS_VISUALIZATION) {
 			startOpenInBrowser(serverHostNameOrIP);
 		}
 
@@ -138,7 +138,7 @@ public class BrowserVisualization implements FleetVisualization {
 					}
 					if (isReady) {
 						areAllVehiclesStarted = true;
-						if (! System.getenv("IS_VISUALIZATION").isEmpty()) {
+						if (Containerization.IS_VISUALIZATION) {
 							makeScreenshot();
 						}
 						Missions.computeMissionLinearizations();

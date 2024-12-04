@@ -1712,21 +1712,45 @@ public class Missions {
 		BrowserVisualizationSocket.sendMapToAll();
 	}
 
-	public static TreeMap<Integer, int[]> robotIDToMissionLinearization = new TreeMap<>();
+	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationA = new TreeMap<>();
+	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationB = new TreeMap<>();
+	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationC = new TreeMap<>();
 
 	public static void computeMissionLinearizations() {
-		robotIDToMissionLinearization.clear();
-		for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
-			AbstractTrajectoryEnvelopeTracker tracker = vehicle.getTracker();
-			TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
-			robotIDToMissionLinearization.put(vehicle.getID(), new int[te.getPathLength()]);
-		}
+		for (TreeMap<Integer, double[]> robotIDToMissionLinearization : List.of(
+				robotIDToMissionLinearizationA,
+				robotIDToMissionLinearizationB,
+				robotIDToMissionLinearizationC
+		)) {
+			robotIDToMissionLinearization.clear();
+			for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
+				AbstractTrajectoryEnvelopeTracker tracker = vehicle.getTracker();
+				TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
+				robotIDToMissionLinearization.put(vehicle.getID(), new double[te.getPathLength()]);
+			}
 
-		for (CriticalSection cs : TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections) {
-			for (int robotID : cs.getRobotIDs()) {
-				int[] linearization = robotIDToMissionLinearization.get(robotID);
-				for (int i = cs.getStart(robotID); i <= cs.getEnd(robotID); i++) {
-					linearization[i] += 1;
+			for (CriticalSection cs : TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections) {
+				for (int robotID : cs.getRobotIDs()) {
+					TrajectoryEnvelope teOther = ! cs.isTe1(robotID) ? cs.getTe1() : cs.getTe2();
+					int teStartOther = ! cs.isTe1(robotID) ? cs.getTe1Start() : cs.getTe2Start();
+					int teEndOther = ! cs.isTe1(robotID) ? cs.getTe1End() : cs.getTe2End();
+
+					double delta;
+					if (robotIDToMissionLinearization == robotIDToMissionLinearizationA) {
+						delta = 1.0;
+					} else if (robotIDToMissionLinearization == robotIDToMissionLinearizationB) {
+						delta = 1.0 / teOther.getPathLength();
+					} else if (robotIDToMissionLinearization == robotIDToMissionLinearizationC) {
+						delta = (double) (teEndOther - teStartOther + 1) / teOther.getPathLength();
+					} else {
+						throw new RuntimeException();
+					}
+					assert delta > 0;
+
+					double[] linearization = robotIDToMissionLinearization.get(robotID);
+					for (int i = cs.getStart(robotID); i <= cs.getEnd(robotID); i++) {
+						linearization[i] += delta;
+					}
 				}
 			}
 		}

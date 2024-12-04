@@ -87,7 +87,7 @@ public abstract class Demo {
         new GatedThread("demo.run") {
             @Override
             public void runCore() {
-                thisDemo.run(System.getenv().get("SCENARIO"));
+                thisDemo.run(Containerization.SCENARIO);
             }
         }.start();
 

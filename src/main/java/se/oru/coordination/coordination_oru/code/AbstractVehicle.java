@@ -25,10 +25,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -68,8 +66,7 @@ public abstract class AbstractVehicle {
     private double pathLength;
     private boolean isRundirPrepared = false;
     public boolean isAdaptiveTracker = false;
-    private static final String rundirsRoot =
-            System.getenv("RUNDIRS") != null ? System.getenv("RUNDIRS") : "logs/rundirs";
+    private static final String rundirsRoot = Containerization.RUNDIRS;
     private static final String dateString = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
     private static final String rundirCurrent = rundirsRoot + "/current";
     public static String scenarioId;
@@ -302,11 +299,18 @@ public abstract class AbstractVehicle {
             }
 
             if (GatedThread.gatekeeper.isOver) {
-                int[] linearization = Missions.robotIDToMissionLinearization.get(ID);
-                String result = Arrays.stream(linearization)
-                        .mapToObj(String::valueOf) // Convert each int to String
-                        .collect(Collectors.joining(" "));
-                bw.write("Linearization" + "\t" + result + "\n");
+                for (TreeMap<Integer, double[]> robotIDToMissionLinearization : List.of(
+                        Missions.robotIDToMissionLinearizationA,
+                        Missions.robotIDToMissionLinearizationB,
+                        Missions.robotIDToMissionLinearizationC
+                )) {
+                    double[] linearization = robotIDToMissionLinearization.get(ID);
+                    String name = getLinearizationName(robotIDToMissionLinearization);
+                    String result = Arrays.stream(linearization)
+                            .mapToObj(String::valueOf) // Convert each number to String
+                            .collect(Collectors.joining(" "));
+                    bw.write("Linearization " + name + "\t" + result + "\n");
+                }
             }
 
             bw.close();
@@ -314,6 +318,17 @@ public abstract class AbstractVehicle {
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    private static String getLinearizationName(TreeMap<Integer, double[]> robotIDToMissionLinearization) {
+        if (robotIDToMissionLinearization == Missions.robotIDToMissionLinearizationA) {
+            return "A";
+        } else if (robotIDToMissionLinearization == Missions.robotIDToMissionLinearizationB) {
+            return "B";
+        } else if (robotIDToMissionLinearization == Missions.robotIDToMissionLinearizationC) {
+            return "C";
+        }
+        throw new RuntimeException();
     }
 
     /**
