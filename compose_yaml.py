@@ -29,7 +29,7 @@ def main():
                 'IS_VISUALIZATION': '',
                 'RUNDIRS': '$RUNDIRS',
             },
-            'command': 'container/index.sh',
+            'command': ['nice', '-n5', 'container/index.sh'],
             'network_mode': 'bridge',  # for the Internet to work
             'shm_size': '4gb',  # for Chromium
         }

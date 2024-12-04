@@ -1,5 +1,5 @@
 up: compose.yaml
-	container/compose-up.sh
+	exec container/compose-up.sh
 
 compose.yaml: compose_yaml.py
 	./compose_yaml.py
