@@ -23,7 +23,7 @@ dirs_maps=(
   '2024-11-28_13:19:18_without_bridges'
 )
 
-indexes_maps=(3 2 {4..10} 1)
+indexes_maps=({1..10})
 
 case ${WORKER:-host} in
   host) positions=({1..10});;
