@@ -41,7 +41,7 @@ for i_map in "${indexes_maps[@]}"; do
       filename_simple=map-generator/generated-maps/$dir_maps/scenario$i_map-$position.json
       filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
       for seed in {1..1}; do
-        for probabilityForcingForHuman in 0 1; do
+        for probabilityForcingForHuman in {0..0}; do
           case $probabilityForcingForHuman in
             0 | 0.0)
               variations=("baseline")

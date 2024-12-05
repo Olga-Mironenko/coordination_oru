@@ -9,6 +9,9 @@ else
   dirs=("$@")
 fi
 
+echo >&2 "Use consolidate.py instead!"
+exit 1
+
 files=()
 for dir in "${dirs[@]}"; do
   files+=("$dir"/*.csv)

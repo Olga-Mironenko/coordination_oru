@@ -236,13 +236,14 @@ public abstract class AbstractVehicle {
             );
             File dir = new File(rundirsRoot + "/" + subdir);
             if (!isRundirPrepared) {
-                if (! dir.mkdirs()) {
-                    FileUtils.cleanDirectory(dir);
-                }
+                boolean isCreated = dir.mkdirs();
+                assert isCreated;
 
-                Path current = Path.of(rundirCurrent);
-                Files.deleteIfExists(current);
-                Files.createSymbolicLink(current, Path.of(subdir));
+                if (! Containerization.IS_CONTAINER) {
+                    Path current = Path.of(rundirCurrent);
+                    Files.deleteIfExists(current);
+                    Files.createSymbolicLink(current, Path.of(subdir));
+                }
 
                 isRundirPrepared = true;
             }
@@ -307,7 +308,7 @@ public abstract class AbstractVehicle {
                     double[] linearization = robotIDToMissionLinearization.get(ID);
                     String name = getLinearizationName(robotIDToMissionLinearization);
                     String result = Arrays.stream(linearization)
-                            .mapToObj(String::valueOf) // Convert each number to String
+                            .mapToObj(d -> String.format("%.6f", d)) // Convert each number to String
                             .collect(Collectors.joining(" "));
                     bw.write("Linearization " + name + "\t" + result + "\n");
                 }
