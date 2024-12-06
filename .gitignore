@@ -67,7 +67,10 @@ ompl-test/original-ompl-examples/
 map-generator/generated-maps
 map-generator/old
 screenshotting/screenshots
+
 scenario-analysis/images
+scenario-analysis/data
+scenario-analysis/AutogluonModels
 
 # Result .txt files
 src/main/java/se/oru/coordination/coordination_oru/results/*
