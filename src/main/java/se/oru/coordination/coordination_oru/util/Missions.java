@@ -1735,21 +1735,21 @@ public class Missions {
 					int teStartOther = ! cs.isTe1(robotID) ? cs.getTe1Start() : cs.getTe2Start();
 					int teEndOther = ! cs.isTe1(robotID) ? cs.getTe1End() : cs.getTe2End();
 
-					double delta;
+					double weight;
 					if (robotIDToMissionLinearization == robotIDToMissionLinearizationA) {
-						delta = 1.0;
+						weight = 1.0;
 					} else if (robotIDToMissionLinearization == robotIDToMissionLinearizationB) {
-						delta = 1.0 / teOther.getPathLength();
+						weight = 1.0 / teOther.getPathLength();
 					} else if (robotIDToMissionLinearization == robotIDToMissionLinearizationC) {
-						delta = (double) (teEndOther - teStartOther + 1) / teOther.getPathLength();
+						weight = (double) (teEndOther - teStartOther + 1) / teOther.getPathLength();
 					} else {
 						throw new RuntimeException();
 					}
-					assert delta > 0;
+					assert weight > 0;
 
 					double[] linearization = robotIDToMissionLinearization.get(robotID);
 					for (int i = cs.getStart(robotID); i <= cs.getEnd(robotID); i++) {
-						linearization[i] += delta;
+						linearization[i] += weight;
 					}
 				}
 			}

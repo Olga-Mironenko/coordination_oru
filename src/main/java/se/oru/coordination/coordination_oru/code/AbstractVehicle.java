@@ -64,7 +64,7 @@ public abstract class AbstractVehicle {
     private int stops;
     private PoseSteering[] path;
     private double pathLength;
-    private boolean isRundirPrepared = false;
+    private static boolean isRundirPrepared = false;
     public boolean isAdaptiveTracker = false;
     private static final String rundirsRoot = Containerization.RUNDIRS;
     private static final String dateString = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
