@@ -300,36 +300,29 @@ public abstract class AbstractVehicle {
             }
 
             if (GatedThread.gatekeeper.isOver) {
-                for (TreeMap<Integer, double[]> robotIDToMissionLinearization : List.of(
-                        Missions.robotIDToMissionLinearizationA,
-                        Missions.robotIDToMissionLinearizationB,
-                        Missions.robotIDToMissionLinearizationC
-                )) {
-                    double[] linearization = robotIDToMissionLinearization.get(ID);
-                    String name = getLinearizationName(robotIDToMissionLinearization);
-                    String result = Arrays.stream(linearization)
-                            .mapToObj(d -> String.format("%.6f", d)) // Convert each number to String
-                            .collect(Collectors.joining(" "));
-                    bw.write("Linearization " + name + "\t" + result + "\n");
+                writeLinearization(bw, "A", Missions.robotIDToMissionLinearizationA.get(ID));
+                writeLinearization(bw, "B", Missions.robotIDToMissionLinearizationB.get(ID));
+                writeLinearization(bw, "C", Missions.robotIDToMissionLinearizationC.get(ID));
+                for (AbstractVehicle other : VehiclesHashMap.getVehicles()) {
+                    if (other.ID == ID) {
+                        continue;
+                    }
+                    writeLinearization(bw, "D" + other.ID,
+                            Missions.robotIDToOtherIDToMissionLinearizationD.get(ID).get(other.ID));
                 }
             }
 
             bw.close();
-
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
     }
 
-    private static String getLinearizationName(TreeMap<Integer, double[]> robotIDToMissionLinearization) {
-        if (robotIDToMissionLinearization == Missions.robotIDToMissionLinearizationA) {
-            return "A";
-        } else if (robotIDToMissionLinearization == Missions.robotIDToMissionLinearizationB) {
-            return "B";
-        } else if (robotIDToMissionLinearization == Missions.robotIDToMissionLinearizationC) {
-            return "C";
-        }
-        throw new RuntimeException();
+    private static void writeLinearization(BufferedWriter bw, String name, double[] linearization) throws IOException {
+        String result = Arrays.stream(linearization)
+                .mapToObj(d -> String.format("%.6f", d)) // Convert each number to String
+                .collect(Collectors.joining(" "));
+        bw.write("Linearization " + name + "\t" + result + "\n");
     }
 
     /**
