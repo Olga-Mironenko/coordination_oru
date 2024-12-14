@@ -2,8 +2,18 @@
 
 set -eu -o pipefail
 
-[ $# = 0 ]
+[ $# -ge 0 ]
+if [ $# = 0 ]; then
+  indexes=({1..10})
+else
+  indexes=("$@")
+fi
 
-for i_map in {1..10}; do
-  papermill analysis.ipynb generated_analysis_map"$i_map".ipynb -i_map I_MAP "$i_map"
+fails=()
+for i_map in "${indexes[@]}"; do
+  if ! papermill -p I_MAP "$i_map" analysis.ipynb generated_analysis_map"$i_map".ipynb; then
+    fails+=("$i_map")
+  fi
 done
+
+[ ! "${fails[*]}" ]
