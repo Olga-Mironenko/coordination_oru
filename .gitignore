@@ -71,6 +71,8 @@ screenshotting/screenshots
 scenario-analysis/images
 scenario-analysis/data
 scenario-analysis/AutogluonModels
+scenario-analysis/generated_*
+scenario-analysis/tmp*.ipynb
 
 # Result .txt files
 src/main/java/se/oru/coordination/coordination_oru/results/*
