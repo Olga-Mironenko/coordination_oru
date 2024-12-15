@@ -82,3 +82,5 @@ src/main/java/se/oru/coordination/coordination_oru/results/*
 src/main/java/se/oru/coordination/coordination_oru/scenarios/Test.java
 
 logprocessing/csvtk
+
+screen-c*.mp4

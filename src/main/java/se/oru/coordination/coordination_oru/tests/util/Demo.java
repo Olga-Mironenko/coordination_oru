@@ -53,7 +53,7 @@ public abstract class Demo {
 
             /// Coordination features for AVs:
             /// - Can pass first:
-            CriticalSection.isCanPassFirstActiveHum = false;
+            CriticalSection.isCanPassFirstActiveHum = true;
             CriticalSection.isCanPassFirstActiveAut = false;
             /// - Racing through crossroad:
             AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = true;
