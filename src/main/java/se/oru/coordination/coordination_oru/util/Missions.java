@@ -1765,8 +1765,8 @@ public class Missions {
 			for (CriticalSection cs : TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections) {
 				for (int robotID : cs.getRobotIDs()) {
 					TrajectoryEnvelope teOther = !cs.isTe1(robotID) ? cs.getTe1() : cs.getTe2();
-					int teStartOther = !cs.isTe1(robotID) ? cs.getTe1Start() : cs.getTe2Start();
-					int teEndOther = !cs.isTe1(robotID) ? cs.getTe1End() : cs.getTe2End();
+					int teOtherStart = !cs.isTe1(robotID) ? cs.getTe1Start() : cs.getTe2Start();
+					int teOtherEnd = !cs.isTe1(robotID) ? cs.getTe1End() : cs.getTe2End();
 
 					double weight;
 					switch (mode) {
@@ -1778,7 +1778,7 @@ public class Missions {
 							break;
 						case "C":
 						case "D":
-							weight = (double) (teEndOther - teStartOther + 1) / teOther.getPathLength();
+							weight = (double) (teOtherEnd - teOtherStart + 1) / teOther.getPathLength();
 							break;
 						default:
 							throw new RuntimeException();

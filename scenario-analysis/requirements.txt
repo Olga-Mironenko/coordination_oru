@@ -1,5 +1,7 @@
 autogluon
+IPython
 matplotlib
 numpy
 pandas
 papermill
+scikit-learn
