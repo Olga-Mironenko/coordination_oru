@@ -2298,196 +2298,198 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 		//Let's try to reverse reversible constraints according to the user defined heuristic if this preserves liveness.
 
-				/*/////////////////////////////
-						CHECK HEURISTIC
-				/////////////////////////////*/
-				for (CriticalSection cs : reversibleCS) {
+		/*/////////////////////////////
+				CHECK HEURISTIC
+		/////////////////////////////*/
+		for (CriticalSection cs : reversibleCS) {
 
-					//check each edge one by one
-					HashMap<Pair<Integer,Integer>,Integer> edgesToDelete = new HashMap<>();
-					HashMap<Pair<Integer,Integer>,Integer> edgesToAdd = new HashMap<>();
+			//check each edge one by one
+			HashMap<Pair<Integer,Integer>,Integer> edgesToDelete = new HashMap<>();
+			HashMap<Pair<Integer,Integer>,Integer> edgesToAdd = new HashMap<>();
 
-					AbstractTrajectoryEnvelopeTracker robotTracker1 = trackers.get(cs.getTe1().getRobotID());
-					RobotReport robotReport1 = currentReports.get(cs.getTe1().getRobotID());
-					AbstractTrajectoryEnvelopeTracker robotTracker2 = trackers.get(cs.getTe2().getRobotID());
-					RobotReport robotReport2 = currentReports.get(cs.getTe2().getRobotID());
+			AbstractTrajectoryEnvelopeTracker robotTracker1 = trackers.get(cs.getTe1().getRobotID());
+			RobotReport robotReport1 = currentReports.get(cs.getTe1().getRobotID());
+			AbstractTrajectoryEnvelopeTracker robotTracker2 = trackers.get(cs.getTe2().getRobotID());
+			RobotReport robotReport2 = currentReports.get(cs.getTe2().getRobotID());
 
-					boolean robot2Yields = getOrder(robotReport1, robotReport2, cs);
-					//true if robot1 should go before robot2, false vice versa
-					boolean robot2YieldsOld = CSToDepsOrder.get(cs).getFirst() == robotReport2.getRobotID();
+			boolean robot2Yields = getOrder(robotReport1, robotReport2, cs);
+			//true if robot1 should go before robot2, false vice versa
+			boolean robot2YieldsOld = CSToDepsOrder.get(cs).getFirst() == robotReport2.getRobotID();
 
-					if (robot2YieldsOld != robot2Yields) {
-						metaCSPLogger.finest("Trying reversing a precedence at critical section " + cs + ".");
+			if (robot2YieldsOld == robot2Yields) {
+				continue;
+			}
 
-						//try reversing the order
-						int drivingCurrentIndex = robot2Yields ? robotReport1.getPathIndex() : robotReport2.getPathIndex();
-						AbstractTrajectoryEnvelopeTracker drivingTracker = robot2Yields ? robotTracker1 : robotTracker2;
-						AbstractTrajectoryEnvelopeTracker waitingTracker = robot2Yields ? robotTracker2 : robotTracker1;
-						int waitingPoint = getCriticalPoint(waitingTracker.getTrajectoryEnvelope().getRobotID(), cs, drivingCurrentIndex);
+			metaCSPLogger.finest("Trying reversing a precedence at critical section " + cs + ".");
 
-						//Update graphs
-						if (waitingPoint >= 0) {
+			//try reversing the order
+			int drivingCurrentIndex = robot2Yields ? robotReport1.getPathIndex() : robotReport2.getPathIndex();
+			AbstractTrajectoryEnvelopeTracker drivingTracker = robot2Yields ? robotTracker1 : robotTracker2;
+			AbstractTrajectoryEnvelopeTracker waitingTracker = robot2Yields ? robotTracker2 : robotTracker1;
+			int waitingPoint = getCriticalPoint(waitingTracker.getTrajectoryEnvelope().getRobotID(), cs, drivingCurrentIndex);
 
-							//Store previous graph (FIXME)
-							DirectedMultigraph<Integer,Dependency> backupDepsGraph = new DirectedMultigraph<Integer, Dependency>(Dependency.class);
-							for (int v : depsGraph.vertexSet()) backupDepsGraph.addVertex(v);
-							for (Dependency dep : depsGraph.edgeSet()) {
-								if (!backupDepsGraph.addEdge(dep.getWaitingRobotID(), dep.getDrivingRobotID(), dep))
-									metaCSPLogger.severe("<<<<<<<<< Add dependency fails (6). Dep: " + dep);
+			//Update graphs
+			if (waitingPoint < 0) {
+				continue;
+			}
+
+			//Store previous graph (FIXME)
+			DirectedMultigraph<Integer,Dependency> backupDepsGraph = new DirectedMultigraph<Integer, Dependency>(Dependency.class);
+			for (int v : depsGraph.vertexSet()) backupDepsGraph.addVertex(v);
+			for (Dependency dep : depsGraph.edgeSet()) {
+				if (!backupDepsGraph.addEdge(dep.getWaitingRobotID(), dep.getDrivingRobotID(), dep))
+					metaCSPLogger.severe("<<<<<<<<< Add dependency fails (6). Dep: " + dep);
+			}
+
+			SimpleDirectedWeightedGraph<Integer, DefaultWeightedEdge> backupGraph = new SimpleDirectedWeightedGraph<Integer, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+			for (int v : currentOrdersGraph.vertexSet()) backupGraph.addVertex(v);
+			for (DefaultWeightedEdge e : currentOrdersGraph.edgeSet()) {
+				DefaultWeightedEdge e_ = backupGraph.addEdge(currentOrdersGraph.getEdgeSource(e), currentOrdersGraph.getEdgeTarget(e));
+				if (e_ == null) metaCSPLogger.severe("<<<<<<<<< Add egde fails (7). Edge: " + e.toString());
+				backupGraph.setEdgeWeight(e_, currentOrdersGraph.getEdgeWeight(e));
+			}
+
+			HashMap<Pair<Integer, Integer>, HashSet<ArrayList<Integer>>> backupcurrentCyclesList = new HashMap<Pair<Integer, Integer>, HashSet<ArrayList<Integer>>>();
+			for (Pair<Integer,Integer> key : currentCyclesList.keySet())
+				backupcurrentCyclesList.put(key, new HashSet<ArrayList<Integer>>(currentCyclesList.get(key)));
+
+			edgesToDelete.put(new Pair<Integer,Integer>(drivingTracker.getTrajectoryEnvelope().getRobotID(), waitingTracker.getTrajectoryEnvelope().getRobotID()), 1);
+			Pair<Integer,Integer> newEdge = new Pair<Integer,Integer>(waitingTracker.getTrajectoryEnvelope().getRobotID(), drivingTracker.getTrajectoryEnvelope().getRobotID());
+			edgesToAdd.put(newEdge, 1);
+			updateGraph(edgesToDelete,edgesToAdd);
+			metaCSPLogger.finest("Graph after revising according to the heuristic: " + currentOrdersGraph.toString() + ".");
+
+			//Make new dependency
+			int drivingCSEnd =  drivingTracker.getTrajectoryEnvelope().getRobotID() == cs.getTe1().getRobotID() ? cs.getTe1End() : cs.getTe2End();
+			int drivingCSEndOld =  drivingTracker.getTrajectoryEnvelope().getRobotID()  == cs.getTe1().getRobotID() ? cs.getTe2End() : cs.getTe1End();
+			Dependency depNew = new Dependency(waitingTracker.getTrajectoryEnvelope(), drivingTracker.getTrajectoryEnvelope(), waitingPoint, drivingCSEnd);
+			Dependency depOld = new Dependency(drivingTracker.getTrajectoryEnvelope(), waitingTracker.getTrajectoryEnvelope(), CSToDepsOrder.get(cs).getSecond(), drivingCSEndOld);
+
+			//update the global graph and treeset
+			depsGraph.removeEdge(depOld);
+			if (!depsGraph.containsVertex(depNew.getWaitingRobotID())) depsGraph.addVertex(depNew.getWaitingRobotID());
+			if (!depsGraph.containsVertex(depNew.getDrivingRobotID())) depsGraph.addVertex(depNew.getDrivingRobotID());
+			if (!depsGraph.addEdge(depNew.getWaitingRobotID(), depNew.getDrivingRobotID(), depNew))
+				metaCSPLogger.severe("<<<<<<<<< Add dependency fails (10). Dep: " + depNew);
+
+			//check if safe (continue here)
+			boolean safe = true;
+			if (currentCyclesList.containsKey(newEdge)) {
+				//for each cycle involving the new edge
+				for (List<Integer> cycle : currentCyclesList.get(newEdge)) {
+
+					//Get edges along the cycle...
+					//  Recall: there could be more than one edge per pair of vertices, as this is a multi-graph
+					ArrayList<ArrayList<Dependency>> edgesAlongCycle = new ArrayList<ArrayList<Dependency>>();
+					for (int i = 0; i < cycle.size(); i++) {
+						int j = i < cycle.size()-1 ? i+1 : 0;
+						if (cycle.get(i) == depNew.getWaitingRobotID() && cycle.get(j) == depNew.getDrivingRobotID()) {
+							ArrayList<Dependency> array = new ArrayList<Dependency>();
+							array.add(depNew);
+							edgesAlongCycle.add(array);
+						}
+						else {
+							Set<Dependency> allEdges = depsGraph.getAllEdges(cycle.get(i), cycle.get(j));
+							if (allEdges == null) {
+								metaCSPLogger.severe("<<<<<<<<< Unfound one vertex between " + cycle.get(i) + " and "+ cycle.get(j));
+								//metaCSPLogger.info(depsGraph.toString());
+								//metaCSPLogger.info(currentCyclesList.toString());
 							}
-
-							SimpleDirectedWeightedGraph<Integer, DefaultWeightedEdge> backupGraph = new SimpleDirectedWeightedGraph<Integer, DefaultWeightedEdge>(DefaultWeightedEdge.class);
-							for (int v : currentOrdersGraph.vertexSet()) backupGraph.addVertex(v);
-							for (DefaultWeightedEdge e : currentOrdersGraph.edgeSet()) {
-								DefaultWeightedEdge e_ = backupGraph.addEdge(currentOrdersGraph.getEdgeSource(e), currentOrdersGraph.getEdgeTarget(e));
-								if (e_ == null) metaCSPLogger.severe("<<<<<<<<< Add egde fails (7). Edge: " + e.toString());
-								backupGraph.setEdgeWeight(e_, currentOrdersGraph.getEdgeWeight(e));
-							}
-
-							HashMap<Pair<Integer, Integer>, HashSet<ArrayList<Integer>>> backupcurrentCyclesList = new HashMap<Pair<Integer, Integer>, HashSet<ArrayList<Integer>>>();
-							for (Pair<Integer,Integer> key : currentCyclesList.keySet())
-								backupcurrentCyclesList.put(key, new HashSet<ArrayList<Integer>>(currentCyclesList.get(key)));
-
-							edgesToDelete.put(new Pair<Integer,Integer>(drivingTracker.getTrajectoryEnvelope().getRobotID(), waitingTracker.getTrajectoryEnvelope().getRobotID()), 1);
-							Pair<Integer,Integer> newEdge = new Pair<Integer,Integer>(waitingTracker.getTrajectoryEnvelope().getRobotID(), drivingTracker.getTrajectoryEnvelope().getRobotID());
-							edgesToAdd.put(newEdge, 1);
-							updateGraph(edgesToDelete,edgesToAdd);
-							metaCSPLogger.finest("Graph after revising according to the heuristic: " + currentOrdersGraph.toString() + ".");
-
-							//Make new dependency
-							int drivingCSEnd =  drivingTracker.getTrajectoryEnvelope().getRobotID() == cs.getTe1().getRobotID() ? cs.getTe1End() : cs.getTe2End();
-							int drivingCSEndOld =  drivingTracker.getTrajectoryEnvelope().getRobotID()  == cs.getTe1().getRobotID() ? cs.getTe2End() : cs.getTe1End();
-							Dependency depNew = new Dependency(waitingTracker.getTrajectoryEnvelope(), drivingTracker.getTrajectoryEnvelope(), waitingPoint, drivingCSEnd);
-							Dependency depOld = new Dependency(drivingTracker.getTrajectoryEnvelope(), waitingTracker.getTrajectoryEnvelope(), CSToDepsOrder.get(cs).getSecond(), drivingCSEndOld);
-
-							//update the global graph and treeset
-							depsGraph.removeEdge(depOld);
-							if (!depsGraph.containsVertex(depNew.getWaitingRobotID())) depsGraph.addVertex(depNew.getWaitingRobotID());
-							if (!depsGraph.containsVertex(depNew.getDrivingRobotID())) depsGraph.addVertex(depNew.getDrivingRobotID());
-							if (!depsGraph.addEdge(depNew.getWaitingRobotID(), depNew.getDrivingRobotID(), depNew))
-								metaCSPLogger.severe("<<<<<<<<< Add dependency fails (10). Dep: " + depNew);
-
-							//check if safe (continue here) 
-							boolean safe = true;
-							if (currentCyclesList.containsKey(newEdge)) {
-								//for each cycle involving the new edge
-								for (List<Integer> cycle : currentCyclesList.get(newEdge)) {
-
-									//Get edges along the cycle...
-									//  Recall: there could be more than one edge per pair of vertices, as this is a multi-graph
-									ArrayList<ArrayList<Dependency>> edgesAlongCycle = new ArrayList<ArrayList<Dependency>>();
-									for (int i = 0; i < cycle.size(); i++) {
-										int j = i < cycle.size()-1 ? i+1 : 0;
-										if (cycle.get(i) == depNew.getWaitingRobotID() && cycle.get(j) == depNew.getDrivingRobotID()) {
-											ArrayList<Dependency> array = new ArrayList<Dependency>();
-											array.add(depNew);
-											edgesAlongCycle.add(array);
-										}
-										else {
-											Set<Dependency> allEdges = depsGraph.getAllEdges(cycle.get(i), cycle.get(j));
-											if (allEdges == null) {
-												metaCSPLogger.severe("<<<<<<<<< Unfound one vertex between " + cycle.get(i) + " and "+ cycle.get(j));
-												//metaCSPLogger.info(depsGraph.toString());
-												//metaCSPLogger.info(currentCyclesList.toString());
-											}
-											else {
-												if (allEdges.isEmpty()) {
-													metaCSPLogger.severe("<<<<<<<<< Unfound deps from: " + cycle.get(i) + " to: "+ cycle.get(j) + " when reversing dep  " + depOld + " to " + depNew);
-													metaCSPLogger.severe("currentCyclesList: " + currentCyclesList.get(newEdge).toString());
-													metaCSPLogger.severe("currentOrdersGraph contains it? " + currentOrdersGraph.containsEdge(cycle.get(i), cycle.get(j)));
-													metaCSPLogger.severe("backupDepsGraph contains it? " + backupDepsGraph.containsEdge(cycle.get(i), cycle.get(j)));
-													metaCSPLogger.severe("backupGraph contains it? " + backupGraph.containsEdge(cycle.get(i), cycle.get(j)));
-													boolean got = false;
-													if (currentDeps.containsKey(cycle.get(i))) {
-														for (Dependency dep1 : currentDeps.get(cycle.get(i))) {
-															if (dep1.getDrivingRobotID() == cycle.get(j)) {
-																got = true;
-																break;
-															}
-														}
-													}
-													metaCSPLogger.severe("currentDeps contains it? " + got);
-												}
-												edgesAlongCycle.add(new ArrayList<Dependency>(allEdges));
-											}
-										}
-									}
-
-									//Get all the possible permutation of edges
-									int maxSize = 0;
-									for (ArrayList<Dependency> oneDepList : edgesAlongCycle) if (oneDepList.size() > maxSize) maxSize = oneDepList.size();
-									PermutationsWithRepetition gen = new PermutationsWithRepetition(maxSize, edgesAlongCycle.size());
-									int[][] v = gen.getVariations();
-									ArrayList<ArrayList<Dependency>> newDeps = new ArrayList<ArrayList<Dependency>>();
-									for (int k = 0; k < v.length; k++) {
-										int[] oneComb = v[k];
-										ArrayList<Dependency> oneSelection = new ArrayList<Dependency>();
-										for (int i = 0; i < oneComb.length; i++) {
-											if (oneComb[i] < edgesAlongCycle.get(i).size()) oneSelection.add(edgesAlongCycle.get(i).get(oneComb[i]));
-											else {
-												oneSelection = null;
+							else {
+								if (allEdges.isEmpty()) {
+									metaCSPLogger.severe("<<<<<<<<< Unfound deps from: " + cycle.get(i) + " to: "+ cycle.get(j) + " when reversing dep  " + depOld + " to " + depNew);
+									metaCSPLogger.severe("currentCyclesList: " + currentCyclesList.get(newEdge).toString());
+									metaCSPLogger.severe("currentOrdersGraph contains it? " + currentOrdersGraph.containsEdge(cycle.get(i), cycle.get(j)));
+									metaCSPLogger.severe("backupDepsGraph contains it? " + backupDepsGraph.containsEdge(cycle.get(i), cycle.get(j)));
+									metaCSPLogger.severe("backupGraph contains it? " + backupGraph.containsEdge(cycle.get(i), cycle.get(j)));
+									boolean got = false;
+									if (currentDeps.containsKey(cycle.get(i))) {
+										for (Dependency dep1 : currentDeps.get(cycle.get(i))) {
+											if (dep1.getDrivingRobotID() == cycle.get(j)) {
+												got = true;
 												break;
 											}
 										}
-										if (oneSelection != null) newDeps.add(oneSelection);
 									}
-
-									//Check for nonlive cycles, that is:
-									//  All along the cycle, check if there are (u,v,dep1) and (v,w,dep2) such that
-									//    v.dep2.waitingpoint <= v.dep1.releasingpoint
-
-									for (ArrayList<Dependency> depList : newDeps) {
-										for (int i = 0; i < depList.size(); i++) {
-											safe = true;
-											Dependency dep1 = depList.get(i);
-											Dependency dep2 = depList.get(i < depList.size()-1 ? i+1 : 0);
-											if (nonlivePair(dep1,dep2)) {
-												if (! cs.isWithForcing()) {
-													safe = false;
-												}
-											}
-											if (safe) break; //if one pair in the cycle is safe, then the cycle is safe
-										}
-										//  If there exists at least one nonlive cycle, then the precedence cannot be reversed.
-										if(!safe) {
-											metaCSPLogger.finest("A nonlive cycle: " + depList + ".");
-											break;
-										}
-									}
-
-									if(!safe) {
-										metaCSPLogger.finest("Cycle: " + edgesAlongCycle + " is NOT deadlock-free");
-										break;
-									}
+									metaCSPLogger.severe("currentDeps contains it? " + got);
 								}
+								edgesAlongCycle.add(new ArrayList<Dependency>(allEdges));
 							}
-
-							if (!safe) {
-								metaCSPLogger.finest("Restore previous precedence " + depOld + ".");
-								depsGraph = backupDepsGraph;
-								currentOrdersGraph = backupGraph;
-								currentCyclesList = backupcurrentCyclesList;
-								nonliveStatesAvoided.incrementAndGet();
-							}
-							else {
-								//update the maps
-								if (!currentDeps.get(depOld.getWaitingRobotID()).remove(depOld)) metaCSPLogger.severe("<<<<<<<< Error in removing dep: " + depOld);
-								if (currentDeps.get(depOld.getWaitingRobotID()).isEmpty()) currentDeps.remove(depOld.getWaitingRobotID());
-								if (!currentDeps.containsKey(waitingTracker.getTrajectoryEnvelope().getRobotID()))
-									currentDeps.put(waitingTracker.getTrajectoryEnvelope().getRobotID(), new HashSet<Dependency>());
-								if (!currentDeps.get(waitingTracker.getTrajectoryEnvelope().getRobotID()).add(depNew)) {
-									metaCSPLogger.severe("<<<<<<<<< Add dependency fails (11). Dep: " + depNew);
-								}
-								CSToDepsOrder.put(cs, new Pair<Integer,Integer>(depNew.getWaitingRobotID(), depNew.getWaitingPoint()));
-								depsToCS.put(depNew, cs);
-								metaCSPLogger.finest("Update precedences " + depNew + " according to heuristic.");
-								currentOrdersHeurusticallyDecided.incrementAndGet();
-							}
-							metaCSPLogger.finest("Final graph: " + currentOrdersGraph.toString() + ".");
-
 						}
 					}
-				}//end for reversibleCS*/
+
+					//Get all the possible permutation of edges
+					int maxSize = 0;
+					for (ArrayList<Dependency> oneDepList : edgesAlongCycle) if (oneDepList.size() > maxSize) maxSize = oneDepList.size();
+					PermutationsWithRepetition gen = new PermutationsWithRepetition(maxSize, edgesAlongCycle.size());
+					int[][] v = gen.getVariations();
+					ArrayList<ArrayList<Dependency>> newDeps = new ArrayList<ArrayList<Dependency>>();
+					for (int k = 0; k < v.length; k++) {
+						int[] oneComb = v[k];
+						ArrayList<Dependency> oneSelection = new ArrayList<Dependency>();
+						for (int i = 0; i < oneComb.length; i++) {
+							if (oneComb[i] < edgesAlongCycle.get(i).size()) oneSelection.add(edgesAlongCycle.get(i).get(oneComb[i]));
+							else {
+								oneSelection = null;
+								break;
+							}
+						}
+						if (oneSelection != null) newDeps.add(oneSelection);
+					}
+
+					//Check for nonlive cycles, that is:
+					//  All along the cycle, check if there are (u,v,dep1) and (v,w,dep2) such that
+					//    v.dep2.waitingpoint <= v.dep1.releasingpoint
+
+					for (ArrayList<Dependency> depList : newDeps) {
+						for (int i = 0; i < depList.size(); i++) {
+							safe = true;
+							Dependency dep1 = depList.get(i);
+							Dependency dep2 = depList.get(i < depList.size()-1 ? i+1 : 0);
+							if (nonlivePair(dep1,dep2)) {
+								if (! cs.isWithForcing()) {
+									safe = false;
+								}
+							}
+							if (safe) break; //if one pair in the cycle is safe, then the cycle is safe
+						}
+						//  If there exists at least one nonlive cycle, then the precedence cannot be reversed.
+						if(!safe) {
+							metaCSPLogger.finest("A nonlive cycle: " + depList + ".");
+							break;
+						}
+					}
+
+					if(!safe) {
+						metaCSPLogger.finest("Cycle: " + edgesAlongCycle + " is NOT deadlock-free");
+						break;
+					}
+				}
+			}
+
+			if (!safe) {
+				metaCSPLogger.finest("Restore previous precedence " + depOld + ".");
+				depsGraph = backupDepsGraph;
+				currentOrdersGraph = backupGraph;
+				currentCyclesList = backupcurrentCyclesList;
+				nonliveStatesAvoided.incrementAndGet();
+			}
+			else {
+				//update the maps
+				if (!currentDeps.get(depOld.getWaitingRobotID()).remove(depOld)) metaCSPLogger.severe("<<<<<<<< Error in removing dep: " + depOld);
+				if (currentDeps.get(depOld.getWaitingRobotID()).isEmpty()) currentDeps.remove(depOld.getWaitingRobotID());
+				if (!currentDeps.containsKey(waitingTracker.getTrajectoryEnvelope().getRobotID()))
+					currentDeps.put(waitingTracker.getTrajectoryEnvelope().getRobotID(), new HashSet<Dependency>());
+				if (!currentDeps.get(waitingTracker.getTrajectoryEnvelope().getRobotID()).add(depNew)) {
+					metaCSPLogger.severe("<<<<<<<<< Add dependency fails (11). Dep: " + depNew);
+				}
+				CSToDepsOrder.put(cs, new Pair<Integer,Integer>(depNew.getWaitingRobotID(), depNew.getWaitingPoint()));
+				depsToCS.put(depNew, cs);
+				metaCSPLogger.finest("Update precedences " + depNew + " according to heuristic.");
+				currentOrdersHeurusticallyDecided.incrementAndGet();
+			}
+			metaCSPLogger.finest("Final graph: " + currentOrdersGraph.toString() + ".");
+		}//end for reversibleCS
 	}//end synchronized(allCriticalSections)
 
 	/**
