@@ -54,7 +54,7 @@ public abstract class Demo {
             /// Coordination features for AVs:
             /// - Can pass first:
             CriticalSection.isCanPassFirstActiveHum = true;
-            CriticalSection.isCanPassFirstActiveAut = true;
+            CriticalSection.isCanPassFirstActiveAut = false;
             /// - Racing through crossroad:
             AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = true;
             /// - Cautious mode:
@@ -63,9 +63,9 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.minMaxVelocityCautious = 1.0;
             /// - Rerouting:
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForHuman = false;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = false;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = true;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = false;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
             /// - Change of priorities:
             Forcing.priorityDistance = 50.0;
             Forcing.isDistanceToCPAddedToPriorityDistance = true;
