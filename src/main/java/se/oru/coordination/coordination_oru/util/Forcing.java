@@ -55,7 +55,7 @@ public class Forcing {
 
     public static int forcingSinceTimestep = -1;
 
-    public static void startForcing(int robotID) {
+    public static void startManualForcing(int robotID) {
         priorityDistance = 10;
 //        stopDistance = 10;
 

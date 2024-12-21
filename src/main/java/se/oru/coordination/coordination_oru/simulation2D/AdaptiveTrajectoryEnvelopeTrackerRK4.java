@@ -931,15 +931,17 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 		robotIDToCSes.get(myRobotID).add(criticalSection);
 
-		if (can) {
-			setCriticalPoint(-1);
+		if (! can) {
+			return;
+		}
 
-			SortedSet<Integer> criticalPointsPostponedOriginal = criticalPointsPostponed;
-			if (! criticalPointsPostponedOriginal.isEmpty()) {
-				criticalPointsPostponed = new TreeSet<>();
-				for (int cp : criticalPointsPostponedOriginal) {
-					setCriticalPoint(cp);
-				}
+		setCriticalPoint(-1);
+
+		SortedSet<Integer> criticalPointsPostponedOriginal = criticalPointsPostponed;
+		if (! criticalPointsPostponedOriginal.isEmpty()) {
+			criticalPointsPostponed = new TreeSet<>();
+			for (int cp : criticalPointsPostponedOriginal) {
+				setCriticalPoint(cp);
 			}
 		}
 	}

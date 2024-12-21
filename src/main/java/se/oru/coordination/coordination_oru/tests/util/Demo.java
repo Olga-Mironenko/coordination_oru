@@ -56,7 +56,7 @@ public abstract class Demo {
             CriticalSection.isCanPassFirstActiveHum = true;
             CriticalSection.isCanPassFirstActiveAut = false;
             /// - Racing through crossroad:
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = false;
             /// - Cautious mode:
             AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.deltaMaxVelocityCautious = -2.0;
