@@ -1829,8 +1829,6 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			HashSet<Integer> askForReplan = new HashSet<Integer>();
 			HashMap<Integer, Integer> earliestStoppingPoints = new HashMap<Integer,Integer>();
 
-			HashMap<Pair<Integer,Integer>,Integer> edgesToDelete = new HashMap<Pair<Integer,Integer>,Integer> ();
-			HashMap<Pair<Integer,Integer>,Integer> edgesToAdd = new HashMap<Pair<Integer,Integer>,Integer> ();
 			HashSet<CriticalSection> reversibleCS = new HashSet<CriticalSection>();
 
 			//? 2) Gather initial dependencies from stopping points
@@ -1843,13 +1841,11 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					depsGraph,
 					askForReplan,
 					earliestStoppingPoints,
-					edgesToDelete,
-					edgesToAdd,
 					reversibleCS,
 					currentReports);
 
 			//? 4) Try reversing reversible constraints according to the user-defined heuristic
-			reverseReversibleConstraints(reversibleCS, currentReports, depsGraph, currentDeps, edgesToDelete, edgesToAdd);
+			reverseReversibleConstraints(reversibleCS, currentReports, depsGraph, currentDeps);
 
 			//? 5) Finalize and communicate updated dependencies (closest points, re-plans, etc.)
 			finalizeGlobalDependencies(currentDeps,
@@ -1918,11 +1914,12 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 											DirectedMultigraph<Integer,Dependency> depsGraph,
 											HashSet<Integer> askForReplan,
 											HashMap<Integer,Integer> earliestStoppingPoints,
-											HashMap<Pair<Integer,Integer>,Integer> edgesToDelete,
-											HashMap<Pair<Integer,Integer>,Integer> edgesToAdd,
 											HashSet<CriticalSection> reversibleCS,
 											HashMap<Integer,RobotReport> currentReports) {
 		Set<Integer> robotIDs = trackers.keySet();
+
+		HashMap<Pair<Integer,Integer>,Integer> edgesToDelete = new HashMap<>();
+		HashMap<Pair<Integer,Integer>,Integer> edgesToAdd = new HashMap<>();
 
 		//Make deps from critical sections, and remove obsolete critical sections
 		synchronized (allCriticalSections) {
@@ -2290,12 +2287,14 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	private void reverseReversibleConstraints(HashSet<CriticalSection> reversibleCS,
 											  HashMap<Integer,RobotReport> currentReports,
 											  DirectedMultigraph<Integer,Dependency> depsGraph,
-											  HashMap<Integer,HashSet<Dependency>> currentDeps,
-											  HashMap<Pair<Integer,Integer>,Integer> edgesToDelete,
-											  HashMap<Pair<Integer,Integer>,Integer> edgesToAdd)
+											  HashMap<Integer,HashSet<Dependency>> currentDeps)
 	{
 		//? This corresponds to the big for-loop that tries to reverse
 		//? constraints if it yields a better (non-deadlocked) graph.
+
+		if (reversibleCS.isEmpty()) {
+			return;
+		}
 
 		//Let's try to reverse reversible constraints according to the user defined heuristic if this preserves liveness.
 
@@ -2305,8 +2304,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				for (CriticalSection cs : reversibleCS) {
 
 					//check each edge one by one
-					edgesToDelete.clear();
-					edgesToAdd.clear();
+					HashMap<Pair<Integer,Integer>,Integer> edgesToDelete = new HashMap<>();
+					HashMap<Pair<Integer,Integer>,Integer> edgesToAdd = new HashMap<>();
 
 					AbstractTrajectoryEnvelopeTracker robotTracker1 = trackers.get(cs.getTe1().getRobotID());
 					RobotReport robotReport1 = currentReports.get(cs.getTe1().getRobotID());
