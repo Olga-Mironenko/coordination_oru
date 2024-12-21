@@ -605,7 +605,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 		boolean ret = false;
 
 		if (cs.te1HigherWeight != cs.te2HigherWeight)
-			ret = cs.te1HigherWeight.ordinal() > cs.te2HigherWeight.ordinal();
+			ret = cs.te1HigherWeight.compareTo(cs.te2HigherWeight) > 0;
 		else if (this.comparators.size() > 0)
 			ret = (this.comparators.compare(r1atcs, r2atcs) < 0);
 		else
@@ -2055,7 +2055,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							!canStopRobot1 && isHuman2Forcing ||
 							!canStopRobot2 && isHuman1Forcing
 					) {
-						// The `isHuman` part is because otherwise `cs.setHigher(...)` (during forcing) affects nothing
+						// The `isHuman` part is because otherwise `cs.setWeight(...)` (during forcing) affects nothing
 						// (since `getOrder` is called only for reversible CSes).
 						reversibleCS.add(cs);
 						boolean robot2Yields;

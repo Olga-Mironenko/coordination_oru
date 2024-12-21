@@ -78,7 +78,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	private boolean isCautious = false;
 	private Double maxVelocityBeforeCautious = null;
 
-	private SortedSet<Integer> criticalPointsPostponed = new TreeSet<>(Collections.reverseOrder());
 	public double distanceToCP;
 	public static double probabilityForcingForHuman = 0.0;
 	public static double distanceToCPForForcing = 5.0;
@@ -688,9 +687,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 					positionToSlowDownTemporary != null && positionToSlowDownTemporary >= state.getPosition() ||
 					positionToSlowDownTemporary == null && isStopped()
 			)) {
-				if (this.criticalPoint != -1) {
-					criticalPointsPostponed.add(this.criticalPoint);
-				}
 				this.setFieldCriticalPoint(criticalPointToSet);
 
 				//assert criticalSectionsReal.size() == 1; // doesn't work when the other robot returns through the same intersection
@@ -729,7 +725,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			Forcing.robotIDToPathIndexToStop.put(robotID, positionToStop);
 		}
 		for (CriticalSection cs : criticalSections) {
-			cs.setHigher(robotID, CriticalSection.Weight.WEIGHT_RACING);
+			cs.setWeight(robotID, CriticalSection.Weight.WEIGHT_RACING);
 			// So the current robot gets higher priority.
 		}
 	}
@@ -899,24 +895,21 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	private void checkIfCanPassFirst() {
-		if (! CriticalSection.isCanPassFirstActiveForRobot(te.getRobotID())) {
-			return;
-		}
-
-		// Forget about a CS if the robot can pass first there:
-		CriticalSection criticalSection = getFirstOfCriticalSectionsOfInferior();
-		if (criticalSection == null) {
+		if (!CriticalSection.isCanPassFirstActiveForRobot(te.getRobotID())) {
 			return;
 		}
 
 		int myRobotID = te.getRobotID();
 
-		//assert criticalSection.getInferior() == myRobotID;
-		// After forcing ends, priority change affects `criticalSection` but doesn't propagate to
-		// `criticalPoint` yet (at least sometimes).
-		if (myRobotID != criticalSection.getInferior()) {
-			return;
+		for (CriticalSection criticalSection : tec.allCriticalSections) {
+			if (myRobotID == criticalSection.getInferior()) {
+				checkIfCanPassFirstCS(criticalSection);
+			}
 		}
+	}
+
+	private void checkIfCanPassFirstCS(CriticalSection criticalSection) {
+		int myRobotID = te.getRobotID();
 
 		Boolean can = criticalSection.canPassFirst(myRobotID);
 		if (can == null) {
@@ -935,14 +928,13 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			return;
 		}
 
-		setCriticalPoint(-1);
+		if (criticalSection.getWeight(myRobotID).compareTo(CriticalSection.Weight.WEIGHT_CAN_PASS_FIRST) < 0) {
+			criticalSection.setWeight(myRobotID, CriticalSection.Weight.WEIGHT_CAN_PASS_FIRST);
+		}
 
-		SortedSet<Integer> criticalPointsPostponedOriginal = criticalPointsPostponed;
-		if (! criticalPointsPostponedOriginal.isEmpty()) {
-			criticalPointsPostponed = new TreeSet<>();
-			for (int cp : criticalPointsPostponedOriginal) {
-				setCriticalPoint(cp);
-			}
+		int otherRobotID = criticalSection.getOtherRobotID(myRobotID);
+		if (criticalSection.getWeight(otherRobotID) == CriticalSection.Weight.WEIGHT_CAN_PASS_FIRST) {
+			criticalSection.setWeight(otherRobotID, CriticalSection.Weight.WEIGHT_NORMAL);
 		}
 	}
 

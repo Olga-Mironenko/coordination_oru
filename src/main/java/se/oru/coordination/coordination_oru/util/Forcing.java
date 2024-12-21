@@ -156,7 +156,7 @@ public class Forcing {
                             continue;
                         }
 
-                        cs.setHigher(robotID, CriticalSection.Weight.WEIGHT_FORCING);
+                        cs.setWeight(robotID, CriticalSection.Weight.WEIGHT_FORCING);
                         criticalSectionsToRestorePrioritiesLater.add(cs);
                         int otherID = cs.getOtherRobotID(robotID);
                         if (TrajectoryEnvelopeCoordinatorSimulation.isCPForcingHack) {
@@ -224,7 +224,7 @@ public class Forcing {
             public void restorePriorities() {
                 for (CriticalSection cs : criticalSectionsToRestorePrioritiesLater) {
                     if (tec.allCriticalSections.contains(cs)) {
-                        cs.setHigher(robotID, CriticalSection.Weight.WEIGHT_NORMAL);
+                        cs.setWeight(robotID, CriticalSection.Weight.WEIGHT_NORMAL);
                     }
                 }
                 criticalSectionsToRestorePrioritiesLater.clear();

@@ -33,7 +33,7 @@ public class CriticalSection {
 	private int te2End = -1;
 	private int te1Break = -1;
 	private int te2Break = -1;
-	public enum Weight { WEIGHT_NORMAL, WEIGHT_UNUSED, WEIGHT_RACING, WEIGHT_FORCING }
+	public enum Weight { WEIGHT_NORMAL, WEIGHT_CAN_PASS_FIRST, WEIGHT_RACING, WEIGHT_FORCING }
 	public Weight te1HigherWeight = Weight.WEIGHT_NORMAL;
 	public Weight te2HigherWeight = Weight.WEIGHT_NORMAL;
 
@@ -190,11 +190,21 @@ public class CriticalSection {
 		return getStart(robotID) <= index && index <= getEnd(robotID);
 	}
 
-	public void setHigher(int robotID, Weight weight) {
+	public void setWeight(int robotID, Weight weight) {
 		if (isTe1(robotID)) {
 			te1HigherWeight = weight;
 		} else if (isTe2(robotID)) {
 			te2HigherWeight = weight;
+		} else {
+			throw new RuntimeException();
+		}
+	}
+
+	public Weight getWeight(int robotID) {
+		if (isTe1(robotID)) {
+			return te1HigherWeight;
+		} else if (isTe2(robotID)) {
+			return te2HigherWeight;
 		} else {
 			throw new RuntimeException();
 		}
@@ -373,6 +383,7 @@ public class CriticalSection {
 	private String makeLabel(Weight weight) {
 		switch (weight) {
 			case WEIGHT_NORMAL: return "";
+			case WEIGHT_CAN_PASS_FIRST: return "(c)";
 			case WEIGHT_RACING: return "(r)";
 			case WEIGHT_FORCING: return "(f)";
 			default: return "(?)";
