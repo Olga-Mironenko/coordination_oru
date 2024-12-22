@@ -190,6 +190,10 @@ public class Missions {
 		return Missions.dynamicMap.filenameYAML;
 	}
 
+	public static String getMapId() {
+		return getMapYAMLFilename() + "_" + Containerization.WORKER;
+	}
+
 	/**
 	 * Get the YAML file of the current map, if set.
 	 * @return The YAML file of the current map, <code>null</code> if no map is known.

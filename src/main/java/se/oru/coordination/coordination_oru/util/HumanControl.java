@@ -53,7 +53,7 @@ public class HumanControl {
 
             try {
                 status = String.format("%s: finding...", statusPrefix);
-                ((AutonomousVehicle) vehicle).getPlan(currentPose, new Pose[]{goal}, Missions.getMapYAMLFilename(), false, robotIDsObstacles);
+                ((AutonomousVehicle) vehicle).getPlan(currentPose, new Pose[]{goal}, Missions.getMapId(), false, robotIDsObstacles);
             }
             catch (NoPathFoundError error) {
                 status = String.format("%s: failed to find", statusPrefix);
