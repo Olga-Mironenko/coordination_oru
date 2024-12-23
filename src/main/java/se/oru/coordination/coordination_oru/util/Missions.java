@@ -608,7 +608,9 @@ public class Missions {
 			assert ! blueprint.isToCleanForward;
 
 			PoseSteering[] pathTotal = (PoseSteering[]) ArrayUtils.addAll(pathForward, pathBackward);
-			Missions.enqueueMission(enrichMission(new Mission(robotID, pathTotal)));
+			Mission mission = enrichMission(new Mission(robotID, pathTotal));
+			mission.setStoppingPoint(pathForward[pathForward.length - 1].getPose(), 0);
+			Missions.enqueueMission(mission);
 		} else {
 			Mission missionForward;
 			if (! blueprint.isToCleanForward) {

@@ -46,17 +46,24 @@ public class HumanControl {
             // [(90, 200), (100, 200), (110, 200), (120, 200), (130, 200)]
             //                  ^                                old goal
 
-            String statusPrefix = String.format("Human controlled path for %s → %s",
-                    poseToShortString(currentPose),
-                    poseToShortString(goal)
-            );
+            String statusPrefix = null;
+            if (VehiclesHashMap.isHuman(robotID)) {
+                statusPrefix = String.format("Human controlled path for %s → %s",
+                        poseToShortString(currentPose),
+                        poseToShortString(goal)
+                );
+            }
 
             try {
-                status = String.format("%s: finding...", statusPrefix);
+                if (statusPrefix != null) {
+                    status = String.format("%s: finding...", statusPrefix);
+                }
                 ((AutonomousVehicle) vehicle).getPlan(currentPose, new Pose[]{goal}, Missions.getMapId(), false, robotIDsObstacles);
             }
             catch (NoPathFoundError error) {
-                status = String.format("%s: failed to find", statusPrefix);
+                if (statusPrefix != null) {
+                    status = String.format("%s: failed to find", statusPrefix);
+                }
                 isWorking = false;
                 return false;
             }
@@ -64,7 +71,9 @@ public class HumanControl {
             assert tec.getRobotReport(robotID).toString().equals(rr.toString());
 
             var newPath = vehicle.getPath();
-            status = String.format("%s: found a path with %d poses", statusPrefix, newPath.length);
+            if (statusPrefix != null) {
+                status = String.format("%s: found a path with %d poses", statusPrefix, newPath.length);
+            }
             // [(105, 200), (115, 300), (120, 400), (130, 400)]
             //                                       (new) goal
 

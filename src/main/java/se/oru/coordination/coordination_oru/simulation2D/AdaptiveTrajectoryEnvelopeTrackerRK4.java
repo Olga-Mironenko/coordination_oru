@@ -597,12 +597,13 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return queueStopEvents.size() >= countStopEvents;
 	}
 
-	private void rerouteBecauseOfSlowVehicleIfNeeded(int robotID, int criticalPointToSet, Set<CriticalSection> criticalSections) {
+	private void rerouteBecauseOfSlowVehicleIfNeeded(int criticalPointToSet, Set<CriticalSection> criticalSections) {
 		if (this.criticalPoint == criticalPointToSet || criticalPointToSet == -1) {
 			return;
 		}
 		// Otherwise, this is a stop event.
 
+		int robotID = te.getRobotID();
 		AbstractVehicle vehicle = VehiclesHashMap.getVehicle(robotID);
 		if (vehicle instanceof HumanDrivenVehicle) {
 			if (! isReroutingNearSlowVehicleForHuman) {
@@ -631,7 +632,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		queueStopEvents.add(Timekeeper.getVirtualMillisPassed());
 		if (areThereTooManyStopEventsRecently()) {
-			tryToReplanNearVehicle(robotID, false);
+			tryToReplanNearVehicle(false);
 			queueStopEvents.clear(); // don't try to reroute again in the nearest future
 		}
 	}
@@ -672,7 +673,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 //			return;
 //		}
 
-		rerouteBecauseOfSlowVehicleIfNeeded(robotID, criticalPointToSet, criticalSections);
+		rerouteBecauseOfSlowVehicleIfNeeded(criticalPointToSet, criticalSections);
 
 		RobotReport rr = getRobotReport();
 		if (isFreezingCP || ! isRacingThroughCrossroadAllowed || criticalPointToSet >= rr.getPathIndex()) {
@@ -1066,7 +1067,37 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return deltaTimeInMillis / this.temporalResolution;
 	}
 
-	public boolean tryToReplanNearVehicle(int myRobotID, boolean mustBeParked) {
+	private int findNearestGoal() {
+		int robotID = te.getRobotID();
+
+		ArrayList<Integer> stoppingPointsOrig = tec.stoppingPoints.getOrDefault(robotID, new ArrayList<>());
+		ArrayList<Integer> stoppingPoints = new ArrayList<>(stoppingPointsOrig); // Copy the original list
+		Collections.sort(stoppingPoints);
+
+		int lastPoint = te.getTrajectory().getPoseSteering().length - 1;
+		if (stoppingPoints.isEmpty() || stoppingPoints.get(stoppingPoints.size() - 1) != lastPoint) {
+			stoppingPoints.add(lastPoint);
+		}
+
+		assert stoppingPoints.get(stoppingPoints.size() - 1) == lastPoint;
+		if (stoppingPoints.size() == 1) { // avoiding to compute `getRobotReport()`
+			return lastPoint;
+		}
+
+		int currentPoint = getRobotReport().getPathIndex();
+		for (int stoppingPoint : stoppingPoints) {
+			if (stoppingPoint > currentPoint) {
+				return stoppingPoint;
+			}
+		}
+
+		assert lastPoint == currentPoint;
+		return lastPoint;
+	}
+
+	public boolean tryToReplanNearVehicle(boolean mustBeParked) {
+		int myRobotID = te.getRobotID();
+
 		CriticalSection cs = getFirstOfCriticalSectionsOfInferior();
 		//assert cs != null; // this may happen when the CS has just been removed
 		if (cs == null) {
@@ -1083,7 +1114,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 
 		PoseSteering[] psa = te.getTrajectory().getPoseSteering();
-		HumanControl.moveRobot(myRobotID, psa[psa.length - 1].getPose(), new int[] {superiorID});
+		int nearestGoal = findNearestGoal();
+		HumanControl.moveRobot(myRobotID, psa[nearestGoal].getPose(), new int[] {superiorID});
 
 		TrajectoryEnvelopeCoordinatorSimulation.incrementForRobot(
 				mustBeParked
@@ -1192,7 +1224,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 			} else if (status == Status.STOPPED_AT_CP) {
 				if (isReroutingNearParkedVehicle && isReroutingNearParkedVehicleOK) {
-					if (tryToReplanNearVehicle(myRobotID, true)) {
+					if (tryToReplanNearVehicle(true)) {
 						isReroutingNearParkedVehicleOK = false;
 					}
 				}
