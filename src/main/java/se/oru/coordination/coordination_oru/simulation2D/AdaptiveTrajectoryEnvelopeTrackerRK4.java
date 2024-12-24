@@ -20,6 +20,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public static boolean isEnabledGlobally = false;
 	public static boolean isReroutingNearParkedVehicleForHuman = false;
 	public static boolean isReroutingNearParkedVehicleForNonHuman = false;
+	public static Integer millisReroutingNearParkedVehicleIfNotInDummyTracker = 3000;
 	public static boolean isReroutingNearSlowVehicleForHuman = false;
 	public static boolean isReroutingNearSlowVehicleForNonHuman = false;
 	public static boolean isRacingThroughCrossroadAllowed = false;
@@ -572,10 +573,12 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 			final int margin = AbstractTrajectoryEnvelopeCoordinator.TRAILING_PATH_POINTS;
 
-			// TODO: A CP is sometimes inside a CS, not before it.
 			// TODO: Rather than trying to guess the critical section of a saved critical point,
 			//       just save critical sections.
-			if (criticalPointToConsider == null || criticalPointToConsider == start - margin) {
+			if (
+					criticalPointToConsider == null ||
+							start - margin <= criticalPointToConsider && criticalPointToConsider <= end + margin
+			) {
 				criticalSections.add(cs);
 			}
 		}
@@ -632,7 +635,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		queueStopEvents.add(Timekeeper.getVirtualMillisPassed());
 		if (areThereTooManyStopEventsRecently()) {
-			tryToReplanNearVehicle(false);
+			tryToReplanNearVehicle(false, null);
 			queueStopEvents.clear(); // don't try to reroute again in the nearest future
 		}
 	}
@@ -1095,7 +1098,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return lastPoint;
 	}
 
-	public boolean tryToReplanNearVehicle(boolean mustBeParked) {
+	public boolean tryToReplanNearVehicle(boolean mustBeParked, Integer millisStartedTryingToRerouteNearParkedVehicle) {
 		int myRobotID = te.getRobotID();
 
 		CriticalSection cs = getFirstOfCriticalSectionsOfInferior();
@@ -1109,8 +1112,20 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			return false;
 		}
 
-		if (mustBeParked && ! (tec.getTracker(superiorID) instanceof TrajectoryEnvelopeTrackerDummy)) {
-			return false;
+
+		if (mustBeParked) {
+			assert millisStartedTryingToRerouteNearParkedVehicle != null;
+			int millisTrying = Timekeeper.getVirtualMillisPassed() - millisStartedTryingToRerouteNearParkedVehicle;
+			assert millisTrying >= 0;
+
+			boolean isOk = (
+				(tec.getTracker(superiorID) instanceof TrajectoryEnvelopeTrackerDummy) ||
+						millisReroutingNearParkedVehicleIfNotInDummyTracker != null &&
+						millisTrying >= millisReroutingNearParkedVehicleIfNotInDummyTracker
+			);
+			if (! isOk) {
+				return false;
+			}
 		}
 
 		PoseSteering[] psa = te.getTrajectory().getPoseSteering();
@@ -1141,6 +1156,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		boolean isHuman = VehiclesHashMap.isHuman(myRobotID);
 
 		boolean isReroutingNearParkedVehicleOK = true;
+		Integer millisStartedTryingToRerouteNearParkedVehicle = null;
 		boolean isReroutingNearParkedVehicle =
 				isHuman ?
 						isReroutingNearParkedVehicleForHuman :
@@ -1216,6 +1232,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			if (status == Status.DRIVING) { // TODO: skip if `deltaTime == 0.0`
 				checkIfCanPassFirst();
 				isReroutingNearParkedVehicleOK = true;
+				millisStartedTryingToRerouteNearParkedVehicle = null;
 
 				//Update the robot's state via RK4 numerical integration
 				updateState(deltaTime, vehicle);
@@ -1224,7 +1241,11 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 			} else if (status == Status.STOPPED_AT_CP) {
 				if (isReroutingNearParkedVehicle && isReroutingNearParkedVehicleOK) {
-					if (tryToReplanNearVehicle(true)) {
+					if (millisStartedTryingToRerouteNearParkedVehicle == null) {
+						millisStartedTryingToRerouteNearParkedVehicle = Timekeeper.getVirtualMillisPassed();
+					}
+
+					if (tryToReplanNearVehicle(true, millisStartedTryingToRerouteNearParkedVehicle)) {
 						isReroutingNearParkedVehicleOK = false;
 					}
 				}
