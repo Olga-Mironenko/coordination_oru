@@ -160,7 +160,7 @@ public class Experiment2 {
 				rsp.setGoals(endLoc);
 				rsp.plan();
 				path = rsp.getPath();
-				pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
+				pathInv = rsp.getPathInverseWithoutFirstPose();
 				if (cachePaths) {
 					Missions.writePath(pathFilename, path);
 					Missions.writePath(pathFilenameInv, pathInv);

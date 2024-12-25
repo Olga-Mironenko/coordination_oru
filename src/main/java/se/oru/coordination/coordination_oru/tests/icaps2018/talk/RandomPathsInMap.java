@@ -221,7 +221,7 @@ public class RandomPathsInMap {
 					throw new Error("No path found.");
 				}
 				path = rsp.getPath();
-				pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
+				pathInv = rsp.getPathInverseWithoutFirstPose();
 				if (cachePaths) {
 					Missions.writePath(pathFilename, path);
 					Missions.writePath(pathFilenameInv, pathInv);

@@ -42,7 +42,7 @@ public class TrafficExample {
 		rsp.setGoals(goal);
 		if (!rsp.plan()) throw new Error ("No path between " + start + " and " + goal);
 		PoseSteering[] path = rsp.getPath();
-		PoseSteering[] pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
+		PoseSteering[] pathInv = rsp.getPathInverseWithoutFirstPose();
 		
 		//Define forward and backward missions and enqueue them
 		Missions.enqueueMission(new Mission(robotID,path));

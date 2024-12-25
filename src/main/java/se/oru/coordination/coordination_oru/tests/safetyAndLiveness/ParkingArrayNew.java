@@ -149,7 +149,7 @@ public class ParkingArrayNew {
 					rsp.setGoals(Missions.getLocation(locationsDown.get(j)));
 					if (!rsp.doPlanning()) throw new Error("No path between " + locationsUp.get(i) + "[" + Missions.getLocation(locationsUp.get(i)) + "] and " + locationsDown.get(j) + "[" + Missions.getLocation(locationsDown.get(j)) + "]");
 					Missions.addKnownPath(locationsUp.get(i), locationsDown.get(j), rsp.getPath());
-					Missions.addKnownPath(locationsDown.get(j), locationsUp.get(i), rsp.getPathInverseWithoutFirstAndLastPose());
+					Missions.addKnownPath(locationsDown.get(j), locationsUp.get(i), rsp.getPathInverseWithoutFirstPose());
 				}			
 			}
 			

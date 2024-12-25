@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.logging.Logger;
 
@@ -130,14 +129,14 @@ public abstract class AbstractMotionPlanner {
 		return inv.toArray(new PoseSteering[inv.size()]);
 	}
 	
-	public PoseSteering[] getPathInverseWithoutFirstAndLastPose() {
+	public PoseSteering[] getPathInverseWithoutFirstPose() {
 		if (this.pathPS == null) return null;
-		return inversePathWithoutFirstAndLastPose(this.pathPS);
+		return inversePathWithoutFirstPose(this.pathPS);
 	}
 
-	public static PoseSteering[] inversePathWithoutFirstAndLastPose(PoseSteering[] path) {
+	public static PoseSteering[] inversePathWithoutFirstPose(PoseSteering[] path) {
 		int iFirst = 1;
-		int length = path.length - 2;
+		int length = path.length - 1;
 		if (length <= 0) {
 			iFirst = 0;
 			length = path.length;

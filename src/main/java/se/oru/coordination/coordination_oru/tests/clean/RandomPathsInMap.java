@@ -119,7 +119,7 @@ public class RandomPathsInMap {
 			rsp.plan();
 			if (rsp.getPath() == null) throw new Error("No path found.");
 			path = rsp.getPath();
-			pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
+			pathInv = rsp.getPathInverseWithoutFirstPose();
 
 			//Enqueue forward and backwards mission
 			Mission m = new Mission(robotID, path, startLocName, endLocName, Missions.getLocationPose(startLocName), Missions.getLocationPose(endLocName));

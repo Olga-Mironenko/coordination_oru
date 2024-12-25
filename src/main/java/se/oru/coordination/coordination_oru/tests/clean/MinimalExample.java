@@ -126,7 +126,7 @@ public class MinimalExample {
 			rsp.setGoals(startAndGoal[1]);
 			if (!rsp.plan()) throw new Error ("No path between " + startAndGoal[0] + " and " + startAndGoal[1]);
 			PoseSteering[] path = rsp.getPath();
-			PoseSteering[] pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
+			PoseSteering[] pathInv = rsp.getPathInverseWithoutFirstPose();
 			
 			//Define forward and backward missions and enqueue them
 			Missions.enqueueMission(new Mission(robotID,path));

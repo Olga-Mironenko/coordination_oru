@@ -81,19 +81,19 @@ public class ThreeRobotsFast {
 		rsp.setGoals(Missions.getLocation("dest1"));
 		rsp.plan();
 		Missions.enqueueMission(new Mission(1,rsp.getPath()));
-		Missions.enqueueMission(new Mission(1,rsp.getPathInverseWithoutFirstAndLastPose()));
+		Missions.enqueueMission(new Mission(1,rsp.getPathInverseWithoutFirstPose()));
 		
 		rsp.setStart(Missions.getLocation("r2p"));
 		rsp.setGoals(Missions.getLocation("dest2"));
 		rsp.plan();
 		Missions.enqueueMission(new Mission(2,rsp.getPath()));
-		Missions.enqueueMission(new Mission(2,rsp.getPathInverseWithoutFirstAndLastPose()));
+		Missions.enqueueMission(new Mission(2,rsp.getPathInverseWithoutFirstPose()));
 		
 		rsp.setStart(Missions.getLocation("r3p"));
 		rsp.setGoals(Missions.getLocation("dest3"));
 		rsp.plan();
 		Missions.enqueueMission(new Mission(3,rsp.getPath()));
-		Missions.enqueueMission(new Mission(3,rsp.getPathInverseWithoutFirstAndLastPose()));
+		Missions.enqueueMission(new Mission(3,rsp.getPathInverseWithoutFirstPose()));
 	
 		System.out.println("Added missions " + Missions.getMissions());
 

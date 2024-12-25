@@ -596,7 +596,7 @@ public class Missions {
 		PoseSteering[] pathBackward =
 				blueprint.direction == MissionBlueprint.Direction.FORWARD_ONLY
 						? null
-						: AbstractMotionPlanner.inversePathWithoutFirstAndLastPose(pathForward);
+						: AbstractMotionPlanner.inversePathWithoutFirstPose(pathForward);
 		// E.g.: pathForward = [a, b, c, d], pathBackward = [c, b], so the whole cycle is [a, b, c, d,  b, c,  a, b, ...]
 
 		int robotID = blueprint.vehicle.getID();

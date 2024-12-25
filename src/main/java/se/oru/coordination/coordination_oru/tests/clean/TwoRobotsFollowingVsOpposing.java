@@ -113,25 +113,25 @@ public class TwoRobotsFollowingVsOpposing {
 		rsp.setGoals(goalRobot11,goalRobot12,goalRobot13);
 		rsp.plan();
 		Missions.enqueueMission(new Mission(1,rsp.getPath()));
-		Missions.enqueueMission(new Mission(1,rsp.getPathInverseWithoutFirstAndLastPose()));
+		Missions.enqueueMission(new Mission(1,rsp.getPathInverseWithoutFirstPose()));
 
 		rsp.setStart(startRobot2);
 		rsp.setGoals(goalRobot21,goalRobot22,goalRobot23);
 		rsp.plan();
 		Missions.enqueueMission(new Mission(2,rsp.getPath()));
-		Missions.enqueueMission(new Mission(2,rsp.getPathInverseWithoutFirstAndLastPose()));
+		Missions.enqueueMission(new Mission(2,rsp.getPathInverseWithoutFirstPose()));
 		
 		rsp.setStart(startRobot3);
 		rsp.setGoals(goalRobot31,goalRobot32,goalRobot33);
 		rsp.plan();
 		Missions.enqueueMission(new Mission(3,rsp.getPath()));
-		Missions.enqueueMission(new Mission(3,rsp.getPathInverseWithoutFirstAndLastPose()));
+		Missions.enqueueMission(new Mission(3,rsp.getPathInverseWithoutFirstPose()));
 
 		rsp.setStart(startRobot4);
 		rsp.setGoals(goalRobot41,goalRobot42,goalRobot43);
 		rsp.plan();
 		Missions.enqueueMission(new Mission(4,rsp.getPath()));
-		Missions.enqueueMission(new Mission(4,rsp.getPathInverseWithoutFirstAndLastPose()));
+		Missions.enqueueMission(new Mission(4,rsp.getPathInverseWithoutFirstPose()));
 		
 		System.out.println("Added missions " + Missions.getMissions());
 		

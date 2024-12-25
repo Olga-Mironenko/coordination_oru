@@ -98,7 +98,7 @@ public class ThreeRobotsDeadlock {
 			rsp.setGoals(goals[i]);
 			if (!rsp.plan()) throw new Error ("No path between " + starts[i] + " and " + goals[i]);
 			Missions.enqueueMission(new Mission(i+1,rsp.getPath()));
-			Missions.enqueueMission(new Mission(i+1,rsp.getPathInverseWithoutFirstAndLastPose()));
+			Missions.enqueueMission(new Mission(i+1,rsp.getPathInverseWithoutFirstPose()));
 			tec.setMotionPlanner(i+1, rsp);
 		}
 		

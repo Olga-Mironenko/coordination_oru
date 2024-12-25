@@ -100,7 +100,7 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner14 {
 		rsp2.setGoals(goalRobot2);
 		if (!rsp2.plan()) throw new Error("No path found!");
 		Missions.enqueueMission(new Mission(2,rsp2.getPath()));
-		Missions.enqueueMission(new Mission(2,rsp2.getPathInverseWithoutFirstAndLastPose()));
+		Missions.enqueueMission(new Mission(2,rsp2.getPathInverseWithoutFirstPose()));
 		rsp2.setStart(startRobot2);
 		rsp2.setGoals(goalRobot2Next);
 		if (!rsp2.plan()) throw new Error("No path found!");

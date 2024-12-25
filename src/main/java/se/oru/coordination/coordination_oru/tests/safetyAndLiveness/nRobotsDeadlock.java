@@ -131,7 +131,7 @@ public class nRobotsDeadlock {
 			if (!rsp.plan()) throw new Error ("No path between " + startPoses.get(robotIDs[i]) + " and " + goalPoses.get(robotIDs[i]));
 			for (int j = 0; j < NUMBER_MISSIONS; j++) {
 				Missions.enqueueMission(new Mission(robotIDs[i], rsp.getPath()));
-				Missions.enqueueMission(new Mission(robotIDs[i], rsp.getPathInverseWithoutFirstAndLastPose()));
+				Missions.enqueueMission(new Mission(robotIDs[i], rsp.getPathInverseWithoutFirstPose()));
 			}
 			status.put(robotIDs[i], false);
 		}

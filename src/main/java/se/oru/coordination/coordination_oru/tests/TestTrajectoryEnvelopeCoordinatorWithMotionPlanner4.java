@@ -129,7 +129,7 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner4 {
 			rsp.clearObstacles();
 			if (!rsp.plan()) throw new Error ("No path along goals " + posesRobot);			
 			PoseSteering[] robotPath = rsp.getPath();
-			PoseSteering[] robotPathInv = rsp.getPathInverseWithoutFirstAndLastPose();
+			PoseSteering[] robotPathInv = rsp.getPathInverseWithoutFirstPose();
 			
 			Missions.enqueueMission(new Mission(robotID, robotPath));
 			Missions.enqueueMission(new Mission(robotID, robotPathInv));

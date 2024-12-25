@@ -176,7 +176,7 @@ public class Basement {
 			rsp.setGoals(goalPoses.get(robotID).get(0), goalPoses.get(robotID).get(1));
 			if (!rsp.plan()) throw new Error ("No path between " + startPose.get(robotID) + " and " + goalPoses.get(robotID).get(1));
 			PoseSteering[] path = rsp.getPath();
-			PoseSteering[] pathInv = rsp.getPathInverseWithoutFirstAndLastPose();
+			PoseSteering[] pathInv = rsp.getPathInverseWithoutFirstPose();
 			
 			//Define forward and backward missions and enqueue them
 			Missions.enqueueMission(new Mission(robotID,path));
