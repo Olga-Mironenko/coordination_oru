@@ -42,12 +42,22 @@ public class CriticalSection {
 	}
 
 	public CriticalSection(TrajectoryEnvelope te1, TrajectoryEnvelope te2, int te1Start, int te2Start, int te1End, int te2End) {
-		this.te1 = te1;
-		this.te2 = te2;
-		this.te1Start = te1Start;
-		this.te2Start = te2Start;
-		this.te1End = te1End;
-		this.te2End = te2End;
+		if (te1.getRobotID() < te2.getRobotID()) {
+			this.te1 = te1;
+			this.te2 = te2;
+			this.te1Start = te1Start;
+			this.te2Start = te2Start;
+			this.te1End = te1End;
+			this.te2End = te2End;
+		} else {
+			this.te1 = te2;
+			this.te2 = te1;
+			this.te1Start = te2Start;
+			this.te2Start = te1Start;
+			this.te1End = te2End;
+			this.te2End = te1End;
+		}
+		assert this.te1.getRobotID() < this.te2.getRobotID();
 	}
 
 	@Override
@@ -396,7 +406,7 @@ public class CriticalSection {
 
 	public static ArrayList<CriticalSection> sortCriticalSections(Collection<CriticalSection> criticalSectionsUnsorted) {
 		ArrayList<CriticalSection> criticalSections = new ArrayList<>(criticalSectionsUnsorted);
-		criticalSections.sort(new Comparator<CriticalSection>() {
+		criticalSections.sort(new Comparator<>() {
 			@Override
 			public int compare(CriticalSection cs1, CriticalSection cs2) {
 				int[] list1 = csToInts(cs1);
@@ -411,10 +421,10 @@ public class CriticalSection {
 
 			private int[] csToInts(CriticalSection cs) {
 				return new int[] {
-						(cs.getTe1() == null ? -1 : cs.getTe1().getRobotID()),
+						cs.getTe1() == null ? -1 : cs.getTe1().getRobotID(),
+						cs.getTe2() == null ? -1 : cs.getTe2().getRobotID(),
 						cs.getTe1Start(),
 						cs.getTe1End(),
-						(cs.getTe2() == null ? -1 : cs.getTe2().getRobotID()),
 						cs.getTe2Start(),
 						cs.getTe2End(),
 				};

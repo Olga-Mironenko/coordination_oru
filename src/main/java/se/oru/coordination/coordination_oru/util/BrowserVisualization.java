@@ -902,15 +902,13 @@ public class BrowserVisualization implements FleetVisualization {
 
 		if (isExtendedText && areAllVehiclesStarted) {
 //			html += "Last `getOrderOfCriticalSection` call was at step " + TrajectoryEnvelopeCoordinator.timestepOfLastCallOfGetOrderOfCriticalSection + "<br>";
-			output.append(stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections));
+			output.append(stringifyCriticalSections(TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections, null));
 		}
 
 		setOverlayText(output.toString());
 	}
 
-	protected static StringBuilder stringifyCriticalSections(HashSet<CriticalSection> allCriticalSections) {
-		Integer robotID = null;
-
+	protected static StringBuilder stringifyCriticalSections(HashSet<CriticalSection> allCriticalSections, Integer robotID) {
 		ArrayList<CriticalSection> criticalSections =
 				robotID == null
 				? CriticalSection.sortCriticalSections(allCriticalSections)
