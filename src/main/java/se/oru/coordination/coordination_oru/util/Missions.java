@@ -186,12 +186,9 @@ public class Missions {
 		return Missions.dynamicMap.origin;
 	}
 
-	public static String getMapYAMLFilename() {
-		return Missions.dynamicMap.filenameYAML;
-	}
-
 	public static String getMapId() {
-		return getMapYAMLFilename() + "_" + Containerization.WORKER;
+		String basename = FilenameUtils.getBaseName(Missions.dynamicMap.filenameYAML);
+		return basename + "_" + Containerization.WORKER; // to avoid racing conditions
 	}
 
 	/**
@@ -591,7 +588,7 @@ public class Missions {
 		blueprint.vehicle.getPlan(
 				blueprint.start,
 				goals.toArray(Pose[]::new),
-				FilenameUtils.getBaseName(Missions.dynamicMap.filenameYAML),
+				Missions.getMapId(),
 				false
 		);
 
@@ -1606,6 +1603,12 @@ public class Missions {
 	public static void savePathToFile(PoseSteering[] path, String filename) throws IOException {
 		new File(filename).getParentFile().mkdirs();
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, false))) {
+			if (path == null) {
+				writer.write("no path");
+				writer.newLine();
+				return;
+			}
+
 			for (PoseSteering poseSteering : path) {
 				String line = poseSteering.getX() + "\t" + poseSteering.getY() + "\t" +poseSteering.getYaw();
 				writer.write(line);
@@ -1641,6 +1644,10 @@ public class Missions {
 			String prevLine = "Gibberish";
 			while (in.hasNextLine()) {
 				String line = in.nextLine().trim();
+				if (line.equals("no path")) {
+					return null;
+				}
+
 				if (!line.equals(prevLine)) {
 					prevLine = line;
 					if (line.length() != 0) {

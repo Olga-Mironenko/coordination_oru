@@ -2,7 +2,6 @@ package se.oru.coordination.coordination_oru.code;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
@@ -15,6 +14,8 @@ import se.oru.coordination.coordination_oru.util.NoPathFoundError;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 public class AutonomousVehicle extends AbstractVehicle {
@@ -81,30 +82,78 @@ public class AutonomousVehicle extends AbstractVehicle {
         getPlan(initial, goals, mapId, inversePath, new int[0]);
     }
 
+    private static String geometriesToHash(Geometry[] geometries) {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (Object obj : geometries) {
+            int hashCode = obj.hashCode();
+            byte[] bytes = new byte[] {
+                    (byte) (hashCode >> 24),
+                    (byte) (hashCode >> 16),
+                    (byte) (hashCode >> 8),
+                    (byte) hashCode
+            };
+            digest.update(bytes);
+        }
+
+        byte[] hashBytes = digest.digest();
+        StringBuilder hexString = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            hexString.append(String.format("%02X", hashBytes[i]));
+        }
+
+        return hexString.toString();
+    }
+
+    private void savePathIfNeeded(String filenameCache, PoseSteering[] path) {
+        if (filenameCache != null) {
+            assert ! new File(filenameCache).isFile();
+            try {
+                Missions.savePathToFile(path, filenameCache);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     public void getPlan(Pose initial, Pose[] goals, String mapId, Boolean inversePath, int[] robotIDsObstacles) {
         String filenameCache = null;
         PoseSteering[] path = null;
 
-        if (isPathCachingEnabled && robotIDsObstacles.length == 0) {
-            String base = poseToString(initial);
+        Geometry[] obstacles = null;
+        if (robotIDsObstacles.length > 0) {
+            obstacles = TrajectoryEnvelopeCoordinatorSimulation.tec.getObstacles(false, robotIDsObstacles);
+        }
+
+        if (isPathCachingEnabled) {
+            StringBuilder base = new StringBuilder(poseToString(initial));
             for (Pose goal : goals) {
-                base += "_" + poseToString(goal);
+                base.append("_").append(poseToString(goal));
             }
-            base += "_" + planningAlgorithm + (inversePath ? "_inv" : "");
+            if (robotIDsObstacles.length > 0) {
+                base.append("_obs").append(geometriesToHash(obstacles));
+            }
+            base.append("_").append(planningAlgorithm).append(inversePath ? "_inv" : "");
 
             filenameCache = "paths/" + mapId + "/" + base + ".path";
             if (new File(filenameCache).isFile()) {
                 path = Missions.loadPathFromFile(filenameCache);
+                if (path == null) {
+                    throw new NoPathFoundError();
+                }
             }
         }
 
-
-        if (path == null) {
+        if (path == null) { // not restored from cache
             var rsp = makePlanner(mapId, getFootprint());
             TrajectoryEnvelopeCoordinatorSimulation.tec.setMotionPlanner(this.getID(), rsp);
 
             if (robotIDsObstacles.length > 0) {
-                Geometry[] obstacles = TrajectoryEnvelopeCoordinatorSimulation.tec.getObstacles(false, robotIDsObstacles);
                 rsp.addObstacles(obstacles);
             }
 
@@ -133,10 +182,13 @@ public class AutonomousVehicle extends AbstractVehicle {
                     break;
                 }
             }
+
             if (robotIDsObstacles.length > 0) {
                 rsp.clearObstacles();
             }
+
             if (! isFound) {
+                savePathIfNeeded(filenameCache, null);
                 throw new NoPathFoundError();
             }
 
@@ -148,17 +200,10 @@ public class AutonomousVehicle extends AbstractVehicle {
             } else {
                 path = pathFwd;
             }
+            savePathIfNeeded(filenameCache, path);
         }
 
         VehiclesHashMap.getVehicle(this.getID()).setPath(path);
-
-        if (filenameCache != null && ! new File(filenameCache).isFile()) {
-            try {
-                Missions.savePathToFile(path, filenameCache);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     private static String poseToString(Pose pose) {
