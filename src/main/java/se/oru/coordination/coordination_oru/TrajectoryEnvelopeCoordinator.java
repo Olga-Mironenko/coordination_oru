@@ -1884,9 +1884,13 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						}
 						//Start waiting thread if the stopping point has been reached
 						//if (Math.abs(robotReport.getPathIndex()-stoppingPoint) <= 1 && robotReport.getCriticalPoint() == stoppingPoint && !stoppingPointTimers.containsKey(robotID)) {
-						if (Math.abs(robotReport.getPathIndex() - stoppingPoint) <= 1 && robotReport.getCriticalPoint() <= stoppingPoint && !stoppingPointTimers.containsKey(robotID)) {
-							// Note: `i` mustn't be used as an index to remove the element because by the time the element
-							// is about to be removed, it's index may change.
+//						if (Math.abs(robotReport.getPathIndex() - stoppingPoint) <= 5 && robotReport.getCriticalPoint() <= stoppingPoint && !stoppingPointTimers.containsKey(robotID)) {
+						if (
+								Math.abs(robotReport.getPathIndex() - stoppingPoint) <= 5 &&
+								robotReport.getVelocity() == 0 &&
+								robotReport.getCriticalPoint() <= stoppingPoint &&
+								! stoppingPointTimers.containsKey(robotID)
+						) {
 							spawnWaitingThread(robotID, stoppingPoint, duration);
 						}
 					}
