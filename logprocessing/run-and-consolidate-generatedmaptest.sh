@@ -11,41 +11,43 @@ root=$(dirname "$0")
 timeout_hard=20m
 demo=GeneratedMapTest
 
-## 4 robots:
-#dirs_maps=(
+# Prepare variables
+
+case ${WORKER:-host} in
+  host) indexes_maps=({1..10});;
+  c1) indexes_maps=({1..2});;
+  c2) indexes_maps=({3..4});;
+  c3) indexes_maps=({5..6});;
+  c4) indexes_maps=({7..8});;
+  c5) indexes_maps=({9..10});;
+esac
+
+positions=({1..10})
+
+#dirs_maps=(  # 4 robots
 #  '2024-11-22_11:26:14_with_bridges'
 #  '2024-11-22_11:27:17_without_bridges'
 #)
-
-# 3 robots:
-dirs_maps=(
+dirs_maps=(  # 3 robots
   '2024-11-28_13:17:39_with_bridges'
   '2024-11-28_13:19:18_without_bridges'
 )
 
-indexes_maps=({1..10})
-
-case ${WORKER:-host} in
-  host) positions=({1..10});;
-  c1) positions=({1..2});;
-  c2) positions=({3..4});;
-  c3) positions=({5..6});;
-  c4) positions=({7..8});;
-  c5) positions=({9..10});;
-esac
+seeds=(1)
 
 probabilities=(
   0
   1
 )
 
+# Use variables
 scenarios=()
 for i_map in "${indexes_maps[@]}"; do
   for position in "${positions[@]}"; do
     for dir_maps in "${dirs_maps[@]}"; do
       filename_simple=map-generator/generated-maps/$dir_maps/scenario$i_map-$position.json
       filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
-      for seed in {1..1}; do
+      for seed in "${seeds[@]}"; do
         for probabilityForcingForHuman in "${probabilities[@]}"; do
           case $probabilityForcingForHuman in
             0 | 0.0)
