@@ -64,6 +64,7 @@ public abstract class Demo {
             /// - Rerouting:
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForHuman = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.millisReroutingNearParkedVehicleIfNotInDummyTracker = null;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
             /// - Change of priorities:
