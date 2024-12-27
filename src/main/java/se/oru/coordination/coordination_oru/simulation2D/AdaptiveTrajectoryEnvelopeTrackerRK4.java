@@ -1130,14 +1130,14 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		PoseSteering[] psa = te.getTrajectory().getPoseSteering();
 		int nearestGoal = findNearestGoal();
-		HumanControl.moveRobot(myRobotID, psa[nearestGoal].getPose(), new int[] {superiorID});
-
-		TrajectoryEnvelopeCoordinatorSimulation.incrementForRobot(
-				mustBeParked
-						? TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumReroutingsNearParkedVehicle
-						: TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumReroutingsNearSlowVehicle,
-				myRobotID
-		);
+		if (HumanControl.moveRobot(myRobotID, psa[nearestGoal].getPose(), new int[] {superiorID})) {
+			TrajectoryEnvelopeCoordinatorSimulation.incrementForRobot(
+					mustBeParked
+							? TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumReroutingsNearParkedVehicle
+							: TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumReroutingsNearSlowVehicle,
+					myRobotID
+			);
+		}
 		return true;
 	}
 

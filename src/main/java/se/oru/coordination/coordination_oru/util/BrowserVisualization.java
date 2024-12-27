@@ -586,7 +586,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 				thead1.append(" |5{border-color: blue;} Coordination strategies for AVs");
 				theadHints.append(" | proactive |4 reactive");
-				thead2.append(" | cautious<br>mode | rerouting at<br>parked / slow | moving<br>backwards" + " | change of<br>priorities | stops");
+				thead2.append(" | cautious<br>mode | reroutings at<br>parked / slow | moving<br>backwards" + " | change of<br>priorities | stops");
 				if (isHuman) {
 					row.append(" |  |  |  |  | ");
 				} else {
