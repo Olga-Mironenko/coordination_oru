@@ -48,8 +48,7 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman = 0.0;
             AdaptiveTrajectoryEnvelopeTrackerRK4.velocitySlowingDownForHuman = 1.5;
             AdaptiveTrajectoryEnvelopeTrackerRK4.lengthIntervalSlowingDownForHuman = 100.0;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.millisStopEvents = 3000; // rerouting (slow)
-            AdaptiveTrajectoryEnvelopeTrackerRK4.countStopEvents = 20; // rerouting (slow)
+            AdaptiveTrajectoryEnvelopeTrackerRK4.millisStopEvents = 5000; // rerouting (slow)
 
             /// Coordination features for AVs:
             /// - Can pass first:

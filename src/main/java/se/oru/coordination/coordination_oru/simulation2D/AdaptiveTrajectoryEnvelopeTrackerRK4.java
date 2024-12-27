@@ -73,8 +73,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public Status statusLast;
 
 	private Deque<Integer> queueStopEvents = new LinkedList<>();
-	public static int millisStopEvents = 3000;
-	public static int countStopEvents = 20;
+	public static int millisStopEvents = 5000;
 
 	private boolean isCautious = false;
 	private Double maxVelocityBeforeCautious = null;
@@ -585,7 +584,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return criticalSections;
 	}
 
-	private boolean areThereTooManyStopEventsRecently() {
+	private boolean areThereTooManyStopEventsRecently(double otherRobotMaxVelocity) {
 		int millisMin = Timekeeper.getVirtualMillisPassed() - millisStopEvents;
 		while (! queueStopEvents.isEmpty()) {
 			Integer first = queueStopEvents.peek();
@@ -597,11 +596,17 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 
 		assert queueStopEvents.isEmpty() || queueStopEvents.peek() >= millisMin;
-		return queueStopEvents.size() >= countStopEvents;
+
+		double criticalPointsPerSecond = otherRobotMaxVelocity / Missions.getMapResolution();
+		double criticalPointsPerMillisStopEvents = criticalPointsPerSecond * millisStopEvents / 1000;
+		return queueStopEvents.size() > criticalPointsPerMillisStopEvents / 2;
 	}
 
 	private void rerouteBecauseOfSlowVehicleIfNeeded(int criticalPointToSet, Set<CriticalSection> criticalSections) {
 		if (this.criticalPoint == criticalPointToSet || criticalPointToSet == -1) {
+			return;
+		}
+		if (! slowingDown) {
 			return;
 		}
 		// Otherwise, this is a stop event.
@@ -634,7 +639,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 
 		queueStopEvents.add(Timekeeper.getVirtualMillisPassed());
-		if (areThereTooManyStopEventsRecently()) {
+		if (areThereTooManyStopEventsRecently(otherVehicle.getMaxVelocity())) {
 			tryToReplanNearVehicle(false, null);
 			queueStopEvents.clear(); // don't try to reroute again in the nearest future
 		}
