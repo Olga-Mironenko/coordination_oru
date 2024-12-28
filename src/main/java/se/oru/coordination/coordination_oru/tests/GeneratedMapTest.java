@@ -53,7 +53,8 @@ public class GeneratedMapTest {
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario9-6.json, baseline, seed 1, probabilityForcingForHuman 0"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-1.json, baseline, seed 1, probabilityForcingForHuman 0"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario10-1.json, baseline, seed 1, probabilityForcingForHuman 0"
-                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario10-1.json, baseline, seed 1, probabilityForcingForHuman 0"
+//                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario10-1.json, baseline, seed 1, probabilityForcingForHuman 0"
+                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario1-1.json, change of priorities, seed 1, probabilityForcingForHuman 1"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario9-1.json, change of priorities, seed 1, probabilityForcingForHuman 1"
             );
         }
@@ -68,6 +69,11 @@ public class GeneratedMapTest {
 
         String scenarioFilename = scenarioTokens[0];
         AbstractVehicle.scenarioFilename = scenarioFilename;
+        // Just to speed up simulations:
+        if (scenarioFilename.contains("_without_bridges/")) {
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtParkedForNonHuman = false;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtSlowForNonHuman = false;
+        }
 
         String stringProb = scenarioTokens[3];
         final String prefixProb = "probabilityForcingForHuman ";

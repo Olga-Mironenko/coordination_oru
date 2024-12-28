@@ -48,7 +48,7 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman = 0.0;
             AdaptiveTrajectoryEnvelopeTrackerRK4.velocitySlowingDownForHuman = 1.5;
             AdaptiveTrajectoryEnvelopeTrackerRK4.lengthIntervalSlowingDownForHuman = 100.0;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.millisStopEvents = 5000; // rerouting (slow)
+            AdaptiveTrajectoryEnvelopeTrackerRK4.millisStopEventsInitial = 10000; // rerouting (slow)
 
             /// Coordination features for AVs:
             /// - Can pass first:
@@ -61,11 +61,11 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.deltaMaxVelocityCautious = -2.0;
             AdaptiveTrajectoryEnvelopeTrackerRK4.minMaxVelocityCautious = 1.0;
             /// - Rerouting:
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForHuman = false;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman = true;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.millisReroutingNearParkedVehicleIfNotInDummyTracker = null;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForHuman = false;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtParkedForHuman = false;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtParkedForNonHuman = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.millisReroutingAtParkedIfNotInDummyTracker = null;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtSlowForHuman = false;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtSlowForNonHuman = true;
             /// - Change of priorities:
             Forcing.priorityDistance = 50.0;
             Forcing.isDistanceToCPAddedToPriorityDistance = true;

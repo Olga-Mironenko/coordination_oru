@@ -600,12 +600,12 @@ public class BrowserVisualization implements FleetVisualization {
                             ),
                             center(
                                     String.format("%s / %s",
-                                            !AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearParkedVehicleForNonHuman
+                                            !AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtParkedForNonHuman
                                                     ? "-"
-                                                    : tec.robotIDToNumReroutingsNearParkedVehicle.getOrDefault(id, 0).toString(),
-                                            !AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingNearSlowVehicleForNonHuman
+                                                    : tec.robotIDToNumReroutingsAtParked.getOrDefault(id, 0).toString(),
+                                            !AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtSlowForNonHuman
                                                     ? "-"
-                                                    : tec.robotIDToNumReroutingsNearSlowVehicle.getOrDefault(id, 0).toString()
+                                                    : tec.robotIDToNumReroutingsAtSlow.getOrDefault(id, 0).toString()
                                     )
                             ),
                             center(isToRestore && !isToResume ? "temporary" : ""),

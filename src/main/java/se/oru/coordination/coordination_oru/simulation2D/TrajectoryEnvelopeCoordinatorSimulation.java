@@ -40,8 +40,8 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 	public HashMap<Integer, List<CollisionEvent>> robotIDToMajorCollisions = new HashMap<>();
 	protected Thread collisionThread = null;
 
-	public HashMap<Integer, Integer> robotIDToNumReroutingsNearParkedVehicle = new HashMap<>();
-	public HashMap<Integer, Integer> robotIDToNumReroutingsNearSlowVehicle = new HashMap<>();
+	public HashMap<Integer, Integer> robotIDToNumReroutingsAtParked = new HashMap<>();
+	public HashMap<Integer, Integer> robotIDToNumReroutingsAtSlow = new HashMap<>();
 
 	public HashMap<Integer, HashSet<CriticalSection>> robotIDToCriticalSectionsPassFirstAffected = new HashMap<>();
 	public HashMap<Integer, HashSet<CriticalSection>> robotIDToCriticalSectionsPassFirstUnaffected = new HashMap<>();
