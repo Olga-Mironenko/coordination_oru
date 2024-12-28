@@ -157,19 +157,17 @@ public class AutonomousVehicle extends AbstractVehicle {
                 rsp.addObstacles(obstacles);
             }
 
+            boolean areSides = rsp.doesIntersectWithObstacle(rsp.getFootprintInPose(initial));
             boolean isFound = false;
             /*
-             8 7 9 (dy=1)
+             8 5 9 (dy=1)
              2 1 3 (dy=0)
              5 4 6 (dy=-1)
              ^
              (dx=-1)
              */
-            for (int dy : robotIDsObstacles.length == 0 ? java.util.List.of(0) : java.util.List.of(0, -1, 1)) {
-                for (int dx : robotIDsObstacles.length == 0 ? java.util.List.of(0) : List.of(0, -1, 1)) {
-                    if (dy != 0 && dx != 0) {
-                        continue;
-                    }
+            for (int dy : ! areSides ? java.util.List.of(0) : java.util.List.of(0, -1, 1)) {
+                for (int dx : ! areSides ? java.util.List.of(0) : List.of(0, -1, 1)) {
                     Pose start = new Pose(initial.getX() + dx, initial.getY() + dy, initial.getTheta());
                     rsp.setStart(start);
                     rsp.setGoals(goals);

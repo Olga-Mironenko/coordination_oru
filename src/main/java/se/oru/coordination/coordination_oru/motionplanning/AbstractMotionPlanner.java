@@ -209,7 +209,7 @@ public abstract class AbstractMotionPlanner {
 		return foot;
 	}
 	
-	protected Geometry getFootprintInPose(Pose p) {
+	public Geometry getFootprintInPose(Pose p) {
 		Geometry goalFoot = getFootprintAsGeometry();
 		AffineTransformation at = new AffineTransformation();
 		at.rotate(p.getTheta());
@@ -223,18 +223,29 @@ public abstract class AbstractMotionPlanner {
 		double area = intersection.getArea();
 		return area > 0 && area > footprint.getArea() * 0.03;
 	}
-	
-	public synchronized boolean plan() {
-		Geometry goalFoot = this.getFootprintInPose(this.goal[this.goal.length-1]);
-		if (this.om != null && checkGoalPose) {
+
+	public boolean doesIntersectWithObstacle(Geometry footprint) {
+		if (this.om != null) {
 			for (Geometry obs : this.om.getObstacles()) {
-				if (intersectsConsiderably(goalFoot, obs)) {
-					metaCSPLogger.info("Goal intersects with an obstacle, no path can exist");
-					return false;
+				if (footprint.intersects(obs)) {
+					return true;
 				}
 			}
 		}
-		
+		return false;
+	}
+	
+	public synchronized boolean plan() {
+		Geometry goalFoot = getFootprintInPose(this.goal[this.goal.length-1]);
+		if (checkGoalPose && doesIntersectWithObstacle(goalFoot)) {
+			metaCSPLogger.info("Goal intersects with an obstacle, no path can exist");
+			return false;
+		}
+		if (doesIntersectWithObstacle(getFootprintInPose(start))) {
+			metaCSPLogger.info("Start intersects with an obstacle, no path can exist");
+			return false;
+		}
+
 		boolean ret = doPlanning();
 		// TODO: `if (! ret) return false;`?
 

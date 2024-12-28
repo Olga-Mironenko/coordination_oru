@@ -46,16 +46,8 @@ public class GeneratedMapTest {
 
         if (scenarioString == null) {
             scenarioString = (
-//                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario2-1.json, baseline, seed 1, probabilityForcingForHuman 0"
-//                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario5-3.json, ..."
-//                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario5-3.json, baseline, seed 1, probabilityForcingForHuman 0"
-//                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario9-6.json, baseline, seed 1, probabilityForcingForHuman 0"
-//                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario9-6.json, baseline, seed 1, probabilityForcingForHuman 0"
-//                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-1.json, baseline, seed 1, probabilityForcingForHuman 0"
-//                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario10-1.json, baseline, seed 1, probabilityForcingForHuman 0"
-//                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario10-1.json, baseline, seed 1, probabilityForcingForHuman 0"
-                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario1-1.json, change of priorities, seed 1, probabilityForcingForHuman 1"
-//                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario9-1.json, change of priorities, seed 1, probabilityForcingForHuman 1"
+//                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario1-1.json, change of priorities, seed 1, probabilityForcingForHuman 1"
+                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-1.json, change of priorities, seed 1, probabilityForcingForHuman 1"
             );
         }
         AbstractVehicle.scenarioId = String.format(
