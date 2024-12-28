@@ -23,14 +23,14 @@ public class HumanControl {
     // TODO: crashes on large initial velocity
 
     public static boolean moveRobot(int robotID, Pose goal) {
-        return moveRobot(robotID, goal, new int[0]);
+        return moveRobot(robotID, new Pose[] { goal }, new int[0]);
     }
 
     public static String poseToShortString(Pose pose) {
         return String.format("(%.1f, %.1f, %.1f)", pose.getX(), pose.getY(), pose.getTheta());
     }
 
-    public static boolean moveRobot(int robotID, Pose goal, int[] robotIDsObstacles) {
+    public static boolean moveRobot(int robotID, Pose[] goals, int[] robotIDsObstacles) {
         if (isWorking) {
             return false;
         }
@@ -50,7 +50,7 @@ public class HumanControl {
             if (VehiclesHashMap.isHuman(robotID)) {
                 statusPrefix = String.format("Human controlled path for %s → %s",
                         poseToShortString(currentPose),
-                        poseToShortString(goal)
+                        poseToShortString(goals[goals.length - 1])
                 );
             }
 
@@ -58,7 +58,7 @@ public class HumanControl {
                 if (statusPrefix != null) {
                     status = String.format("%s: finding...", statusPrefix);
                 }
-                ((AutonomousVehicle) vehicle).getPlan(currentPose, new Pose[]{goal}, Missions.getMapId(), false, robotIDsObstacles);
+                ((AutonomousVehicle) vehicle).getPlan(currentPose, goals, Missions.getMapId(), false, robotIDsObstacles);
             }
             catch (NoPathFoundError error) {
                 if (statusPrefix != null) {

@@ -1088,32 +1088,38 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		return deltaTimeInMillis / this.temporalResolution;
 	}
 
-	private int findNearestGoal() {
+	private Pose[] findFurtherGoals() {
 		int robotID = te.getRobotID();
 
 		ArrayList<Integer> stoppingPointsOrig = tec.stoppingPoints.getOrDefault(robotID, new ArrayList<>());
 		ArrayList<Integer> stoppingPoints = new ArrayList<>(stoppingPointsOrig); // Copy the original list
 		Collections.sort(stoppingPoints);
 
-		int lastPoint = te.getTrajectory().getPoseSteering().length - 1;
+		PoseSteering[] psa = te.getTrajectory().getPoseSteering();
+		int lastPoint = psa.length - 1;
 		if (stoppingPoints.isEmpty() || stoppingPoints.get(stoppingPoints.size() - 1) != lastPoint) {
 			stoppingPoints.add(lastPoint);
 		}
 
 		assert stoppingPoints.get(stoppingPoints.size() - 1) == lastPoint;
 		if (stoppingPoints.size() == 1) { // avoiding to compute `getRobotReport()`
-			return lastPoint;
+			return new Pose[] { psa[lastPoint].getPose() };
 		}
 
 		int currentPoint = getRobotReport().getPathIndex();
-		for (int stoppingPoint : stoppingPoints) {
+		for (int i = 0; i < stoppingPoints.size(); i++) {
+			int stoppingPoint = stoppingPoints.get(i);
 			if (stoppingPoint > currentPoint) {
-				return stoppingPoint;
+				Pose[] goals = new Pose[stoppingPoints.size() - i];
+				for (int j = 0; j < goals.length; j++) {
+					goals[j] = psa[stoppingPoints.get(i + j)].getPose();
+				}
+				return goals;
 			}
 		}
 
 		assert lastPoint == currentPoint;
-		return lastPoint;
+		return new Pose[] { psa[lastPoint].getPose() };
 	}
 
 	public enum ResultOfTryToReplanNearVehicle { NOT_TRIED, TRIED_AND_FAILED, SUCCEEDED };
@@ -1149,9 +1155,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			}
 		}
 
-		PoseSteering[] psa = te.getTrajectory().getPoseSteering();
-		int nearestGoal = findNearestGoal();
-		if (HumanControl.moveRobot(myRobotID, psa[nearestGoal].getPose(), new int[] {superiorID})) {
+		Pose[] goals = findFurtherGoals();
+		if (HumanControl.moveRobot(myRobotID, goals, new int[] {superiorID})) {
 			TrajectoryEnvelopeCoordinatorSimulation.incrementForRobot(
 					mustBeParked
 							? TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumReroutingsAtParked
