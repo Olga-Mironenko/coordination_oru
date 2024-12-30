@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AutonomousVehicle extends AbstractVehicle {
@@ -122,6 +123,26 @@ public class AutonomousVehicle extends AbstractVehicle {
     }
 
     public void getPlan(Pose initial, Pose[] goals, String mapId, Boolean inversePath, int[] robotIDsObstacles) {
+        ArrayList<PoseSteering> finalPath = new ArrayList<PoseSteering>();
+        for (int i = 0; i < goals.length; i++) {
+            Pose start_ = i == 0 ? initial : goals[i - 1];
+            Pose goal_ = goals[i];
+
+            int[] obstacles = i == 0 ? robotIDsObstacles : new int[0]; // TODO: do this only for rerouting at slow?
+            PoseSteering[] path = findPlanToGoal(start_, goal_, mapId, inversePath, obstacles);
+
+            for (int j = 0; j < path.length; j++) {
+                if (i > 0 && j == 0) {
+                    continue;
+                }
+                finalPath.add(path[j]);
+            }
+        }
+
+        VehiclesHashMap.getVehicle(this.getID()).setPath(finalPath.toArray(new PoseSteering[finalPath.size()]));
+    }
+
+    public PoseSteering[] findPlanToGoal(Pose initial, Pose goal, String mapId, Boolean inversePath, int[] robotIDsObstacles) {
         String filenameCache = null;
         PoseSteering[] path = null;
 
@@ -132,9 +153,7 @@ public class AutonomousVehicle extends AbstractVehicle {
 
         if (isPathCachingEnabled) {
             StringBuilder base = new StringBuilder(poseToString(initial));
-            for (Pose goal : goals) {
-                base.append("_").append(poseToString(goal));
-            }
+            base.append("_").append(poseToString(goal));
             if (robotIDsObstacles.length > 0) {
                 base.append("_obs").append(geometriesToHash(obstacles));
             }
@@ -170,7 +189,7 @@ public class AutonomousVehicle extends AbstractVehicle {
                 for (int dx : ! areSides ? java.util.List.of(0) : List.of(0, -1, 1)) {
                     Pose start = new Pose(initial.getX() + dx, initial.getY() + dy, initial.getTheta());
                     rsp.setStart(start);
-                    rsp.setGoals(goals);
+                    rsp.setGoals(goal);
                     if (rsp.plan()) {
                         isFound = true;
                         break;
@@ -201,7 +220,7 @@ public class AutonomousVehicle extends AbstractVehicle {
             savePathIfNeeded(filenameCache, path);
         }
 
-        VehiclesHashMap.getVehicle(this.getID()).setPath(path);
+        return path;
     }
 
     private static String poseToString(Pose pose) {

@@ -35,6 +35,7 @@ import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
@@ -52,25 +53,6 @@ public class BrowserVisualization implements FleetVisualization {
 	public static String[] statsColumns = null;
 	public static TreeMap<Integer, String[]> statsIdToRow = null;
 
-	public static int runProcess(String... args) {
-		Process process;
-		try {
-			ProcessBuilder builder = new ProcessBuilder(args);
-			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
-			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-			process = builder.start();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		int code;
-		try {
-			code = process.waitFor();
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-		return code;
-	}
-
 	public static void makeScreenshot() {
 		File fileScenario = new File(AbstractVehicle.scenarioFilename);
 		File dirScreenshots = new File(fileScenario.getParent() + "/screenshots");
@@ -86,9 +68,9 @@ public class BrowserVisualization implements FleetVisualization {
 			return;
 		}
 
-		int codeMake = runProcess("screenshotting/make-screenshot.sh", fileScreenshotFull.toString());
+		int codeMake = Demo.runProcess("screenshotting/make-screenshot.sh", fileScreenshotFull.toString());
 		assert codeMake == 0;
-		int codeCrop = runProcess("screenshotting/crop-screenshot.sh",
+		int codeCrop = Demo.runProcess("screenshotting/crop-screenshot.sh",
 				fileScreenshotFull.toString(), fileScreenshotCropped.toString());
 		assert codeCrop == 0;
 	}
@@ -153,7 +135,7 @@ public class BrowserVisualization implements FleetVisualization {
 	private void startOpenInBrowser(String serverHostNameOrIP) {
 		String url = "http://" + serverHostNameOrIP + ":8080";
 		if (Containerization.IS_CONTAINER) {
-			int code = runProcess("container/chromium.sh", url);
+			int code = Demo.runProcess("container/chromium.sh", url);
 			assert code == 0;
 		} else if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 			try { Desktop.getDesktop().browse(new URI(url)); }

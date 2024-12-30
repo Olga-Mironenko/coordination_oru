@@ -154,10 +154,9 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 		this.pathPS = null;
 		ArrayList<PoseSteering> finalPath = new ArrayList<PoseSteering>();  
 		for (int i = 0; i < this.goal.length; i++) {
-			Pose start_ = null;
+			Pose start_ = i == 0 ? this.start : this.goal[i-1];
 			Pose goal_ = this.goal[i];
-			if (i == 0) start_ = this.start;
-			else start_ = this.goal[i-1];
+
 			path = new PointerByReference();
 			pathLength = new IntByReference();
 			double[] xCoords = new double[collisionCircleCenters.length];
@@ -168,6 +167,7 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 				yCoords[j] = collisionCircleCenters[j].y;
 			}
 			metaCSPLogger.info("Path planning with " + collisionCircleCenters.length + " circle positions");
+
 			if (this.om != null) {
 				byte[] occ = om.asByteArray();
 				int w = om.getPixelWidth();
@@ -224,9 +224,13 @@ public class ReedsSheppCarPlanner extends AbstractMotionPlanner {
 			valsRef.read();
 			int numVals = pathLength.getValue();
 			if (numVals == 0) return false;
-			PathPose[] pathPoses = (PathPose[])valsRef.toArray(numVals);
-			if (i == 0) finalPath.add(new PoseSteering(pathPoses[0].x, pathPoses[0].y, pathPoses[0].theta, 0.0));
-			for (int j = 1; j < pathPoses.length; j++) finalPath.add(new PoseSteering(pathPoses[j].x, pathPoses[j].y, pathPoses[j].theta, 0.0));
+			PathPose[] pathPoses = (PathPose[]) valsRef.toArray(numVals);
+			for (int j = 0; j < pathPoses.length; j++) {
+				if (i > 0 && j == 0) {
+					continue;
+				}
+				finalPath.add(new PoseSteering(pathPoses[j].x, pathPoses[j].y, pathPoses[j].theta, 0.0));
+			}
 
 			if (planningAlgorithm != ReedsSheppCarPlanner.PLANNING_ALGORITHM.PRMcustom) {
 				INSTANCE_SIMPLE.cleanupPath(pathVals);

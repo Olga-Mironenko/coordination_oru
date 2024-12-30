@@ -9,11 +9,38 @@ import se.oru.coordination.coordination_oru.util.*;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
+import java.io.IOException;
+
 public abstract class Demo {
     protected abstract void run(String scenarioString);
 
+    public static int runProcess(String... args) {
+        Process process;
+        try {
+            ProcessBuilder builder = new ProcessBuilder(args);
+            builder.redirectError(ProcessBuilder.Redirect.INHERIT);
+            builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            process = builder.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        int code;
+        try {
+            code = process.waitFor();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return code;
+    }
+
     public void exec() {
         checkForAssertions();
+
+        if (! Containerization.IS_CONTAINER) {
+            long pid = ProcessHandle.current().pid();
+//        runProcess("renice --priority=-5 --pid " + pid);
+//        runProcess("ionice --class=realtime --classdata=1 --pid " + pid);
+        }
 
         Printer.resetTime();
         Printer.print("started");
