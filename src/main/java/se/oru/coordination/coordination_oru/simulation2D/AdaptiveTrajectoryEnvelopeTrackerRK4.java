@@ -60,7 +60,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	protected boolean hasCurvatureDampeningEqualValues = false;
 	private ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
 	private int numberOfReplicas = 1;
-	public static int seedGlobal = 0;
+	public static int seedGlobal = 1;
 	private Random rand = new Random(seedGlobal + GatedCalendar.getInstance().getTimeInMillis());
 	private TreeMap<Double,Double> slowDownProfile = null;
 	private boolean slowingDown = false;

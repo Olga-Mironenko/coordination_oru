@@ -33,11 +33,21 @@ dirs_maps=(  # 3 robots
   '2024-11-28_13:19:18_without_bridges'
 )
 
-seeds=(1)
-
-probabilities=(
+passhums=(
   0
   1
+)
+
+slownesses=(
+  "no"
+#  "without rerouting"
+#  "with rerouting"
+)
+
+forcings=(
+  "no"
+  "change of priorities"
+  "stops"
 )
 
 # Use variables
@@ -47,19 +57,12 @@ for i_map in "${indexes_maps[@]}"; do
     for dir_maps in "${dirs_maps[@]}"; do
       filename_simple=map-generator/generated-maps/$dir_maps/scenario$i_map-$position.json
       filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
-      for seed in "${seeds[@]}"; do
-        for probabilityForcingForHuman in "${probabilities[@]}"; do
-          case $probabilityForcingForHuman in
-            0 | 0.0)
-              variations=("baseline")
-              ;;
-            *)
-              variations=("change of priorities" "stops")
-              ;;
-          esac
 
-          for variation in "${variations[@]}"; do
-            scenarios+=("$filename, $variation, seed $seed, probabilityForcingForHuman $probabilityForcingForHuman")
+      for slowness in "${slownesses[@]}"; do
+        for passhum in "${passhums[@]}"; do
+          for forcing in "${forcings[@]}"; do
+            scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
+            scenarios+=("$scenario")
           done
         done
       done
@@ -73,8 +76,4 @@ printf -- "- %s\n" "${scenarios[@]}"
 trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT TERM
 
 set -x
-reference=$(mktemp --tmpdir run-and-consolidate.XXXX)
-#trap 'ls -l "$reference"; rm -f "$reference"' EXIT
-
-"$root"/run-scenarios.sh "$timeout_hard" "$demo" "${scenarios[@]}" || echo "WARNING: exit $?"
-#"$root"/consolidate-rundirs-to-sorted-csv.sh "$reference"  # will consolidate everything created after the reference file
+exec "$root"/run-scenarios.sh "$timeout_hard" "$demo" "${scenarios[@]}"

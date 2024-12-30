@@ -69,7 +69,7 @@ public abstract class Demo {
 
             /// Human (mis)behavior actions:
             /// - Violation of priorities:
-            AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 0.5;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 0;
             AdaptiveTrajectoryEnvelopeTrackerRK4.distanceToCPForForcing = 30.0;
             /// - Moving slowly:
             AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman = 0.0;
@@ -79,7 +79,7 @@ public abstract class Demo {
 
             /// Coordination features for AVs:
             /// - Can pass first:
-            CriticalSection.isCanPassFirstActiveHum = true;
+            CriticalSection.isCanPassFirstActiveHum = false;
             CriticalSection.isCanPassFirstActiveAut = false;
             /// - Racing through crossroad:
             AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = true;
@@ -89,10 +89,10 @@ public abstract class Demo {
             AdaptiveTrajectoryEnvelopeTrackerRK4.minMaxVelocityCautious = 1.0;
             /// - Rerouting:
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtParkedForHuman = false;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtParkedForNonHuman = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtParkedForNonHuman = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.millisReroutingAtParkedIfNotInDummyTracker = null;
             AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtSlowForHuman = false;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtSlowForNonHuman = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtSlowForNonHuman = false;
             /// - Change of priorities:
             Forcing.priorityDistance = 50.0;
             Forcing.isDistanceToCPAddedToPriorityDistance = true;

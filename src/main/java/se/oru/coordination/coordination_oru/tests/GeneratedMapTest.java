@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru.tests;
 
 import com.google.gson.JsonArray;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
+import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.code.*;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
@@ -33,6 +34,11 @@ public class GeneratedMapTest {
         }.exec();
     }
 
+    private static String getSuffix(String string, String prefix) {
+        assert string.startsWith(prefix);
+        return string.substring(prefix.length());
+    }
+
     protected static void runDemo(String scenarioString) {
         HumanControl.isEnabledForBrowser = true;
 //        Timekeeper.setVirtualSecondsPassedMax(2);
@@ -48,62 +54,68 @@ public class GeneratedMapTest {
             scenarioString = (
 //                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario1-1.json, change of priorities, seed 1, probabilityForcingForHuman 1"
 //                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario1-1.json, baseline, seed 1, probabilityForcingForHuman 0"
-                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-1.json, change of priorities, seed 1, probabilityForcingForHuman 1"
+                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-1.json, passhum 1, slowness with rerouting, forcing change of priorities"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-4.json, baseline, seed 1, probabilityForcingForHuman 0"
             );
         }
-        AbstractVehicle.scenarioId = String.format(
-                "%s; %s",
-                scenarioString,
-                heuristics.getHeuristicName()
-        );
+        AbstractVehicle.scenarioId = scenarioString;
+
+        // Parsing `scenarioString`:
 
         String[] scenarioTokens = scenarioString.split(", ");
         assert scenarioTokens.length == 4;
 
-        String scenarioFilename = scenarioTokens[0];
-        AbstractVehicle.scenarioFilename = scenarioFilename;
-        // Just to speed up simulations:
-        if (scenarioFilename.contains("_without_bridges/")) {
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtParkedForNonHuman = false;
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtSlowForNonHuman = false;
+        AbstractVehicle.scenarioFilename = scenarioTokens[0];
+        CriticalSection.isCanPassFirstActiveHum = getSuffix(scenarioTokens[1], "passhum ").equals("1");
+
+        boolean isSlow = false;
+        assert ! AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtSlowForNonHuman;
+        assert ! AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtParkedForNonHuman;
+        switch (getSuffix(scenarioTokens[2], "slowness ")) {
+            case "no":
+                break;
+            case "without rerouting":
+                isSlow = true;
+                break;
+            case "with rerouting":
+                isSlow = true;
+                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtSlowForNonHuman = true;
+                AdaptiveTrajectoryEnvelopeTrackerRK4.isReroutingAtParkedForNonHuman = true;
+                if (AbstractVehicle.scenarioFilename.contains("_without_bridges/")) {
+                    return;
+                }
+                break;
+            default:
+                throw new IllegalArgumentException();
         }
 
-        String stringProb = scenarioTokens[3];
-        final String prefixProb = "probabilityForcingForHuman ";
-        assert stringProb.startsWith(prefixProb);
-        AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = Double.parseDouble(
-                stringProb.substring(prefixProb.length()));
-
-        String stringVariation = scenarioTokens[1];
-        switch (stringVariation) {
-            case "baseline":
-                assert AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman == 0.0;
+        assert AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman == 0;
+        switch (getSuffix(scenarioTokens[3], "forcing ")) {
+            case "no":
                 break;
             case "change of priorities":
+                AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
                 Forcing.stopDistance = Double.NEGATIVE_INFINITY;
                 break;
             case "stops":
+                AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
                 Forcing.stopDistance = Forcing.priorityDistance;
                 break;
             default:
-                throw new IllegalArgumentException("Unrecognized variation string: " + stringVariation);
+                throw new IllegalArgumentException();
         }
 
-        String stringSeed = scenarioTokens[2];
-        final String prefixSeed = "seed ";
-        assert stringSeed.startsWith(prefixSeed);
-        AdaptiveTrajectoryEnvelopeTrackerRK4.seedGlobal = Integer.parseInt(stringSeed.substring(prefixSeed.length()));
+        // Creating vehicles, etc.:
 
         int numAuts;
         double[] dimensionsVehicle;
-        try (FileReader reader = new FileReader(scenarioFilename)) {
+        try (FileReader reader = new FileReader(AbstractVehicle.scenarioFilename)) {
             JsonElement jsonElement = JsonParser.parseReader(reader);
 
             assert jsonElement.isJsonObject();
             JsonObject jsonObject = jsonElement.getAsJsonObject();
 
-            File file = new File(scenarioFilename);
+            File file = new File(AbstractVehicle.scenarioFilename);
             String basenameLocations = jsonObject.get("locations").getAsString();
             Missions.loadRoadMap(file.getParentFile() + File.separator + basenameLocations);
 
@@ -147,7 +159,7 @@ public class GeneratedMapTest {
         AutonomousVehicle hum = new HumanDrivenVehicle(
                 0, 0,
                 Color.ORANGE, Color.ORANGE,
-                1, 0.3
+                isSlow ? 1 : 5.6, 0.3
         );
         AutonomousVehicle[] auts = new AutonomousVehicle[numAuts];
         for (int i = 0; i < numAuts; i++) {

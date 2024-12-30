@@ -7,4 +7,4 @@ set -eux -o pipefail
 root=$(dirname "$0")
 cd "$root"/..
 #exec \time ./gradlew run -Passert -Pdemo=GeneratedMapTest
-exec \time logprocessing/run-and-consolidate-generatedmaptest.sh
+exec \time logprocessing/run-generatedmaptest.sh
