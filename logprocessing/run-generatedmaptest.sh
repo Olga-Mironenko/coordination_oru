@@ -39,9 +39,9 @@ passhums=(
 )
 
 slownesses=(
-  "no"
-#  "without rerouting"
-#  "with rerouting"
+#  "no"
+  "without rerouting"
+  "with rerouting"
 )
 
 forcings=(
