@@ -74,6 +74,7 @@ scenario-analysis/AutogluonModels
 scenario-analysis/generated_*
 scenario-analysis/tmp*.ipynb
 scenario-analysis/.ipynb_checkpoints/
+scenario-analysis/old/
 
 # Result .txt files
 src/main/java/se/oru/coordination/coordination_oru/results/*
