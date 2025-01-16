@@ -276,10 +276,10 @@ def plot_csd_scores(runname):
         #         print(axis)
 
         # Show the individual figure
-        heatmap_fig.show()
+        # heatmap_fig.show()
 
-        # Show the individual figure separately
-    #   heatmap_fig.show()
+    # Show the individual figure separately
+    # heatmap_fig.show()
 
     fig.update_layout(
         coloraxis1=dict(  # shared color axis
@@ -335,7 +335,9 @@ def rank_dataframes(dataframes, is_the_more_the_better=True):
     return ranked_dfs
 
 
-def compare_ranked_dfs(df_a, df_b, label_a, label_b, color_a, color_b, color_ab):
+def compare_ranked_dfs(df_a, df_b, label_a, label_b, *,
+                       label_na,
+                       color_a, color_b, color_ab, color_na):
     df_cmp = pd.DataFrame(index=df_a.index, columns=df_a.columns)
     df_colors = pd.DataFrame(index=df_a.index, columns=df_a.columns)
 
@@ -349,18 +351,21 @@ def compare_ranked_dfs(df_a, df_b, label_a, label_b, color_a, color_b, color_ab)
             value_a = df_a.iloc[row, col]
             value_b = df_b.iloc[row, col]
 
-            if value_a < value_b:
+            if pd.isna(value_a) and pd.isna(value_b):
+                value_c = label_na
+                color_c = color_na
+            elif pd.isna(value_b) or value_a < value_b:
                 value_c = label_a
-                color = color_a
-            elif value_a > value_b:
+                color_c = color_a
+            elif pd.isna(value_a) or value_a > value_b:
                 value_c = label_b
-                color = color_b
+                color_c = color_b
             else:
                 value_c = label_a + label_b
-                color = color_ab
+                color_c = color_ab
 
             df_cmp.iloc[row, col] = value_c
-            df_colors.iloc[row, col] = color
+            df_colors.iloc[row, col] = color_c
 
     return df_cmp, df_colors
 
@@ -408,15 +413,18 @@ def plot_df_all(
         title_to_heatmap_data[strategy] = heatmap_data
 
     if is_full or is_comparison_only:
-        dfs_ranks = rank_dataframes(list(title_to_heatmap_data.values()),
+        strategies_for_ranks = strategies[1:3]
+        dfs_for_ranks = [title_to_heatmap_data[strategy] for strategy in strategies_for_ranks]
+        dfs_ranks = rank_dataframes(dfs_for_ranks,
                                     is_the_more_the_better=is_the_more_the_better)
         df_cmp, df_color = compare_ranked_dfs(
-            dfs_ranks[1], dfs_ranks[2],
-            strategies[1].split()[-1][0].upper(),
-            strategies[2].split()[-1][0].upper(),
-            0.0,  # 'blue',
-            1.0,  # 'yellow',
-            0.5,  # 'gray',
+            *dfs_ranks,
+            *(s.split()[-1][0].upper() for s in strategies_for_ranks),
+            label_na='N/A',
+            color_a=0.0,
+            color_b=1.0,
+            color_ab=0.5,
+            color_na=0.25,
         )
         title_to_heatmap_data[TITLE_CMP] = df_color
 
@@ -452,35 +460,37 @@ def plot_df_all(
                       heatmap_data=heatmap_data, idx=idx, are_bridges=are_bridges)
 
     # Update layout with shared color scale
+
     fig.update_layout(
-        title="" if is_comparison_only else f"{col_data}<br>(slowness: {slowness}; coordination strategies)",
-        coloraxis1=dict(  # shared color axis
-            colorscale="Greens" if is_the_more_the_better else "Reds",
-            colorbar=dict(
-                title=(
-                    "No. of<br>completed<br>missions"
-                    if col_data == "No. of completed missions"
-                    else
-                    'No. of<br>collisions'
-                    if col_data == 'No. of collisions'
-                    else
-                    col_data
-                ),  # ⬅ Conditional title
-                titlefont=dict(size=14),
-                x=-0.13,
-                titleside="top",
-                thickness=10,
-                len=1.1  # ⬅ Increases the length of the colorbar (default is 0.5)
-            )
-        ),
-        coloraxis2=dict(
-            colorscale=[
-                [0.0, '#FFFFE0'],  # 0.0 is P
-                [0.5, '#D3D3D3'],  # 0.5 is PS
-                [1.0, '#ADD8E6'],  # 1.0 is S
-            ],
+    title="" if is_comparison_only else f"{col_data}<br>(slowness: {slowness}; coordination strategies)",
+    coloraxis1=dict(  # shared color axis
+        colorscale="Greens" if is_the_more_the_better else "Reds",
+        colorbar=dict(
+            title=(
+                "No. of<br>completed<br>missions"
+                if col_data == "No. of completed missions"
+                else
+                'No. of<br>collisions'
+                if col_data == 'No. of collisions'
+                else
+                col_data
+            ),  # ⬅ Conditional title
+            titlefont=dict(size=14),
+            x=-0.13,
+            titleside="top",
+            thickness=10,
+            len=1.1  # ⬅ Increases the length of the colorbar (default is 0.5)
         )
+    ),
+    coloraxis2=dict(
+        colorscale=[
+            [0.0, '#FFFFE0'],  # 0.0 is P
+            [0.25, '#3D3D3D'],  # 0.25 is NA
+            [0.5, '#D3D3D3'],  # 0.5 is PS
+            [1.0, '#ADD8E6'],  # 1.0 is S
+        ],
     )
+)
 
 
 def make_comparison_title(are_bridges, slowness):
@@ -570,6 +580,8 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
 
 
 def main():
+    plot_runname('20241230_173555', 'No. of completed missions', is_blocked_to_na=True)
+
     plot_runname('20241230_173555', 'Collisions rate', is_comparison_only=True)
     plot_runname('20241230_173555', 'Collisions rate')
     plot_runname('20241230_173555', 'No. of completed missions', is_comparison_only=True)
