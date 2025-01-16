@@ -491,7 +491,7 @@ def make_comparison_title(are_bridges, slowness):
     return f'{TITLE_CMP}<br>Maps with {"high" if are_bridges else "low"} connectivity<br>{comment}'
 
 
-def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=False):
+def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=False, is_blocked_to_na=False):
     is_full = not (is_baseline_only or is_comparison_only)
     assert is_full + is_baseline_only + is_comparison_only == 1
 
@@ -526,6 +526,9 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
         key2df = get_key2df(runname)
         is_aut = True
         df = key2df[are_bridges, is_aut]
+        if is_blocked_to_na:
+            df = df.copy()
+            df.loc[df['Is blocked'], column] = pd.NA
 
         for slowness in slownesses:
             dfx = df[~df['passhum'] & (df['slowness'] == slowness)]
@@ -572,6 +575,7 @@ def main():
     plot_runname('20241230_173555', 'No. of completed missions', is_comparison_only=True)
     plot_runname('20241230_173555', 'No. of collisions', is_comparison_only=True)
     plot_runname('20241230_173555', 'No. of completed missions', is_baseline_only=True)
+    plot_runname('20241230_173555', 'No. of completed missions', is_blocked_to_na=True)
     plot_runname('20241230_173555', 'No. of completed missions')
     plot_runname('20241230_173555', 'No. of collisions')
     plot_runname('20241230_173555', 'No. of near-misses')
