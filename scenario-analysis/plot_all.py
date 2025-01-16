@@ -567,6 +567,7 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
 
 
 def main():
+    plot_runname('20241230_173555', 'Collisions rate', is_comparison_only=True)
     plot_runname('20241230_173555', 'Collisions rate')
     plot_runname('20241230_173555', 'No. of completed missions', is_comparison_only=True)
     plot_runname('20241230_173555', 'No. of collisions', is_comparison_only=True)
