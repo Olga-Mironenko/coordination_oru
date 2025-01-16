@@ -1,4 +1,5 @@
 import pickle
+import textwrap
 
 import pandas as pd
 import plotly.io as pio
@@ -31,7 +32,7 @@ def get_key2df(runname):
     return CACHE_KEY2DF[runname]
 
 
-MARGIN = dict(t=100, b=0, l=80, r=0)
+# MARGIN = dict(t=100, b=0, l=80, r=0)
 
 
 def calculate_heatmap_data(*, df, col_i, col_j, col_data):
@@ -146,6 +147,10 @@ def make_subplots_row(titles, *, horizontal_spacing=0.05):
         horizontal_spacing = 0.25 / len(titles)
         width = 500 * len(titles)  # Adjust based on the number of subplots
         height = 500  # Fixed height to make the plots square
+    elif len(titles) == 4:
+        horizontal_spacing = 0.25 / len(titles)
+        width = 460 * len(titles)  # Adjust based on the number of subplots
+        height = 500  # Fixed height to make the plots square
     elif len(titles) == 5:
         horizontal_spacing = 0.25 / len(titles)
         width = 460 * len(titles)  # Adjust based on the number of subplots
@@ -216,7 +221,7 @@ def plot_csd_scores(runname):
             height=500,  # Same fixed height as the subplot
             coloraxis=dict(
                 colorscale="Greys",
-                colorbar=dict(
+                colorbar=dict(  # TODO: remove multiple colorbar definitions in this function
                     title="POD score",
                     titlefont=dict(size=16),
                     x=-0.3,
@@ -392,7 +397,7 @@ def plot_df(*, runname, title, col_i, col_j, col_data, heatmap_data, df_ranks, i
 
 def plot_df_all(
         runname, col_data, *,
-        fig, offset_fig, strategies, titles, df, are_bridges, slowness,
+        fig, offset_fig, strategies, titles, titles_fig, df, are_bridges, slowness,
         is_full, is_baseline_only, is_comparison_only
 ):
     assert is_full + is_baseline_only + is_comparison_only == 1
@@ -462,35 +467,27 @@ def plot_df_all(
     # Update layout with shared color scale
 
     fig.update_layout(
-    title="" if is_comparison_only else f"{col_data}<br>(slowness: {slowness}; coordination strategies)",
-    coloraxis1=dict(  # shared color axis
-        colorscale="Greens" if is_the_more_the_better else "Reds",
-        colorbar=dict(
-            title=(
-                "No. of<br>completed<br>missions"
-                if col_data == "No. of completed missions"
-                else
-                'No. of<br>collisions'
-                if col_data == 'No. of collisions'
-                else
-                col_data
-            ),  # ⬅ Conditional title
-            titlefont=dict(size=14),
-            x=-0.13,
-            titleside="top",
-            thickness=10,
-            len=1.1  # ⬅ Increases the length of the colorbar (default is 0.5)
+        title="" if is_comparison_only else f"{col_data}<br>(slowness: {slowness}; coordination strategies)",
+        coloraxis1=dict(  # shared color axis
+            colorscale="Greens" if is_the_more_the_better else "Reds",
+            colorbar=dict(
+                title="<br>".join(textwrap.wrap(col_data, 10)),
+                titlefont=dict(size=14),
+                x=-0.25 / len(titles_fig),
+                titleside="top",
+                thickness=10,
+                len=1.1  # ⬅ Increases the length of the colorbar (default is 0.5)
+            )
+        ),
+        coloraxis2=dict(
+            colorscale=[
+                [0.0, '#FFFFE0'],  # 0.0 is P
+                [0.25, '#3D3D3D'],  # 0.25 is NA
+                [0.5, '#D3D3D3'],  # 0.5 is PS
+                [1.0, '#ADD8E6'],  # 1.0 is S
+            ],
         )
-    ),
-    coloraxis2=dict(
-        colorscale=[
-            [0.0, '#FFFFE0'],  # 0.0 is P
-            [0.25, '#3D3D3D'],  # 0.25 is NA
-            [0.5, '#D3D3D3'],  # 0.5 is PS
-            [1.0, '#ADD8E6'],  # 1.0 is S
-        ],
     )
-)
 
 
 def make_comparison_title(are_bridges, slowness):
@@ -509,16 +506,18 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
 
     if is_baseline_only:
         strategies = titles = ['baseline']
-        fig = make_subplots_row(['baseline (Maps with low connectivity)', 'baseline (Maps with high connectivity)'])
+        titles_fig = ['baseline (Maps with low connectivity)', 'baseline (Maps with high connectivity)']
+        fig = make_subplots_row(titles_fig)
         offset_fig = 0
     elif is_comparison_only:
         titles = [TITLE_CMP]
-        fig = make_subplots_row([
+        titles_fig = [
             make_comparison_title(are_bridges, slowness)
             for slowness in ('baseline', 'without rerouting', 'with rerouting')
             for are_bridges in (False, True)
             if not (not are_bridges and slowness == 'with rerouting')
-        ])
+        ]
+        fig = make_subplots_row(titles_fig)
         offset_fig = 0
 
     for are_bridges in False, True:
@@ -550,7 +549,7 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
                 col_strategy = 'forcing'
                 strategies = list(dfx[col_strategy].unique())
                 if is_full:
-                    titles = strategies + [TITLE_CMP]
+                    titles = titles_fig = strategies + [TITLE_CMP]
                     fig = make_subplots_row(titles)
                     offset_fig = 0
 
@@ -561,6 +560,7 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
                 offset_fig=offset_fig,
                 strategies=strategies,
                 titles=titles,
+                titles_fig=titles_fig,
                 df=dfx,
                 are_bridges=are_bridges,
                 slowness=slowness,
@@ -580,15 +580,21 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
 
 
 def main():
-    plot_runname('20241230_173555', 'No. of completed missions', is_blocked_to_na=True)
+    plot_runname('20241230_173555', 'No. of completed missions', is_baseline_only=True)
+    plot_runname('20241230_173555', 'No. of completed missions')
 
     plot_runname('20241230_173555', 'Collisions rate', is_comparison_only=True)
     plot_runname('20241230_173555', 'Collisions rate')
+
+    plot_runname('20241230_173555', 'No. of completed missions', is_comparison_only=True, is_blocked_to_na=True)
     plot_runname('20241230_173555', 'No. of completed missions', is_comparison_only=True)
+
     plot_runname('20241230_173555', 'No. of collisions', is_comparison_only=True)
     plot_runname('20241230_173555', 'No. of completed missions', is_baseline_only=True)
+
     plot_runname('20241230_173555', 'No. of completed missions', is_blocked_to_na=True)
     plot_runname('20241230_173555', 'No. of completed missions')
+
     plot_runname('20241230_173555', 'No. of collisions')
     plot_runname('20241230_173555', 'No. of near-misses')
 
