@@ -1,11 +1,14 @@
 import pickle
 
 import pandas as pd
+import plotly.io as pio
 import plotly.express as px
 from plotly.subplots import make_subplots
 from IPython.display import display, HTML
 
 RUNDIRS = '../logs/rundirs'
+
+pio.templates.default = "plotly_dark"
 
 
 def get_key2df(runname):
@@ -22,13 +25,6 @@ def get_key2df(runname):
         rundir = f'{RUNDIRS}/{runname}'
         with open(f'{rundir}/key2df.pickle', 'rb') as file:
             key2df = pickle.load(file)
-
-        for key, df in key2df.items():
-            col = 'No. of collisions'
-            col2 = 'No. of violations'
-            if col in df.columns and col2 in df.columns:
-                df['Collisions rate'] = df.apply(lambda row: row[col] / row[col2] if row[col2] > 0 else 0,
-                                                 axis=1)
 
         CACHE_KEY2DF[runname] = key2df
 
@@ -528,7 +524,8 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
             ]
 
         key2df = get_key2df(runname)
-        df = key2df[are_bridges, True]
+        is_aut = 'all' if column.endswith(' rate') else True
+        df = key2df[are_bridges, is_aut]
 
         for slowness in slownesses:
             dfx = df[~df['passhum'] & (df['slowness'] == slowness)]
@@ -570,8 +567,7 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
 
 
 def main():
-    # plot_runname('20241230_173555', 'No. of violations')
-    # plot_runname('20241230_173555', 'Collisions rate')
+    plot_runname('20241230_173555', 'Collisions rate')
     plot_runname('20241230_173555', 'No. of completed missions', is_comparison_only=True)
     plot_runname('20241230_173555', 'No. of collisions', is_comparison_only=True)
     plot_runname('20241230_173555', 'No. of completed missions', is_baseline_only=True)
