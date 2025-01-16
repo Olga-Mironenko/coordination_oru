@@ -524,7 +524,7 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
             ]
 
         key2df = get_key2df(runname)
-        is_aut = 'all' if column.endswith(' rate') else True
+        is_aut = True
         df = key2df[are_bridges, is_aut]
 
         for slowness in slownesses:
