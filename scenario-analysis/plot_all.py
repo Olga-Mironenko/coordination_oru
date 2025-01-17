@@ -406,7 +406,8 @@ def plot_df(*, runname, title, col_i, col_j, col_data, heatmap_data, df_ranks, i
 
 def plot_df_all(
         runname, col_data, *,
-        fig, offset_fig, strategies, titles, titles_fig, df, are_bridges, slowness,
+        fig, offset_fig, strategies, titles, titles_fig, df,
+        are_bridges, label_are_bridges, slowness,
         is_full, is_baseline_only, is_comparison_only
 ):
     assert is_full + is_baseline_only + is_comparison_only == 1
@@ -415,6 +416,8 @@ def plot_df_all(
     col_i = 'i_map'
     col_j = 'position'
     is_the_more_the_better = COLUMN_TO_IS_THE_MORE_THE_BETTER[col_data]
+
+    title_fig = "" if is_comparison_only else f"{col_data}<br>(slowness: {slowness}; coordination strategies)"
 
     title_to_heatmap_data = {}
     for idx, strategy in enumerate(strategies):
@@ -425,7 +428,9 @@ def plot_df_all(
             col_data=col_data,
         )
         title_to_heatmap_data[strategy] = heatmap_data
-        yield strategy, heatmap_data
+        comment = '' if not title_fig else title_fig.replace('<br>', '\n').splitlines()[-1]
+        title_pair = label_are_bridges + (' ' + comment if comment else '') + ': ' + strategy
+        yield title_pair, heatmap_data
 
     if is_full or is_comparison_only:
         strategies_for_ranks = strategies[1:3]
@@ -477,7 +482,7 @@ def plot_df_all(
     # Update layout with shared color scale
 
     fig.update_layout(
-        title="" if is_comparison_only else f"{col_data}<br>(slowness: {slowness}; coordination strategies)",
+        title=title_fig,
         coloraxis1=dict(  # shared color axis
             colorscale="Greens" if is_the_more_the_better else "Reds",
             colorbar=dict(
@@ -533,8 +538,8 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
     list_pairs = []
 
     for are_bridges in False, True:
+        label_are_bridges = 'Maps with high connectivity' if are_bridges else 'Maps with low connectivity'
         if is_full:
-            label_are_bridges = 'Maps with high connectivity' if are_bridges else 'Maps with low connectivity'
             display(HTML(f'<h2>{label_are_bridges}</h2>'))
 
         slownesses = ['baseline']
@@ -575,6 +580,7 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
                 titles_fig=titles_fig,
                 df=dfx,
                 are_bridges=are_bridges,
+                label_are_bridges=label_are_bridges,
                 slowness=slowness,
                 is_full=is_full,
                 is_baseline_only=is_baseline_only,
@@ -607,6 +613,9 @@ def show_correlation(col1, col2, arr1, arr2):
 
     # Convert results to DataFrame
     df = pd.DataFrame(results)
+    df['Correlation'] = df['Correlation'].map(lambda x: f'{x:.3f}')
+    df['P-Value'] = df['P-Value'].map(lambda x: f'{x:.1e}')
+    display(df)
 
     # Plot scatter plot with linear trendline (for Pearson correlation)
     plt.figure(figsize=(8, 6))
@@ -635,30 +644,58 @@ def show_correlations(col1, col2, pairs1, pairs2):
     display(HTML('<hr/>'))
 
 
+def filter_pairs(pairs, titles):
+    return [p for p in pairs if p[0] in titles]
+
+
 def main():
-    pairs_csd_scores = plot_csd_scores('20241230_173555')
+    runname = '20241230_173555'
+    
+    pairs_csd_scores = plot_csd_scores(runname)
 
     pairs_missions_baseline = (
-        plot_runname('20241230_173555', 'No. of completed missions', is_baseline_only=True)
+        plot_runname(runname, 'No. of completed missions', is_baseline_only=True)
     )
     show_correlations('CSD scores', 'No. of completed missions',
                       pairs_csd_scores, pairs_missions_baseline)
-    plot_runname('20241230_173555', 'No. of completed missions')
+    pairs_missions_all = plot_runname(runname, 'No. of completed missions')
+    # print(*[t for t, _ in pairs_missions_all], sep='\n')
 
-    plot_runname('20241230_173555', 'Collisions rate', is_comparison_only=True)
-    plot_runname('20241230_173555', 'Collisions rate')
+    pairs_missions_without_rerouting = filter_pairs(
+        pairs_missions_all,
+        [f'Maps with {x} connectivity (slowness: without rerouting; coordination strategies): baseline'
+         for x in ('low', 'high')]
+    )
+    show_correlations('CSD scores', 'No. of completed missions',
+                      pairs_csd_scores, pairs_missions_without_rerouting)
 
-    plot_runname('20241230_173555', 'No. of completed missions', is_comparison_only=True, is_blocked_to_na=True)
-    plot_runname('20241230_173555', 'No. of completed missions', is_comparison_only=True)
+    plot_runname(runname, 'Collisions rate', is_comparison_only=True)
+    pairs_collisions_rate_all = plot_runname(runname, 'Collisions rate')
+    # print(*[t for t, _ in pairs_collisions_rate_all], sep='\n')
 
-    plot_runname('20241230_173555', 'No. of collisions', is_comparison_only=True)
-    #plot_runname('20241230_173555', 'No. of completed missions', is_baseline_only=True)
+    titles_change_of_priorities = [
+        f'Maps with {x} connectivity (slowness: baseline; coordination strategies): change of priorities'
+         for x in ('low', 'high')
+    ]
+    pairs_collisions_rate_for_corr = filter_pairs(pairs_collisions_rate_all, titles_change_of_priorities)
+    show_correlations('CSD scores', 'Collisions rate', pairs_csd_scores, pairs_collisions_rate_for_corr)
 
-    plot_runname('20241230_173555', 'No. of completed missions', is_blocked_to_na=True)
-    plot_runname('20241230_173555', 'No. of completed missions')
+    plot_runname(runname, 'No. of completed missions', is_comparison_only=True, is_blocked_to_na=True)
+    plot_runname(runname, 'No. of completed missions', is_comparison_only=True)
 
-    plot_runname('20241230_173555', 'No. of collisions')
-    plot_runname('20241230_173555', 'No. of near-misses')
+    pairs_collisions_all = plot_runname(runname, 'No. of collisions')
+    print(*[t for t, _ in pairs_collisions_all], sep='\n')
+    pairs_collisions_for_corr = filter_pairs(pairs_collisions_all, titles_change_of_priorities)
+    show_correlations('CSD scores', 'No. of collisions', pairs_csd_scores, pairs_collisions_for_corr)
+
+    plot_runname(runname, 'No. of collisions', is_comparison_only=True)
+
+    #plot_runname(runname, 'No. of completed missions', is_baseline_only=True)
+
+    plot_runname(runname, 'No. of completed missions', is_blocked_to_na=True)
+    plot_runname(runname, 'No. of completed missions')
+
+    plot_runname(runname, 'No. of near-misses')
 
 
 if __name__ == '__main__':
