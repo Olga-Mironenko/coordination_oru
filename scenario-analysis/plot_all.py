@@ -1,11 +1,15 @@
 import pickle
 import textwrap
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import plotly.io as pio
 import plotly.express as px
 from plotly.subplots import make_subplots
 from IPython.display import display, HTML
+
+from scipy.stats import pearsonr, spearmanr, kendalltau
 
 RUNDIRS = '../logs/rundirs'
 
@@ -183,7 +187,7 @@ def plot_csd_scores(runname):
     col_j = 'position'
     col_data = 'CSD score (AVs)'
 
-    display(HTML(f'<h1>CSD scores</h2>'))
+    display(HTML(f'<h1>CSD scores</h1>'))
     key2df = get_key2df(runname)
 
     list_are_bridges = [False, True]
@@ -192,9 +196,13 @@ def plot_csd_scores(runname):
     # Create subplots
     fig = make_subplots_row(titles, horizontal_spacing=0.14)
 
+    list_pairs = []
+
     for idx, are_bridges in enumerate(list_are_bridges):
         df = key2df[are_bridges, 'conf']
         heatmap_data = calculate_heatmap_data(df=df, col_i=col_i, col_j=col_j, col_data=col_data)
+
+        list_pairs.append((titles[idx], heatmap_data))
 
         # Determine primary label (L for low connectivity, H for high connectivity)
         primary_label = 'L' if not are_bridges else 'H'
@@ -307,8 +315,9 @@ def plot_csd_scores(runname):
 
     display(HTML('<hr/>'))
 
+    return list_pairs
 
-plot_csd_scores('20241230_173555')
+
 COLUMN_TO_IS_THE_MORE_THE_BETTER = {
     'No. of completed missions': True,
     'No. of collisions': False,
@@ -416,6 +425,7 @@ def plot_df_all(
             col_data=col_data,
         )
         title_to_heatmap_data[strategy] = heatmap_data
+        yield strategy, heatmap_data
 
     if is_full or is_comparison_only:
         strategies_for_ranks = strategies[1:3]
@@ -502,7 +512,7 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
     is_full = not (is_baseline_only or is_comparison_only)
     assert is_full + is_baseline_only + is_comparison_only == 1
 
-    display(HTML(f'<h1>{column}</h2>'))
+    display(HTML(f'<h1>{column}</h1>'))
 
     if is_baseline_only:
         strategies = titles = ['baseline']
@@ -519,6 +529,8 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
         ]
         fig = make_subplots_row(titles_fig)
         offset_fig = 0
+
+    list_pairs = []
 
     for are_bridges in False, True:
         if is_full:
@@ -553,7 +565,7 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
                     fig = make_subplots_row(titles)
                     offset_fig = 0
 
-            plot_df_all(
+            list_pairs += plot_df_all(
                 runname,
                 column,
                 fig=fig,
@@ -578,9 +590,59 @@ def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=
 
     display(HTML('<hr/>'))
 
+    return list_pairs
+
+
+def show_correlation(col1, col2, arr1, arr2):
+    # Calculate correlations and p-values
+    results = []
+    name2function = {
+        'Pearson': pearsonr,
+        'Spearman': spearmanr,
+        'Kendall': kendalltau,
+    }
+    for name, func in name2function.items():
+        corr, pval = func(arr1, arr2)
+        results.append({"Method": name, "Correlation": corr, "P-Value": pval})
+
+    # Convert results to DataFrame
+    df = pd.DataFrame(results)
+
+    # Plot scatter plot with linear trendline (for Pearson correlation)
+    plt.figure(figsize=(8, 6))
+    plt.scatter(arr1, arr2, alpha=0.7, edgecolor='k', label='Data points')
+    coeffs = np.polyfit(arr1, arr2, 1)
+    trendline = np.poly1d(coeffs)
+    plt.plot(arr1, trendline(arr1), color='red', linestyle='--', label='Linear Trendline')
+
+    # Customize plot
+    # plt.title('Scatter Plot with Linear Trendline')
+    plt.xlabel(col1)
+    plt.ylabel(col2)
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.show()
+
+
+def show_correlations(col1, col2, pairs1, pairs2):
+    display(HTML(f'<h1>{col1} vs. {col2}</h1>'))
+
+    for i, ((title1, m1), (title2, m2)) in enumerate(zip(pairs1, pairs2, strict=True), 1):
+        title = title1 if title1 == title2 else f'{title1} ({title2})'
+        display(HTML(f'<h2>{title}</h2>'))
+        show_correlation(col1, col2, *(m.to_numpy().flatten() for m in (m1, m2)))
+
+    display(HTML('<hr/>'))
+
 
 def main():
-    plot_runname('20241230_173555', 'No. of completed missions', is_baseline_only=True)
+    pairs_csd_scores = plot_csd_scores('20241230_173555')
+
+    pairs_missions_baseline = (
+        plot_runname('20241230_173555', 'No. of completed missions', is_baseline_only=True)
+    )
+    show_correlations('CSD scores', 'No. of completed missions',
+                      pairs_csd_scores, pairs_missions_baseline)
     plot_runname('20241230_173555', 'No. of completed missions')
 
     plot_runname('20241230_173555', 'Collisions rate', is_comparison_only=True)
@@ -590,7 +652,7 @@ def main():
     plot_runname('20241230_173555', 'No. of completed missions', is_comparison_only=True)
 
     plot_runname('20241230_173555', 'No. of collisions', is_comparison_only=True)
-    plot_runname('20241230_173555', 'No. of completed missions', is_baseline_only=True)
+    #plot_runname('20241230_173555', 'No. of completed missions', is_baseline_only=True)
 
     plot_runname('20241230_173555', 'No. of completed missions', is_blocked_to_na=True)
     plot_runname('20241230_173555', 'No. of completed missions')

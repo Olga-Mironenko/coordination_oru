@@ -1,8 +1,9 @@
 autogluon
-IPython
-matplotlib
+IPython~=8.27.0
+matplotlib~=3.7.5
 numpy
-pandas
+pandas~=2.2.3
 papermill
-plotly
+plotly~=5.24.1
 scikit-learn
+scipy~=1.14.1
