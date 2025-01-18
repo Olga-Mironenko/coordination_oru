@@ -62,7 +62,12 @@ def add_ticks(*, fig, offset_fig, col_i, col_j, heatmap_data, row2label=str, idx
 
     fig.update_layout(**{
         xaxis_key: dict(
-            title=col_j,
+            title=dict(
+                text=col_j,
+                font=dict(
+                    size=18,
+                ),
+            ),
             tickmode="array",
             tickvals=list(heatmap_data.columns),
             ticktext=[f'{x}' for x in heatmap_data.columns],
@@ -72,10 +77,18 @@ def add_ticks(*, fig, offset_fig, col_i, col_j, heatmap_data, row2label=str, idx
             # margin=MARGIN,
         ),
         yaxis_key: dict(
-            title=yaxis_title,
+            title=dict(
+                text=yaxis_title,
+                font=dict(
+                    size=18,
+                ),
+            ),
             tickmode="array",
             tickvals=list(heatmap_data.index),
-            ticktext=[row2label(y) for y in heatmap_data.columns],
+            ticktext=[row2label(y) + '&nbsp;'
+                      if not secondary_y
+                      else '&nbsp;' + row2label(y)
+                      for y in heatmap_data.columns],
             autorange="reversed",  # Reverse the y-axis for top-to-bottom ticks
             title_standoff=standoff_value,  # Move y-axis title closer
             automargin=False,
@@ -146,7 +159,7 @@ def plot_df_csd(*, title, col_i, col_j, col_data, heatmap_data):
     return fig
 
 
-def make_subplots_row(titles, *, horizontal_spacing=0.05):
+def make_subplots_row(titles):
     if len(titles) == 2:
         horizontal_spacing = 0.25 / len(titles)
         width = 500 * len(titles)  # Adjust based on the number of subplots
@@ -167,7 +180,7 @@ def make_subplots_row(titles, *, horizontal_spacing=0.05):
     fig = make_subplots(
         rows=1,
         cols=len(titles),
-        subplot_titles=titles,
+        subplot_titles=[t.capitalize() for t in titles],
         specs=[[{'secondary_y': True}] * len(titles)],
         horizontal_spacing=horizontal_spacing,  # Adjust spacing between subplots
     )
@@ -178,6 +191,12 @@ def make_subplots_row(titles, *, horizontal_spacing=0.05):
         width=width,
         height=height,
     )
+
+    for annotation in fig['layout']['annotations']:
+        annotation['y'] += 0.03  # Move titles higher by increasing y-coordinate
+        annotation['font'] = {
+            'size': 20,  # Adjust font size
+        }
 
     return fig
 
@@ -194,7 +213,7 @@ def plot_csd_scores(runname):
     titles = ['Maps with low connectivity', 'Maps with high connectivity']
 
     # Create subplots
-    fig = make_subplots_row(titles, horizontal_spacing=0.14)
+    fig = make_subplots_row(titles)
 
     list_pairs = []
 
@@ -280,7 +299,7 @@ def plot_csd_scores(runname):
             fig.add_trace(trace, row=1, col=idx + 1, secondary_y=False)
             fig.add_trace(trace, row=1, col=idx + 1, secondary_y=True)
 
-            # Add ticks for the subplot
+        # Add ticks for the subplot
         add_all_ticks(fig=fig, offset_fig=0, col_i='map ID', col_j='positions configuration', heatmap_data=heatmap_data,
                       idx=idx, are_bridges=are_bridges)
 
@@ -389,7 +408,7 @@ def plot_df(*, runname, title, col_i, col_j, col_data, heatmap_data, df_ranks, i
     fig = px.imshow(
         heatmap_data,
         labels={"x": col_j, "y": col_i, "color": col_data},
-        title=f"{runname}: {title}: {col_data}",
+        title=f"{runname}: {title}: {col_data}".capitalize(),  # TODO: not used (only `titles` in `make_subplots_row` are used)
         # text_auto=True,
     )
 
@@ -482,11 +501,17 @@ def plot_df_all(
     # Update layout with shared color scale
 
     fig.update_layout(
-        title=title_fig,
+        title=dict(
+            text=title_fig + '<br>',
+            y=0.96,
+            font=dict(
+                size=20,
+            )
+        ),
         coloraxis1=dict(  # shared color axis
             colorscale="Greens" if is_the_more_the_better else "Reds",
             colorbar=dict(
-                title="<br>".join(textwrap.wrap(col_data, 10)),
+                title="<br>".join(textwrap.wrap(col_data, 10)) + "<br>&nbsp;",
                 titlefont=dict(size=14),
                 x=-0.25 / len(titles_fig),
                 titleside="top",
@@ -626,8 +651,8 @@ def show_correlation(col1, col2, arr1, arr2):
 
     # Customize plot
     # plt.title('Scatter Plot with Linear Trendline')
-    plt.xlabel(col1)
-    plt.ylabel(col2)
+    plt.xlabel(col1, fontsize=16)
+    plt.ylabel(col2, fontsize=16)
     plt.legend()
     plt.grid(alpha=0.3)
     plt.show()
@@ -645,7 +670,8 @@ def show_correlations(col1, col2, pairs1, pairs2):
 
 
 def filter_pairs(pairs, titles):
-    return [p for p in pairs if p[0] in titles]
+    titles_lower = [t.lower() for t in titles]
+    return [p for p in pairs if p[0].lower() in titles_lower]
 
 
 def main():
@@ -656,7 +682,7 @@ def main():
     pairs_missions_baseline = (
         plot_runname(runname, 'No. of completed missions', is_baseline_only=True)
     )
-    show_correlations('CSD scores', 'No. of completed missions',
+    show_correlations('POD scores', 'No. of completed missions',
                       pairs_csd_scores, pairs_missions_baseline)
     pairs_missions_all = plot_runname(runname, 'No. of completed missions')
     # print(*[t for t, _ in pairs_missions_all], sep='\n')
@@ -666,7 +692,7 @@ def main():
         [f'Maps with {x} connectivity (slowness: without rerouting; coordination strategies): baseline'
          for x in ('low', 'high')]
     )
-    show_correlations('CSD scores', 'No. of completed missions',
+    show_correlations('POD scores', 'No. of completed missions',
                       pairs_csd_scores, pairs_missions_without_rerouting)
 
     plot_runname(runname, 'Collisions rate', is_comparison_only=True)
@@ -678,7 +704,7 @@ def main():
          for x in ('low', 'high')
     ]
     pairs_collisions_rate_for_corr = filter_pairs(pairs_collisions_rate_all, titles_change_of_priorities)
-    show_correlations('CSD scores', 'Collisions rate', pairs_csd_scores, pairs_collisions_rate_for_corr)
+    show_correlations('POD scores', 'Collisions rate', pairs_csd_scores, pairs_collisions_rate_for_corr)
 
     plot_runname(runname, 'No. of completed missions', is_comparison_only=True, is_blocked_to_na=True)
     plot_runname(runname, 'No. of completed missions', is_comparison_only=True)
@@ -686,7 +712,7 @@ def main():
     pairs_collisions_all = plot_runname(runname, 'No. of collisions')
     print(*[t for t, _ in pairs_collisions_all], sep='\n')
     pairs_collisions_for_corr = filter_pairs(pairs_collisions_all, titles_change_of_priorities)
-    show_correlations('CSD scores', 'No. of collisions', pairs_csd_scores, pairs_collisions_for_corr)
+    show_correlations('POD scores', 'No. of collisions', pairs_csd_scores, pairs_collisions_for_corr)
 
     plot_runname(runname, 'No. of collisions', is_comparison_only=True)
 
