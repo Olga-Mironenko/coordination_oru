@@ -658,6 +658,16 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		}
 	}
 
+	private boolean areAllCriticalSectionsWithForcing(int robotID, Set<CriticalSection> criticalSections) {
+		for (CriticalSection cs : criticalSections) {
+			int otherID = cs.getOtherRobotID(robotID);
+			if (cs.getWeight(otherID) != CriticalSection.Weight.WEIGHT_FORCING) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public synchronized void setCriticalPoint(int criticalPointToSet) {
 		metaCSPLogger.finest("setCriticalPoint: (" + te.getComponent() + "): " + criticalPointToSet);
 		int robotID = te.getRobotID();
@@ -695,6 +705,12 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 //		}
 
 		rerouteAtSlowIfNeeded(criticalPointToSet, criticalSections);
+
+		if (Forcing.isForcingToBeIgnored) {
+			if (! criticalSections.isEmpty() && areAllCriticalSectionsWithForcing(robotID, criticalSections)) {
+				return;
+			}
+		}
 
 		RobotReport rr = getRobotReport();
 		if (isFreezingCP || ! isRacingThroughCrossroadAllowed || criticalPointToSet >= rr.getPathIndex()) {

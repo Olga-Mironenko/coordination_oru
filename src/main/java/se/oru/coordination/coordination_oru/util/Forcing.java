@@ -50,6 +50,7 @@ public class Forcing {
     // - If `isResetAfterCurrentCrossroad` is true, then forcing finishes automatically when its priority and stop
     //   effects end. If the flag is false, then it's needed to finish forcing manually.
     public static boolean isResetAfterCurrentCrossroad = true;
+    public static boolean isForcingToBeIgnored = false;
 
     private final static int maxNumberOfHumans = 1;
 

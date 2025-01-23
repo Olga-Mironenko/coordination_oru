@@ -96,6 +96,7 @@ public abstract class Demo {
             /// - Change of priorities:
             Forcing.priorityDistance = 50.0;
             Forcing.isDistanceToCPAddedToPriorityDistance = true;
+            Forcing.isForcingToBeIgnored = false;
             /// - Stops:
             Forcing.stopDistance = 50.0;
             Forcing.isDistanceToCPAddedToStopDistance = true;
