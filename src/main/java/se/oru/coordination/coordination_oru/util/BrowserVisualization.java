@@ -893,7 +893,7 @@ public class BrowserVisualization implements FleetVisualization {
 	protected static StringBuilder stringifyCriticalSections(HashSet<CriticalSection> allCriticalSections, Integer robotID) {
 		ArrayList<CriticalSection> criticalSections =
 				robotID == null
-				? CriticalSection.sortCriticalSections(allCriticalSections)
+				? CriticalSection.sortCriticalSections(allCriticalSections, null)
 				: CriticalSection.sortCriticalSectionsForRobotID(allCriticalSections, robotID);
 
 		StringBuilder text = new StringBuilder("Critical sections" + (robotID == null ? "" : " for " + robotID) + ":");

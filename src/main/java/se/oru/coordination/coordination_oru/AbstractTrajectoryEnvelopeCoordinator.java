@@ -32,6 +32,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 
 import aima.core.util.datastructure.Pair;
+import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.FleetVisualization;
@@ -157,6 +158,8 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 	//State knowledge
 	protected HashMap<Integer,Boolean> isDriving = new HashMap<Integer, Boolean>();
+
+	public static boolean isHumanIgnored = false;
 
 	/**
 	 * Get the envelopes representing robots that are not idle.

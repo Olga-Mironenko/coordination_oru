@@ -2,6 +2,7 @@ package se.oru.coordination.coordination_oru.tests;
 
 import com.google.gson.JsonArray;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
+import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
 import se.oru.coordination.coordination_oru.code.*;
@@ -41,9 +42,13 @@ public class GeneratedMapTest {
 
     protected static void runDemo(String scenarioString) {
         HumanControl.isEnabledForBrowser = true;
-//        Timekeeper.setVirtualSecondsPassedMax(2);
-        Timekeeper.setVirtualMinutesPassedMax(30);
-//        Timekeeper.setVirtualMinutesPassedMax(1);
+        if (Containerization.IS_CONTAINER) {
+            Timekeeper.setVirtualMinutesPassedMax(30);
+        } else {
+//            Timekeeper.setVirtualMinutesPassedMax(30);
+//            Timekeeper.setVirtualSecondsPassedMax(2);
+            Timekeeper.setVirtualMinutesPassedMax(2);
+        }
 
         Heuristics heuristics = new Heuristics();
 //        Comparator<RobotAtCriticalSection> comparator = heuristics.humanFirst();
@@ -57,7 +62,8 @@ public class GeneratedMapTest {
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-1.json, passhum 1, slowness with rerouting, forcing change of priorities"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-4.json, baseline, seed 1, probabilityForcingForHuman 0"
 //                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario1-5.json, passhum 0, slowness no, forcing no"
-                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness without rerouting, forcing change of priorities"
+                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness without rerouting, forcing ignoring human"
+//                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness without rerouting, forcing change of priorities"
             );
         }
         AbstractVehicle.scenarioId = scenarioString;
@@ -95,19 +101,20 @@ public class GeneratedMapTest {
         switch (getSuffix(scenarioTokens[3], "forcing ")) {
             case "no":
                 break;
+
+            case "ignoring human":
+                AbstractTrajectoryEnvelopeCoordinator.isHumanIgnored = true;
+                // and "change of priorities"
             case "change of priorities":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
-
-//                Forcing.priorityDistance = 0.0; // TODO
-//                Forcing.isDistanceToCPAddedToPriorityDistance = false;
-
-                Forcing.isForcingToBeIgnored = true;
                 Forcing.stopDistance = Double.NEGATIVE_INFINITY;
                 break;
+
             case "stops":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
                 Forcing.stopDistance = Forcing.priorityDistance;
                 break;
+
             default:
                 throw new IllegalArgumentException();
         }

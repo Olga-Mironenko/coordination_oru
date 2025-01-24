@@ -404,7 +404,8 @@ public class CriticalSection {
 		return te1HigherWeight == Weight.WEIGHT_FORCING || te2HigherWeight == Weight.WEIGHT_FORCING;
 	}
 
-	public static ArrayList<CriticalSection> sortCriticalSections(Collection<CriticalSection> criticalSectionsUnsorted) {
+	public static ArrayList<CriticalSection> sortCriticalSections(Collection<CriticalSection> criticalSectionsUnsorted,
+																  Integer robotID) {
 		ArrayList<CriticalSection> criticalSections = new ArrayList<>(criticalSectionsUnsorted);
 		criticalSections.sort(new Comparator<>() {
 			@Override
@@ -420,6 +421,13 @@ public class CriticalSection {
 			}
 
 			private int[] csToInts(CriticalSection cs) {
+				if (robotID != null) {
+					return new int[] {
+							cs.getStart(robotID),
+							cs.getEnd(robotID),
+					};
+				}
+
 				return new int[] {
 						cs.getTe1() == null ? -1 : cs.getTe1().getRobotID(),
 						cs.getTe2() == null ? -1 : cs.getTe2().getRobotID(),

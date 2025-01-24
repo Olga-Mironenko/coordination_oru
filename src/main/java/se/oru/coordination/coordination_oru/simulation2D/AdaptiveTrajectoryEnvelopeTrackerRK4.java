@@ -856,10 +856,17 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	private ArrayList<CriticalSection> getCriticalSectionsOfInferior() {
+		if (AbstractTrajectoryEnvelopeCoordinator.isHumanIgnored) {
+			return CriticalSection.sortCriticalSections(
+					getCriticalSectionsForRobot(null),
+					te.getRobotID()
+			);
+		}
+
 		if (criticalPoint == -1) {
 			return null;
 		}
-		return CriticalSection.sortCriticalSections(getCriticalSectionsForRobot(criticalPoint));
+		return CriticalSection.sortCriticalSections(getCriticalSectionsForRobot(criticalPoint), te.getRobotID());
 	}
 
 	private CriticalSection getFirstOfCriticalSectionsOfInferior() {

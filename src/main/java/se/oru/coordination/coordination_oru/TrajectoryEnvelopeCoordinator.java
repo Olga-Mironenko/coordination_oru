@@ -1947,6 +1947,17 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 			HashSet<CriticalSection> toRemove = new HashSet<CriticalSection>();
 			for (CriticalSection cs : this.allCriticalSections) {
+				if (AbstractTrajectoryEnvelopeCoordinator.isHumanIgnored) {
+					Integer id1 = cs.getTe1RobotID();
+					Integer id2 = cs.getTe2RobotID();
+
+					boolean isHuman1 = VehiclesHashMap.isHuman(id1);
+					boolean isHuman2 = VehiclesHashMap.isHuman(id2);
+
+					if (isHuman1 || isHuman2) {
+						continue;
+					}
+				}
 
 				//Will be assigned depending on current situation of robot reports...
 				int waitingPoint = -1;

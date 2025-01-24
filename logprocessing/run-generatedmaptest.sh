@@ -29,13 +29,13 @@ positions=({1..10})
 #  '2024-11-22_11:27:17_without_bridges'
 #)
 dirs_maps=(  # 3 robots
-  '2024-11-28_13:17:39_with_bridges'
   '2024-11-28_13:19:18_without_bridges'
+  '2024-11-28_13:17:39_with_bridges'
 )
 
 passhums=(
   0
-  1
+#  1
 )
 
 slownesses=(
@@ -48,6 +48,7 @@ forcings=(
   "no"
   "change of priorities"
   "stops"
+  "ignoring human"
 )
 
 # Use variables
@@ -58,20 +59,33 @@ for i_map in "${indexes_maps[@]}"; do
       filename_simple=map-generator/generated-maps/$dir_maps/scenario$i_map-$position.json
       filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
 
-      for slowness in "${slownesses[@]}"; do
-        for passhum in "${passhums[@]}"; do
-          for forcing in "${forcings[@]}"; do
-            scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
-            scenarios+=("$scenario")
-          done
-        done
-      done
+#      for slowness in "${slownesses[@]}"; do
+#        for passhum in "${passhums[@]}"; do
+#          for forcing in "${forcings[@]}"; do
+#            scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
+#            scenarios+=("$scenario")
+#          done
+#        done
+#      done
+
+      passhum=0
+
+      forcing="ignoring human"
+      slowness="no"
+      scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
+      scenarios+=("$scenario")
+
+      forcing="ignoring human"
+      slowness="without rerouting"
+      scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
+      scenarios+=("$scenario")
     done
   done
 done
 
 echo "Scenarios:"
 printf -- "- %s\n" "${scenarios[@]}"
+#exit
 
 trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT TERM
 

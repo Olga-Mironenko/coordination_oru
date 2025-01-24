@@ -1,5 +1,6 @@
 package se.oru.coordination.coordination_oru.tests.util;
 
+import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
@@ -96,12 +97,13 @@ public abstract class Demo {
             /// - Change of priorities:
             Forcing.priorityDistance = 50.0;
             Forcing.isDistanceToCPAddedToPriorityDistance = true;
-            Forcing.isForcingToBeIgnored = false;
             /// - Stops:
             Forcing.stopDistance = 50.0;
             Forcing.isDistanceToCPAddedToStopDistance = true;
             Forcing.isGlobalTemporaryStop = false; // true for Global, false for Local
             Forcing.isResetAfterCurrentCrossroad = true;
+            /// - Baseline "Ignoring Human":
+            AbstractTrajectoryEnvelopeCoordinator.isHumanIgnored = false;
         }
 
         BrowserVisualization.isStatusText = true;
