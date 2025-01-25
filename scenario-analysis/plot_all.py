@@ -180,7 +180,7 @@ def make_subplots_row(titles):
     fig = make_subplots(
         rows=1,
         cols=len(titles),
-        subplot_titles=[t.capitalize() for t in titles],
+        subplot_titles=[t.capitalize().replace(' mv ', ' MV ') for t in titles],
         specs=[[{'secondary_y': True}] * len(titles)],
         horizontal_spacing=horizontal_spacing,  # Adjust spacing between subplots
     )
@@ -206,7 +206,7 @@ def plot_csd_scores(runname):
     col_j = 'position'
     col_data = 'CSD score (AVs)'
 
-    display(HTML(f'<h1>CSD scores</h1>'))
+    display(HTML(f'<h1>POD scores</h1>'))
     key2df = get_key2df(runname)
 
     list_are_bridges = [False, True]
@@ -538,11 +538,13 @@ def make_comparison_title(are_bridges, slowness):
     return f'{TITLE_CMP}<br>Maps with {"high" if are_bridges else "low"} connectivity<br>{comment}'
 
 
-def plot_runname(runname, column, *, is_baseline_only=False, is_comparison_only=False, is_blocked_to_na=False):
+def plot_runname(runname, column, *, title=None, is_baseline_only=False, is_comparison_only=False, is_blocked_to_na=False):
     is_full = not (is_baseline_only or is_comparison_only)
     assert is_full + is_baseline_only + is_comparison_only == 1
 
-    display(HTML(f'<h1>{column}</h1>'))
+    if title is None:
+        title = column
+    display(HTML(f'<h1>{title}</h1>'))
 
     if is_baseline_only:
         strategies = titles = ['baseline']
@@ -647,7 +649,7 @@ def show_correlation(col1, col2, arr1, arr2):
     plt.scatter(arr1, arr2, alpha=0.7, edgecolor='k', label='Data points')
     coeffs = np.polyfit(arr1, arr2, 1)
     trendline = np.poly1d(coeffs)
-    plt.plot(arr1, trendline(arr1), color='red', linestyle='--', label='Linear Trendline')
+    plt.plot(arr1, trendline(arr1), color='red', linestyle='--', label='Linear trendline')
 
     # Customize plot
     # plt.title('Scatter Plot with Linear Trendline')
@@ -674,9 +676,54 @@ def filter_pairs(pairs, titles):
     return [p for p in pairs if p[0].lower() in titles_lower]
 
 
-def main():
+def new():
     runname = '20241230_173555'
-    
+
+    pairs_csd_scores = plot_csd_scores(runname)
+
+    display(HTML(f'<h1><b><u>Baselines analysis</u></b></h1>'))
+    for is_blocked_to_na in False, True:
+        display(HTML(f'<h1><b>{is_blocked_to_na=}</b></h1>'))
+
+        for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collisions rate':
+            # for prime in 1, 2, 3:
+            #     # TODO: {col}, baseline prime {prime}, low/high, is_blocked_to_na=is_blocked_to_na
+            #     pairs_missions_baseline = (
+            #         plot_runname(runname, col, prime=prime, is_baseline_only=True)
+            #     )
+            pairs_missions_baseline = (
+                plot_runname(runname, col,
+                             title=f'{col} ({is_blocked_to_na=})',
+                             is_baseline_only=True, is_blocked_to_na=is_blocked_to_na)
+            )
+
+            if col not in ('No. of collisions', 'No. of near-misses'):
+                show_correlations('POD scores', col,
+                                  pairs_csd_scores, pairs_missions_baseline)  # low, high
+
+        display(HTML('<hr/>'))
+
+    display(HTML(f'<h1><b><u>Analysis for all</u></b></h1>'))
+    for is_blocked_to_na in False, True:
+        for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collisions rate':
+            pairs_missions_all = plot_runname(runname, col)
+            # TODO: add `is_blocked_to_na` to the title
+            # TODO: slowness=baseline: Baseline prime 1
+            # TODO: slowness=without: Baseline prime 2
+            # TODO: slowness=with: Baseline prime 3
+            # heatmaps (total): (2 for low + 3 for high) * 3 rows = 15
+
+            # plot_runname(runname, col, is_comparison_only=True)
+            #
+            # if col not in ('No. of collisions', 'No. of near-misses'):
+            #     # for each of the 15 heatmaps:
+            #     #     show_correlations('POD scores', heatmap)
+            #     ...
+
+
+def old():
+    runname = '20241230_173555'
+
     pairs_csd_scores = plot_csd_scores(runname)
 
     pairs_missions_baseline = (
@@ -707,21 +754,22 @@ def main():
     show_correlations('POD scores', 'Collisions rate', pairs_csd_scores, pairs_collisions_rate_for_corr)
 
     plot_runname(runname, 'No. of completed missions', is_comparison_only=True, is_blocked_to_na=True)
-    plot_runname(runname, 'No. of completed missions', is_comparison_only=True)
 
     pairs_collisions_all = plot_runname(runname, 'No. of collisions')
     print(*[t for t, _ in pairs_collisions_all], sep='\n')
     pairs_collisions_for_corr = filter_pairs(pairs_collisions_all, titles_change_of_priorities)
-    show_correlations('POD scores', 'No. of collisions', pairs_csd_scores, pairs_collisions_for_corr)
+    show_correlations('POD scores', 'No. of collisions',
+                      pairs_csd_scores, pairs_collisions_for_corr)
 
     plot_runname(runname, 'No. of collisions', is_comparison_only=True)
+    plot_runname(runname, 'No. of near-misses')
 
     #plot_runname(runname, 'No. of completed missions', is_baseline_only=True)
 
-    plot_runname(runname, 'No. of completed missions', is_blocked_to_na=True)
-    plot_runname(runname, 'No. of completed missions')
 
-    plot_runname(runname, 'No. of near-misses')
+def main():
+    # old()
+    new()
 
 
 if __name__ == '__main__':
