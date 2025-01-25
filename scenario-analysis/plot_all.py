@@ -1,3 +1,4 @@
+import os
 import pickle
 import textwrap
 
@@ -26,14 +27,18 @@ def get_key2df(runname):
     # Note: "When a module is reloaded, its dictionary (containing the module’s global variables) is retained."
     # (https://docs.python.org/3/library/importlib.html#importlib.reload).
 
-    if runname not in CACHE_KEY2DF:
-        rundir = f'{RUNDIRS}/{runname}'
-        with open(f'{rundir}/key2df.pickle', 'rb') as file:
+    rundir = f'{RUNDIRS}/{runname}'
+    filename = f'{rundir}/key2df.pickle'
+    mtime = os.path.getmtime(filename)
+
+    pair = CACHE_KEY2DF.get(runname)
+    if pair is None or pair[0] != mtime:
+        with open(filename, 'rb') as file:
             key2df = pickle.load(file)
 
-        CACHE_KEY2DF[runname] = key2df
+        CACHE_KEY2DF[runname] = mtime, key2df
 
-    return CACHE_KEY2DF[runname]
+    return CACHE_KEY2DF[runname][1]
 
 
 # MARGIN = dict(t=100, b=0, l=80, r=0)
@@ -679,46 +684,45 @@ def filter_pairs(pairs, titles):
 def new():
     runname = '20241230_173555'
 
-    pairs_csd_scores = plot_csd_scores(runname)
-
-    display(HTML(f'<h1><b><u>Baselines analysis</u></b></h1>'))
-    for is_blocked_to_na in False, True:
-        display(HTML(f'<h1><b>{is_blocked_to_na=}</b></h1>'))
-
-        for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collisions rate':
-            # for prime in 1, 2, 3:
-            #     # TODO: {col}, baseline prime {prime}, low/high, is_blocked_to_na=is_blocked_to_na
-            #     pairs_missions_baseline = (
-            #         plot_runname(runname, col, prime=prime, is_baseline_only=True)
-            #     )
-            pairs_missions_baseline = (
-                plot_runname(runname, col,
-                             title=f'{col} ({is_blocked_to_na=})',
-                             is_baseline_only=True, is_blocked_to_na=is_blocked_to_na)
-            )
-
-            if col not in ('No. of collisions', 'No. of near-misses'):
-                show_correlations('POD scores', col,
-                                  pairs_csd_scores, pairs_missions_baseline)  # low, high
-
-        display(HTML('<hr/>'))
+    # pairs_csd_scores = plot_csd_scores(runname)
+    #
+    # display(HTML(f'<h1><b><u>Baselines analysis</u></b></h1>'))
+    # # for is_blocked_to_na in False, True:
+    # #     display(HTML(f'<h1><b>{is_blocked_to_na=}</b></h1>'))
+    # is_blocked_to_na = False
+    # for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collisions rate':
+    #     # for prime in 1, 2, 3:
+    #     #     # TODO: {col}, baseline prime {prime}, low/high, is_blocked_to_na=is_blocked_to_na
+    #     #     pairs_missions_baseline = (
+    #     #         plot_runname(runname, col, prime=prime, is_baseline_only=True)
+    #     #     )
+    #     pairs_missions_baseline = (
+    #         plot_runname(runname, col,
+    #                      # title=f'{col} ({is_blocked_to_na=})',
+    #                      is_baseline_only=True, is_blocked_to_na=is_blocked_to_na)
+    #     )
+    #
+    #     if col not in ('No. of collisions', 'No. of near-misses'):
+    #         show_correlations('POD scores', col,
+    #                           pairs_csd_scores, pairs_missions_baseline)  # low, high
+    #
+    #     display(HTML('<hr/>'))
 
     display(HTML(f'<h1><b><u>Analysis for all</u></b></h1>'))
-    for is_blocked_to_na in False, True:
-        for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collisions rate':
-            pairs_missions_all = plot_runname(runname, col)
-            # TODO: add `is_blocked_to_na` to the title
-            # TODO: slowness=baseline: Baseline prime 1
-            # TODO: slowness=without: Baseline prime 2
-            # TODO: slowness=with: Baseline prime 3
-            # heatmaps (total): (2 for low + 3 for high) * 3 rows = 15
+    # for is_blocked_to_na in False, True:
+    for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collisions rate':
+        pairs_missions_all = plot_runname(runname, col)
+        # TODO: slowness=baseline: Baseline prime 1
+        # TODO: slowness=without: Baseline prime 2
+        # TODO: slowness=with: Baseline prime 3
+        # heatmaps (total): (2 for low + 3 for high) * 3 rows = 15
 
-            # plot_runname(runname, col, is_comparison_only=True)
-            #
-            # if col not in ('No. of collisions', 'No. of near-misses'):
-            #     # for each of the 15 heatmaps:
-            #     #     show_correlations('POD scores', heatmap)
-            #     ...
+        # plot_runname(runname, col, is_comparison_only=True)
+        #
+        # if col not in ('No. of collisions', 'No. of near-misses'):
+        #     # for each of the 15 heatmaps:
+        #     #     show_correlations('POD scores', heatmap)
+        #     ...
 
 
 def old():
