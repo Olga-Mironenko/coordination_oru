@@ -1,6 +1,7 @@
 import os
 import pickle
 import textwrap
+from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,6 +14,9 @@ from IPython.display import display, HTML
 from scipy.stats import pearsonr, spearmanr, kendalltau
 
 RUNDIRS = '../logs/rundirs'
+
+COL_I = 'i_map'
+COL_J = 'position'
 
 pio.templates.default = "plotly_dark"
 
@@ -207,8 +211,6 @@ def make_subplots_row(titles):
 
 
 def plot_csd_scores(runname):
-    col_i = 'i_map'
-    col_j = 'position'
     col_data = 'CSD score (AVs)'
 
     display(HTML(f'<h1>POD scores</h1>'))
@@ -224,7 +226,7 @@ def plot_csd_scores(runname):
 
     for idx, are_bridges in enumerate(list_are_bridges):
         df = key2df[are_bridges, 'conf']
-        heatmap_data = calculate_heatmap_data(df=df, col_i=col_i, col_j=col_j, col_data=col_data)
+        heatmap_data = calculate_heatmap_data(df=df, col_i=COL_I, col_j=COL_J, col_data=col_data)
 
         list_pairs.append((titles[idx], heatmap_data))
 
@@ -233,8 +235,8 @@ def plot_csd_scores(runname):
 
         heatmap_fig = plot_df_csd(
             title=f'{titles[idx]}',  # TODO: `subplot_titles`
-            col_i=col_i,
-            col_j=col_j,
+            col_i=COL_I,
+            col_j=COL_J,
             col_data=col_data,
             heatmap_data=heatmap_data,
         )
@@ -264,7 +266,7 @@ def plot_csd_scores(runname):
             ),  # Colorbar on the left
 
             xaxis=dict(
-                title=col_j,
+                title=COL_J,
                 tickmode="array",
                 tickvals=list(heatmap_data.columns),
                 ticktext=[f'{x}' for x in heatmap_data.columns],
@@ -273,7 +275,7 @@ def plot_csd_scores(runname):
                 # margin=MARGIN,
             ),
             yaxis=dict(
-                title=f'{col_i} ({primary_label})',
+                title=f'{COL_I} ({primary_label})',
                 tickmode="array",
                 tickvals=list(heatmap_data.index),
                 ticktext=[f'{y}{primary_label}' for y in heatmap_data.index],
@@ -408,7 +410,7 @@ def compare_ranked_dfs(df_a, df_b, label_a, label_b, *,
     return df_cmp, df_colors
 
 
-def plot_df(*, runname, title, col_i, col_j, col_data, heatmap_data, df_ranks, is_value_in_tooltip):
+def plot_df(*, runname='', title='', col_i, col_j, col_data, heatmap_data, df_ranks, is_value_in_tooltip):
     # Create an interactive heatmap
     fig = px.imshow(
         heatmap_data,
@@ -437,8 +439,6 @@ def plot_df_all(
     assert is_full + is_baseline_only + is_comparison_only == 1
 
     col_strategy = 'forcing'
-    col_i = 'i_map'
-    col_j = 'position'
     is_the_more_the_better = COLUMN_TO_IS_THE_MORE_THE_BETTER[col_data]
 
     title_fig = "" if is_comparison_only else f"{col_data}<br>(slowness: {slowness}; coordination strategies)"
@@ -447,8 +447,8 @@ def plot_df_all(
     for idx, strategy in enumerate(strategies):
         heatmap_data = calculate_heatmap_data(
             df=df[df[col_strategy] == strategy],
-            col_i=col_i,
-            col_j=col_j,
+            col_i=COL_I,
+            col_j=COL_J,
             col_data=col_data,
         )
         title_to_heatmap_data[strategy] = heatmap_data
@@ -482,8 +482,8 @@ def plot_df_all(
         heatmap_fig = plot_df(
             runname=runname,
             title=title,
-            col_i=col_i,
-            col_j=col_j,
+            col_i=COL_I,
+            col_j=COL_J,
             col_data=col_data,
             heatmap_data=heatmap_data,
             df_ranks=df_cmp if title == TITLE_CMP else None,
@@ -666,14 +666,14 @@ def show_correlation(col1, col2, arr1, arr2):
 
 
 def show_correlations(col1, col2, pairs1, pairs2):
-    display(HTML(f'<h1>{col1} vs. {col2}</h1>'))
+    display(HTML(f'<h2>{col1} vs. {col2}</h2>'))
 
     for i, ((title1, m1), (title2, m2)) in enumerate(zip(pairs1, pairs2, strict=True), 1):
         title = title1 if title1 == title2 else f'{title1} ({title2})'
-        display(HTML(f'<h2>{title}</h2>'))
+        display(HTML(f'<h3>{title}</h3>'))
         show_correlation(col1, col2, *(m.to_numpy().flatten() for m in (m1, m2)))
 
-    display(HTML('<hr/>'))
+    # display(HTML('<hr/>'))
 
 
 def filter_pairs(pairs, titles):
@@ -681,9 +681,228 @@ def filter_pairs(pairs, titles):
     return [p for p in pairs if p[0].lower() in titles_lower]
 
 
-def new():
-    runname = '20241230_173555'
+@dataclass
+class RuleViolationSection:
+    runname: str
+    pairs_csd_scores: list[tuple[str, pd.DataFrame]]
+    connectivity: str
+    col_data: str
 
+    title: str
+    title2paramdict: dict[str, dict[str, str]]
+    is_comparison: bool = True
+
+    def are_bridges(self):
+        assert self.connectivity in ('low', 'high')
+        return self.connectivity == 'high'
+
+    def is_the_more_the_better(self):
+        return COLUMN_TO_IS_THE_MORE_THE_BETTER[self.col_data]
+
+    def filter_df(self, paramdict):
+        key2df = get_key2df(self.runname)
+        is_aut = True
+        df = key2df[self.are_bridges(), is_aut]
+
+        mask = pd.Series(True, index=df.index)  # Start with all True
+        for col, val in paramdict.items():
+            mask &= df[col] == val
+
+        filtered_df = df[mask]
+        assert not filtered_df.empty, paramdict
+        return filtered_df
+
+    def make_title_to_heatmap_data(self, titles_fig):
+        title_to_heatmap_data = {}
+        list_pairs = []
+        for title, paramdict in self.title2paramdict.items():
+            heatmap_data = calculate_heatmap_data(
+                df=self.filter_df(paramdict),
+                col_i=COL_I,
+                col_j=COL_J,
+                col_data=self.col_data,
+            )
+            title_to_heatmap_data[title] = heatmap_data
+
+            title_pair = title
+            list_pairs.append((title_pair, heatmap_data))
+
+        if not self.is_comparison:
+            df_cmp = None
+        else:
+            titles_for_ranks = titles_fig[-3:-1]
+            assert len(titles_for_ranks) == 2
+            dfs_for_ranks = [title_to_heatmap_data[title] for title in titles_for_ranks]
+            dfs_ranks = rank_dataframes(dfs_for_ranks, is_the_more_the_better=self.is_the_more_the_better())
+            df_cmp, df_color = compare_ranked_dfs(
+                *dfs_ranks,
+                *(s.split()[-1][0].upper() for s in titles_for_ranks),
+                label_na='N/A',
+                color_a=0.0,
+                color_b=1.0,
+                color_ab=0.5,
+                color_na=0.25,
+            )
+            title_to_heatmap_data[TITLE_CMP] = df_color
+
+        return title_to_heatmap_data, df_cmp, list_pairs
+
+    def render(self):
+        display(HTML(f'<h2><b>{self.title}</b> ({self.col_data}, {self.connectivity} connectivity)</h2>'))
+
+        titles_fig = list(self.title2paramdict)
+        if self.is_comparison:
+            titles_fig.append(TITLE_CMP)
+        fig = make_subplots_row(titles_fig)
+
+        title_to_heatmap_data, df_cmp, list_pairs = self.make_title_to_heatmap_data(titles_fig)
+
+        for idx, title in enumerate(titles_fig):
+            heatmap_data = title_to_heatmap_data[title]
+
+            heatmap_fig = plot_df(
+                col_i=COL_I,
+                col_j=COL_J,
+                col_data=self.col_data,
+                heatmap_data=heatmap_data,
+                df_ranks=df_cmp if title == TITLE_CMP else None,
+                is_value_in_tooltip=title != TITLE_CMP,
+            )
+
+            # Add heatmap to the subplot
+            for trace in heatmap_fig.data:
+                if title != TITLE_CMP:
+                    trace.update(coloraxis="coloraxis1")  # Link each subplot to the shared color axis
+                else:
+                    trace.update(coloraxis="coloraxis2", showscale=False)
+                trace.update(showscale=title != TITLE_CMP)  # Show colorbar only if it's not the Comparison plot
+                for secondary_y in False, True:
+                    fig.add_trace(trace, row=1, col=idx + 1, secondary_y=secondary_y)
+
+            add_all_ticks(fig=fig, offset_fig=0, col_i='map ID', col_j='positions configuration',
+                          heatmap_data=heatmap_data, idx=idx, are_bridges=self.are_bridges())
+
+        self.render_fig(fig, titles_fig)
+
+        list_pairs_csd = [self.pairs_csd_scores[0 if self.connectivity == 'low' else 1]] * len(list_pairs)
+        show_correlations('POD scores', self.col_data,
+                          list_pairs_csd, list_pairs)
+        display(HTML('<hr/>'))
+
+    def render_fig(self, fig, titles_fig):
+        # Update layout with shared color scale:
+        fig.update_layout(
+            title=dict(
+                text=self.col_data + '<br>',
+                y=0.96,
+                font=dict(
+                    size=20,
+                )
+            ),
+            coloraxis1=dict(  # shared color axis
+                colorscale="Greens" if self.is_the_more_the_better() else "Reds",
+                colorbar=dict(
+                    title="<br>".join(textwrap.wrap(self.col_data, 10)) + "<br>&nbsp;",
+                    titlefont=dict(size=14),
+                    x=-0.25 / len(titles_fig),
+                    titleside="top",
+                    thickness=10,
+                    len=1.1  # ⬅ Increases the length of the colorbar (default is 0.5)
+                )
+            ),
+            coloraxis2=dict(
+                colorscale=[
+                    [0.0, '#FFFFE0'],   # 0.0 is P
+                    [0.25, '#3D3D3D'],  # 0.25 is NA
+                    [0.5, '#D3D3D3'],   # 0.5 is PS
+                    [1.0, '#ADD8E6'],   # 1.0 is S
+                ],
+            )
+        )
+
+        fig.show()
+
+
+def version3(runname):
+    pairs_csd_scores = plot_csd_scores(runname)
+
+    for col_data in 'No. of completed missions', 'No. of collisions', 'Collisions rate':
+        for connectivity in 'low', 'high':
+            display(HTML(f'<h1>{col_data} ({connectivity} connectivity)</h1>'))
+
+            RuleViolationSection(
+                runname=runname,
+                pairs_csd_scores=pairs_csd_scores,
+                connectivity=connectivity,
+                col_data=col_data,
+
+                title='Priorities violation',
+                title2paramdict={
+                    'Baseline prime 1':
+                        {'slowness': 'baseline', 'forcing': 'ignoring human'},
+                    'Dynamic change of priorities':
+                        {'slowness': 'baseline', 'forcing': 'change of priorities'},
+                    'Stops':
+                        {'slowness': 'baseline', 'forcing': 'stops'},
+                },
+            ).render()
+
+            RuleViolationSection(
+                runname=runname,
+                pairs_csd_scores=pairs_csd_scores,
+                connectivity=connectivity,
+                col_data=col_data,
+
+                title='Speed violation',
+                title2paramdict={
+                    'Baseline prime 2':
+                        {'slowness': 'without rerouting', 'forcing': 'baseline'},
+                } | (
+                    {} if connectivity == 'low' else {
+                        'Rerouting':
+                            {'slowness': 'with rerouting', 'forcing': 'baseline'},
+                    }
+                ),
+                is_comparison=False,
+            ).render()
+
+            RuleViolationSection(
+                runname=runname,
+                pairs_csd_scores=pairs_csd_scores,
+                connectivity=connectivity,
+                col_data=col_data,
+
+                title='Priorities violation and Speed violation (Part 1)',
+                title2paramdict={
+                    'Baseline prime 3':
+                        {'slowness': 'without rerouting', 'forcing': 'ignoring human'},
+                    'Dynamic change of priorities':
+                        {'slowness': 'without rerouting', 'forcing': 'change of priorities'},
+                    'Stops':
+                        {'slowness': 'without rerouting', 'forcing': 'stops'},
+                },
+            ).render()
+
+            if connectivity == 'high':
+                RuleViolationSection(
+                    runname=runname,
+                    pairs_csd_scores=pairs_csd_scores,
+                    connectivity=connectivity,
+                    col_data=col_data,
+
+                    title='Priorities violation and Speed violation (Part 2)',
+                    title2paramdict={
+                        'Baseline prime 3':
+                            {'slowness': 'without rerouting', 'forcing': 'ignoring human'},
+                        'Rerouting and Dynamic change of priorities':
+                            {'slowness': 'with rerouting', 'forcing': 'change of priorities'},
+                        'Rerouting and Stops':
+                            {'slowness': 'with rerouting', 'forcing': 'stops'},
+                    },
+                ).render()
+
+
+def version2(runname):
     # pairs_csd_scores = plot_csd_scores(runname)
     #
     # display(HTML(f'<h1><b><u>Baselines analysis</u></b></h1>'))
@@ -712,10 +931,6 @@ def new():
     # for is_blocked_to_na in False, True:
     for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collisions rate':
         pairs_missions_all = plot_runname(runname, col)
-        # TODO: slowness=baseline: Baseline prime 1
-        # TODO: slowness=without: Baseline prime 2
-        # TODO: slowness=with: Baseline prime 3
-        # heatmaps (total): (2 for low + 3 for high) * 3 rows = 15
 
         # plot_runname(runname, col, is_comparison_only=True)
         #
@@ -725,9 +940,7 @@ def new():
         #     ...
 
 
-def old():
-    runname = '20241230_173555'
-
+def version1(runname):
     pairs_csd_scores = plot_csd_scores(runname)
 
     pairs_missions_baseline = (
@@ -772,8 +985,10 @@ def old():
 
 
 def main():
-    # old()
-    new()
+    runname = '20241230_173555'
+    # version1(runname)
+    # version2(runname)
+    version3(runname)
 
 
 if __name__ == '__main__':
