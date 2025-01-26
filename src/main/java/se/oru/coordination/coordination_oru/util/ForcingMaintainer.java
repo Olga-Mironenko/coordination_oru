@@ -57,9 +57,11 @@ public class ForcingMaintainer {
             }
         }
 
-        assert (knobsAfterForcing != null) == (rrAtForcingStart != null);
+        boolean isForcing = knobsAfterForcing != null;
+        assert (rrAtForcingStart != null) == isForcing;
+        assert Forcing.isForcingActive() == isForcing;
 
-        if (rrAtForcingStart == null) {
+        if (! isForcing) {
             return;
         }
 

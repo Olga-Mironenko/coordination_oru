@@ -45,9 +45,9 @@ public class GeneratedMapTest {
         if (Containerization.IS_CONTAINER) {
             Timekeeper.setVirtualMinutesPassedMax(30);
         } else {
-//            Timekeeper.setVirtualMinutesPassedMax(30);
+            Timekeeper.setVirtualMinutesPassedMax(30);
 //            Timekeeper.setVirtualSecondsPassedMax(2);
-            Timekeeper.setVirtualMinutesPassedMax(2);
+//            Timekeeper.setVirtualMinutesPassedMax(2);
         }
 
         Heuristics heuristics = new Heuristics();
@@ -62,7 +62,8 @@ public class GeneratedMapTest {
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-1.json, passhum 1, slowness with rerouting, forcing change of priorities"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-4.json, baseline, seed 1, probabilityForcingForHuman 0"
 //                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario1-5.json, passhum 0, slowness no, forcing no"
-                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness without rerouting, forcing ignoring human"
+//                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness without rerouting, forcing ignoring human"
+                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario3-1.json, passhum 0, slowness no, forcing ignoring human"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness without rerouting, forcing change of priorities"
             );
         }
