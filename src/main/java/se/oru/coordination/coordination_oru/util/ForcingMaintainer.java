@@ -19,7 +19,7 @@ public class ForcingMaintainer {
             return null;
         }
 
-        ForcingMaintainer forcingMaintainer = ((AdaptiveTrajectoryEnvelopeTrackerRK4) trackerHuman).forcingMaintainer;
+        ForcingMaintainer forcingMaintainer = AdaptiveTrajectoryEnvelopeTrackerRK4.forcingMaintainer;
         if (forcingMaintainer == null) {
             return null;
         }
@@ -74,6 +74,9 @@ public class ForcingMaintainer {
             // A (slightly) better approach would be to compare mission IDs (that can be stored in RRs).
             knobsAfterForcing.resumeRobots();
             knobsAfterForcing.restorePriorities();
+            knobsAfterForcing = null;
+            rrAtForcingStart = null;
+            // TODO: Perhaps `knobsAfterForcing.updateForcing` is enough (instead of this special logic).
         } else {
             double distanceTraveled = rr.getDistanceTraveled() - distanceOfLastForcingStart;
             assert distanceTraveled >= 0; // otherwise, we are in a new mission, but restoring/resuming hasn't happened

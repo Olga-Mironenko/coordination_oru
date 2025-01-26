@@ -537,8 +537,8 @@ public class BrowserVisualization implements FleetVisualization {
 				} else {
 					boolean isForcingOngoing = (
 							trackerAdaptive != null &&
-							trackerAdaptive.forcingMaintainer != null &&
-							trackerAdaptive.forcingMaintainer.isForcingOngoing()
+							AdaptiveTrajectoryEnvelopeTrackerRK4.forcingMaintainer != null &&
+							AdaptiveTrajectoryEnvelopeTrackerRK4.forcingMaintainer.isForcingOngoing()
 					);
 					row.append(String.format(" | %s | %s",
                             center(

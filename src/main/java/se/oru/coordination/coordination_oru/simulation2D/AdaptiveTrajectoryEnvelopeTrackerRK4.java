@@ -83,7 +83,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public double distanceToCP;
 	public static double probabilityForcingForHuman = 0.0;
 	public static double distanceToCPForForcing = 5.0;
-	public ForcingMaintainer forcingMaintainer;
+	public static ForcingMaintainer forcingMaintainer;
 	public static double probabilitySlowingDownForHuman = 0.0;
 	public static double velocitySlowingDownForHuman = 1.0;
 	public static double lengthIntervalSlowingDownForHuman = 10.0;
@@ -1214,7 +1214,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 		boolean isExpectingDistanceShrinking = true;
 		double distanceToCPLast = Double.POSITIVE_INFINITY;
-		if (isHuman) {
+		if (isHuman && forcingMaintainer == null) {
 			forcingMaintainer = new ForcingMaintainer();
 		}
 		DistanceMonitor distanceMonitor = new DistanceMonitor();
