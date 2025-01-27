@@ -3,7 +3,9 @@ import pickle
 import re
 import textwrap
 from dataclasses import dataclass
+from typing import Callable
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -632,7 +634,15 @@ def plot_runname(runname, column, *, title=None, is_baseline_only=False, is_comp
     return list_pairs
 
 
-def show_correlation(ax, title, col_x, col_y, xs, ys):
+def scatter(ax, xs, ys, *, color, label):
+    ax.scatter(xs, ys, s=5, alpha=0.7, color=color, label='\n'.join(textwrap.wrap(label, 15)))
+
+    coeffs = np.polyfit(xs, ys, 1)
+    trendline = np.poly1d(coeffs)
+    ax.plot(xs, trendline(xs), color=color, alpha=0.3, linestyle='--', label='Linear trendline')
+
+
+def show_correlation(ax, title, color, col_x, col_y, xs, ys):
     # Calculate correlations and p-values
     results = []
     name2function = {
@@ -651,16 +661,13 @@ def show_correlation(ax, title, col_x, col_y, xs, ys):
     display(df)
 
     # Plot scatter plot with linear trendline (for Pearson correlation)
-    ax.scatter(xs, ys, alpha=0.7, edgecolor='k', label='Scenarios')
-    coeffs = np.polyfit(xs, ys, 1)
-    trendline = np.poly1d(coeffs)
-    ax.plot(xs, trendline(xs), color='red', linestyle='--', label='Linear trendline')
+    scatter(ax, xs, ys, color=color, label='Scenarios')
 
     # Customize plot
     ax.set_title("\n".join(textwrap.wrap(title, 30)))
     ax.set_xlabel(col_x, fontsize=16)
     ax.set_ylabel(col_y, fontsize=16)
-    ax.legend()
+    ax.legend(fontsize=10)
     ax.grid(alpha=0.3)
 
 
@@ -677,32 +684,42 @@ def show_correlation_comparison(ax, col_x, col_y,
     pretitle2, posttitle2 = split_title(title2)
 
     assert posttitle1 != posttitle2
-    ax.scatter(xs1, ys1, alpha=0.7, color='red', label=posttitle1)
-    ax.scatter(xs2, ys2, alpha=0.7, color='blue', label=posttitle2)
+    scatter(ax, xs1, ys1, color='red', label=posttitle1)
+    scatter(ax, xs2, ys2, color='blue', label=posttitle2)
 
     # Customize plot
     assert pretitle1 == pretitle2
     ax.set_title(f'Strategies comparison\n{pretitle1}')
     ax.set_xlabel(col_x, fontsize=16)
     ax.set_ylabel(col_y, fontsize=16)
-    ax.legend()
+    ax.legend(fontsize=10)
     ax.grid(alpha=0.3)
 
 
-def show_correlations(col_x, col_y, pairs1, pairs2):
+def make_subplots_matplotlib(n_plots):
+    fig, [axes] = plt.subplots(1, n_plots, squeeze=False,
+                                figsize=(n_plots * 4, 4), sharey='all')
+    return fig, axes
+
+
+def show_correlations(col_x: str,
+                      col_y: str,
+                      pairs1: list[tuple[str, pd.DataFrame]],
+                      pairs2: list[tuple[str, pd.DataFrame]]) -> Callable[[matplotlib.axes.Axes, str], None] | None:
     display(HTML(f'<h2>{col_x} vs. {col_y}</h2>'))
 
     assert len(pairs1) == len(pairs2)
     n_pairs = len(pairs1)
     is_comparison = n_pairs > 1
     n_plots = n_pairs + 1 if is_comparison else n_pairs
-    fig, [axes] = plt.subplots(1, n_plots, squeeze=False,
-                                figsize=(n_plots * 4, 4), sharey='all')
+    fig, axes = make_subplots_matplotlib(n_plots)
+
+    colors = ['black', 'red', 'blue']
 
     titles = []
     list_xs = []
     list_ys = []
-    for ax, (title_x, df_x), (title_y, df_y) in zip(axes, pairs1, pairs2, strict=False):
+    for i, (ax, (title_x, df_x), (title_y, df_y)) in enumerate(zip(axes, pairs1, pairs2, strict=False)):
         title = title_x if title_x == title_y else f'{title_x} ({title_y})'
         titles.append(title)
 
@@ -712,18 +729,24 @@ def show_correlations(col_x, col_y, pairs1, pairs2):
         ys = df_y.to_numpy().flatten()
         list_ys.append(ys)
 
-        show_correlation(ax, title, col_x, col_y, xs, ys)
+        show_correlation(ax, title, colors[i], col_x, col_y if i == 0 else '', xs, ys)
 
-    if is_comparison:
+    if not is_comparison:
+        show_comparison = None
+    else:
         i1 = n_pairs - 2
         i2 = n_pairs - 1
-        show_correlation_comparison(axes[-1], col_x, col_y,
-                                    titles[i1], list_xs[i1], list_ys[i1],
-                                    titles[i2], list_xs[i2], list_ys[i2])
+        show_comparison = lambda ax, col_y: show_correlation_comparison(ax, col_x, col_y,
+                                                                        titles[i1], list_xs[i1], list_ys[i1],
+                                                                        titles[i2], list_xs[i2], list_ys[i2])
+        show_comparison.col_y = col_y
+        show_comparison(axes[-1], '')
 
     plt.tight_layout()  # Adjust layout to prevent overlap
     plt.show()
     # display(HTML('<hr/>'))
+
+    return show_comparison
 
 
 def filter_pairs(pairs, titles):
@@ -797,7 +820,7 @@ class RuleViolationSection:
 
         return title_to_heatmap_data, df_cmp, list_pairs
 
-    def render(self):
+    def render(self) -> Callable[[matplotlib.axes.Axes, str], None] | None:
         display(HTML(f'<h2><b>{self.title}</b> ({self.col_data}, {self.connectivity} connectivity)</h2>'))
 
         titles_fig = list(self.title2paramdict)
@@ -835,9 +858,12 @@ class RuleViolationSection:
         self.render_fig(fig, titles_fig)
 
         list_pairs_csd = [self.pairs_csd_scores[0 if self.connectivity == 'low' else 1]] * len(list_pairs)
-        show_correlations('POD scores', self.col_data,
-                          list_pairs_csd, list_pairs)
+        show_comparison = show_correlations('POD scores', self.col_data,
+                                            list_pairs_csd, list_pairs)
+        if show_comparison is not None:
+            show_comparison.title = self.title
         display(HTML('<hr/>'))
+        return show_comparison
 
     def render_fig(self, fig, titles_fig):
         # Update layout with shared color scale:
@@ -873,67 +899,104 @@ class RuleViolationSection:
         fig.show()
 
 
+def render_metric2connectivity2shows(
+        metric2connectivity2shows: dict[
+            str,
+            dict[
+                str,
+                list[Callable[[matplotlib.axes.Axes, str], None] | None]
+            ]
+        ]
+):
+    for col_data, connectivity2shows in metric2connectivity2shows.items():
+        display(HTML(f'<h1>{col_data}</h1>'))
+        pairs_shows = zip(*connectivity2shows.values(), strict=True)  # [[..., ...], ..., [..., ...]]
+        for pair in pairs_shows:
+            shows = [show for show in pair if show is not None]
+            assert shows
+            assert all(show.title == shows[0].title for show in shows)
+            display(HTML(f'<h2>{shows[0].title}</h2>'))
+
+            fig, axes = make_subplots_matplotlib(len(shows))
+            for i, (ax, show) in enumerate(zip(axes, shows, strict=True)):
+                show(ax, show.col_y if i == 0 else '')
+            plt.show()
+
+
 def version3(runname):
     pairs_csd_scores = plot_csd_scores(runname)
 
+    metric2connectivity2shows = {}
+
     for col_data in 'No. of completed missions', 'No. of collisions', 'Collisions rate':
+        connectivity2shows = metric2connectivity2shows[col_data] = {}
+
         for connectivity in 'low', 'high':
             display(HTML(f'<h1>{col_data} ({connectivity} connectivity)</h1>'))
 
-            RuleViolationSection(
-                runname=runname,
-                pairs_csd_scores=pairs_csd_scores,
-                connectivity=connectivity,
-                col_data=col_data,
+            shows = connectivity2shows[connectivity] = []
 
-                title='Priorities violation',
-                title2paramdict={
-                    'Baseline prime 1':
-                        {'slowness': 'baseline', 'forcing': 'ignoring human'},
-                    'Dynamic change of priorities':
-                        {'slowness': 'baseline', 'forcing': 'change of priorities'},
-                    'Stops':
-                        {'slowness': 'baseline', 'forcing': 'stops'},
-                },
-            ).render()
+            shows.append(
+                RuleViolationSection(
+                    runname=runname,
+                    pairs_csd_scores=pairs_csd_scores,
+                    connectivity=connectivity,
+                    col_data=col_data,
 
-            RuleViolationSection(
-                runname=runname,
-                pairs_csd_scores=pairs_csd_scores,
-                connectivity=connectivity,
-                col_data=col_data,
+                    title='Priorities violation',
+                    title2paramdict={
+                        'Baseline prime 1':
+                            {'slowness': 'baseline', 'forcing': 'ignoring human'},
+                        'Dynamic change of priorities':
+                            {'slowness': 'baseline', 'forcing': 'change of priorities'},
+                        'Stops':
+                            {'slowness': 'baseline', 'forcing': 'stops'},
+                    },
+                ).render()
+            )
 
-                title='Speed violation',
-                title2paramdict={
-                    'Baseline prime 2':
-                        {'slowness': 'without rerouting', 'forcing': 'baseline'},
-                } | (
-                    {} if connectivity == 'low' else {
-                        'Rerouting':
-                            {'slowness': 'with rerouting', 'forcing': 'baseline'},
-                    }
-                ),
-                is_comparison=False,
-            ).render()
+            shows.append(
+                RuleViolationSection(
+                    runname=runname,
+                    pairs_csd_scores=pairs_csd_scores,
+                    connectivity=connectivity,
+                    col_data=col_data,
 
-            RuleViolationSection(
-                runname=runname,
-                pairs_csd_scores=pairs_csd_scores,
-                connectivity=connectivity,
-                col_data=col_data,
+                    title='Speed violation',
+                    title2paramdict={
+                        'Baseline prime 2':
+                            {'slowness': 'without rerouting', 'forcing': 'baseline'},
+                    } | (
+                        {} if connectivity == 'low' else {
+                            'Rerouting':
+                                {'slowness': 'with rerouting', 'forcing': 'baseline'},
+                        }
+                    ),
+                    is_comparison=False,
+                ).render()
+            )
 
-                title='Priorities violation and Speed violation (Part 1)',
-                title2paramdict={
-                    'Baseline prime 3':
-                        {'slowness': 'without rerouting', 'forcing': 'ignoring human'},
-                    'Dynamic change of priorities':
-                        {'slowness': 'without rerouting', 'forcing': 'change of priorities'},
-                    'Stops':
-                        {'slowness': 'without rerouting', 'forcing': 'stops'},
-                },
-            ).render()
+            shows.append(
+                RuleViolationSection(
+                    runname=runname,
+                    pairs_csd_scores=pairs_csd_scores,
+                    connectivity=connectivity,
+                    col_data=col_data,
 
-            if connectivity == 'high':
+                    title='Priorities violation and Speed violation (Part 1)',
+                    title2paramdict={
+                        'Baseline prime 3':
+                            {'slowness': 'without rerouting', 'forcing': 'ignoring human'},
+                        'Dynamic change of priorities':
+                            {'slowness': 'without rerouting', 'forcing': 'change of priorities'},
+                        'Stops':
+                            {'slowness': 'without rerouting', 'forcing': 'stops'},
+                    },
+                ).render()
+            )
+
+            shows.append(
+                None if connectivity != 'high' else
                 RuleViolationSection(
                     runname=runname,
                     pairs_csd_scores=pairs_csd_scores,
@@ -950,6 +1013,9 @@ def version3(runname):
                             {'slowness': 'with rerouting', 'forcing': 'stops'},
                     },
                 ).render()
+            )
+
+    return metric2connectivity2shows
 
 
 def version2(runname):
@@ -1038,7 +1104,8 @@ def main():
     runname = '20241230_173555'
     # version1(runname)
     # version2(runname)
-    version3(runname)
+    metric2connectivity2shows = version3(runname)
+    render_metric2connectivity2shows(metric2connectivity2shows)
 
 
 if __name__ == '__main__':
