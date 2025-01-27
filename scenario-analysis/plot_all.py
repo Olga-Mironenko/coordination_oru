@@ -1,5 +1,6 @@
 import os
 import pickle
+import re
 import textwrap
 from dataclasses import dataclass
 
@@ -631,7 +632,7 @@ def plot_runname(runname, column, *, title=None, is_baseline_only=False, is_comp
     return list_pairs
 
 
-def show_correlation(col1, col2, arr1, arr2):
+def show_correlation(ax, title, col_x, col_y, xs, ys):
     # Calculate correlations and p-values
     results = []
     name2function = {
@@ -640,7 +641,7 @@ def show_correlation(col1, col2, arr1, arr2):
         'Kendall': kendalltau,
     }
     for name, func in name2function.items():
-        corr, pval = func(arr1, arr2)
+        corr, pval = func(xs, ys)
         results.append({"Method": name, "Correlation": corr, "P-Value": pval})
 
     # Convert results to DataFrame
@@ -650,29 +651,78 @@ def show_correlation(col1, col2, arr1, arr2):
     display(df)
 
     # Plot scatter plot with linear trendline (for Pearson correlation)
-    plt.figure(figsize=(8, 6))
-    plt.scatter(arr1, arr2, alpha=0.7, edgecolor='k', label='Data points')
-    coeffs = np.polyfit(arr1, arr2, 1)
+    ax.scatter(xs, ys, alpha=0.7, edgecolor='k', label='Scenarios')
+    coeffs = np.polyfit(xs, ys, 1)
     trendline = np.poly1d(coeffs)
-    plt.plot(arr1, trendline(arr1), color='red', linestyle='--', label='Linear trendline')
+    ax.plot(xs, trendline(xs), color='red', linestyle='--', label='Linear trendline')
 
     # Customize plot
-    # plt.title('Scatter Plot with Linear Trendline')
-    plt.xlabel(col1, fontsize=16)
-    plt.ylabel(col2, fontsize=16)
-    plt.legend()
-    plt.grid(alpha=0.3)
+    ax.set_title("\n".join(textwrap.wrap(title, 30)))
+    ax.set_xlabel(col_x, fontsize=16)
+    ax.set_ylabel(col_y, fontsize=16)
+    ax.legend()
+    ax.grid(alpha=0.3)
+
+
+def split_title(title):
+    match = re.match(r'(.+) [(](.+)[)]$', title)
+    assert match is not None
+    return match.groups()
+
+
+def show_correlation_comparison(ax, col_x, col_y,
+                                title1, xs1, ys1,
+                                title2, xs2, ys2):
+    pretitle1, posttitle1 = split_title(title1)
+    pretitle2, posttitle2 = split_title(title2)
+
+    assert posttitle1 != posttitle2
+    ax.scatter(xs1, ys1, alpha=0.7, color='red', label=posttitle1)
+    ax.scatter(xs2, ys2, alpha=0.7, color='blue', label=posttitle2)
+
+    # Customize plot
+    assert pretitle1 == pretitle2
+    ax.set_title(f'Strategies comparison\n{pretitle1}')
+    ax.set_xlabel(col_x, fontsize=16)
+    ax.set_ylabel(col_y, fontsize=16)
+    ax.legend()
+    ax.grid(alpha=0.3)
+
+
+def show_correlations(col_x, col_y, pairs1, pairs2):
+    display(HTML(f'<h2>{col_x} vs. {col_y}</h2>'))
+
+    assert len(pairs1) == len(pairs2)
+    n_pairs = len(pairs1)
+    is_comparison = n_pairs > 1
+    n_plots = n_pairs + 1 if is_comparison else n_pairs
+    fig, [axes] = plt.subplots(1, n_plots, squeeze=False,
+                                figsize=(n_plots * 4, 4), sharey='all')
+
+    titles = []
+    list_xs = []
+    list_ys = []
+    for ax, (title_x, df_x), (title_y, df_y) in zip(axes, pairs1, pairs2, strict=False):
+        title = title_x if title_x == title_y else f'{title_x} ({title_y})'
+        titles.append(title)
+
+        xs = df_x.to_numpy().flatten()
+        list_xs.append(xs)
+
+        ys = df_y.to_numpy().flatten()
+        list_ys.append(ys)
+
+        show_correlation(ax, title, col_x, col_y, xs, ys)
+
+    if is_comparison:
+        i1 = n_pairs - 2
+        i2 = n_pairs - 1
+        show_correlation_comparison(axes[-1], col_x, col_y,
+                                    titles[i1], list_xs[i1], list_ys[i1],
+                                    titles[i2], list_xs[i2], list_ys[i2])
+
+    plt.tight_layout()  # Adjust layout to prevent overlap
     plt.show()
-
-
-def show_correlations(col1, col2, pairs1, pairs2):
-    display(HTML(f'<h2>{col1} vs. {col2}</h2>'))
-
-    for i, ((title1, m1), (title2, m2)) in enumerate(zip(pairs1, pairs2, strict=True), 1):
-        title = title1 if title1 == title2 else f'{title1} ({title2})'
-        display(HTML(f'<h3>{title}</h3>'))
-        show_correlation(col1, col2, *(m.to_numpy().flatten() for m in (m1, m2)))
-
     # display(HTML('<hr/>'))
 
 
