@@ -39,7 +39,7 @@ passhums=(
 )
 
 slownesses=(
-#  "no"
+  "no"
   "without rerouting"
   "with rerouting"
 )
@@ -48,7 +48,7 @@ forcings=(
   "no"
   "change of priorities"
   "stops"
-  "ignoring human"
+#  "ignoring human"
 )
 
 # Use variables
@@ -59,32 +59,36 @@ for i_map in "${indexes_maps[@]}"; do
       filename_simple=map-generator/generated-maps/$dir_maps/scenario$i_map-$position.json
       filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
 
-#      for slowness in "${slownesses[@]}"; do
-#        for passhum in "${passhums[@]}"; do
-#          for forcing in "${forcings[@]}"; do
-#            scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
-#            scenarios+=("$scenario")
-#          done
-#        done
-#      done
+      for slowness in "${slownesses[@]}"; do
+        if [[ $dir_maps = *_without_bridges ]] && [ "$slowness" = 'with rerouting' ]; then
+          continue
+        fi
 
-      passhum=0
+        for passhum in "${passhums[@]}"; do
+          for forcing in "${forcings[@]}"; do
+            scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
+            scenarios+=("$scenario")
+          done
+        done
+      done
 
-      forcing="ignoring human"
-      slowness="no"
-      scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
-      scenarios+=("$scenario")
-
-      forcing="ignoring human"
-      slowness="without rerouting"
-      scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
-      scenarios+=("$scenario")
+#      passhum=0
+#
+#      forcing="ignoring human"
+#      slowness="no"
+#      scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
+#      scenarios+=("$scenario")
+#
+#      forcing="ignoring human"
+#      slowness="without rerouting"
+#      scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
+#      scenarios+=("$scenario")
     done
   done
 done
 
 echo "Scenarios:"
-printf -- "- %s\n" "${scenarios[@]}"
+printf -- "- %s\n" "${scenarios[@]}" | cat -n
 #exit
 
 trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT TERM
