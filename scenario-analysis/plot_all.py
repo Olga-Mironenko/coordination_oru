@@ -634,12 +634,13 @@ def plot_runname(runname, column, *, title=None, is_baseline_only=False, is_comp
     return list_pairs
 
 
-def scatter(ax, xs, ys, *, color, label):
-    ax.scatter(xs, ys, s=5, alpha=0.7, color=color, label='\n'.join(textwrap.wrap(label, 15)))
+def scatter(ax, xs, ys, *, color, label, label_trendline='Linear trendline'):
+    if label is not None:
+        ax.scatter(xs, ys, s=5, alpha=0.7, color=color, label='\n'.join(textwrap.wrap(label, 15)))
 
     coeffs = np.polyfit(xs, ys, 1)
     trendline = np.poly1d(coeffs)
-    ax.plot(xs, trendline(xs), color=color, alpha=0.3, linestyle='--', label='Linear trendline')
+    ax.plot(xs, trendline(xs), color=color, alpha=0.3, linestyle='--', label=label_trendline)
 
 
 def show_correlation(ax, title, color, col_x, col_y, xs, ys):
@@ -664,7 +665,8 @@ def show_correlation(ax, title, color, col_x, col_y, xs, ys):
     scatter(ax, xs, ys, color=color, label='Scenarios')
 
     # Customize plot
-    ax.set_title("\n".join(textwrap.wrap(title, 30)))
+    pretitle, posttitle = split_title(title)
+    ax.set_title(f'{posttitle}\n{pretitle}')
     ax.set_xlabel(col_x, fontsize=16)
     ax.set_ylabel(col_y, fontsize=16)
     ax.legend(fontsize=10)
@@ -677,19 +679,18 @@ def split_title(title):
     return match.groups()
 
 
-def show_correlation_comparison(ax, col_x, col_y,
-                                title1, xs1, ys1,
-                                title2, xs2, ys2):
-    pretitle1, posttitle1 = split_title(title1)
-    pretitle2, posttitle2 = split_title(title2)
-
-    assert posttitle1 != posttitle2
-    scatter(ax, xs1, ys1, color='red', label=posttitle1)
-    scatter(ax, xs2, ys2, color='blue', label=posttitle2)
+def show_correlation_comparison(ax, col_x, col_y, title,
+                                xsbase, ysbase,
+                                label1, xs1, ys1,
+                                label2, xs2, ys2):
+    assert label1 != label2
+    if xsbase is not None:
+        scatter(ax, xsbase, ysbase, color='gray', label=None, label_trendline='Baseline trendline')
+    scatter(ax, xs1, ys1, color='red', label=label1)
+    scatter(ax, xs2, ys2, color='blue', label=label2)
 
     # Customize plot
-    assert pretitle1 == pretitle2
-    ax.set_title(f'Strategies comparison\n{pretitle1}')
+    ax.set_title(title)
     ax.set_xlabel(col_x, fontsize=16)
     ax.set_ylabel(col_y, fontsize=16)
     ax.legend(fontsize=10)
@@ -705,7 +706,7 @@ def make_subplots_matplotlib(n_plots):
 def show_correlations(col_x: str,
                       col_y: str,
                       pairs1: list[tuple[str, pd.DataFrame]],
-                      pairs2: list[tuple[str, pd.DataFrame]]) -> Callable[[matplotlib.axes.Axes, str], None] | None:
+                      pairs2: list[tuple[str, pd.DataFrame]]) -> Callable[[matplotlib.axes.Axes, str, str], None] | None:
     display(HTML(f'<h2>{col_x} vs. {col_y}</h2>'))
 
     assert len(pairs1) == len(pairs2)
@@ -736,11 +737,27 @@ def show_correlations(col_x: str,
     else:
         i1 = n_pairs - 2
         i2 = n_pairs - 1
-        show_comparison = lambda ax, col_y: show_correlation_comparison(ax, col_x, col_y,
-                                                                        titles[i1], list_xs[i1], list_ys[i1],
-                                                                        titles[i2], list_xs[i2], list_ys[i2])
+        pretitle1, posttitle1 = split_title(titles[i1])
+        pretitle2, posttitle2 = split_title(titles[i2])
+        assert pretitle1 == pretitle2
+        title = f'Strategies comparison\n{pretitle1}'
+
+        ibase = n_pairs - 3
+        if ibase < 0:
+            xsbase = ysbase = None
+        else:
+            xsbase = list_xs[ibase]
+            ysbase = list_ys[ibase]
+
+        def show_comparison(ax, col_y, title):
+            show_correlation_comparison(ax, col_x, col_y, title,
+                                        xsbase, ysbase,
+                                        posttitle1, list_xs[i1], list_ys[i1],
+                                        posttitle2, list_xs[i2], list_ys[i2])
+
         show_comparison.col_y = col_y
-        show_comparison(axes[-1], '')
+        show_comparison.pretitle = pretitle1
+        show_comparison(axes[-1], '', title)
 
     plt.tight_layout()  # Adjust layout to prevent overlap
     plt.show()
@@ -820,7 +837,7 @@ class RuleViolationSection:
 
         return title_to_heatmap_data, df_cmp, list_pairs
 
-    def render(self) -> Callable[[matplotlib.axes.Axes, str], None] | None:
+    def render(self) -> Callable[[matplotlib.axes.Axes, str, str], None] | None:
         display(HTML(f'<h2><b>{self.title}</b> ({self.col_data}, {self.connectivity} connectivity)</h2>'))
 
         titles_fig = list(self.title2paramdict)
@@ -904,22 +921,24 @@ def render_metric2connectivity2shows(
             str,
             dict[
                 str,
-                list[Callable[[matplotlib.axes.Axes, str], None] | None]
+                list[Callable[[matplotlib.axes.Axes, str, str], None] | None]
             ]
         ]
-):
+) -> None:
     for col_data, connectivity2shows in metric2connectivity2shows.items():
         display(HTML(f'<h1>{col_data}</h1>'))
         pairs_shows = zip(*connectivity2shows.values(), strict=True)  # [[..., ...], ..., [..., ...]]
         for pair in pairs_shows:
             shows = [show for show in pair if show is not None]
             assert shows
-            assert all(show.title == shows[0].title for show in shows)
-            display(HTML(f'<h2>{shows[0].title}</h2>'))
+            section = shows[0].title
+            assert all(show.title == section for show in shows)
 
             fig, axes = make_subplots_matplotlib(len(shows))
-            for i, (ax, show) in enumerate(zip(axes, shows, strict=True)):
-                show(ax, show.col_y if i == 0 else '')
+            fig.suptitle(section, fontsize=16)
+            for i, (ax, show_comparison) in enumerate(zip(axes, shows, strict=True)):
+                show_comparison(ax, show_comparison.col_y if i == 0 else '', show_comparison.pretitle)
+            plt.tight_layout(rect=[0, 0, 1, 0.99])
             plt.show()
 
 
