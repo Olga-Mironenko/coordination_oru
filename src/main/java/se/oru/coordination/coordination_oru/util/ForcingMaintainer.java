@@ -35,6 +35,13 @@ public class ForcingMaintainer {
         return rrAtForcingStart != null;
     }
 
+    private void finishForcing() {
+        knobsAfterForcing.resumeRobots();
+        knobsAfterForcing.restorePriorities();
+        knobsAfterForcing = null;
+        rrAtForcingStart = null;
+    }
+
     public void update(int robotID, Double distanceToCP, boolean isForcingNow, boolean isResumingNow, boolean isRestoringNow) {
         assert VehiclesHashMap.isHuman(robotID);
         HumanDrivenVehicle human = (HumanDrivenVehicle) VehiclesHashMap.getVehicle(robotID);
@@ -44,17 +51,16 @@ public class ForcingMaintainer {
             assert ! isRestoringNow;
             // Because that's perhaps not fully supported.
 
-            if (knobsAfterForcing != null) {
-                distanceOfLastForcingStart = human.getCurrentRobotReport().getDistanceTraveled(); // renewing the forcing
-            } else {
-                KnobsAfterForcing knobsAfterForcingNew = Forcing.forceDriving(robotID);
-                if (knobsAfterForcingNew != null) {
-                    knobsAfterForcing = knobsAfterForcingNew;
-                    knobsAfterForcing.distanceToCP = distanceToCP;
-                    rrAtForcingStart = human.getCurrentRobotReport();
-                    distanceOfLastForcingStart = rrAtForcingStart.getDistanceTraveled();
-                }
+            if (isForcingOngoing()) {
+                finishForcing();
             }
+            KnobsAfterForcing knobsAfterForcingNew = Forcing.forceDriving(robotID);
+            assert knobsAfterForcingNew != null;
+
+            knobsAfterForcing = knobsAfterForcingNew;
+            knobsAfterForcing.distanceToCP = distanceToCP;
+            rrAtForcingStart = human.getCurrentRobotReport();
+            distanceOfLastForcingStart = rrAtForcingStart.getDistanceTraveled();
         }
 
         boolean isForcing = knobsAfterForcing != null;
@@ -72,17 +78,13 @@ public class ForcingMaintainer {
             // `ysUpwardsRestoringPriorities` (which are sometimes not reached when mission ends)
             // but rather on events like "the first crossroad has passed" and "the mission has ended".
             // A (slightly) better approach would be to compare mission IDs (that can be stored in RRs).
-            knobsAfterForcing.resumeRobots();
-            knobsAfterForcing.restorePriorities();
-            knobsAfterForcing = null;
-            rrAtForcingStart = null;
+            finishForcing();
             // TODO: Perhaps `knobsAfterForcing.updateForcing` is enough (instead of this special logic).
         } else {
             double distanceTraveled = rr.getDistanceTraveled() - distanceOfLastForcingStart;
             assert distanceTraveled >= 0; // otherwise, we are in a new mission, but restoring/resuming hasn't happened
             if (!knobsAfterForcing.updateForcing(distanceTraveled)) {
-                knobsAfterForcing = null;
-                rrAtForcingStart = null;
+                finishForcing();
             }
         }
     }

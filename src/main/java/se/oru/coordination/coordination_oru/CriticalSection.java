@@ -354,6 +354,14 @@ public class CriticalSection {
 	public boolean is1Before2() {
 		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
+		if (getWeight(getTe1RobotID()) != Weight.WEIGHT_NORMAL || getWeight(getTe2RobotID()) != Weight.WEIGHT_NORMAL) {
+			return tec.getOrder(
+					tec.getRobotReport(getTe1RobotID()),
+					tec.getRobotReport(getTe2RobotID()),
+					this
+			);
+		}
+
 		for (int id : List.of(getTe1RobotID(), getTe2RobotID())) {
 			Dependency dep = tec.getCurrentDependencies().get(id);
 			if (dep != null) {

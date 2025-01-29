@@ -1351,10 +1351,15 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	}
 
 	private double computeDistanceToCP() {
+		if (criticalPoint != -1) {
+			return computeDistance(getRobotReport().getPathIndex(), criticalPoint);
+		}
+
 		CriticalSection cs = getFirstOfCriticalSectionsOfInferior();
 		if (cs == null) {
 			return Double.POSITIVE_INFINITY;
 		}
+
 		int robotID = te.getRobotID();
 		int start = cs.getStart(robotID);
 		return computeDistance(getRobotReport().getPathIndex(), start);

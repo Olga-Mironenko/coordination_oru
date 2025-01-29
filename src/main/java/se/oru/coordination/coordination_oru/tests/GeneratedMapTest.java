@@ -65,7 +65,9 @@ public class GeneratedMapTest {
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness without rerouting, forcing ignoring human"
 //                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario3-1.json, passhum 0, slowness no, forcing ignoring human"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness without rerouting, forcing change of priorities"
-                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario5-1.json, passhum 0, slowness no, forcing ignoring human"
+//                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario5-1.json, passhum 0, slowness no, forcing ignoring human"
+//                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario5-1.json, passhum 0, slowness no, forcing stops"
+                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario9-6.json, passhum 0, slowness no, forcing change of priorities"
             );
         }
         AbstractVehicle.scenarioId = scenarioString;

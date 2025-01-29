@@ -72,17 +72,17 @@ for i_map in "${indexes_maps[@]}"; do
         done
       done
 
-#      passhum=0
-#
-#      forcing="ignoring human"
-#      slowness="no"
-#      scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
-#      scenarios+=("$scenario")
-#
-#      forcing="ignoring human"
-#      slowness="without rerouting"
-#      scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
-#      scenarios+=("$scenario")
+      passhum=0
+
+      forcing="ignoring human"
+      slowness="no"
+      scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
+      scenarios+=("$scenario")
+
+      forcing="ignoring human"
+      slowness="without rerouting"
+      scenario="$filename, passhum $passhum, slowness $slowness, forcing $forcing"
+      scenarios+=("$scenario")
     done
   done
 done

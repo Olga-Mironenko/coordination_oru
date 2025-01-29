@@ -88,9 +88,8 @@ public class Forcing {
     }
 
     public static KnobsAfterForcing forceDriving(int robotID) {
-        if (isForcingActive()) { // another forcing is already in progress
-            return null;
-        }
+        assert ! isForcingActive();
+
         forcingSinceTimestep = Timekeeper.getTimestepsPassed();
         robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);
 
@@ -100,7 +99,7 @@ public class Forcing {
         TreeSet<Integer> robotsToRestoreLater = new TreeSet<>();
         TreeSet<Integer> robotsToResumeLater = new TreeSet<>();
 
-        KnobsAfterForcing knobsAfterForcing = new KnobsAfterForcing() {
+        return new KnobsAfterForcing() {
             @Override
             public boolean isToRestore(int robotID) {
                 return robotsToRestoreLater.contains(robotID);
@@ -182,14 +181,7 @@ public class Forcing {
                             );
 
                     for (CriticalSection cs : criticalSectionsForStop) {
-                        int robotToStop;
-                        if (cs.isTe1(robotID)) {
-                            robotToStop = cs.getTe2RobotID();
-                        } else if (cs.isTe2(robotID)) {
-                            robotToStop = cs.getTe1RobotID();
-                        } else {
-                            throw new RuntimeException();
-                        }
+                        int robotToStop = cs.getOtherRobotID(robotID);
                         assert robotToStop != robotID;
 
                         if (!cs.isRobotOnCS(robotToStop)) {
@@ -238,8 +230,6 @@ public class Forcing {
                 forcingSinceTimestep = -1;
             }
         };
-
-        return knobsAfterForcing;
     }
 
     protected static ArrayList<CriticalSection> selectCriticalSections(

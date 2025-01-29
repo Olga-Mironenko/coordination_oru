@@ -587,11 +587,13 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 		if (yieldIfParking) {
 			boolean robot1ParksInCS = cs.getTe1End() == cs.getTe1().getPathLength()-1;
 			boolean robot2ParksInCS = cs.getTe2End() == cs.getTe2().getPathLength()-1;
-			if (robot1ParksInCS && !robot2ParksInCS) {
+			CriticalSection.Weight weight1 = cs.getWeight(cs.getTe1RobotID());
+			CriticalSection.Weight weight2 = cs.getWeight(cs.getTe2RobotID());
+			if (robot1ParksInCS && weight1 == CriticalSection.Weight.WEIGHT_NORMAL && !robot2ParksInCS) {
 				metaCSPLogger.finest("Robot" + cs.getTe1().getRobotID() + " will park in " + cs + ", letting Robot" + cs.getTe2().getRobotID() + " go first");
 				return false;
 			}
-			else if (!robot1ParksInCS && robot2ParksInCS) {
+			else if (!robot1ParksInCS && robot2ParksInCS && weight2 == CriticalSection.Weight.WEIGHT_NORMAL) {
 				metaCSPLogger.finest("Robot" + cs.getTe2().getRobotID() + " will park in " + cs + ", letting Robot" + cs.getTe1().getRobotID() + " go first");
 				return true;
 			}
@@ -2522,36 +2524,34 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 			//update and communicate critical points
 			//get current dependencies
-			synchronized(currentDependencies) {
 
-				//FIXME: already synchronized (so maybe is ok currentDependencies = computeClosestDependencies(currentDeps, artificialDependencies);)
-				HashMap<Integer, Dependency> closestDeps  = computeClosestDependencies(currentDeps, artificialDependencies);
-				currentDependencies.clear();
-				currentDependencies.putAll(closestDeps);
+			//FIXME: already synchronized (so maybe is ok currentDependencies = computeClosestDependencies(currentDeps, artificialDependencies);)
+			HashMap<Integer, Dependency> closestDeps = computeClosestDependencies(currentDeps, artificialDependencies);
+			currentDependencies.clear();
+			currentDependencies.putAll(closestDeps);
 
-				//The global strategy builds upon the assumption that robots do not start from critical section.
-				//If this is not the case, them pre-loading may bring to nonlive cycles.
-				//To handle this case, switch to a local strategy whenever a robot is starting from a critical section and cannot
-				//exit from it.
-				for (int robotID : askForReplan) {
-					int trials = robotToReplanningTrials.getOrDefault(robotID, 0);
-					if (trials < 5) {
-						replanEnvelope(robotID, true);
-						if (GatedThread.isEnabled()) {
-							robotToReplanningTrials.put(robotID, trials + 1);
-						}
+			//The global strategy builds upon the assumption that robots do not start from critical section.
+			//If this is not the case, them pre-loading may bring to nonlive cycles.
+			//To handle this case, switch to a local strategy whenever a robot is starting from a critical section and cannot
+			//exit from it.
+			for (int robotID : askForReplan) {
+				int trials = robotToReplanningTrials.getOrDefault(robotID, 0);
+				if (trials < 5) {
+					replanEnvelope(robotID, true);
+					if (GatedThread.isEnabled()) {
+						robotToReplanningTrials.put(robotID, trials + 1);
 					}
 				}
+			}
 
-				//send revised dependencies
-				for (int robotID : robotIDs) sendCriticalPoint(robotID, currentReports);
+			//send revised dependencies
+			for (int robotID : robotIDs) sendCriticalPoint(robotID, currentReports);
 
-				//Check if the robots are in deadlocks
-				isDeadlocked();
+			//Check if the robots are in deadlocks
+			isDeadlocked();
 
-				if (! this.isDeadlocked) {
-					robotToReplanningTrials.clear();
-				}
+			if (! this.isDeadlocked) {
+				robotToReplanningTrials.clear();
 			}
 
 		}//end synchronized(solver)
