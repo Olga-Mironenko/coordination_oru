@@ -21,6 +21,13 @@ RUNDIRS = '../logs/rundirs'
 COL_I = 'i_map'
 COL_J = 'position'
 
+FONTSIZE_LABEL = 18
+FONTSIZE_TITLE = 18
+FONTSIZE_SUPTITLE = 18
+FONTSIZE_LEGEND = 10
+
+TITLE_TO_SUBSCATTER = {}
+
 pio.templates.default = "plotly_dark"
 
 
@@ -634,13 +641,24 @@ def plot_runname(runname, column, *, title=None, is_baseline_only=False, is_comp
     return list_pairs
 
 
-def scatter(ax, xs, ys, *, color, label, label_trendline='Linear trendline'):
+def scatter(ax, xs, ys, *, color, label, label_trendline=None):
+    if label_trendline is None:
+        label_trendline = 'Trendline'
+
     if label is not None:
         ax.scatter(xs, ys, s=5, alpha=0.7, color=color, label='\n'.join(textwrap.wrap(label, 15)))
 
     coeffs = np.polyfit(xs, ys, 1)
     trendline = np.poly1d(coeffs)
-    ax.plot(xs, trendline(xs), color=color, alpha=0.3, linestyle='--', label=label_trendline)
+    ax.plot(xs, trendline(xs), color=color, alpha=0.7, linestyle='--', label=label_trendline)
+
+
+def add_grid_etc(ax, *, title, xlabel, ylabel):
+    ax.set_title(title, fontsize=FONTSIZE_TITLE)
+    ax.set_xlabel(xlabel, fontsize=FONTSIZE_LABEL)
+    ax.set_ylabel(ylabel, fontsize=FONTSIZE_LABEL)
+    ax.legend(fontsize=FONTSIZE_LEGEND)
+    ax.grid(alpha=0.3)
 
 
 def show_correlation(ax, title, color, col_x, col_y, xs, ys):
@@ -662,15 +680,16 @@ def show_correlation(ax, title, color, col_x, col_y, xs, ys):
     display(df)
 
     # Plot scatter plot with linear trendline (for Pearson correlation)
-    scatter(ax, xs, ys, color=color, label='Scenarios')
+    def subscatter(*, ax, color, label, label_trendline=None):
+        scatter(ax, xs, ys, color=color, label=label, label_trendline=label_trendline)
+
+    TITLE_TO_SUBSCATTER[title] = subscatter
+
+    subscatter(ax=ax, color=color, label='Scenarios')
 
     # Customize plot
     pretitle, posttitle = split_title(title)
-    ax.set_title(f'{posttitle}\n{pretitle}')
-    ax.set_xlabel(col_x, fontsize=16)
-    ax.set_ylabel(col_y, fontsize=16)
-    ax.legend(fontsize=10)
-    ax.grid(alpha=0.3)
+    add_grid_etc(ax, title=f'{posttitle}\n{pretitle}', xlabel=col_x, ylabel=col_y)
 
 
 def split_title(title):
@@ -680,21 +699,27 @@ def split_title(title):
 
 
 def show_correlation_comparison(ax, col_x, col_y, title,
-                                xsbase, ysbase,
+                                xs_base, ys_base,
                                 label1, xs1, ys1,
                                 label2, xs2, ys2):
+    if xs_base is not None:
+        color_base = 'gray'
+        color1 = 'red'
+        color2 = 'blue'
+    else:
+        color_base = None
+        color1 = 'gray'
+        color2 = 'green'
+
+    if xs_base is not None:
+        scatter(ax, xs_base, ys_base, color=color_base, label=None, label_trendline='Baseline trendline')
+
     assert label1 != label2
-    if xsbase is not None:
-        scatter(ax, xsbase, ysbase, color='gray', label=None, label_trendline='Baseline trendline')
-    scatter(ax, xs1, ys1, color='red', label=label1)
-    scatter(ax, xs2, ys2, color='blue', label=label2)
+    scatter(ax, xs1, ys1, color=color1, label=label1)
+    scatter(ax, xs2, ys2, color=color2, label=label2)
 
     # Customize plot
-    ax.set_title(title)
-    ax.set_xlabel(col_x, fontsize=16)
-    ax.set_ylabel(col_y, fontsize=16)
-    ax.legend(fontsize=10)
-    ax.grid(alpha=0.3)
+    add_grid_etc(ax, title=title, xlabel=col_x, ylabel=col_y)
 
 
 def make_subplots_matplotlib(n_plots):
@@ -742,16 +767,16 @@ def show_correlations(col_x: str,
         assert pretitle1 == pretitle2
         title = f'Strategies comparison\n{pretitle1}'
 
-        ibase = n_pairs - 3
-        if ibase < 0:
-            xsbase = ysbase = None
+        i_base = n_pairs - 3
+        if i_base < 0:
+            xs_base = ys_base = None
         else:
-            xsbase = list_xs[ibase]
-            ysbase = list_ys[ibase]
+            xs_base = list_xs[i_base]
+            ys_base = list_ys[i_base]
 
         def show_comparison(ax, col_y, title):
             show_correlation_comparison(ax, col_x, col_y, title,
-                                        xsbase, ysbase,
+                                        xs_base, ys_base,
                                         posttitle1, list_xs[i1], list_ys[i1],
                                         posttitle2, list_xs[i2], list_ys[i2])
 
@@ -928,27 +953,69 @@ def render_metric2connectivity2shows(
     for col_data, connectivity2shows in metric2connectivity2shows.items():
         display(HTML(f'<h1>{col_data}</h1>'))
         pairs_shows = zip(*connectivity2shows.values(), strict=True)  # [[..., ...], ..., [..., ...]]
-        for pair in pairs_shows:
+
+        shows_summary = []
+        for i_pair, pair in enumerate(pairs_shows):
             shows = [show for show in pair if show is not None]
             assert shows
             section = shows[0].title
             assert all(show.title == section for show in shows)
 
             fig, axes = make_subplots_matplotlib(len(shows))
-            fig.suptitle(section, fontsize=16)
-            for i, (ax, show_comparison) in enumerate(zip(axes, shows, strict=True)):
-                show_comparison(ax, show_comparison.col_y if i == 0 else '', show_comparison.pretitle)
+            fig.suptitle(section, fontsize=FONTSIZE_SUPTITLE)
+            for i_show, (ax, show_comparison) in enumerate(zip(axes, shows, strict=True)):
+                show_comparison(ax, show_comparison.col_y if i_show == 0 else '', show_comparison.pretitle)
+                if i_pair != 1:  # "Speed violation"
+                    shows_summary.append(show_comparison)
             plt.tight_layout(rect=[0, 0, 1, 0.99])
             plt.show()
+
+        fig, axes = make_subplots_matplotlib(len(shows_summary))
+        for i_show, (ax, show_comparison) in enumerate(zip(axes, shows_summary, strict=True)):
+            show_comparison(ax, show_comparison.col_y if i_show == 0 else '', show_comparison.pretitle)
+        plt.tight_layout()
+        plt.show()
+
+
+def render_metric2title2subscatter(metric2title2subscatter):
+    col_x = 'POD scores'
+
+    for col_data, title2subscatter in metric2title2subscatter.items():
+        display(HTML(f'<h1>{col_data}</h1>'))
+
+        fig, (ax1, ax2, ax3) = make_subplots_matplotlib(3)
+
+        for ax, conn in (ax1, 'low'), (ax2, 'high'):
+            title2subscatter[f'Maps with {conn} connectivity (Baseline prime 2)'](
+                ax=ax, color='black', label='Baseline prime 2')
+            title2subscatter[f'Maps with {conn} connectivity (Baseline prime 1)'](
+                ax=ax, color='lightgray', label=None, label_trendline='Baseline prime 1')
+            title2subscatter[f'Maps with {conn} connectivity (Baseline prime 3)'](
+                ax=ax, color='darkgray', label=None, label_trendline='Baseline prime 3')
+            add_grid_etc(ax, title=f'Maps with {conn} connectivity', xlabel=col_x, ylabel=col_data)
+
+        # TODO:
+        # title2subscatter[f'Maps with {conn} connectivity (Baseline prime 2)'](
+        #     ax=ax, color='black', label='Baseline prime 2')
+        # title2subscatter[f'Maps with {conn} connectivity (Baseline prime 1)'](
+        #     ax=ax, color='lightgray', label=None, label_trendline='Baseline prime 1')
+        # title2subscatter[f'Maps with {conn} connectivity (Baseline prime 3)'](
+        #     ax=ax, color='darkgray', label=None, label_trendline='Baseline prime 3')
+        # add_grid_etc(ax, title=f'Maps with {conn} connectivity', xlabel=col_x, ylabel=col_data)
+
+        plt.tight_layout()
+        plt.show()
 
 
 def version3(runname):
     pairs_csd_scores = plot_csd_scores(runname)
 
     metric2connectivity2shows = {}
+    metric2title2subscatter = {}
 
     for col_data in 'No. of completed missions', 'No. of collisions', 'Collisions rate':
         connectivity2shows = metric2connectivity2shows[col_data] = {}
+        TITLE_TO_SUBSCATTER.clear()
 
         for connectivity in 'low', 'high':
             display(HTML(f'<h1>{col_data} ({connectivity} connectivity)</h1>'))
@@ -1034,7 +1101,10 @@ def version3(runname):
                 ).render()
             )
 
-    return metric2connectivity2shows
+        print(*TITLE_TO_SUBSCATTER, sep='\n')
+        metric2title2subscatter[col_data] = TITLE_TO_SUBSCATTER.copy()
+
+    return metric2connectivity2shows, metric2title2subscatter
 
 
 def version2(runname):
@@ -1123,8 +1193,9 @@ def main():
     runname = '20241230_173555'
     # version1(runname)
     # version2(runname)
-    metric2connectivity2shows = version3(runname)
+    metric2connectivity2shows, metric2title2subscatter = version3(runname)
     render_metric2connectivity2shows(metric2connectivity2shows)
+    render_metric2title2subscatter(metric2title2subscatter)
 
 
 if __name__ == '__main__':
