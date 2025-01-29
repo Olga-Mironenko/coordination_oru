@@ -14,12 +14,19 @@ import plotly.io as pio
 import plotly.express as px
 from plotly.subplots import make_subplots
 from scipy.stats import pearsonr, spearmanr, kendalltau
+import scipy.stats as stats
 from sklearn.feature_selection import mutual_info_regression
 
 RUNDIRS = '../logs/rundirs'
 
 COL_I = 'i_map'
 COL_J = 'position'
+
+# Dictionary to map Map IDs to the number of OPs
+MAP_TO_OPS = {
+    1: 2, 6: 2, 10: 2,  # Maps with 2 OPs
+    2: 1, 3: 1, 4: 1, 5: 1, 7: 1, 8: 1, 9: 1,  # Maps with 1 OP
+}
 
 FONTSIZE_LABEL = 18
 FONTSIZE_TITLE = 18
@@ -118,12 +125,6 @@ def add_ticks(*, fig, offset_fig, col_i, col_j, heatmap_data, row2label=str, idx
 
 
 def add_all_ticks(*, fig, offset_fig, col_i, col_j, heatmap_data, idx, are_bridges):
-    # Dictionary to map Map IDs to the number of OPs
-    map_to_ops = {
-        1: 2, 6: 2, 10: 2,  # Maps with 2 OPs
-        2: 1, 3: 1, 4: 1, 5: 1, 7: 1, 8: 1, 9: 1,  # Maps with 1 OP
-    }
-
     # Check if the current map is low or high connectivity
     primary_label = 'L' if not are_bridges else 'H'  # Use 'L' for low connectivity maps
 
@@ -136,7 +137,7 @@ def add_all_ticks(*, fig, offset_fig, col_i, col_j, heatmap_data, idx, are_bridg
     add_ticks(
         fig=fig, offset_fig=offset_fig, col_i=col_i, col_j=col_j, heatmap_data=heatmap_data,
         idx_x=idx, idx_y=idx * 2 + 1,
-        row2label=lambda r: f'{map_to_ops[r]}',
+        row2label=lambda r: f'{MAP_TO_OPS[r]}',
         secondary_y=True
     )
 
@@ -220,10 +221,8 @@ def make_subplots_row(titles):
     return fig
 
 
-def plot_csd_scores(runname):
-    col_data = 'CSD score (AVs)'
-
-    display(HTML(f'<h1>POD scores</h1>'))
+def plot_feature(runname, col_data, title, label):
+    display(HTML(f'<h1>{title}</h1>'))
     key2df = get_key2df(runname)
 
     list_are_bridges = [False, True]
@@ -236,6 +235,8 @@ def plot_csd_scores(runname):
 
     for idx, are_bridges in enumerate(list_are_bridges):
         df = key2df[are_bridges, 'conf']
+        df['No. of OPs'] = df['i_map'].map(MAP_TO_OPS)
+
         heatmap_data = calculate_heatmap_data(df=df, col_i=COL_I, col_j=COL_J, col_data=col_data)
 
         list_pairs.append((titles[idx], heatmap_data))
@@ -334,7 +335,7 @@ def plot_csd_scores(runname):
         coloraxis1=dict(  # shared color axis
             colorscale="Greys",
             colorbar=dict(
-                title="POD score",
+                title=label,
                 titlefont=dict(size=16),
                 x=-0.13,  # Colorbar position for subplots
                 titleside="top",
@@ -683,6 +684,49 @@ def compute_mi_p_value(xs, ys, n_permutations=1000):
     p_value = np.mean(np.array(permuted_mis) >= observed_mi)
     return observed_mi, p_value
 
+def plot_hist_norm(data):
+    """Plots histogram, normal curve, and performs normality tests independently."""
+
+    # Create a new figure
+    # plt.figure()
+
+    # Plot histogram
+    # plt.hist(data, bins=30, density=True, alpha=0.6, color='b', edgecolor='black')
+
+    # Fit a normal distribution
+    mu, std = np.mean(data), np.std(data)
+    xmin, xmax = plt.xlim()  # Get x-axis limits
+    x = np.linspace(xmin, xmax, 100)
+    p = stats.norm.pdf(x, mu, std)
+
+    # Plot normal distribution curve
+    # plt.plot(x, p, 'r', linewidth=2)
+
+    # Labels
+    # plt.title("Histogram with Normal Distribution Fit")
+    # plt.xlabel("Value")
+    # plt.ylabel("Frequency (Normalized)")
+
+    # Show non-blocking plot
+    # plt.show(block=False)
+
+    # Normality Tests
+    shapiro_test = stats.shapiro(data)
+    ks_test = stats.kstest(data, 'norm', args=(mu, std))
+
+    print(f"Shapiro-Wilk test: Statistic={shapiro_test.statistic:.4f}, p-value={shapiro_test.pvalue:.4f}")
+    # print(f"Kolmogorov-Smirnov test: Statistic={ks_test.statistic:.4f}, p-value={ks_test.pvalue:.4f}")
+    # print()
+
+    # # Q-Q Plot in a separate figure
+    # plt.figure()
+    # stats.probplot(data, dist="norm", plot=plt)
+    # plt.title("Q-Q Plot")
+    #
+    # # Show non-blocking Q-Q plot
+    # plt.show(block=False)
+
+
 
 def show_correlation(ax, title, color, col_x, col_y, xs, ys):
     # Calculate correlations and p-values
@@ -702,6 +746,8 @@ def show_correlation(ax, title, color, col_x, col_y, xs, ys):
     df['Correlation'] = df['Correlation'].map(lambda x: f'{x:.3f}')
     df['P-Value'] = df['P-Value'].map(lambda x: f'{x:.1e}')
     display(df)
+
+    plot_hist_norm(ys)
 
     # Plot scatter plot with linear trendline (for Pearson correlation)
     def subscatter(*, ax, color, label, label_trendline=None):
@@ -823,7 +869,7 @@ def filter_pairs(pairs, titles):
 @dataclass
 class RuleViolationSection:
     runname: str
-    pairs_csd_scores: list[tuple[str, pd.DataFrame]]
+    title_to_pairs_feature: dict[str, list[tuple[str, pd.DataFrame]]]
     connectivity: str
     col_data: str
 
@@ -886,7 +932,7 @@ class RuleViolationSection:
 
         return title_to_heatmap_data, df_cmp, list_pairs
 
-    def render(self) -> Callable[[matplotlib.axes.Axes, str, str], None] | None:
+    def render(self) -> dict[str, Callable[[matplotlib.axes.Axes, str, str], None] | None]:
         display(HTML(f'<h2><b>{self.title}</b> ({self.col_data}, {self.connectivity} connectivity)</h2>'))
 
         titles_fig = list(self.title2paramdict)
@@ -923,13 +969,17 @@ class RuleViolationSection:
 
         self.render_fig(fig, titles_fig)
 
-        list_pairs_csd = [self.pairs_csd_scores[0 if self.connectivity == 'low' else 1]] * len(list_pairs)
-        show_comparison = show_correlations('POD scores', self.col_data,
-                                            list_pairs_csd, list_pairs)
-        if show_comparison is not None:
-            show_comparison.title = self.title
+        title_to_show_comparison = {}
+        for title_features, pairs_feature in self.title_to_pairs_feature.items():
+            list_pairs_csd = [pairs_feature[0 if self.connectivity == 'low' else 1]] * len(list_pairs)
+            show_comparison = show_correlations(title_features, self.col_data,
+                                                list_pairs_csd, list_pairs)
+            if show_comparison is not None:
+                show_comparison.title = self.title
+            title_to_show_comparison[title_features] = show_comparison
+
         display(HTML('<hr/>'))
-        return show_comparison
+        return title_to_show_comparison
 
     def render_fig(self, fig, titles_fig):
         # Update layout with shared color scale:
@@ -970,35 +1020,47 @@ def render_metric2connectivity2shows(
             str,
             dict[
                 str,
-                list[Callable[[matplotlib.axes.Axes, str, str], None] | None]
+                list[
+                    dict[
+                        str,
+                        Callable[[matplotlib.axes.Axes, str, str], None] | None
+                    ]
+                ]
             ]
         ]
 ) -> None:
-    for col_data, connectivity2shows in metric2connectivity2shows.items():
-        display(HTML(f'<h1>{col_data}</h1>'))
-        pairs_shows = zip(*connectivity2shows.values(), strict=True)  # [[..., ...], ..., [..., ...]]
+    for i_title in range(2):
+        def get_show(title_to_show_comparison):
+            return list(title_to_show_comparison.values())[i_title]
 
-        shows_summary = []
-        for i_pair, pair in enumerate(pairs_shows):
-            shows = [show for show in pair if show is not None]
-            assert shows
-            section = shows[0].title
-            assert all(show.title == section for show in shows)
+        for col_data, connectivity2shows in metric2connectivity2shows.items():
+            display(HTML(f'<h1>{col_data}</h1>'))
+            pairs_shows = zip(*connectivity2shows.values(), strict=True)  # [[..., ...], ..., [..., ...]]
 
-            fig, axes = make_subplots_matplotlib(len(shows))
-            fig.suptitle(section, fontsize=FONTSIZE_SUPTITLE)
-            for i_show, (ax, show_comparison) in enumerate(zip(axes, shows, strict=True)):
+            shows_summary = []
+            for i_pair, pair in enumerate(pairs_shows):
+                shows = [get_show(show)
+                         for show in pair
+                         if show is not None
+                         and get_show(show) is not None]
+                assert shows
+                section = shows[0].title
+                assert all(show.title == section for show in shows)
+
+                fig, axes = make_subplots_matplotlib(len(shows))
+                fig.suptitle(section, fontsize=FONTSIZE_SUPTITLE)
+                for i_show, (ax, show_comparison) in enumerate(zip(axes, shows, strict=True)):
+                    show_comparison(ax, show_comparison.col_y if i_show == 0 else '', show_comparison.pretitle)
+                    if i_pair != 1:  # "Speed violation"
+                        shows_summary.append(show_comparison)
+                plt.tight_layout(rect=[0, 0, 1, 0.99])
+                plt.show()
+
+            fig, axes = make_subplots_matplotlib(len(shows_summary))
+            for i_show, (ax, show_comparison) in enumerate(zip(axes, shows_summary, strict=True)):
                 show_comparison(ax, show_comparison.col_y if i_show == 0 else '', show_comparison.pretitle)
-                if i_pair != 1:  # "Speed violation"
-                    shows_summary.append(show_comparison)
-            plt.tight_layout(rect=[0, 0, 1, 0.99])
+            plt.tight_layout()
             plt.show()
-
-        fig, axes = make_subplots_matplotlib(len(shows_summary))
-        for i_show, (ax, show_comparison) in enumerate(zip(axes, shows_summary, strict=True)):
-            show_comparison(ax, show_comparison.col_y if i_show == 0 else '', show_comparison.pretitle)
-        plt.tight_layout()
-        plt.show()
 
 
 def render_metric2title2subscatter(metric2title2subscatter):
@@ -1032,7 +1094,12 @@ def render_metric2title2subscatter(metric2title2subscatter):
 
 
 def version3(runname):
-    pairs_csd_scores = plot_csd_scores(runname)
+    title_to_pairs_feature = {
+        'POD scores':
+            plot_feature(runname, 'CSD score (AVs)', 'POD scores', 'POD score'),
+        'No. of OPs':
+            plot_feature(runname, 'No. of OPs', 'No. of OPs', 'No. of OPs'),
+    }
 
     metric2connectivity2shows = {}
     metric2title2subscatter = {}
@@ -1049,7 +1116,7 @@ def version3(runname):
             shows.append(
                 RuleViolationSection(
                     runname=runname,
-                    pairs_csd_scores=pairs_csd_scores,
+                    title_to_pairs_feature=title_to_pairs_feature,
                     connectivity=connectivity,
                     col_data=col_data,
 
@@ -1068,7 +1135,7 @@ def version3(runname):
             shows.append(
                 RuleViolationSection(
                     runname=runname,
-                    pairs_csd_scores=pairs_csd_scores,
+                    title_to_pairs_feature=title_to_pairs_feature,
                     connectivity=connectivity,
                     col_data=col_data,
 
@@ -1089,7 +1156,7 @@ def version3(runname):
             shows.append(
                 RuleViolationSection(
                     runname=runname,
-                    pairs_csd_scores=pairs_csd_scores,
+                    title_to_pairs_feature=title_to_pairs_feature,
                     connectivity=connectivity,
                     col_data=col_data,
 
@@ -1109,7 +1176,7 @@ def version3(runname):
                 None if connectivity != 'high' else
                 RuleViolationSection(
                     runname=runname,
-                    pairs_csd_scores=pairs_csd_scores,
+                    title_to_pairs_feature=title_to_pairs_feature,
                     connectivity=connectivity,
                     col_data=col_data,
 
@@ -1170,7 +1237,7 @@ def version2(runname):
 
 
 def version1(runname):
-    pairs_csd_scores = plot_csd_scores(runname)
+    pairs_csd_scores = plot_feature(runname, 'CSD score (AVs)', 'POD scores', 'POD score')
 
     pairs_missions_baseline = (
         plot_runname(runname, 'No. of completed missions', is_baseline_only=True)
