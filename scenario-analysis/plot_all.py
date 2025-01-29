@@ -648,9 +648,13 @@ def scatter(ax, xs, ys, *, color, label, label_trendline=None):
     if label is not None:
         ax.scatter(xs, ys, s=5, alpha=0.7, color=color, label='\n'.join(textwrap.wrap(label, 15)))
 
-    coeffs = np.polyfit(xs, ys, 1)
-    trendline = np.poly1d(coeffs)
-    ax.plot(xs, trendline(xs), color=color, alpha=0.7, linestyle='--', label=label_trendline)
+    try:
+        coeffs = np.polyfit(xs, ys, 1)
+    except np.linalg.LinAlgError:
+        pass
+    else:
+        trendline = np.poly1d(coeffs)
+        ax.plot(xs, trendline(xs), color=color, alpha=0.7, linestyle='--', label=label_trendline)
 
 
 def add_grid_etc(ax, *, title, xlabel, ylabel):
@@ -1190,7 +1194,7 @@ def version1(runname):
 
 
 def main():
-    runname = '20241230_173555'
+    runname = '20250128_094430'
     # version1(runname)
     # version2(runname)
     metric2connectivity2shows, metric2title2subscatter = version3(runname)

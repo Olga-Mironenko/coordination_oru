@@ -8,7 +8,7 @@ root=$(dirname "$0")
 
 "$root"/stop-all-demos.sh
 
-timeout_hard=20m
+timeout_hard=30m
 demo=GeneratedMapTest
 
 # Prepare variables
