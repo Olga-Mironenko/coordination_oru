@@ -5,6 +5,7 @@ import textwrap
 from dataclasses import dataclass
 from typing import Callable
 
+from IPython.display import display, HTML
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,9 +13,8 @@ import pandas as pd
 import plotly.io as pio
 import plotly.express as px
 from plotly.subplots import make_subplots
-from IPython.display import display, HTML
-
 from scipy.stats import pearsonr, spearmanr, kendalltau
+from sklearn.feature_selection import mutual_info_regression
 
 RUNDIRS = '../logs/rundirs'
 
@@ -665,12 +665,32 @@ def add_grid_etc(ax, *, title, xlabel, ylabel):
     ax.grid(alpha=0.3)
 
 
+def compute_mi_p_value(xs, ys, n_permutations=1000):
+    xs = np.array(xs).reshape(-1, 1)
+    ys = np.array(ys)
+
+    # Compute observed MI
+    observed_mi = mutual_info_regression(xs, ys, random_state=1).item()
+
+    # Compute MI under permutation null hypothesis
+    permuted_mis = []
+    for _ in range(n_permutations):
+        np.random.shuffle(ys)  # Shuffle ys randomly
+        permuted_mi = mutual_info_regression(xs, ys, random_state=1).item()
+        permuted_mis.append(permuted_mi)
+
+    # Compute p-value (fraction of permuted MIs >= observed MI)
+    p_value = np.mean(np.array(permuted_mis) >= observed_mi)
+    return observed_mi, p_value
+
+
 def show_correlation(ax, title, color, col_x, col_y, xs, ys):
     # Calculate correlations and p-values
     results = []
     name2function = {
-        'Pearson': pearsonr,
         'Spearman': spearmanr,
+        'Mutual Information': compute_mi_p_value,
+        'Pearson': pearsonr,
         'Kendall': kendalltau,
     }
     for name, func in name2function.items():
