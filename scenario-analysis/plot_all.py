@@ -318,7 +318,7 @@ def plot_feature(runname, col_data, title, label):
             fig.add_trace(trace, row=1, col=idx + 1, secondary_y=True)
 
         # Add ticks for the subplot
-        add_all_ticks(fig=fig, offset_fig=0, col_i='map ID', col_j='positions configuration', heatmap_data=heatmap_data,
+        add_all_ticks(fig=fig, offset_fig=0, col_i='map ID', col_j='position configuration', heatmap_data=heatmap_data,
                       idx=idx, are_bridges=are_bridges)
 
         # for axis in fig.layout:
@@ -359,7 +359,7 @@ COLUMN_TO_IS_THE_MORE_THE_BETTER = {
     'No. of completed missions': True,
     'No. of collisions': False,
     'No. of near-misses': False,
-    'Collisions rate': False,
+    'Collision rate': False,
 }
 TITLE_CMP = 'Strategies Comparison'
 
@@ -511,7 +511,7 @@ def plot_df_all(
             for secondary_y in False, True:
                 fig.add_trace(trace, row=1, col=idx + 1 + offset_fig, secondary_y=secondary_y)
 
-        add_all_ticks(fig=fig, offset_fig=offset_fig, col_i='map ID', col_j='positions configuration',
+        add_all_ticks(fig=fig, offset_fig=offset_fig, col_i='map ID', col_j='position configuration',
                       heatmap_data=heatmap_data, idx=idx, are_bridges=are_bridges)
 
     # Update layout with shared color scale
@@ -964,7 +964,7 @@ class RuleViolationSection:
                 for secondary_y in False, True:
                     fig.add_trace(trace, row=1, col=idx + 1, secondary_y=secondary_y)
 
-            add_all_ticks(fig=fig, offset_fig=0, col_i='map ID', col_j='positions configuration',
+            add_all_ticks(fig=fig, offset_fig=0, col_i='map ID', col_j='position configuration',
                           heatmap_data=heatmap_data, idx=idx, are_bridges=self.are_bridges())
 
         self.render_fig(fig, titles_fig)
@@ -1096,7 +1096,7 @@ def render_metric2title2subscatter(metric2title2subscatter):
 def version3(runname):
     title_to_pairs_feature = {
         'POD scores':
-            plot_feature(runname, 'CSD score (AVs)', 'POD scores', 'POD score'),
+            plot_feature(runname, 'POD score (AVs)', 'POD scores', 'POD score'),
         'No. of OPs':
             plot_feature(runname, 'No. of OPs', 'No. of OPs', 'No. of OPs'),
     }
@@ -1104,7 +1104,7 @@ def version3(runname):
     metric2connectivity2shows = {}
     metric2title2subscatter = {}
 
-    for col_data in 'No. of completed missions', 'No. of collisions', 'Collisions rate':
+    for col_data in 'No. of completed missions', 'No. of collisions', 'Collision rate':
         connectivity2shows = metric2connectivity2shows[col_data] = {}
         TITLE_TO_SUBSCATTER.clear()
 
@@ -1205,7 +1205,7 @@ def version2(runname):
     # # for is_blocked_to_na in False, True:
     # #     display(HTML(f'<h1><b>{is_blocked_to_na=}</b></h1>'))
     # is_blocked_to_na = False
-    # for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collisions rate':
+    # for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collision rate':
     #     # for prime in 1, 2, 3:
     #     #     # TODO: {col}, baseline prime {prime}, low/high, is_blocked_to_na=is_blocked_to_na
     #     #     pairs_missions_baseline = (
@@ -1225,7 +1225,7 @@ def version2(runname):
 
     display(HTML(f'<h1><b><u>Analysis for all</u></b></h1>'))
     # for is_blocked_to_na in False, True:
-    for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collisions rate':
+    for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collision rate':
         pairs_missions_all = plot_runname(runname, col)
 
         # plot_runname(runname, col, is_comparison_only=True)
@@ -1237,7 +1237,7 @@ def version2(runname):
 
 
 def version1(runname):
-    pairs_csd_scores = plot_feature(runname, 'CSD score (AVs)', 'POD scores', 'POD score')
+    pairs_csd_scores = plot_feature(runname, 'POD score (AVs)', 'POD scores', 'POD score')
 
     pairs_missions_baseline = (
         plot_runname(runname, 'No. of completed missions', is_baseline_only=True)
@@ -1255,8 +1255,8 @@ def version1(runname):
     show_correlations('POD scores', 'No. of completed missions',
                       pairs_csd_scores, pairs_missions_without_rerouting)
 
-    plot_runname(runname, 'Collisions rate', is_comparison_only=True)
-    pairs_collisions_rate_all = plot_runname(runname, 'Collisions rate')
+    plot_runname(runname, 'Collision rate', is_comparison_only=True)
+    pairs_collisions_rate_all = plot_runname(runname, 'Collision rate')
     # print(*[t for t, _ in pairs_collisions_rate_all], sep='\n')
 
     titles_change_of_priorities = [
@@ -1264,7 +1264,7 @@ def version1(runname):
          for x in ('low', 'high')
     ]
     pairs_collisions_rate_for_corr = filter_pairs(pairs_collisions_rate_all, titles_change_of_priorities)
-    show_correlations('POD scores', 'Collisions rate', pairs_csd_scores, pairs_collisions_rate_for_corr)
+    show_correlations('POD scores', 'Collision rate', pairs_csd_scores, pairs_collisions_rate_for_corr)
 
     plot_runname(runname, 'No. of completed missions', is_comparison_only=True, is_blocked_to_na=True)
 
