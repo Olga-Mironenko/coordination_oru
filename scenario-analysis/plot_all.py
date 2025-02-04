@@ -771,7 +771,9 @@ def split_title(title):
 def show_correlation_comparison(ax, col_x, col_y, title,
                                 xs_base, ys_base,
                                 label1, xs1, ys1,
-                                label2, xs2, ys2):
+                                label2, xs2, ys2,
+                                *,
+                                baseline_title):
     if xs_base is not None:
         color_base = 'gray'
         color1 = 'red'
@@ -782,7 +784,7 @@ def show_correlation_comparison(ax, col_x, col_y, title,
         color2 = 'green'
 
     if xs_base is not None:
-        scatter(ax, xs_base, ys_base, color=color_base, label=None, label_trendline='Baseline trendline')
+        scatter(ax, xs_base, ys_base, color=color_base, label=None, label_trendline=baseline_title + ' trendline')
 
     assert label1 != label2
     scatter(ax, xs1, ys1, color=color1, label=label1)
@@ -801,7 +803,9 @@ def make_subplots_matplotlib(n_plots):
 def show_correlations(col_x: str,
                       col_y: str,
                       pairs1: list[tuple[str, pd.DataFrame]],
-                      pairs2: list[tuple[str, pd.DataFrame]]) -> Callable[[matplotlib.axes.Axes, str, str], None] | None:
+                      pairs2: list[tuple[str, pd.DataFrame]],
+                      *,
+                      baseline_title) -> Callable[[matplotlib.axes.Axes, str, str], None] | None:
     display(HTML(f'<h2>{col_x} vs. {col_y}</h2>'))
 
     assert len(pairs1) == len(pairs2)
@@ -848,7 +852,8 @@ def show_correlations(col_x: str,
             show_correlation_comparison(ax, col_x, col_y, title,
                                         xs_base, ys_base,
                                         posttitle1, list_xs[i1], list_ys[i1],
-                                        posttitle2, list_xs[i2], list_ys[i2])
+                                        posttitle2, list_xs[i2], list_ys[i2],
+                                        baseline_title=baseline_title)
 
         show_comparison.col_y = col_y
         show_comparison.pretitle = pretitle1
@@ -973,7 +978,8 @@ class RuleViolationSection:
         for title_features, pairs_feature in self.title_to_pairs_feature.items():
             list_pairs_csd = [pairs_feature[0 if self.connectivity == 'low' else 1]] * len(list_pairs)
             show_comparison = show_correlations(title_features, self.col_data,
-                                                list_pairs_csd, list_pairs)
+                                                list_pairs_csd, list_pairs,
+                                                baseline_title=next(iter(self.title2paramdict)))
             if show_comparison is not None:
                 show_comparison.title = self.title
             title_to_show_comparison[title_features] = show_comparison
@@ -1072,21 +1078,21 @@ def render_metric2title2subscatter(metric2title2subscatter):
         fig, (ax1, ax2, ax3) = make_subplots_matplotlib(3)
 
         for ax, conn in (ax1, 'low'), (ax2, 'high'):
-            title2subscatter[f'Maps with {conn} connectivity (Baseline prime 2)'](
-                ax=ax, color='black', label='Baseline prime 2')
-            title2subscatter[f'Maps with {conn} connectivity (Baseline prime 1)'](
-                ax=ax, color='lightgray', label=None, label_trendline='Baseline prime 1')
-            title2subscatter[f'Maps with {conn} connectivity (Baseline prime 3)'](
-                ax=ax, color='darkgray', label=None, label_trendline='Baseline prime 3')
+            title2subscatter[f'Maps with {conn} connectivity (Baseline 2)'](
+                ax=ax, color='black', label='Baseline 2')
+            title2subscatter[f'Maps with {conn} connectivity (Baseline 1)'](
+                ax=ax, color='lightgray', label=None, label_trendline='Baseline 1')
+            title2subscatter[f'Maps with {conn} connectivity (Baseline 3)'](
+                ax=ax, color='darkgray', label=None, label_trendline='Baseline 3')
             add_grid_etc(ax, title=f'Maps with {conn} connectivity', xlabel=col_x, ylabel=col_data)
 
         # TODO:
-        # title2subscatter[f'Maps with {conn} connectivity (Baseline prime 2)'](
-        #     ax=ax, color='black', label='Baseline prime 2')
-        # title2subscatter[f'Maps with {conn} connectivity (Baseline prime 1)'](
-        #     ax=ax, color='lightgray', label=None, label_trendline='Baseline prime 1')
-        # title2subscatter[f'Maps with {conn} connectivity (Baseline prime 3)'](
-        #     ax=ax, color='darkgray', label=None, label_trendline='Baseline prime 3')
+        # title2subscatter[f'Maps with {conn} connectivity (Baseline 2)'](
+        #     ax=ax, color='black', label='Baseline 2')
+        # title2subscatter[f'Maps with {conn} connectivity (Baseline 1)'](
+        #     ax=ax, color='lightgray', label=None, label_trendline='Baseline 1')
+        # title2subscatter[f'Maps with {conn} connectivity (Baseline 3)'](
+        #     ax=ax, color='darkgray', label=None, label_trendline='Baseline 3')
         # add_grid_etc(ax, title=f'Maps with {conn} connectivity', xlabel=col_x, ylabel=col_data)
 
         plt.tight_layout()
@@ -1122,7 +1128,7 @@ def version3(runname):
 
                     title='Priorities violation',
                     title2paramdict={
-                        'Baseline prime 1':
+                        'Baseline 1':
                             {'slowness': 'baseline', 'forcing': 'ignoring human'},
                         'Dynamic change of priorities':
                             {'slowness': 'baseline', 'forcing': 'change of priorities'},
@@ -1141,7 +1147,7 @@ def version3(runname):
 
                     title='Speed violation',
                     title2paramdict={
-                        'Baseline prime 2':
+                        'Baseline 2':
                             {'slowness': 'without rerouting', 'forcing': 'baseline'},
                     } | (
                         {} if connectivity == 'low' else {
@@ -1162,7 +1168,7 @@ def version3(runname):
 
                     title='Priorities violation and Speed violation (Part 1)',
                     title2paramdict={
-                        'Baseline prime 3':
+                        'Baseline 3':
                             {'slowness': 'without rerouting', 'forcing': 'ignoring human'},
                         'Dynamic change of priorities':
                             {'slowness': 'without rerouting', 'forcing': 'change of priorities'},
@@ -1182,7 +1188,7 @@ def version3(runname):
 
                     title='Priorities violation and Speed violation (Part 2)',
                     title2paramdict={
-                        'Baseline prime 3':
+                        'Baseline 3':
                             {'slowness': 'without rerouting', 'forcing': 'ignoring human'},
                         'Rerouting and Dynamic change of priorities':
                             {'slowness': 'with rerouting', 'forcing': 'change of priorities'},
@@ -1207,7 +1213,7 @@ def version2(runname):
     # is_blocked_to_na = False
     # for col in 'No. of completed missions', 'No. of collisions', 'No. of near-misses', 'Collision rate':
     #     # for prime in 1, 2, 3:
-    #     #     # TODO: {col}, baseline prime {prime}, low/high, is_blocked_to_na=is_blocked_to_na
+    #     #     # TODO: {col}, Baseline {prime}, low/high, is_blocked_to_na=is_blocked_to_na
     #     #     pairs_missions_baseline = (
     #     #         plot_runname(runname, col, prime=prime, is_baseline_only=True)
     #     #     )
