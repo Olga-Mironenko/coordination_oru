@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractVehicle {
     public static int vehicleNumber = 1;
-    private final int ID;
+    private final int id;
     private final int priorityID;
     private final String type = this.getClass().getSimpleName();
     private double maxVelocity;
@@ -76,7 +76,7 @@ public abstract class AbstractVehicle {
      * It initializes the robot's ID, priorityID, color, maxVelocity, maxAcceleration, and footprint.
      * If a robot with the same ID already exists, an IllegalStateException is thrown.
      *
-     * @param ID              The unique identifier of the robot.
+     * @param id              The unique identifier of the robot.
      * @param priorityID      The priority identifier of the robot.
      * @param color           The color of the robot when stationary.
      * @param maxVelocity     The maximum velocity of the robot.
@@ -85,8 +85,8 @@ public abstract class AbstractVehicle {
      * @param yLength         The length of the robot along the y-axis.
      * @throws IllegalStateException if a robot with the same ID already exists.
      */
-    public AbstractVehicle(int ID, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
-        this.ID = ID;
+    public AbstractVehicle(int id, int priorityID, Color color, Color colorInMotion, double maxVelocity, double maxAcceleration, double xLength, double yLength) {
+        this.id = id;
         this.priorityID = priorityID;
         this.color = color;
         this.colorInMotion = colorInMotion;
@@ -98,12 +98,12 @@ public abstract class AbstractVehicle {
         this.footprint = xLength == 0 && yLength == 0 ? null : makeFootprint(xLength, yLength);
         this.totalDistance = 0;
 
-        AbstractVehicle existingVehicle = VehiclesHashMap.getVehicle(ID);
+        AbstractVehicle existingVehicle = VehiclesHashMap.getVehicle(id);
         if (existingVehicle != null) {
-            throw new IllegalStateException("ID " + ID + " already exists.");
+            throw new IllegalStateException("ID " + id + " already exists.");
         }
 
-        VehiclesHashMap.getList().put(this.ID, this);
+        VehiclesHashMap.getList().put(this.id, this);
         vehicleNumber++;
     }
 
@@ -133,7 +133,7 @@ public abstract class AbstractVehicle {
     @Override
     public String toString() {
         return "AbstractVehicle{" +
-                "ID=" + ID +
+                "ID=" + id +
                 ", priorityID=" + priorityID +
                 ", type='" + type + '\'' +
                 ", color=" + color +
@@ -165,17 +165,17 @@ public abstract class AbstractVehicle {
             yLengthInner + vehicleSize.leftSafeDistance, yLengthInner + vehicleSize.rightSafeDistance
         );
 
-        tec.setInnerFootprint(getID(), this.innerFootprint);
-        tec.setFootprint(getID(), this.footprint);
+        tec.setInnerFootprint(id, this.innerFootprint);
+        tec.setFootprint(id, this.footprint);
 
         tec.setForwardModel(
-                this.getID(),
+                id,
                 new ConstantAccelerationForwardModel(
                         this.getMaxAcceleration(),
                         this.getMaxVelocity(),
                         tec.getTemporalResolution(),
                         tec.getControlPeriod(),
-                        tec.getRobotTrackingPeriodInMillis(this.getID())
+                        tec.getRobotTrackingPeriodInMillis(id)
                 )
         );
     }
@@ -224,76 +224,78 @@ public abstract class AbstractVehicle {
         }
         return scenarioId.replace('/', '_').replace(' ', '_');
     }
-
-    public LinkedHashMap<String, String> collectStatistics() {
-        LinkedHashMap<String, String> mapStats = new LinkedHashMap<>();
+    
+    public LinkedHashMap<Entry<String, Integer>, String> collectStatistics() {
+        LinkedHashMap<Entry<String, Integer>, String> mapStats = new LinkedHashMap<>();
         TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-        mapStats.put("Date", dateString);
-        mapStats.put("Scenario ID", scenarioId);
-        mapStats.put("Vehicle ID", "" + this.getID());
-        mapStats.put("Vehicle type", this.type);
+        mapStats.put(new Entry<>("Date"), dateString);
+        mapStats.put(new Entry<>("Scenario ID"), scenarioId);
+        mapStats.put(new Entry<>("Vehicle ID", id), "" + id);
+        mapStats.put(new Entry<>("Vehicle type", id), this.type);
 
-        mapStats.put("Cycle distance (m)", "" + this.pathLength);
-        mapStats.put("No. of completed missions", "" + this.numMissions);
-        mapStats.put("Total distance traveled (m)", "" + round(totalDistance));
+        mapStats.put(new Entry<>("Cycle distance (m)", id), "" + this.pathLength);
+        mapStats.put(new Entry<>("No. of completed missions", id), "" + this.numMissions);
+        mapStats.put(new Entry<>("Total distance traveled (m)", id), "" + round(totalDistance));
 
-        int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(ID, 0);
-        int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(ID, 0);
+        int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(id, 0);
+        int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(id, 0);
         int numViolations = numForcings - numUselessForcings;
 
-        mapStats.put("No. of stops", "" + this.stops);
-        mapStats.put("No. of forcing events", "" + numForcings);
-        mapStats.put("No. of violations", "" + numViolations);
-        mapStats.put("No. of critical sections", "" + tec.robotIDToNumPotentialInteractions.get(ID));
+        mapStats.put(new Entry<>("No. of stops", id), "" + this.stops);
+        mapStats.put(new Entry<>("No. of forcing events", id), "" + numForcings);
+        mapStats.put(new Entry<>("No. of violations", id), "" + numViolations);
+        mapStats.put(new Entry<>("No. of critical sections", id), "" + tec.robotIDToNumPotentialInteractions.get(id));
 
-        mapStats.put("No. of near-misses", "" + tec.robotIDToMinorCollisions.getOrDefault(ID, new ArrayList<>()).size());
-        mapStats.put("No. of collisions", "" + tec.robotIDToMajorCollisions.getOrDefault(ID, new ArrayList<>()).size());
-        mapStats.put("Is blocked", "" + (VehiclesHashMap.getVehicle(ID).isBlocked() ? 1 : 0));
+        mapStats.put(new Entry<>("No. of near-misses", id), "" + tec.robotIDToMinorCollisions.getOrDefault(id, new ArrayList<>()).size());
+        mapStats.put(new Entry<>("No. of collisions", id), "" + tec.robotIDToMajorCollisions.getOrDefault(id, new ArrayList<>()).size());
+        mapStats.put(new Entry<>("Is blocked", id), "" + (VehiclesHashMap.getVehicle(id).isBlocked() ? 1 : 0));
 
-        mapStats.put("Total waiting time (s)", "" + round(totalWaitingTime));
-        mapStats.put("Maximum waiting time (s)", "" + round(maxWaitingTime));
-        mapStats.put("Total time (s)", "" + round(totalTime));
+        mapStats.put(new Entry<>("Total waiting time (s)", id), "" + round(totalWaitingTime));
+        mapStats.put(new Entry<>("Maximum waiting time (s)", id), "" + round(maxWaitingTime));
+        mapStats.put(new Entry<>("Total time (s)", id), "" + round(totalTime));
 
-        mapStats.put("Maximum acceleration (m/s^2)", "" + round(maxAcceleration));
-        mapStats.put("Maximum speed (m/s)", "" + round(maxVelocity));
-        mapStats.put("Average speed (m/s)", "" + round(totalDistance / totalTime));
+        mapStats.put(new Entry<>("Maximum acceleration (m/s^2)", id), "" + round(maxAcceleration));
+        mapStats.put(new Entry<>("Maximum speed (m/s)", id), "" + round(maxVelocity));
+        mapStats.put(new Entry<>("Average speed (m/s)", id), "" + round(totalDistance / totalTime));
 
         if (BrowserVisualization.mapPretable != null) {
-            mapStats.putAll(BrowserVisualization.mapPretable);
+            for (Map.Entry<String, String> entry : BrowserVisualization.mapPretable.entrySet()) {
+                mapStats.put(new Entry<>(entry.getKey()), entry.getValue());
+            }
         }
 
         String[] columns = BrowserVisualization.statsColumns;
         if (columns != null) {
-            String[] rows = BrowserVisualization.statsIdToRow.get(ID);
+            String[] rows = BrowserVisualization.statsIdToRow.get(id);
             assert columns.length == rows.length;
             for (int i = 1; i < columns.length; i++) {
-                mapStats.put(columns[i], rows[i]);
+                mapStats.put(new Entry<>(columns[i], id), rows[i]);
             }
         }
 
         return mapStats;
     }
 
-    public LinkedHashMap<String, String> collectLinearizations() {
-        LinkedHashMap<String, String> mapStats = new LinkedHashMap<>();
+    public LinkedHashMap<Entry<String, Integer>, String> collectLinearizations() {
+        LinkedHashMap<Entry<String, Integer>, String> mapStats = new LinkedHashMap<>();
 
-        addLinearization(mapStats, "A", Missions.robotIDToMissionLinearizationA.get(ID));
-        addLinearization(mapStats, "B", Missions.robotIDToMissionLinearizationB.get(ID));
-        addLinearization(mapStats, "C", Missions.robotIDToMissionLinearizationC.get(ID));
+        addLinearization(mapStats, "A", Missions.robotIDToMissionLinearizationA.get(id));
+        addLinearization(mapStats, "B", Missions.robotIDToMissionLinearizationB.get(id));
+        addLinearization(mapStats, "C", Missions.robotIDToMissionLinearizationC.get(id));
         for (AbstractVehicle other : VehiclesHashMap.getVehicles()) {
-            if (other.ID == ID) {
+            if (other.id == id) {
                 continue;
             }
-            addLinearization(mapStats, "D" + other.ID,
-                    Missions.robotIDToOtherIDToMissionLinearizationD.get(ID).get(other.ID));
+            addLinearization(mapStats, "D" + other.id,
+                    Missions.robotIDToOtherIDToMissionLinearizationD.get(id).get(other.id));
         }
 
         return mapStats;
     }
-
+    
     public void writeStatistics() {
-        LinkedHashMap<String, String> mapStats = collectStatistics();
+        LinkedHashMap<Entry<String, Integer>, String> mapStats = collectStatistics();
         if (GatedThread.gatekeeper.isOver) {
             mapStats.putAll(collectLinearizations());
         }
@@ -318,11 +320,20 @@ public abstract class AbstractVehicle {
                 isRundirPrepared = true;
             }
 
-            File file = new File(dir + "/" + this.ID + ".csv");
+            File file = new File(dir + "/" + this.id + ".csv");
             FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
             BufferedWriter bw = new BufferedWriter(fw);
-            for (Map.Entry<String, String> entry : mapStats.entrySet()) {
-                bw.write(entry.getKey() + "\t" + entry.getValue() + "\n");
+            for (Map.Entry<Entry<String, Integer>, String> entry : mapStats.entrySet()) {
+                bw.write(entry.getKey().getKey() + "\t" + entry.getValue() + "\n");
+
+                /*
+                Entry<String, Integer> key = entry.getKey();
+                String name = key.getKey();
+                if (key.getValue() != null) {
+                    name = "V" + key.getValue() + ": " + name;
+                }
+                bw.write(name + "\t" + entry.getValue() + "\n");
+                 */
             }
             bw.close();
         } catch (IOException e) {
@@ -330,11 +341,12 @@ public abstract class AbstractVehicle {
         }
     }
 
-    private static void addLinearization(LinkedHashMap<String, String> mapStats, String name, double[] linearization) {
+    private void addLinearization(LinkedHashMap<Entry<String, Integer>, String> mapStats,
+                                  String name, double[] linearization) {
         String result = Arrays.stream(linearization)
                 .mapToObj(d -> String.format("%.6f", d)) // Convert each number to String
                 .collect(Collectors.joining(" "));
-        mapStats.put("Linearization " + name, result);
+        mapStats.put(new Entry<>("Linearization " + name, id), result);
     }
 
     /**
@@ -346,9 +358,9 @@ public abstract class AbstractVehicle {
      * @throws InterruptedException if the sleep operation is interrupted.
      */
     public void blinkRobot(Color colorOriginal, Color colorToggle, long blinkTimeSeconds) throws InterruptedException {
-        VehiclesHashMap.getVehicle(ID).setVehicleColor(colorToggle);
+        VehiclesHashMap.getVehicle(id).setVehicleColor(colorToggle);
         TimeUnit.SECONDS.sleep(blinkTimeSeconds);
-        VehiclesHashMap.getVehicle(ID).setVehicleColor(colorOriginal);
+        VehiclesHashMap.getVehicle(id).setVehicleColor(colorOriginal);
     }
 
     public Color getVehicleColor() {
@@ -394,7 +406,7 @@ public abstract class AbstractVehicle {
     }
 
     public int getID() {
-        return ID;
+        return id;
     }
 
     public void setVehicleColor(Color color) {
@@ -439,7 +451,7 @@ public abstract class AbstractVehicle {
     }
 
     public AbstractTrajectoryEnvelopeTracker getTracker() {
-        return TrajectoryEnvelopeCoordinatorSimulation.tec.trackers.get(getID());
+        return TrajectoryEnvelopeCoordinatorSimulation.tec.trackers.get(id);
     }
 
     public AdaptiveTrajectoryEnvelopeTrackerRK4 getAdaptiveTracker() {
