@@ -49,7 +49,7 @@ public class BrowserVisualization implements FleetVisualization {
 
 	public static boolean areAllVehiclesStarted = false;
 
-	public static Map<String, String> mapPretable = null;
+	public static LinkedHashMap<String, String> mapPretable = null;
 	public static String[] statsColumns = null;
 	public static TreeMap<Integer, String[]> statsIdToRow = null;
 
@@ -841,7 +841,7 @@ public class BrowserVisualization implements FleetVisualization {
 		StringBuilder htmlOutput = new StringBuilder(
 				"<style>ul.pretable li { white-space: nowrap; }</style>\n<ul class=\"pretable\">"
 		);
-		Map<String, String> mapCsv = new LinkedHashMap<>();
+		LinkedHashMap<String, String> mapCsv = new LinkedHashMap<>();
 		for (Map.Entry<String, String> entry : map.entrySet()) {
 			String csv = htmlToCsv(entry.getValue());
 			String title = escapeHTML(csv);

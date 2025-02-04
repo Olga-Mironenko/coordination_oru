@@ -1,7 +1,6 @@
 package se.oru.coordination.coordination_oru.code;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import org.apache.commons.io.FileUtils;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
@@ -26,7 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -227,7 +225,79 @@ public abstract class AbstractVehicle {
         return scenarioId.replace('/', '_').replace(' ', '_');
     }
 
+    public LinkedHashMap<String, String> collectStatistics() {
+        LinkedHashMap<String, String> mapStats = new LinkedHashMap<>();
+        TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+
+        mapStats.put("Date", dateString);
+        mapStats.put("Scenario ID", scenarioId);
+        mapStats.put("Vehicle ID", "" + this.getID());
+        mapStats.put("Vehicle type", this.type);
+
+        mapStats.put("Cycle distance (m)", "" + this.pathLength);
+        mapStats.put("No. of completed missions", "" + this.numMissions);
+        mapStats.put("Total distance traveled (m)", "" + round(totalDistance));
+
+        int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(ID, 0);
+        int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(ID, 0);
+        int numViolations = numForcings - numUselessForcings;
+
+        mapStats.put("No. of stops", "" + this.stops);
+        mapStats.put("No. of forcing events", "" + numForcings);
+        mapStats.put("No. of violations", "" + numViolations);
+        mapStats.put("No. of critical sections", "" + tec.robotIDToNumPotentialInteractions.get(ID));
+
+        mapStats.put("No. of near-misses", "" + tec.robotIDToMinorCollisions.getOrDefault(ID, new ArrayList<>()).size());
+        mapStats.put("No. of collisions", "" + tec.robotIDToMajorCollisions.getOrDefault(ID, new ArrayList<>()).size());
+        mapStats.put("Is blocked", "" + (VehiclesHashMap.getVehicle(ID).isBlocked() ? 1 : 0));
+
+        mapStats.put("Total waiting time (s)", "" + round(totalWaitingTime));
+        mapStats.put("Maximum waiting time (s)", "" + round(maxWaitingTime));
+        mapStats.put("Total time (s)", "" + round(totalTime));
+
+        mapStats.put("Maximum acceleration (m/s^2)", "" + round(maxAcceleration));
+        mapStats.put("Maximum speed (m/s)", "" + round(maxVelocity));
+        mapStats.put("Average speed (m/s)", "" + round(totalDistance / totalTime));
+
+        if (BrowserVisualization.mapPretable != null) {
+            mapStats.putAll(BrowserVisualization.mapPretable);
+        }
+
+        String[] columns = BrowserVisualization.statsColumns;
+        if (columns != null) {
+            String[] rows = BrowserVisualization.statsIdToRow.get(ID);
+            assert columns.length == rows.length;
+            for (int i = 1; i < columns.length; i++) {
+                mapStats.put(columns[i], rows[i]);
+            }
+        }
+
+        return mapStats;
+    }
+
+    public LinkedHashMap<String, String> collectLinearizations() {
+        LinkedHashMap<String, String> mapStats = new LinkedHashMap<>();
+
+        addLinearization(mapStats, "A", Missions.robotIDToMissionLinearizationA.get(ID));
+        addLinearization(mapStats, "B", Missions.robotIDToMissionLinearizationB.get(ID));
+        addLinearization(mapStats, "C", Missions.robotIDToMissionLinearizationC.get(ID));
+        for (AbstractVehicle other : VehiclesHashMap.getVehicles()) {
+            if (other.ID == ID) {
+                continue;
+            }
+            addLinearization(mapStats, "D" + other.ID,
+                    Missions.robotIDToOtherIDToMissionLinearizationD.get(ID).get(other.ID));
+        }
+
+        return mapStats;
+    }
+
     public void writeStatistics() {
+        LinkedHashMap<String, String> mapStats = collectStatistics();
+        if (GatedThread.gatekeeper.isOver) {
+            mapStats.putAll(collectLinearizations());
+        }
+
         try {
             String subdir = dateString + "_" + Containerization.WORKER + (
                     scenarioId == null
@@ -251,78 +321,20 @@ public abstract class AbstractVehicle {
             File file = new File(dir + "/" + this.ID + ".csv");
             FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
             BufferedWriter bw = new BufferedWriter(fw);
-
-            TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-
-            bw.write("Date\t" + dateString + "\n");
-            bw.write("Scenario ID\t" + scenarioId + "\n");
-            bw.write("Vehicle ID\t" + this.getID() + "\n");
-            bw.write("Vehicle type\t" + this.type + "\n");
-
-            bw.write("Cycle distance (m)\t" + this.pathLength + "\n");
-            bw.write("No. of completed missions\t" + this.numMissions + "\n");
-            bw.write("Total distance traveled (m)\t" + round(totalDistance) + "\n");
-
-            int numForcings = Forcing.robotIDToNumForcingEvents.getOrDefault(ID, 0);
-            int numUselessForcings = Forcing.robotIDToNumUselessForcingEvents.getOrDefault(ID, 0);
-            int numViolations = numForcings - numUselessForcings;
-
-            bw.write("No. of stops\t" + this.stops + "\n");
-            bw.write("No. of forcing events\t" + numForcings + "\n");
-            bw.write("No. of violations\t" + numViolations + "\n");
-            bw.write("No. of critical sections\t" + tec.robotIDToNumPotentialInteractions.get(ID) + "\n");
-
-            bw.write("No. of near-misses\t" + tec.robotIDToMinorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
-            bw.write("No. of collisions\t" + tec.robotIDToMajorCollisions.getOrDefault(ID, new ArrayList<>()).size() + "\n");
-            bw.write("Is blocked\t" + (VehiclesHashMap.getVehicle(ID).isBlocked() ? 1 : 0) + "\n");
-
-            bw.write("Total waiting time (s)\t" + round(totalWaitingTime) + "\n");
-            bw.write("Maximum waiting time (s)\t" + round(maxWaitingTime) + "\n");
-            bw.write("Total time (s)\t" + round(totalTime) + "\n");
-
-            bw.write("Maximum acceleration (m/s^2)\t" + round(maxAcceleration) + "\n");
-            bw.write("Maximum speed (m/s)\t" + round(maxVelocity) + "\n");
-            bw.write("Average speed (m/s)\t" + round(totalDistance / totalTime) + "\n");
-
-            if (BrowserVisualization.mapPretable != null) {
-                for (Map.Entry<String, String> entry : BrowserVisualization.mapPretable.entrySet()) {
-                    bw.write(entry.getKey() + "\t" + entry.getValue() + "\n");
-                }
+            for (Map.Entry<String, String> entry : mapStats.entrySet()) {
+                bw.write(entry.getKey() + "\t" + entry.getValue() + "\n");
             }
-
-            String[] columns = BrowserVisualization.statsColumns;
-            if (columns != null) {
-                String[] rows = BrowserVisualization.statsIdToRow.get(ID);
-                assert columns.length == rows.length;
-                for (int i = 1; i < columns.length; i++) {
-                    bw.write(columns[i] + "\t" + rows[i] + "\n");
-                }
-            }
-
-            if (GatedThread.gatekeeper.isOver) {
-                writeLinearization(bw, "A", Missions.robotIDToMissionLinearizationA.get(ID));
-                writeLinearization(bw, "B", Missions.robotIDToMissionLinearizationB.get(ID));
-                writeLinearization(bw, "C", Missions.robotIDToMissionLinearizationC.get(ID));
-                for (AbstractVehicle other : VehiclesHashMap.getVehicles()) {
-                    if (other.ID == ID) {
-                        continue;
-                    }
-                    writeLinearization(bw, "D" + other.ID,
-                            Missions.robotIDToOtherIDToMissionLinearizationD.get(ID).get(other.ID));
-                }
-            }
-
             bw.close();
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
     }
 
-    private static void writeLinearization(BufferedWriter bw, String name, double[] linearization) throws IOException {
+    private static void addLinearization(LinkedHashMap<String, String> mapStats, String name, double[] linearization) {
         String result = Arrays.stream(linearization)
                 .mapToObj(d -> String.format("%.6f", d)) // Convert each number to String
                 .collect(Collectors.joining(" "));
-        bw.write("Linearization " + name + "\t" + result + "\n");
+        mapStats.put("Linearization " + name, result);
     }
 
     /**
