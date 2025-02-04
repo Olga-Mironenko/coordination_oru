@@ -422,7 +422,7 @@ public class GridTest {
                     }
 
                     if (isForcingNow) {
-                        knobsAfterForcing = Forcing.forceDriving(hum0Final.getID());
+                        knobsAfterForcing = Forcing.forceDriving(hum0Final.getID(), true);
                         if (knobsAfterForcing != null) {
                             rrAtForcingStart = hum0Final.getCurrentRobotReport();
                         }

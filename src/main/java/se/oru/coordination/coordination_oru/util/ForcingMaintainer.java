@@ -42,7 +42,9 @@ public class ForcingMaintainer {
         rrAtForcingStart = null;
     }
 
-    public void update(int robotID, Double distanceToCP, boolean isForcingNow, boolean isResumingNow, boolean isRestoringNow) {
+    public void update(int robotID, Double distanceToCP,
+                       boolean isForcingNow, boolean areStopsAllowed,
+                       boolean isResumingNow, boolean isRestoringNow) {
         assert VehiclesHashMap.isHuman(robotID);
         HumanDrivenVehicle human = (HumanDrivenVehicle) VehiclesHashMap.getVehicle(robotID);
 
@@ -54,7 +56,7 @@ public class ForcingMaintainer {
             if (isForcingOngoing()) {
                 finishForcing();
             }
-            KnobsAfterForcing knobsAfterForcingNew = Forcing.forceDriving(robotID);
+            KnobsAfterForcing knobsAfterForcingNew = Forcing.forceDriving(robotID, areStopsAllowed);
             assert knobsAfterForcingNew != null;
 
             knobsAfterForcing = knobsAfterForcingNew;

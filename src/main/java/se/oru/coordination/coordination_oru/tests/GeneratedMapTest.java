@@ -70,7 +70,8 @@ public class GeneratedMapTest {
 //                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario9-6.json, passhum 0, slowness no, forcing change of priorities"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario7-1.json, passhum 0, slowness with rerouting, forcing change of priorities"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-2.json, passhum 0, slowness with rerouting, forcing change of priorities"
-                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness with rerouting, forcing change of priorities"
+//                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness with rerouting, forcing change of priorities"
+                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness no, forcing 50% stops"
             );
         }
         AbstractVehicle.scenarioId = scenarioString;
@@ -105,6 +106,7 @@ public class GeneratedMapTest {
         }
 
         assert AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman == 0;
+        Forcing.stopDistance = Forcing.priorityDistance;
         switch (getSuffix(scenarioTokens[3], "forcing ")) {
             case "no":
                 break;
@@ -114,12 +116,17 @@ public class GeneratedMapTest {
                 // and "change of priorities"
             case "change of priorities":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
-                Forcing.stopDistance = Double.NEGATIVE_INFINITY;
+                AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingStops = 0;
                 break;
 
             case "stops":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
-                Forcing.stopDistance = Forcing.priorityDistance;
+                AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingStops = 1;
+                break;
+
+            case "50% stops":
+                AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
+                AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingStops = 0.5;
                 break;
 
             default:

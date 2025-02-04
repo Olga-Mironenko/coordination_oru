@@ -62,7 +62,7 @@ public class Forcing {
 
         AbstractVehicle hum0 = VehiclesHashMap.getVehicle(robotID);
         RobotReport rrAtForcingStart = hum0.getCurrentRobotReport();
-        KnobsAfterForcing knobsAfterForcing = Forcing.forceDriving(robotID);
+        KnobsAfterForcing knobsAfterForcing = Forcing.forceDriving(robotID, true);
         if (knobsAfterForcing == null) {
             return;
         }
@@ -87,7 +87,7 @@ public class Forcing {
         return forcingSinceTimestep != -1;
     }
 
-    public static KnobsAfterForcing forceDriving(int robotID) {
+    public static KnobsAfterForcing forceDriving(int robotID, boolean areStopsAllowed) {
         assert ! isForcingActive();
 
         forcingSinceTimestep = Timekeeper.getTimestepsPassed();
@@ -119,12 +119,15 @@ public class Forcing {
                 }
                 priorityDistanceRemaining = Math.max(0, priorityDistanceRemaining);
 
-                double stopDistanceRemaining = stopDistance - distanceTraveledAfterForcing;
-                if (isDistanceToCPAddedToStopDistance) {
-                    assert distanceToCP != null;
-                    stopDistanceRemaining += distanceToCP;
+                double stopDistanceRemaining = 0;
+                if (areStopsAllowed) {
+                    stopDistanceRemaining = stopDistance - distanceTraveledAfterForcing;
+                    if (isDistanceToCPAddedToStopDistance) {
+                        assert distanceToCP != null;
+                        stopDistanceRemaining += distanceToCP;
+                    }
+                    stopDistanceRemaining = Math.max(0, stopDistanceRemaining);
                 }
-                stopDistanceRemaining = Math.max(0, stopDistanceRemaining);
 
                 assert criticalSectionsToRestorePrioritiesLater.isEmpty() == robotsToRestoreLater.isEmpty();
 
