@@ -46,7 +46,7 @@ public class EventWriter {
             }
 
             LinkedHashMap<String, String> mapEvent = new LinkedHashMap<>();
-            mapEvent.put("millisVirtual", "" + Timekeeper.getVirtualMillisPassed());
+            mapEvent.put("secondsVirtual", String.format("%6.1f", Timekeeper.getVirtualMillisPassed() / 1000.0));
             mapEvent.put("event", event.toJson());
             for (boolean isNull : List.of(true, false)) {
                 for (Map.Entry<Entry<String, Integer>, String> entry : mapStats.entrySet()) {
@@ -68,6 +68,10 @@ public class EventWriter {
                 }
 
                 bw.write(String.join("\t", mapEvent.values()) + "\n");
+
+                if (! Containerization.IS_CONTAINER) {
+                    bw.flush();
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage());
             }

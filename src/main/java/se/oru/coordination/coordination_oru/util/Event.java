@@ -13,7 +13,9 @@ public abstract class Event {
             .setPrettyPrinting()  // Pretty printing ensures spaces after commas
             .create();
 
-    public abstract String getType();
+    public String getType() {
+        return this.getClass().getSimpleName();
+    }
 
     // Convert event to JSON string with correct formatting
     public String toJson() {
@@ -42,56 +44,11 @@ public abstract class Event {
         EventWriter.writeEvent(this);
     }
 
-    // Inner class for an event with no robot ID
-    public static class EventA extends Event {
-        public String message;
-
-        public EventA(String message) {
-            this.message = message;
-        }
-
-        @Override
-        public String getType() {
-            return "event_a";
-        }
-    }
-
-    // Inner class for an event with one robot ID
-    public static class EventB extends Event {
-        public int robotID;
-        public String action;
-
-        public EventB(int robotID, String action) {
-            this.robotID = robotID;
-            this.action = action;
-        }
-
-        @Override
-        public String getType() {
-            return "event_b";
-        }
-    }
-
-    // Example usage
-    public static void main(String[] args) {
-        Event event1 = new EventA("System started");
-        Event event2 = new EventB(42, "Move forward");
-
-        // Serialize and print JSON
-        System.out.println(event1.toJson());
-        System.out.println(event2.toJson());
-    }
-
     public static class MissionStarted extends Event {
         public int robotID;
 
         public MissionStarted(int robotID) {
             this.robotID = robotID;
-        }
-
-        @Override
-        public String getType() {
-            return "MissionStarted";
         }
     }
 
@@ -100,11 +57,6 @@ public abstract class Event {
 
         public MissionFinished(int robotID) {
             this.robotID = robotID;
-        }
-
-        @Override
-        public String getType() {
-            return "MissionFinished";
         }
     }
 
@@ -116,11 +68,6 @@ public abstract class Event {
             this.robotID = robotID;
             this.otherID = otherID;
         }
-
-        @Override
-        public String getType() {
-            return "MinorCollision";
-        }
     }
 
     public static class MajorCollisionFromMinor extends Event {
@@ -131,10 +78,35 @@ public abstract class Event {
             this.robotID = robotID;
             this.otherID = otherID;
         }
+    }
 
-        @Override
-        public String getType() {
-            return "MajorCollisionFromMinor";
+    public static class ForcingStarted extends Event {
+        public int robotID;
+        public boolean areStopsAllowed;
+
+        public ForcingStarted(int robotID, boolean areStopsAllowed) {
+            this.robotID = robotID;
+            this.areStopsAllowed = areStopsAllowed;
+        }
+    }
+
+    public static class ForcingFinished extends Event {
+        public int robotID;
+
+        public ForcingFinished(int robotID) {
+            this.robotID = robotID;
+        }
+    }
+
+    public static class MaxVelocitySet extends Event {
+        public int robotID;
+        public double maxVelocityNew;
+        public double maxVelocityOld;
+
+        public MaxVelocitySet(int robotID, double maxVelocityNew, double maxVelocityOld) {
+            this.robotID = robotID;
+            this.maxVelocityNew = maxVelocityNew;
+            this.maxVelocityOld = maxVelocityOld;
         }
     }
 }

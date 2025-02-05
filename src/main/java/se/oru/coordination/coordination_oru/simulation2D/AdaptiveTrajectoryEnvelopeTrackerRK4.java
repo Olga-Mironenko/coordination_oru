@@ -1259,11 +1259,15 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			}
 			if (isHuman) { // slowing down
 				if (distanceMonitor.update(lengthIntervalSlowingDownForHuman, getLastRobotReport().getDistanceTraveled())) {
+					double maxVelocityOld = vehicle.getMaxVelocity();
+
 					if (rand.nextDouble() < probabilitySlowingDownForHuman) {
 						vehicle.setMaxVelocity(velocitySlowingDownForHuman);
 					} else {
 						vehicle.resetMaxVelocity();
 					}
+
+					new Event.MaxVelocitySet(vehicle.getID(), vehicle.getMaxVelocity(), maxVelocityOld).write();
 				}
 			}
 

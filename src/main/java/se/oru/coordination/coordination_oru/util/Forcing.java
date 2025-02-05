@@ -89,6 +89,7 @@ public class Forcing {
 
     public static KnobsAfterForcing forceDriving(int robotID, boolean areStopsAllowed) {
         assert ! isForcingActive();
+        new Event.ForcingStarted(robotID, areStopsAllowed).write();
 
         forcingSinceTimestep = Timekeeper.getTimestepsPassed();
         robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);

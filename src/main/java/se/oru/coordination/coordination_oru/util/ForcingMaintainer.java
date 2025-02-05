@@ -38,6 +38,7 @@ public class ForcingMaintainer {
     private void finishForcing() {
         knobsAfterForcing.resumeRobots();
         knobsAfterForcing.restorePriorities();
+        new Event.ForcingFinished(rrAtForcingStart.getRobotID()).write();
         knobsAfterForcing = null;
         rrAtForcingStart = null;
     }
