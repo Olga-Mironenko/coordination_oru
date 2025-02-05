@@ -293,13 +293,8 @@ public abstract class AbstractVehicle {
 
         return mapStats;
     }
-    
-    public void writeStatistics() {
-        LinkedHashMap<Entry<String, Integer>, String> mapStats = collectStatistics();
-        if (GatedThread.gatekeeper.isOver) {
-            mapStats.putAll(collectLinearizations());
-        }
 
+    public static File prepareRundir() {
         try {
             String subdir = dateString + "_" + Containerization.WORKER + (
                     scenarioId == null
@@ -307,6 +302,7 @@ public abstract class AbstractVehicle {
                             : "_" + getScenarioIdAsBasename()
             );
             File dir = new File(rundirsRoot + "/" + subdir);
+
             if (!isRundirPrepared) {
                 boolean isCreated = dir.mkdirs();
                 assert isCreated;
@@ -320,6 +316,20 @@ public abstract class AbstractVehicle {
                 isRundirPrepared = true;
             }
 
+            return dir;
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+    
+    public void writeStatistics() {
+        LinkedHashMap<Entry<String, Integer>, String> mapStats = collectStatistics();
+        if (GatedThread.gatekeeper.isOver) {
+            mapStats.putAll(collectLinearizations());
+        }
+
+        File dir = prepareRundir();
+        try {
             File file = new File(dir + "/" + this.id + ".csv");
             FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
             BufferedWriter bw = new BufferedWriter(fw);

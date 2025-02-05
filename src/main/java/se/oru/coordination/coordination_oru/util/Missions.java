@@ -41,6 +41,7 @@ import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.util.Event;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
@@ -1413,7 +1414,7 @@ public class Missions {
 						catch (InterruptedException e) { e.printStackTrace(); return; }
 						if (isStatisticsPeriodical) {
 							updateRobotReports(tec); // Call to update all the robot reports
-							writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
+//							writeStatistics(tec); // Call to write statistics of all robots to scenarios/filename
 						}
 // 						LookAheadVehicle.updateLookAheadVehiclesPath(tec); // Call to update limited predictable vehicles paths
 					}
@@ -1451,6 +1452,8 @@ public class Missions {
 							if (! tec.addMissions(m)) {
 								continue; // robot wasn't free to accept a new mission
 							}
+
+							EventWriter.writeEvent(new Event.MissionStarted(robotID));
 
 							Missions.dequeueMission(m.getRobotID());
 							if (loopMissions.getOrDefault(robotID, true)) {

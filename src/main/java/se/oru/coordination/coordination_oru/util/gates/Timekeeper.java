@@ -1,6 +1,7 @@
 package se.oru.coordination.coordination_oru.util.gates;
 
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.EventWriter;
 import se.oru.coordination.coordination_oru.util.Missions;
 
 import java.util.Calendar;
@@ -67,6 +68,7 @@ public class Timekeeper extends GatedThread {
         interruptAllThreads();
         if (Missions.isStatisticsFinal) {
             Missions.writeStatistics(TrajectoryEnvelopeCoordinatorSimulation.tec);
+            EventWriter.close();
         }
         System.exit(0);
     }

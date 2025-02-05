@@ -772,7 +772,7 @@ public class BrowserVisualization implements FleetVisualization {
 		Map<String, String> map = new LinkedHashMap<>();
 
 		if (AbstractVehicle.scenarioId != null) {
-			map.put("Scenario", AbstractVehicle.scenarioId);
+			map.put("Scenario ID", AbstractVehicle.scenarioId);
 		}
 
 		map.put("Current datetime", java.time.LocalDateTime.now().format(

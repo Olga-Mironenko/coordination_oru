@@ -45,8 +45,8 @@ public class GeneratedMapTest {
         if (Containerization.IS_CONTAINER) {
             Timekeeper.setVirtualMinutesPassedMax(30);
         } else {
-            Timekeeper.setVirtualMinutesPassedMax(30);
-//            Timekeeper.setVirtualSecondsPassedMax(2);
+//            Timekeeper.setVirtualMinutesPassedMax(30);
+            Timekeeper.setVirtualSecondsPassedMax(20);
 //            Timekeeper.setVirtualMinutesPassedMax(2);
         }
 
@@ -75,6 +75,7 @@ public class GeneratedMapTest {
             );
         }
         AbstractVehicle.scenarioId = scenarioString;
+        EventWriter.activate();
 
         // Parsing `scenarioString`:
 
