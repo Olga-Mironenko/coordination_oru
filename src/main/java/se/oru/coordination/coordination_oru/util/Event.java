@@ -38,6 +38,10 @@ public abstract class Event {
                 .collect(Collectors.joining(" ")); // Join lines with a space
     }
 
+    public void write() {
+        EventWriter.writeEvent(this);
+    }
+
     // Inner class for an event with no robot ID
     public static class EventA extends Event {
         public String message;
@@ -78,7 +82,6 @@ public abstract class Event {
         System.out.println(event2.toJson());
     }
 
-    // Inner class for an event with one robot ID
     public static class MissionStarted extends Event {
         public int robotID;
 
@@ -92,4 +95,16 @@ public abstract class Event {
         }
     }
 
+    public static class MissionFinished extends Event {
+        public int robotID;
+
+        public MissionFinished(int robotID) {
+            this.robotID = robotID;
+        }
+
+        @Override
+        public String getType() {
+            return "MissionFinished";
+        }
+    }
 }

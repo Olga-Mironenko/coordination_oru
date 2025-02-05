@@ -1339,6 +1339,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		assert status == Status.FULL_STOP;
 		onPositionUpdate();
 		enqueueOneReport();
+		new Event.MissionFinished(myRobotID).write();
 
 		//continue transmitting until the coordinator will be informed of having reached the last position.
 		while (tec.getRobotReport(te.getRobotID()).getPathIndex() != -1)

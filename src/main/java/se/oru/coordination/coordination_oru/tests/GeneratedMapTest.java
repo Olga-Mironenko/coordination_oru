@@ -46,7 +46,8 @@ public class GeneratedMapTest {
             Timekeeper.setVirtualMinutesPassedMax(30);
         } else {
 //            Timekeeper.setVirtualMinutesPassedMax(30);
-            Timekeeper.setVirtualSecondsPassedMax(20);
+            Timekeeper.setVirtualMinutesPassedMax(3);
+//            Timekeeper.setVirtualSecondsPassedMax(20);
 //            Timekeeper.setVirtualMinutesPassedMax(2);
         }
 

@@ -1453,7 +1453,7 @@ public class Missions {
 								continue; // robot wasn't free to accept a new mission
 							}
 
-							EventWriter.writeEvent(new Event.MissionStarted(robotID));
+							new Event.MissionStarted(robotID).write();
 
 							Missions.dequeueMission(m.getRobotID());
 							if (loopMissions.getOrDefault(robotID, true)) {
