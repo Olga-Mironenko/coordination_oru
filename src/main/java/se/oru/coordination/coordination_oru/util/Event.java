@@ -107,4 +107,34 @@ public abstract class Event {
             return "MissionFinished";
         }
     }
+
+    public static class MinorCollision extends Event {
+        public int robotID;
+        public int otherID;
+
+        public MinorCollision(int robotID, int otherID) {
+            this.robotID = robotID;
+            this.otherID = otherID;
+        }
+
+        @Override
+        public String getType() {
+            return "MinorCollision";
+        }
+    }
+
+    public static class MajorCollisionFromMinor extends Event {
+        public int robotID;
+        public int otherID;
+
+        public MajorCollisionFromMinor(int robotID, int otherID) {
+            this.robotID = robotID;
+            this.otherID = otherID;
+        }
+
+        @Override
+        public String getType() {
+            return "MajorCollisionFromMinor";
+        }
+    }
 }

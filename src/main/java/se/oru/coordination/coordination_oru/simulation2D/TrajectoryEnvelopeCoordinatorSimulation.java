@@ -22,6 +22,7 @@ import se.oru.coordination.coordination_oru.TrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.util.Event;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
@@ -525,6 +526,16 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 
 									collisionsList.add(ce);
 
+									if (isMajor) {
+										new Event.MajorCollisionFromMinor(
+												robotReport1.getRobotID(), robotReport2.getRobotID()
+										).write();
+									} else {
+										new Event.MinorCollision(
+												robotReport1.getRobotID(), robotReport2.getRobotID()
+										).write();
+									}
+
 									HashMap<Integer, List<CollisionEvent>> robotIDToCollisions = isMajor ? robotIDToMajorCollisions : robotIDToAllCollisions;
 									for (int robotID : Arrays.asList(cs.getTe1RobotID(), cs.getTe2RobotID(), -1)) {
 										// Prepare a list of collisions:
@@ -539,12 +550,10 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 										robotIDToCollisions.get(robotID).add(ce);
 										if (! isMajor) {
 											robotIDToMinorCollisions.get(robotID).add(ce);
-										}
-
-										if (isMajor) {
+										} else {
 											// Remove the corresponding minor collision:
 											int indexMinor = findCSinCollisionsList(cs, robotIDToMinorCollisions.get(robotID));
-											assert indexMinor != -1;
+											assert indexMinor != -1; // TODO: perhaps doesn't work if there's no safety distance
 											robotIDToMinorCollisions.get(robotID).remove(indexMinor);
 
 											// Change the type of the corresponding minor collision:
