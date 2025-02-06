@@ -61,7 +61,7 @@ public class GeneratedMapTest {
 //                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario1-1.json, change of priorities, seed 1, probabilityForcingForHuman 1"
 //                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario1-1.json, baseline, seed 1, probabilityForcingForHuman 0"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-1.json, passhum 1, slowness with rerouting, forcing change of priorities"
-                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-1.json, passhum 1, slowness no, forcing no"
+//                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-1.json, passhum 1, slowness no, forcing no"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario1-4.json, baseline, seed 1, probabilityForcingForHuman 0"
 //                    "map-generator/generated-maps/2024-11-28_13:19:18_without_bridges/scenario1-5.json, passhum 0, slowness no, forcing no"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness without rerouting, forcing ignoring human"
@@ -74,6 +74,7 @@ public class GeneratedMapTest {
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-2.json, passhum 0, slowness with rerouting, forcing change of priorities"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness with rerouting, forcing change of priorities"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness with rerouting, forcing change of priorities"
+                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness no, forcing change of priorities"
             );
         }
         AbstractVehicle.scenarioId = scenarioString;
