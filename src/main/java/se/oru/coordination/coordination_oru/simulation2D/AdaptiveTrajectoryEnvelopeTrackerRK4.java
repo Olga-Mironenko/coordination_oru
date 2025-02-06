@@ -974,12 +974,18 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			return;
 		}
 
-		if (criticalSection.getWeight(myRobotID).compareTo(CriticalSection.Weight.WEIGHT_CAN_PASS_FIRST) < 0) {
+		int otherRobotID = criticalSection.getOtherRobotID(myRobotID);
+		CriticalSection.Weight myWeight = criticalSection.getWeight(myRobotID);
+		CriticalSection.Weight otherWeight = criticalSection.getWeight(otherRobotID);
+		new Event.PassFirst(myRobotID, otherRobotID, myWeight.toString(), otherWeight.toString()).write();
+
+		if (myWeight.compareTo(CriticalSection.Weight.WEIGHT_CAN_PASS_FIRST) < 0) {
 			criticalSection.setWeight(myRobotID, CriticalSection.Weight.WEIGHT_CAN_PASS_FIRST);
+			// TODO: Should we mark other robots affected only in this case? (Otherwise, something like forcing
+			//       is going on anyway.)
 		}
 
-		int otherRobotID = criticalSection.getOtherRobotID(myRobotID);
-		if (criticalSection.getWeight(otherRobotID) == CriticalSection.Weight.WEIGHT_CAN_PASS_FIRST) {
+		if (otherWeight == CriticalSection.Weight.WEIGHT_CAN_PASS_FIRST) {
 			criticalSection.setWeight(otherRobotID, CriticalSection.Weight.WEIGHT_NORMAL);
 		}
 	}

@@ -121,4 +121,18 @@ public abstract class Event {
             this.isAtParked = isAtParked;
         }
     }
+
+    public static class PassFirst extends Event {
+        public int robotID;
+        public int otherID;
+        public String weightRobot;
+        public String weightOther;
+
+        public PassFirst(int robotID, int otherID, String weightRobot, String weightOther) {
+            this.robotID = robotID;
+            this.otherID = otherID;
+            this.weightRobot = weightRobot;
+            this.weightOther = weightOther;
+        }
+    }
 }
