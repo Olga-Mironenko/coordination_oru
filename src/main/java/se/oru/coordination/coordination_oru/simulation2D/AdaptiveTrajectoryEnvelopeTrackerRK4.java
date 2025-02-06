@@ -1187,6 +1187,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 							: TrajectoryEnvelopeCoordinatorSimulation.tec.robotIDToNumReroutingsAtSlow,
 					myRobotID
 			);
+			new Event.Rerouting(myRobotID, superiorID, mustBeParked).write();
 			return ResultOfTryToReplanNearVehicle.SUCCEEDED;
 		}
 		return ResultOfTryToReplanNearVehicle.TRIED_AND_FAILED;

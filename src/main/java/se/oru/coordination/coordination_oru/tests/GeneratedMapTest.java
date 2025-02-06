@@ -46,7 +46,7 @@ public class GeneratedMapTest {
             Timekeeper.setVirtualMinutesPassedMax(30);
         } else {
 //            Timekeeper.setVirtualMinutesPassedMax(30);
-            Timekeeper.setVirtualMinutesPassedMax(3);
+            Timekeeper.setVirtualMinutesPassedMax(15);
 //            Timekeeper.setVirtualSecondsPassedMax(20);
 //            Timekeeper.setVirtualMinutesPassedMax(2);
         }
@@ -72,7 +72,7 @@ public class GeneratedMapTest {
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario7-1.json, passhum 0, slowness with rerouting, forcing change of priorities"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-2.json, passhum 0, slowness with rerouting, forcing change of priorities"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness with rerouting, forcing change of priorities"
-                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness no, forcing 50% stops"
+                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness with rerouting, forcing change of priorities"
             );
         }
         AbstractVehicle.scenarioId = scenarioString;

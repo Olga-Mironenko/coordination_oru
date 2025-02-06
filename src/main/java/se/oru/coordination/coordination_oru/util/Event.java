@@ -109,4 +109,16 @@ public abstract class Event {
             this.maxVelocityOld = maxVelocityOld;
         }
     }
+
+    public static class Rerouting extends Event {
+        public int robotID;
+        public int otherID;
+        public boolean isAtParked;
+
+        public Rerouting(int robotID, int otherID, boolean isAtParked) {
+            this.robotID = robotID;
+            this.otherID = otherID;
+            this.isAtParked = isAtParked;
+        }
+    }
 }
