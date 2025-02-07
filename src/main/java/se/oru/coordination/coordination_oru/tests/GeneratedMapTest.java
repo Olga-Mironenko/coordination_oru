@@ -40,6 +40,30 @@ public class GeneratedMapTest {
         return string.substring(prefix.length());
     }
 
+    public static String replaceUnderscoreAfterFirstComma(String input) {
+        // Find the index of the first comma
+        int commaIndex = input.indexOf(',');
+        if (commaIndex == -1) {
+            // If no comma exists, return the original string unchanged
+            return input;
+        }
+
+        // Get the substring up to and including the first comma
+        String beforeComma = input.substring(0, commaIndex + 1);
+        beforeComma = beforeComma.replace("map-generator_", "map-generator/");
+        beforeComma = beforeComma.replace("generated-maps_", "generated-maps/");
+        beforeComma = beforeComma.replace("bridges_", "bridges/");
+
+        // Get the substring after the first comma
+        String afterComma = input.substring(commaIndex + 1);
+
+        // Replace all '_' characters with a space in the afterComma part
+        afterComma = afterComma.replace('_', ' ');
+
+        // Return the concatenation of the unmodified part and the modified part
+        return beforeComma + afterComma;
+    }
+
     protected static void runDemo(String scenarioString) {
         HumanControl.isEnabledForBrowser = true;
         if (Containerization.IS_CONTAINER) {
@@ -74,9 +98,12 @@ public class GeneratedMapTest {
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-2.json, passhum 0, slowness with rerouting, forcing change of priorities"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness with rerouting, forcing change of priorities"
 //                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness with rerouting, forcing change of priorities"
-                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness no, forcing change of priorities"
+//                    "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario2-3.json, passhum 0, slowness no, forcing change of priorities"
+//                    "map-generator_generated-maps_2024-11-28_13:17:39_with_bridges_scenario2-3.json,_passhum_0,_slowness_no,_forcing_change_of_priorities"
+                    "map-generator_generated-maps_2024-11-28_13:17:39_with_bridges_scenario2-3.json,_passhum_0,_slowness_no,_forcing_50%_stops"
             );
         }
+        scenarioString = replaceUnderscoreAfterFirstComma(scenarioString);
         AbstractVehicle.scenarioId = scenarioString;
         EventWriter.activate();
 

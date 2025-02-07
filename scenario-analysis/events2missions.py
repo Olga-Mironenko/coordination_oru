@@ -19,7 +19,7 @@ Mission = List[Row]
 MissionsDict = Dict[str, List[Mission]]
 
 
-def parse_tsv_file(file_path: str) -> MissionsDict:
+def parse_tsv_file(file_path: str, *, is_concise: bool) -> MissionsDict:
     """
     Parse the TSV file and convert it to a dictionary mapping robotID
     to missions.
@@ -48,23 +48,31 @@ def parse_tsv_file(file_path: str) -> MissionsDict:
         event_str: str = row["event"]
         event_data: Dict[str, Any] = json.loads(event_str)
         # Replace the 'event' field with the parsed dictionary.
-        row["event"] = event_data
+        row["event"] = event_data.copy()
 
-        event_type: str = event_data["type"]
-        robot_id: str = event_data["robotID"]
+        seconds: str = row["secondsVirtual"]
+        event_type: str = event_data.pop("type")
+        robot_id: str = event_data.pop("robotID")
+
+        if is_concise:
+            row_out = f"{seconds:6.1f}: {event_type}"
+            if event_data:
+                row_out += ": " + ", ".join(f"{key}={value!r}" for key, value in event_data.items())
+        else:
+            row_out = row
 
         if event_type == "MissionStarted":
             # Start a new mission for this robot.
             assert robot_id not in active_missions, (
                 f"Robot {robot_id} already has an active mission."
             )
-            active_missions[robot_id] = [row]
+            active_missions[robot_id] = [row_out]
         elif event_type == "MissionFinished":
             # End the mission for this robot.
             assert robot_id in active_missions, (
                 f"No active mission for robot {robot_id} to finish."
             )
-            active_missions[robot_id].append(row)
+            active_missions[robot_id].append(row_out)
             robot_id_to_missions.setdefault(robot_id, []).append(
                 active_missions.pop(robot_id)
             )
@@ -73,9 +81,9 @@ def parse_tsv_file(file_path: str) -> MissionsDict:
             assert robot_id in active_missions, (
                 f"No active mission for robot {robot_id} to append to."
             )
-            active_missions[robot_id].append(row)
+            active_missions[robot_id].append(row_out)
 
-    return robot_id_to_missions
+    return dict(sorted(robot_id_to_missions.items()))
 
 
 def main() -> None:
@@ -88,7 +96,7 @@ def main() -> None:
         sys.exit(1)
 
     file_path: str = sys.argv[1]
-    robot_id_to_missions: MissionsDict = parse_tsv_file(file_path)
+    robot_id_to_missions: MissionsDict = parse_tsv_file(file_path, is_concise=True)
 
     # Print the resulting missions dictionary in JSON format.
     print(json.dumps(robot_id_to_missions, indent=4))
