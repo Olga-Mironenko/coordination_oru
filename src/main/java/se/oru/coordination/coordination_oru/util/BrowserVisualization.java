@@ -577,7 +577,7 @@ public class BrowserVisualization implements FleetVisualization {
 					boolean isToResume = knobsAfterForcing != null && knobsAfterForcing.isToResume(id);
 					row.append(String.format(" | %s | %s |  | %s | %s",
                             center(
-                                    !AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousModeAllowed ? "" :
+                                    !AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousMode ? "" :
                                             vehicle.isMaxVelocityLowered() ? "yes" : "no"
                             ),
                             center(

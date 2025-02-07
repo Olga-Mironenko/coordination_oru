@@ -12,6 +12,7 @@ public abstract class Event {
             .disableHtmlEscaping()
             .setPrettyPrinting()  // Pretty printing ensures spaces after commas
             .create();
+    public int robotID;
 
     public String getType() {
         return this.getClass().getSimpleName();
@@ -45,23 +46,18 @@ public abstract class Event {
     }
 
     public static class MissionStarted extends Event {
-        public int robotID;
-
         public MissionStarted(int robotID) {
             this.robotID = robotID;
         }
     }
 
     public static class MissionFinished extends Event {
-        public int robotID;
-
         public MissionFinished(int robotID) {
             this.robotID = robotID;
         }
     }
 
     public static class MinorCollision extends Event {
-        public int robotID;
         public int otherID;
 
         public MinorCollision(int robotID, int otherID) {
@@ -71,7 +67,6 @@ public abstract class Event {
     }
 
     public static class MajorCollisionFromMinor extends Event {
-        public int robotID;
         public int otherID;
 
         public MajorCollisionFromMinor(int robotID, int otherID) {
@@ -81,7 +76,6 @@ public abstract class Event {
     }
 
     public static class ForcingStarted extends Event {
-        public int robotID;
         public boolean areStopsAllowed;
 
         public ForcingStarted(int robotID, boolean areStopsAllowed) {
@@ -91,15 +85,12 @@ public abstract class Event {
     }
 
     public static class ForcingFinished extends Event {
-        public int robotID;
-
         public ForcingFinished(int robotID) {
             this.robotID = robotID;
         }
     }
 
     public static class MaxVelocitySet extends Event {
-        public int robotID;
         public double maxVelocityNew;
         public double maxVelocityOld;
 
@@ -111,7 +102,6 @@ public abstract class Event {
     }
 
     public static class Rerouting extends Event {
-        public int robotID;
         public int otherID;
         public boolean isAtParked;
 
@@ -123,7 +113,6 @@ public abstract class Event {
     }
 
     public static class PassFirst extends Event {
-        public int robotID;
         public int otherID;
         public String weightRobot;
         public String weightOther;
@@ -133,6 +122,18 @@ public abstract class Event {
             this.otherID = otherID;
             this.weightRobot = weightRobot;
             this.weightOther = weightOther;
+        }
+    }
+
+    public static class CautiousStarted extends Event {
+        public CautiousStarted(int robotID) {
+            this.robotID = robotID;
+        }
+    }
+
+    public static class CautiousFinished extends Event {
+        public CautiousFinished(int robotID) {
+            this.robotID = robotID;
         }
     }
 }

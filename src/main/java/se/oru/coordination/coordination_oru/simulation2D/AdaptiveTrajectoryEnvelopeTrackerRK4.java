@@ -25,7 +25,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	public static boolean isReroutingAtSlowForNonHuman = false;
 	public static boolean isRacingThroughCrossroadAllowed = false;
 
-	public static boolean isCautiousModeAllowed = false;
+	public static boolean isCautiousMode = false;
 	public static double deltaMaxVelocityCautious = 0.0;
 	public static double minMaxVelocityCautious = 0.0;
 
@@ -899,6 +899,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		if (! isCautious) {
 			if (isCautiousSituation()) {
 				isCautious = true;
+				new Event.CautiousStarted(vehicle.getID()).write();
 
 				assert deltaMaxVelocityCautious <= 0;
 				// if max velocity isn't to be increased, then it's OK to keep the same `slowDownProfile`
@@ -913,6 +914,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		} else {
 			if (! isCautiousSituation()) {
 				isCautious = false;
+				new Event.CautiousFinished(vehicle.getID()).write();
 
 				assert maxVelocityBeforeCautious != null;
 				vehicle.setMaxVelocity(maxVelocityBeforeCautious);
@@ -1278,7 +1280,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 				}
 			}
 
-			if (isCautiousModeAllowed) {
+			if (isCautiousMode) {
 				maintainCautiousMode(vehicle);
 			}
 
