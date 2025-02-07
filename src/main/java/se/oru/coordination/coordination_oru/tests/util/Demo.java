@@ -85,7 +85,7 @@ public abstract class Demo {
             /// - Racing through crossroad:
             AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed = true;
             /// - Cautious mode (= responsiveness to cautious situations):
-            AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousMode = true;
+            AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousMode = false;
             AdaptiveTrajectoryEnvelopeTrackerRK4.deltaMaxVelocityCautious = -2.0;
             AdaptiveTrajectoryEnvelopeTrackerRK4.minMaxVelocityCautious = 1.0;
             /// - Rerouting:
