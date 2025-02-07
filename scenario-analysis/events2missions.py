@@ -139,24 +139,32 @@ def missions_to_dataframe(robot_id_to_missions: MissionsDict) -> pd.DataFrame:
     return df
 
 
-def add_minor_collision_counts(df: pd.DataFrame) -> pd.DataFrame:
+import pandas as pd
+
+
+def add_related_event_counts(
+    df: pd.DataFrame, related_event_type: str
+) -> pd.DataFrame:
     """
     For each row in the dataframe with event_type 'ForcingStarted',
-    add counts of subsequent 'MinorCollision' events in four scopes:
+    add counts of subsequent events of type `related_event_type` in four scopes:
 
-      - "MinorCollision before forcing ends": Count of MinorCollision events
-        after the ForcingStarted event until the next ForcingFinished event
-        (in the same mission). If no ForcingFinished is found, count until mission end.
+      - "{related_event_type} before forcing ends": Count of events of type
+        `related_event_type` after the ForcingStarted event until the next
+        ForcingFinished event (in the same mission). If no ForcingFinished is
+        found, count until mission end.
 
-      - "MinorCollision before mission ends": Count of MinorCollision events
-        after the ForcingStarted event until the mission ends.
+      - "{related_event_type} before mission ends": Count of events of type
+        `related_event_type` after the ForcingStarted event until the mission ends.
 
-      - "MinorCollision before scenario ends": Count of MinorCollision events
-        after the ForcingStarted event until the end of the dataframe (for that robot).
+      - "{related_event_type} before scenario ends": Count of events of type
+        `related_event_type` after the ForcingStarted event until the end of the
+        dataframe (for that robot).
 
-      - "MinorCollision before next forcing starts": Count of MinorCollision events
-        after the ForcingStarted event until the next ForcingStarted event
-        (in the same mission). If no further ForcingStarted is found, count until mission end.
+      - "{related_event_type} before next forcing starts": Count of events of type
+        `related_event_type` after the ForcingStarted event until the next
+        ForcingStarted event (in the same mission). If no further ForcingStarted is
+        found, count until mission end.
 
     For rows that are not ForcingStarted, these new columns will contain NaN.
 
@@ -170,6 +178,10 @@ def add_minor_collision_counts(df: pd.DataFrame) -> pd.DataFrame:
     the ordering is defined as:
         any other event, ForcingFinished, MissionFinished, MissionStarted, ForcingStarted
 
+    Args:
+        df: Original dataframe.
+        related_event_type: The event type to count (for example, "MinorCollision").
+
     Returns:
         A new DataFrame (sorted by robotID, missionID, secondsVirtual, and event order)
         with the four additional columns.
@@ -177,17 +189,19 @@ def add_minor_collision_counts(df: pd.DataFrame) -> pd.DataFrame:
     # Work on a copy.
     df = df.copy()
 
-    # --- Step 1. Define custom ordering for events at the same time ---
-    def event_order(event_type: str) -> int:
-        # Any event not in the mapping gets order 0.
+    # --- Step 1. Custom sort for events with the same robotID, missionID and secondsVirtual ---
+    # Define a helper function to assign an order value to each event type.
+    def event_order(et: str) -> int:
+        # Any event not explicitly listed will get order 0.
         mapping = {
             "ForcingFinished": 1,
             "MissionFinished": 2,
             "MissionStarted": 3,
             "ForcingStarted": 4,
         }
-        return mapping.get(event_type, 0)
+        return mapping.get(et, 0)
 
+    # Create an auxiliary column for sorting.
     df["event_order"] = df["event_type"].apply(event_order)
 
     # Sort by robotID, missionID, secondsVirtual, then by event_order.
@@ -196,74 +210,79 @@ def add_minor_collision_counts(df: pd.DataFrame) -> pd.DataFrame:
         inplace=True
     )
 
-    # --- Step 2. Create helper columns for counting collisions ---
-    # Mark 1 for MinorCollision events, else 0.
-    df["is_minor_collision"] = (df["event_type"] == "MinorCollision").astype(int)
+    # --- Step 2. Create helper columns for counting related events ---
+    # Mark 1 for rows where event_type equals the provided related_event_type.
+    df["is_related_event"] = (df["event_type"] == related_event_type).astype(int)
 
-    # Cumulative collision counts within each mission and for each robot.
-    df["cum_minor_mission"] = df.groupby(["robotID", "missionID"])["is_minor_collision"].cumsum()
-    df["cum_minor_scenario"] = df.groupby("robotID")["is_minor_collision"].cumsum()
+    # Cumulative counts within each mission and for each robot.
+    cum_mission_col = f"cum_{related_event_type}_mission"
+    cum_scenario_col = f"cum_{related_event_type}_scenario"
+    df[cum_mission_col] = df.groupby(["robotID", "missionID"])["is_related_event"].cumsum()
+    df[cum_scenario_col] = df.groupby("robotID")["is_related_event"].cumsum()
 
-    # For scenario counts, get the final cumulative count for each robot.
-    df["final_scenario"] = df.groupby("robotID")["cum_minor_scenario"].transform("last")
+    # For scenario counts, record the final cumulative count for each robot.
+    final_scenario_col = f"final_{related_event_type}_scenario"
+    df[final_scenario_col] = df.groupby("robotID")[cum_scenario_col].transform("last")
 
-    # --- Step 3. Initialize new count columns ---
-    new_columns = [
-        "MinorCollision before forcing ends",
-        "MinorCollision before next forcing starts",
-        "MinorCollision before mission ends",
-        "MinorCollision before scenario ends",
-    ]
-    for col in new_columns:
+    # --- Step 3. Initialize new count columns (only filled for ForcingStarted rows) ---
+    col_before_forcing = f"{related_event_type} before forcing ends"
+    col_before_next_forcing = f"{related_event_type} before next forcing starts"
+    col_before_mission = f"{related_event_type} before mission ends"
+    col_before_scenario = f"{related_event_type} before scenario ends"
+
+    for col in [
+        col_before_forcing,
+        col_before_next_forcing,
+        col_before_mission,
+        col_before_scenario,
+    ]:
         df[col] = pd.NA
 
     # --- Step 4. Process each mission group ---
-    # We group by robotID and missionID so that the counts are restricted to a mission.
+    # Group by robotID and missionID so that counts are computed per mission.
     for (robot, mission), group in df.groupby(["robotID", "missionID"]):
-        # Reset index within the group to iterate in sorted order,
-        # but keep the original index in a column.
-        g = group.reset_index()  # This creates a column 'index' with the original index.
-        # Last cumulative collisions in the mission.
-        last_cum_mission = g["cum_minor_mission"].iloc[-1]
+        # Reset the group's index to iterate in sorted order; preserve original indices.
+        g = group.reset_index()  # 'index' column holds the original index.
+        # Get the last cumulative count within the mission.
+        last_cum_mission = g[cum_mission_col].iloc[-1]
         for i, row in g.iterrows():
             if row["event_type"] == "ForcingStarted":
-                cum_at_forcing = row["cum_minor_mission"]
-                # Collisions until mission end.
-                mission_collisions = last_cum_mission - cum_at_forcing
-                # Set "MinorCollision before mission ends".
-                df.at[row["index"], "MinorCollision before mission ends"] = mission_collisions
+                cum_at_forcing = row[cum_mission_col]
+                # Count of related events from forcing start until mission end.
+                mission_count = last_cum_mission - cum_at_forcing
+                df.at[row["index"], col_before_mission] = mission_count
 
-                # --- Count until next ForcingFinished ---
-                subsequent = g.iloc[i+1:]
+                # --- Count until the next ForcingFinished event ---
+                subsequent = g.iloc[i + 1 :]
                 forcing_finished = subsequent[subsequent["event_type"] == "ForcingFinished"]
                 if not forcing_finished.empty:
-                    cum_at_finished = forcing_finished.iloc[0]["cum_minor_mission"]
-                    forcing_collisions = cum_at_finished - cum_at_forcing
+                    cum_at_finished = forcing_finished.iloc[0][cum_mission_col]
+                    forcing_count = cum_at_finished - cum_at_forcing
                 else:
-                    forcing_collisions = mission_collisions
-                df.at[row["index"], "MinorCollision before forcing ends"] = forcing_collisions
+                    forcing_count = mission_count
+                df.at[row["index"], col_before_forcing] = forcing_count
 
-                # --- Count until next ForcingStarted ---
+                # --- Count until the next ForcingStarted event ---
                 next_forcing = subsequent[subsequent["event_type"] == "ForcingStarted"]
                 if not next_forcing.empty:
-                    cum_at_next_forcing = next_forcing.iloc[0]["cum_minor_mission"]
-                    next_forcing_collisions = cum_at_next_forcing - cum_at_forcing
+                    cum_at_next_forcing = next_forcing.iloc[0][cum_mission_col]
+                    next_forcing_count = cum_at_next_forcing - cum_at_forcing
                 else:
-                    next_forcing_collisions = mission_collisions
-                df.at[row["index"], "MinorCollision before next forcing starts"] = next_forcing_collisions
+                    next_forcing_count = mission_count
+                df.at[row["index"], col_before_next_forcing] = next_forcing_count
 
-                # --- Count until scenario end (all events for this robot) ---
-                scenario_collisions = row["final_scenario"] - row["cum_minor_scenario"]
-                df.at[row["index"], "MinorCollision before scenario ends"] = scenario_collisions
+                # --- Count until scenario (all events for this robot) ends ---
+                scenario_count = row[final_scenario_col] - row[cum_scenario_col]
+                df.at[row["index"], col_before_scenario] = scenario_count
 
-    # Optionally, drop helper columns.
-    # df.drop(
-    #     columns=[
-    #         "event_order", "is_minor_collision", "cum_minor_mission",
-    #         "cum_minor_scenario", "final_scenario"
-    #     ],
-    #     inplace=True
-    # )
+    # Optionally, drop helper columns if no longer needed.
+    df.drop(
+        columns=[
+            "event_order", "is_related_event", cum_mission_col,
+            cum_scenario_col, final_scenario_col
+        ],
+        inplace=True
+    )
 
     return df
 
@@ -282,7 +301,10 @@ def main() -> None:
 
     robot_id_to_missions: MissionsDict = parse_tsv_file(file_path, is_concise=False)
     df = missions_to_dataframe(robot_id_to_missions)
-    df = add_minor_collision_counts(df)
+
+    for related_event in 'MinorCollision', 'MajorCollisionFromMinor':
+        df = add_related_event_counts(df, related_event)
+
     with pd.option_context("display.max_rows", 50,
                            "display.max_columns", 10,
                            "display.width", WIDTH_CONSOLE):
