@@ -76,7 +76,7 @@ public abstract class Event {
     }
 
     public static class ForcingStarted extends Event {
-        public boolean areStopsAllowed;
+        public boolean areStopsAllowed; // TODO: remove
 
         public ForcingStarted(int robotID, boolean areStopsAllowed) {
             this.robotID = robotID;
@@ -84,17 +84,23 @@ public abstract class Event {
         }
     }
 
-    public static class ForcingReaction extends Event {
+    public static class ForcingFinished extends Event {
+        public ForcingFinished(int robotID) {
+            this.robotID = robotID;
+        }
+    }
+
+    public static class ForcingReactionStarted extends Event {
         public boolean isStop;
 
-        public ForcingReaction(int robotID, boolean isStop) {
+        public ForcingReactionStarted(int robotID, boolean isStop) {
             this.robotID = robotID;
             this.isStop = isStop;
         }
     }
 
-    public static class ForcingFinished extends Event {
-        public ForcingFinished(int robotID) {
+    public static class ForcingReactionFinished extends Event {
+        public ForcingReactionFinished(int robotID) {
             this.robotID = robotID;
         }
     }

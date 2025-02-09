@@ -194,12 +194,24 @@ def add_related_event_counts(
     def event_order(et: str) -> int:
         # Any event not explicitly listed will get order 0.
         mapping = {
-            "ForcingFinished": 1,
-            "MissionFinished": 2,
-            "MissionStarted": 3,
-            "ForcingStarted": 4,
+            et: i_et
+            for i_et, et in enumerate(
+                (
+                    "ForcingReactionFinished",
+                    "ForcingFinished",
+                    "MissionFinished",
+
+                    "MissionStarted",
+                    "ForcingStarted",
+                    "ForcingReactionStarted",
+                ),
+                1
+            )
         }
         return mapping.get(et, 0)
+
+    et_started = "ForcingReactionStarted"
+    et_finished = "ForcingReactionFinished"
 
     # Create an auxiliary column for sorting.
     df["event_order"] = df["event_type"].apply(event_order)
@@ -246,7 +258,7 @@ def add_related_event_counts(
         # Get the last cumulative count within the mission.
         last_cum_mission = g[cum_mission_col].iloc[-1]
         for i, row in g.iterrows():
-            if row["event_type"] == "ForcingStarted":
+            if row["event_type"] == et_started:
                 cum_at_forcing = row[cum_mission_col]
                 # Count of related events from forcing start until mission end.
                 mission_count = last_cum_mission - cum_at_forcing
@@ -254,7 +266,7 @@ def add_related_event_counts(
 
                 # --- Count until the next ForcingFinished event ---
                 subsequent = g.iloc[i + 1 :]
-                forcing_finished = subsequent[subsequent["event_type"] == "ForcingFinished"]
+                forcing_finished = subsequent[subsequent["event_type"] == et_finished]
                 if not forcing_finished.empty:
                     cum_at_finished = forcing_finished.iloc[0][cum_mission_col]
                     forcing_count = cum_at_finished - cum_at_forcing
@@ -263,7 +275,7 @@ def add_related_event_counts(
                 df.at[row["index"], col_before_forcing] = forcing_count
 
                 # --- Count until the next ForcingStarted event ---
-                next_forcing = subsequent[subsequent["event_type"] == "ForcingStarted"]
+                next_forcing = subsequent[subsequent["event_type"] == et_started]
                 if not next_forcing.empty:
                     cum_at_next_forcing = next_forcing.iloc[0][cum_mission_col]
                     next_forcing_count = cum_at_next_forcing - cum_at_forcing

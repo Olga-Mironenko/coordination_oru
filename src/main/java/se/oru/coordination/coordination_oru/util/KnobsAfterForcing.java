@@ -11,8 +11,9 @@ public abstract class KnobsAfterForcing {
     public abstract boolean isToResume(int robotID);
 
     public abstract boolean updateForcing(double distanceTraveled);
+    public abstract void finishForcing();
 
-    public abstract void resumeRobots();
-
+    // For backward compatibility only:
     public abstract void restorePriorities();
+    public abstract void resumeRobots();
 }

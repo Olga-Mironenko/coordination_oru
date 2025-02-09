@@ -32,13 +32,11 @@ public class ForcingMaintainer {
     }
 
     public boolean isForcingOngoing() {
-        return rrAtForcingStart != null;
+        return knobsAfterForcing != null;
     }
 
     private void finishForcing() {
-        knobsAfterForcing.resumeRobots();
-        knobsAfterForcing.restorePriorities();
-        new Event.ForcingFinished(rrAtForcingStart.getRobotID()).write();
+        knobsAfterForcing.finishForcing();
         knobsAfterForcing = null;
         rrAtForcingStart = null;
     }

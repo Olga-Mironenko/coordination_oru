@@ -154,7 +154,6 @@ public class GeneratedMapTest {
             case "stops":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingStops = 1;
-                Forcing.priorityDistance *= 10; // TODO: remove that
                 break;
 
             case "50% stops":

@@ -526,14 +526,17 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 
 									collisionsList.add(ce);
 
-									if (isMajor) {
-										new Event.MajorCollisionFromMinor(
-												robotReport1.getRobotID(), robotReport2.getRobotID()
-										).write();
-									} else {
-										new Event.MinorCollision(
-												robotReport1.getRobotID(), robotReport2.getRobotID()
-										).write();
+									for (List<Integer> pair : List.of(
+											List.of(robotReport1.getRobotID(), robotReport2.getRobotID()),
+											List.of(robotReport2.getRobotID(), robotReport1.getRobotID())
+									)) {
+										int a = pair.get(0);
+										int b = pair.get(1);
+										if (isMajor) {
+											new Event.MajorCollisionFromMinor(a, b).write();
+										} else {
+											new Event.MinorCollision(a, b).write();
+										}
 									}
 
 									HashMap<Integer, List<CollisionEvent>> robotIDToCollisions = isMajor ? robotIDToMajorCollisions : robotIDToAllCollisions;
