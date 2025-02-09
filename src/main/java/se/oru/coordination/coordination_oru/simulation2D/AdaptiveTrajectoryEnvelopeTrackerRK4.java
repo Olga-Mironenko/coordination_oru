@@ -60,8 +60,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 	protected boolean hasCurvatureDampeningEqualValues = false;
 	private ArrayList<Integer> internalCriticalPoints = new ArrayList<Integer>();
 	private int numberOfReplicas = 1;
-	public static int seedGlobal = 1;
-	private Random rand = new Random(seedGlobal + GatedCalendar.getInstance().getTimeInMillis());
+	private Random rand;
 	private TreeMap<Double,Double> slowDownProfile = null;
 	private boolean slowingDown = false;
 	private boolean useInternalCPs = true;
@@ -159,6 +158,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	public AdaptiveTrajectoryEnvelopeTrackerRK4(TrajectoryEnvelope te, int timeStep, double temporalResolution, TrajectoryEnvelopeCoordinator tec, TrackingCallback cb) {
 		super(te, temporalResolution, tec, timeStep, cb);
+		this.rand = new DeterministicRandom(AdaptiveTrajectoryEnvelopeTrackerRK4.class.getName(), te.getRobotID());
 		this.state = new State(0.0, 0.0);
 		this.totalDistance = traj.getPathLength();
 		this.overallDistance = totalDistance;

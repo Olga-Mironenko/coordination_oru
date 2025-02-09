@@ -5,6 +5,7 @@ import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
@@ -104,8 +105,7 @@ public class Forcing {
         TreeSet<Integer> robotsToResumeLater = new TreeSet<>();
         TreeMap<Integer, Boolean> robotToIsStopInPast = new TreeMap<>();
 
-        int seedGlobal = 2;
-        Random rand = new Random(seedGlobal + GatedCalendar.getInstance().getTimeInMillis());
+        Random rand = new DeterministicRandom(Forcing.class.getName(), robotID);
 
         return new KnobsAfterForcing() {
             @Override
