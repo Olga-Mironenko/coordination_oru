@@ -84,6 +84,15 @@ public abstract class Event {
         }
     }
 
+    public static class ForcingReaction extends Event {
+        public boolean isStop;
+
+        public ForcingReaction(int robotID, boolean isStop) {
+            this.robotID = robotID;
+            this.isStop = isStop;
+        }
+    }
+
     public static class ForcingFinished extends Event {
         public ForcingFinished(int robotID) {
             this.robotID = robotID;

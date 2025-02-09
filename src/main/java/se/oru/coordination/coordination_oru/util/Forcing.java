@@ -6,6 +6,7 @@ import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
@@ -45,6 +46,8 @@ public class Forcing {
     //   `stopDistanceMin` meters after the beginning of the forcing.
     //   Note that stop effect without priority effect makes little sense.
     public static double stopDistanceMin = Double.NEGATIVE_INFINITY;
+    // - When both change of priorities and stops apply, the latter is selected with the following probability.
+    public static double probabilityStop = 0.5;
     // - If `isGlobalTemporaryStop` is true, then all other robots are stopped during forcing.
     public static boolean isGlobalTemporaryStop = false;
     // - If `isResetAfterCurrentCrossroad` is true, then forcing finishes automatically when its priority and stop
@@ -99,6 +102,10 @@ public class Forcing {
         HashSet<CriticalSection> criticalSectionsToRestorePrioritiesLater = new HashSet<>();
         TreeSet<Integer> robotsToRestoreLater = new TreeSet<>();
         TreeSet<Integer> robotsToResumeLater = new TreeSet<>();
+        TreeMap<Integer, Boolean> robotToIsStopInPast = new TreeMap<>();
+
+        int seedGlobal = 2;
+        Random rand = new Random(seedGlobal + GatedCalendar.getInstance().getTimeInMillis());
 
         return new KnobsAfterForcing() {
             @Override
@@ -135,7 +142,7 @@ public class Forcing {
                 boolean isDone = priorityDistanceRemaining == 0 && stopDistanceRemaining == 0;
 
                 if (isResetAfterCurrentCrossroad && isDone) {
-                    boolean isEmpty = criticalSectionsToRestorePrioritiesLater.isEmpty() && robotsToResumeLater.isEmpty();
+                    boolean isEmpty = robotsToRestoreLater.isEmpty() && robotsToResumeLater.isEmpty();
                     if (isEmpty || areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsToRestorePrioritiesLater)) {
                         if (isEmpty) {
                             robotIDToNumUselessForcingEvents.put(robotID, robotIDToNumUselessForcingEvents.getOrDefault(robotID, 0) + 1);
@@ -146,6 +153,15 @@ public class Forcing {
                     }
                 }
 
+                affectRobots(distanceTraveledAfterForcing, priorityDistanceRemaining, stopDistanceRemaining);
+                return true;
+            }
+
+            private TreeMap<Integer, ArrayList<CriticalSection>> findRobotToCSesPriority(
+                    double distanceTraveledAfterForcing,
+                    double priorityDistanceRemaining
+            ) {
+                TreeMap<Integer, ArrayList<CriticalSection>> robotToCSesPriority = new TreeMap<>();
                 if (priorityDistanceRemaining > 0) {
                     final ArrayList<CriticalSection> criticalSectionsForPriority =
                             selectCriticalSections(
@@ -160,16 +176,20 @@ public class Forcing {
                             continue;
                         }
 
-                        cs.setWeight(robotID, CriticalSection.Weight.WEIGHT_FORCING);
-                        criticalSectionsToRestorePrioritiesLater.add(cs);
                         int otherID = cs.getOtherRobotID(robotID);
-                        if (TrajectoryEnvelopeCoordinatorSimulation.isCPForcingHack) {
-                            TrajectoryEnvelopeCoordinatorSimulation.tec.addStoppingPoint(otherID, TrajectoryEnvelopeCoordinatorSimulation.CP_FORCING_HACK, -1);
+                        if (! robotToCSesPriority.containsKey(otherID)) {
+                            robotToCSesPriority.put(otherID, new ArrayList<>());
                         }
-                        robotsToRestoreLater.add(otherID);
+                        robotToCSesPriority.get(otherID).add(cs);
                     }
                 }
+                return robotToCSesPriority;
+            }
 
+            private TreeSet<Integer> findRobotsToStop(
+                    double distanceTraveledAfterForcing,
+                    double stopDistanceRemaining
+            ) {
                 TreeSet<Integer> robotsToStop = new TreeSet<>();
                 if (isGlobalTemporaryStop) {
                     robotsToStop.addAll(VehiclesHashMap.getList().keySet());
@@ -188,24 +208,90 @@ public class Forcing {
                         int robotToStop = cs.getOtherRobotID(robotID);
                         assert robotToStop != robotID;
 
-                        if (!cs.isRobotOnCS(robotToStop)) {
-                            robotsToStop.add(robotToStop);
-                        }
+                        robotsToStop.add(robotToStop);
                     }
                 }
-                for (int robot : robotsToStop) {
-                    if (robotsToResumeLater.contains(robot)) {
-                        continue;
+                return robotsToStop;
+            }
+
+            private void affectRobots(
+                    double distanceTraveledAfterForcing,
+                    double priorityDistanceRemaining,
+                    double stopDistanceRemaining
+            ) {
+                TreeMap<Integer, ArrayList<CriticalSection>> robotToCSesPriority = findRobotToCSesPriority(
+                        distanceTraveledAfterForcing, priorityDistanceRemaining
+                );
+                TreeSet<Integer> robotsToStop = findRobotsToStop(distanceTraveledAfterForcing, stopDistanceRemaining);
+
+                TreeMap<Integer, Boolean> robotToIsStop = new TreeMap<>();
+                TreeSet<Integer> robotsToConsider = new TreeSet<>();
+                robotsToConsider.addAll(robotToCSesPriority.keySet());
+                robotsToConsider.addAll(robotsToStop);
+                for (int robotID : robotsToConsider) {
+                    Boolean isStop = null;
+                    if (robotToIsStopInPast.containsKey(robotID)) {
+                        isStop = robotToIsStopInPast.get(robotID);
+                    } else if (! robotToCSesPriority.containsKey(robotID)) {
+                        assert robotsToStop.contains(robotID);
+                        isStop = true;
+                    } else if (! robotsToStop.contains(robotID)) {
+                        assert robotToCSesPriority.containsKey(robotID);
+                        isStop = false;
                     }
 
-                    // Note: If the robot is not in `criticalSectionsToRestorePrioritiesLater`,
-                    // then it's after all critical sections with the human, so no priority change is needed.
-
-                    stopRobot(robot);
-                    robotsToResumeLater.add(robot);
+                    if (isStop == null) {
+                        isStop = rand.nextDouble() < probabilityStop;
+                    }
+                    robotToIsStop.put(robotID, isStop);
                 }
 
-                return true;
+                for (Map.Entry<Integer, Boolean> entry : robotToIsStop.entrySet()) {
+                    int otherID = entry.getKey();
+                    boolean isStop = entry.getValue();
+
+                    for (CriticalSection cs : robotToCSesPriority.getOrDefault(otherID, new ArrayList<>())) {
+                        increaseRobotPriorityOnCS(cs);
+                    }
+                    if (isStop) {
+                        stopRobotIfNeeded(otherID);
+                    }
+
+                    if (robotToIsStopInPast.containsKey(otherID)) {
+                        assert robotToIsStopInPast.get(otherID) == isStop;
+                    } else {
+                        robotToIsStopInPast.put(otherID, isStop);
+                        new Event.ForcingReaction(otherID, isStop).write();
+                    }
+                }
+            }
+
+            private void increaseRobotPriorityOnCS(CriticalSection cs) {
+                cs.setWeight(robotID, CriticalSection.Weight.WEIGHT_FORCING);
+
+                int otherID = cs.getOtherRobotID(robotID);
+                if (TrajectoryEnvelopeCoordinatorSimulation.isCPForcingHack) {
+                    TrajectoryEnvelopeCoordinatorSimulation.tec.addStoppingPoint(
+                            otherID, TrajectoryEnvelopeCoordinatorSimulation.CP_FORCING_HACK, -1
+                    );
+                }
+
+                robotsToRestoreLater.add(otherID);
+
+                assert ! criticalSectionsToRestorePrioritiesLater.contains(cs);
+                criticalSectionsToRestorePrioritiesLater.add(cs);
+            }
+
+            private void stopRobotIfNeeded(int robotID) {
+                if (robotsToResumeLater.contains(robotID)) {
+                    return;
+                }
+
+                // Note: If the robot is not in `criticalSectionsToRestorePrioritiesLater`,
+                // then it's after all critical sections with the human, so no priority change is needed.
+
+                stopRobot(robotID);
+                robotsToResumeLater.add(robotID);
             }
 
             @Override
