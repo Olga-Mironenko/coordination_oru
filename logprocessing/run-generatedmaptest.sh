@@ -48,7 +48,6 @@ forcings=(
   "no"
   "change of priorities"
   "stops"
-#  "ignoring human"
 )
 
 # Use variables

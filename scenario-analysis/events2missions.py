@@ -21,6 +21,39 @@ MissionsDict = Dict[str, List[Mission]]
 WIDTH_CONSOLE = shutil.get_terminal_size().columns
 
 
+def sort_df(df: pd.DataFrame):
+    # --- Step 1. Custom sort for events with the same robotID, missionID and secondsVirtual ---
+    # Define a helper function to assign an order value to each event type.
+    def event_order(event: Dict[str, Any]) -> int:
+        # Any event not explicitly listed will get order 0.
+        mapping = {
+            et: i_et
+            for i_et, et in enumerate(
+                (
+                    "ForcingReactionFinished",
+                    "ForcingFinished",
+                    "MissionFinished",
+
+                    "MissionStarted",
+                    "ForcingStarted",
+                    "ForcingReactionStarted",
+                ),
+                1
+            )
+        }
+        et = event['type']
+        return mapping.get(et, 0)
+
+    # Create an auxiliary column for sorting.
+    df["event_order"] = df["event"].apply(event_order)
+
+    # Sort by robotID, missionID, secondsVirtual, then by event_order.
+    df.sort_values(
+        by=["secondsVirtual", "event_order"],
+        inplace=True
+    )
+
+
 def parse_tsv_file(file_path: str, *, is_concise: bool = False) -> MissionsDict:
     """
     Parse the TSV file and convert it to a dictionary mapping robotID
@@ -41,16 +74,15 @@ def parse_tsv_file(file_path: str, *, is_concise: bool = False) -> MissionsDict:
     """
     # Read the TSV file using pandas; numeric columns are inferred.
     df: pd.DataFrame = pd.read_csv(file_path, sep="\t")
+    df['event'] = df['event'].apply(json.loads)
+    sort_df(df)
     rows: List[Row] = df.to_dict(orient="records")
 
     robot_id_to_missions: MissionsDict = {}
     active_missions: Dict[str, Mission] = {}
 
-    for row in rows:
-        event_str: str = row["event"]
-        event_data: Dict[str, Any] = json.loads(event_str)
-        # Replace the 'event' field with the parsed dictionary.
-        row["event"] = event_data.copy()
+    for _i_row, row in enumerate(rows):
+        event_data: Dict[str, Any] = row["event"].copy()
 
         seconds: str = row["secondsVirtual"]
         event_type: str = event_data.pop("type")
@@ -69,15 +101,16 @@ def parse_tsv_file(file_path: str, *, is_concise: bool = False) -> MissionsDict:
                 f"Robot {robot_id} already has an active mission."
             )
             active_missions[robot_id] = [row_out]
+            robot_id_to_missions.setdefault(robot_id, []).append(
+                active_missions[robot_id]
+            )
         elif event_type == "MissionFinished":
             # End the mission for this robot.
             assert robot_id in active_missions, (
                 f"No active mission for robot {robot_id} to finish."
             )
             active_missions[robot_id].append(row_out)
-            robot_id_to_missions.setdefault(robot_id, []).append(
-                active_missions.pop(robot_id)
-            )
+            del active_missions[robot_id]
         else:
             # Append the row to an active mission.
             assert robot_id in active_missions, (
@@ -189,38 +222,10 @@ def add_related_event_counts(
     # Work on a copy.
     df = df.copy()
 
-    # --- Step 1. Custom sort for events with the same robotID, missionID and secondsVirtual ---
-    # Define a helper function to assign an order value to each event type.
-    def event_order(et: str) -> int:
-        # Any event not explicitly listed will get order 0.
-        mapping = {
-            et: i_et
-            for i_et, et in enumerate(
-                (
-                    "ForcingReactionFinished",
-                    "ForcingFinished",
-                    "MissionFinished",
-
-                    "MissionStarted",
-                    "ForcingStarted",
-                    "ForcingReactionStarted",
-                ),
-                1
-            )
-        }
-        return mapping.get(et, 0)
-
     et_started = "ForcingReactionStarted"
     et_finished = "ForcingReactionFinished"
 
-    # Create an auxiliary column for sorting.
-    df["event_order"] = df["event_type"].apply(event_order)
-
-    # Sort by robotID, missionID, secondsVirtual, then by event_order.
-    df.sort_values(
-        by=["robotID", "missionID", "secondsVirtual", "event_order"],
-        inplace=True
-    )
+    # (Step 1: extracted into `sort_df`.)
 
     # --- Step 2. Create helper columns for counting related events ---
     # Mark 1 for rows where event_type equals the provided related_event_type.
@@ -290,8 +295,7 @@ def add_related_event_counts(
     # Optionally, drop helper columns if no longer needed.
     df.drop(
         columns=[
-            "event_order", "is_related_event", cum_mission_col,
-            cum_scenario_col, final_scenario_col
+            "is_related_event", cum_mission_col, cum_scenario_col, final_scenario_col
         ],
         inplace=True
     )
@@ -299,29 +303,29 @@ def add_related_event_counts(
     return df
 
 
-def main() -> None:
-    """
-    Main function to parse a TSV file provided as a command-line argument and
-    print the resulting dictionary of missions in JSON format.
-    """
-    if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} <tsv_file_path> <csv_file_path_out>")
-        sys.exit(1)
-
-    file_path: str = sys.argv[1]
-    file_path_out: str = sys.argv[2]
-
-    robot_id_to_missions: MissionsDict = parse_tsv_file(file_path, is_concise=False)
+def convert(filename_events_tsv: str, filename_missions_csv: str) -> None:
+    robot_id_to_missions: MissionsDict = parse_tsv_file(filename_events_tsv, is_concise=False)
     df = missions_to_dataframe(robot_id_to_missions)
 
     for related_event in 'MinorCollision', 'MajorCollisionFromMinor':
         df = add_related_event_counts(df, related_event)
 
+    df.to_csv(filename_missions_csv, index=False)
+
+
+def main() -> None:
+    if len(sys.argv) != 3:
+        print(f"Usage: {sys.argv[0]} <filename_events_tsv> <filename_missions_csv>")
+        sys.exit(1)
+
+    filename_events_tsv: str = sys.argv[1]
+    filename_missions_csv: str = sys.argv[2]
+
+    df = convert(filename_events_tsv, filename_missions_csv)
     with pd.option_context("display.max_rows", 50,
                            "display.max_columns", 10,
                            "display.width", WIDTH_CONSOLE):
         print(df)
-    df.to_csv(file_path_out, index=False)
 
 
 if __name__ == "__main__":
