@@ -54,7 +54,7 @@ def sort_df(df: pd.DataFrame):
     )
 
 
-def parse_tsv_file(file_path: str, *, is_concise: bool = False) -> MissionsDict:
+def parse_tsv_file(file_path: str, *, is_concise: bool = False) -> tuple[pd.DataFrame, MissionsDict]:
     """
     Parse the TSV file and convert it to a dictionary mapping robotID
     to missions.
@@ -118,7 +118,7 @@ def parse_tsv_file(file_path: str, *, is_concise: bool = False) -> MissionsDict:
             )
             active_missions[robot_id].append(row_out)
 
-    return dict(sorted(robot_id_to_missions.items()))
+    return df, dict(sorted(robot_id_to_missions.items()))
 
 
 def missions_to_dataframe(robot_id_to_missions: MissionsDict) -> pd.DataFrame:
@@ -304,11 +304,13 @@ def add_related_event_counts(
 
 
 def convert(filename_events_tsv: str, filename_missions_csv: str) -> None:
-    robot_id_to_missions: MissionsDict = parse_tsv_file(filename_events_tsv, is_concise=False)
+    df_events, robot_id_to_missions = parse_tsv_file(filename_events_tsv, is_concise=False)
     df = missions_to_dataframe(robot_id_to_missions)
+    assert len(df) == len(df_events)
 
     for related_event in 'MinorCollision', 'MajorCollisionFromMinor':
         df = add_related_event_counts(df, related_event)
+        assert len(df) == len(df_events)
 
     df.to_csv(filename_missions_csv, index=False)
 

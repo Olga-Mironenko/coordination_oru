@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", message="Can't initialize NVML")
 
 RUNDIRS = '../logs/rundirs'
 
-RUNNAME = '20250209_170442_halfway'
+RUNNAME = '20250209_170442'
 
 RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 DIRECTORY_DATA = f'data/{RUNNAME}'
@@ -33,7 +33,7 @@ def prepare_missions(filename_events_tsv, filename_missions_csv):
             os.path.getmtime(filename_missions_csv) < os.path.getmtime(filename_events_tsv) or
             os.path.getmtime(filename_missions_csv) < os.path.getmtime(filename_script)
     ):
-        print(filename_events_tsv)
+        # print(filename_events_tsv)
         events2missions.convert(filename_events_tsv, filename_missions_csv)
     return pd.read_csv(filename_missions_csv)
 
