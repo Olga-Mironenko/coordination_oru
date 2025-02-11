@@ -329,22 +329,21 @@ public class BrowserVisualization implements FleetVisualization {
 		}
 	}
 
-	protected static double round(double value) {
-		return (double) Math.round(value * 10) / 10;
-	}
+	public static String millisToHMS(long millis) {
+		long seconds = millis / 1000;
 
-	public static String secondsToHMS(long seconds) {
-		long time = seconds;
+		long s = seconds % 60;
+		seconds /= 60;
 
-		long s = time % 60;
-		time /= 60;
+		long m = seconds % 60;
+		seconds /= 60;
 
-		long m = time % 60;
-		time /= 60;
+		long h = seconds;
 
-		long h = time;
-
-		return String.format("%d:%02d:%02d", h, m, s);
+		return String.format(
+				"%d:%02d:%02d%s", h, m, s,
+				String.format("%.1f", (millis % 1000) / 1000.0).replace("0.", ".")
+		);
 	}
 
 	protected String center(Object object) {
@@ -617,7 +616,7 @@ public class BrowserVisualization implements FleetVisualization {
                         vehicle.totalDistance,
                         vehicle.getNumMissions(),
                         center(vehicle.isBlocked()
-								? secondsToHMS((int) vehicle.getAdaptiveTracker().durationStopped)
+								? millisToHMS((long) vehicle.getAdaptiveTracker().durationStopped * 1000)
 								: "")
                 ));
 				thead1.append(" |3{border-color: green;} Efficiency");
@@ -780,9 +779,9 @@ public class BrowserVisualization implements FleetVisualization {
 		));
 
 		if (Timekeeper.isTimekeeperActive()) {
-			map.put("Time passed (real)", secondsToHMS(Timekeeper.getRealMillisPassed() / 1000));
+			map.put("Time passed (real)", millisToHMS(Timekeeper.getRealMillisPassed()));
 			map.put("Time passed (sim.)", String.format("%s (x%.1f)",
-					secondsToHMS(Timekeeper.getVirtualMillisPassed() / 1000),
+					millisToHMS(Timekeeper.getVirtualMillisPassed()),
 					(double) Timekeeper.getVirtualMillisPassed() / Timekeeper.getRealMillisPassed()
 			));
 		}
@@ -812,7 +811,7 @@ public class BrowserVisualization implements FleetVisualization {
 			String comment = "";
 			if (isExtendedText && Forcing.isForcingActive()) {
 				comment = " (forcing is active since " +
-						secondsToHMS((long) Forcing.forcingSinceTimestep * Timekeeper.virtualMillisPerTimestep / 1000) +
+						millisToHMS((long) Forcing.forcingSinceTimestep * Timekeeper.virtualMillisPerTimestep) +
 						")";
 				;
 			}
@@ -867,7 +866,7 @@ public class BrowserVisualization implements FleetVisualization {
 				output.append(", ");
 			}
 			output.append(String.format("%s: <b>V%d</b>[%d]-<b>V%d</b>[%d]",
-					secondsToHMS(collision.getMillis() / 1000),
+					millisToHMS(collision.getMillis()),
 					collision.getReports()[0].getRobotID(),
 					collision.getReports()[0].getPathIndex(),
 					collision.getReports()[1].getRobotID(),

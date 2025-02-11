@@ -65,7 +65,7 @@ public class CollisionEvent {
 
 		return String.format("%s collision @ %s: %s",
 				isMajor ? "major" : "minor",
-				BrowserVisualization.secondsToHMS(millis / 1000),
+				BrowserVisualization.millisToHMS(millis),
 				getRobotInfo(index)
 		);
 	};
