@@ -69,8 +69,8 @@ public class GeneratedMapTest {
         if (Containerization.IS_CONTAINER) {
             Timekeeper.setVirtualMinutesPassedMax(30);
         } else {
-//            Timekeeper.setVirtualMinutesPassedMax(30);
-            Timekeeper.setVirtualMinutesPassedMax(15);
+            Timekeeper.setVirtualMinutesPassedMax(30);
+//            Timekeeper.setVirtualMinutesPassedMax(15);
 //            Timekeeper.setVirtualSecondsPassedMax(20);
 //            Timekeeper.setVirtualMinutesPassedMax(2);
         }
@@ -102,7 +102,9 @@ public class GeneratedMapTest {
 //                    "map-generator_generated-maps_2024-11-28_13:17:39_with_bridges_scenario2-3.json,_passhum_0,_slowness_no,_forcing_change_of_priorities"
 //                    "map-generator_generated-maps_2024-11-28_13:17:39_with_bridges_scenario2-3.json,_passhum_0,_slowness_no,_forcing_50%_stops"
 //                    "map-generator_generated-maps_2024-11-28_13:17:39_with_bridges_scenario2-3.json,_passhum_0,_slowness_no,_forcing_stops"
-                    "map-generator_generated-maps_2024-11-28_13:17:39_with_bridges_scenario9-2.json,_passhum_0,_slowness_no,_forcing_no"
+//                    "map-generator_generated-maps_2024-11-28_13:17:39_with_bridges_scenario9-2.json,_passhum_0,_slowness_no,_forcing_no"
+//                      "map-generator_generated-maps_2024-11-28_13:17:39_with_bridges_scenario2-2.json,_passhum_0,_slowness_with_rerouting,_forcing_change_of_priorities"
+                      "map-generator/generated-maps/2024-11-28_13:17:39_with_bridges/scenario9-6.json, passhum 0, slowness no, forcing stops"
             );
         }
         scenarioString = replaceUnderscoreAfterFirstComma(scenarioString);
