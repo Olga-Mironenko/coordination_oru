@@ -17,16 +17,13 @@ from scipy.stats import pearsonr, spearmanr, kendalltau
 import scipy.stats as stats
 from sklearn.feature_selection import mutual_info_regression
 
+import dynmodel
+
 RUNDIRS = '../logs/rundirs'
 
 COL_I = 'i_map'
 COL_J = 'position'
 
-# Dictionary to map Map IDs to the number of OPs
-MAP_TO_OPS = {
-    1: 2, 6: 2, 10: 2,  # Maps with 2 OPs
-    2: 1, 3: 1, 4: 1, 5: 1, 7: 1, 8: 1, 9: 1,  # Maps with 1 OP
-}
 
 FONTSIZE_LABEL = 18
 FONTSIZE_TITLE = 18
@@ -137,7 +134,7 @@ def add_all_ticks(*, fig, offset_fig, col_i, col_j, heatmap_data, idx, are_bridg
     add_ticks(
         fig=fig, offset_fig=offset_fig, col_i=col_i, col_j=col_j, heatmap_data=heatmap_data,
         idx_x=idx, idx_y=idx * 2 + 1,
-        row2label=lambda r: f'{MAP_TO_OPS[r]}',
+        row2label=lambda r: f'{dynmodel.MAP_TO_OPS[r]}',
         secondary_y=True
     )
 
@@ -235,7 +232,7 @@ def plot_feature(runname, col_data, title, label):
 
     for idx, are_bridges in enumerate(list_are_bridges):
         df = key2df[are_bridges, 'conf']
-        df['No. of OPs'] = df['i_map'].map(MAP_TO_OPS)
+        df['No. of OPs'] = df['i_map'].map(dynmodel.MAP_TO_OPS)
 
         heatmap_data = calculate_heatmap_data(df=df, col_i=COL_I, col_j=COL_J, col_data=col_data)
 

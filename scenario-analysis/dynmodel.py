@@ -28,6 +28,13 @@ RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # os.makedirs(DIRECTORY_DATA, exist_ok=True)
 
 
+# Dictionary to map Map IDs to the number of OPs
+MAP_TO_OPS = {
+    1: 2, 6: 2, 10: 2,  # Maps with 2 OPs
+    2: 1, 3: 1, 4: 1, 5: 1, 7: 1, 8: 1, 9: 1,  # Maps with 1 OP
+}
+
+
 def add_derived_columns(df_orig, *, columns_params = None, columns_configuration = None):
     df_id_pre = df_orig['Scenario ID'].str.extract(r'^(?P<filename>.*?)(?P<params>, .*)$', expand=True)
 
@@ -46,7 +53,9 @@ def add_derived_columns(df_orig, *, columns_params = None, columns_configuration
             int),
         df_params,
     ], axis=1).rename(columns={'i_locations': 'position'})
+    df_id['No. of OPs'] = df_id['i_map'].map(MAP_TO_OPS)
     # IPython.display.display(df_id)
+
     df_id['slowness'] = df_id['slowness'].apply(lambda s: 'baseline' if s == 'no' else s)
     df_id['forcing'] = df_id['forcing'].apply(lambda s: 'baseline' if s == 'no' else s)
     df_id['filename_screenshot'] = "../map-generator/generated-maps/" + df_id['dir_map'] + '/screenshots/' + df_id[
@@ -158,6 +167,7 @@ def series2values(series: pd.Series) -> np.ndarray:
 def select_columns_input_output(df: pd.DataFrame) -> pd.DataFrame:
     columns_input = [
         'i_map',
+        'No. of OPs',
         'V: v_current',
         'V0: v_current',
     ]
