@@ -98,15 +98,18 @@ public class Forcing {
 
         final TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-        HashSet<CriticalSection> criticalSectionsToRestorePrioritiesLater = new HashSet<>();
-        TreeSet<Integer> robotsToRestoreLater = new TreeSet<>();
-        TreeSet<Integer> robotsToResumeLater = new TreeSet<>();
-        TreeMap<Integer, Boolean> robotToIsStopInPast = new TreeMap<>();
-        final boolean[] arrayIsForcingFinished = {false};
-
-        Random rand = new DeterministicRandom(Forcing.class.getName(), robotID);
 
         return new KnobsAfterForcing() {
+            boolean isForcingFinished = false;
+            final Random rand = new DeterministicRandom(Forcing.class.getName(), robotID);
+
+            final HashSet<CriticalSection> criticalSectionsToRestorePrioritiesLater = new HashSet<>();
+            HashSet<CriticalSection> criticalSectionsAtDone = null;
+
+            final TreeSet<Integer> robotsToRestoreLater = new TreeSet<>();
+            final TreeSet<Integer> robotsToResumeLater = new TreeSet<>();
+            final TreeMap<Integer, Boolean> robotToIsStopInPast = new TreeMap<>();
+
             @Override
             public boolean isToRestore(int robotID) {
                 return robotsToRestoreLater.contains(robotID);
@@ -119,7 +122,7 @@ public class Forcing {
 
             @Override
             public boolean updateForcing(double distanceTraveledAfterForcing) {
-                assert ! arrayIsForcingFinished[0];
+                assert ! isForcingFinished;
 
                 double priorityDistanceRemaining = priorityDistance - distanceTraveledAfterForcing;
                 if (isDistanceToCPAddedToPriorityDistance) {
@@ -138,11 +141,19 @@ public class Forcing {
 
                 assert criticalSectionsToRestorePrioritiesLater.isEmpty() == robotsToRestoreLater.isEmpty();
 
-                boolean isDone = priorityDistanceRemaining == 0 && stopDistanceRemaining == 0;
+                if (
+                        isResetAfterCurrentCrossroad &&
+                        priorityDistanceRemaining == 0 &&
+                        stopDistanceRemaining == 0
+                ) {
+                    if (robotsToRestoreLater.isEmpty() && robotsToResumeLater.isEmpty()) {
+                        return false;
+                    }
 
-                if (isResetAfterCurrentCrossroad && isDone) {
-                    boolean isEmpty = robotsToRestoreLater.isEmpty() && robotsToResumeLater.isEmpty();
-                    if (isEmpty || areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsToRestorePrioritiesLater)) {
+                    if (criticalSectionsAtDone == null) {
+                        criticalSectionsAtDone = new HashSet<>(criticalSectionsToRestorePrioritiesLater);
+                        criticalSectionsAtDone.retainAll(tec.allCriticalSections);
+                    } else if (areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsAtDone)) {
                         return false;
                     }
                 }
@@ -311,7 +322,7 @@ public class Forcing {
 
             @Override
             public void finishForcing() {
-                assert ! arrayIsForcingFinished[0];
+                assert ! isForcingFinished;
 
                 boolean isEmpty = robotsToRestoreLater.isEmpty() && robotsToResumeLater.isEmpty();
                 if (isEmpty) {
@@ -326,7 +337,7 @@ public class Forcing {
                 }
                 new Event.ForcingFinished(robotID).write();
 
-                arrayIsForcingFinished[0] = true;
+                isForcingFinished = true;
             }
         };
     }
