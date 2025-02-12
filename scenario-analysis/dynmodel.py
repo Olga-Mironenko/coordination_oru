@@ -28,6 +28,61 @@ RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # os.makedirs(DIRECTORY_DATA, exist_ok=True)
 
 
+def add_derived_columns(df_orig, *, columns_params = None, columns_configuration = None):
+    df_id_pre = df_orig['Scenario ID'].str.extract(r'^(?P<filename>.*?)(?P<params>, .*)$', expand=True)
+
+    df_params = pd.concat([
+        df_id_pre['params'].str.extract(r', passhum (?P<passhum>0|1)\b', expand=True).astype(int).astype(bool),
+        df_id_pre['params'].str.extract(r', slowness (?P<slowness>[^,]+)\b', expand=True),
+        df_id_pre['params'].str.extract(r', forcing (?P<forcing>[^,]+)\b', expand=True),
+    ], axis=1)
+    if columns_params is not None:
+        assert list(df_params.columns) == columns_params  # TODO: set `COLUMNS_PARAMS`
+
+    df_id = pd.concat([
+        df_id_pre[['filename']],
+        df_id_pre['filename'].str.extract(r'(?P<dir_map>[^/]+)/(?P<basename_scenario>[^/]+)[.]json$', expand=True),
+        df_id_pre['filename'].str.extract(r'/scenario(?P<i_map>\d+)-(?P<i_locations>\d+)[.]json$', expand=True).astype(
+            int),
+        df_params,
+    ], axis=1).rename(columns={'i_locations': 'position'})
+    # IPython.display.display(df_id)
+    df_id['slowness'] = df_id['slowness'].apply(lambda s: 'baseline' if s == 'no' else s)
+    df_id['forcing'] = df_id['forcing'].apply(lambda s: 'baseline' if s == 'no' else s)
+    df_id['filename_screenshot'] = "../map-generator/generated-maps/" + df_id['dir_map'] + '/screenshots/' + df_id[
+        'basename_scenario'] + '.png'
+    df_id['are_bridges'] = df_id['dir_map'].str.contains('with_bridges')
+    if columns_configuration is not None:
+        df_id['configuration'] = df_id[
+            columns_configuration
+        ].agg(
+            lambda r: f'map {r['i_map']}, {"with" if r['are_bridges'] else "without"} bridges, pos.var. {r['position']}',
+            axis=1
+        )
+
+    cols_reroutings = [col
+                       for col in df_orig.columns
+                       if col.endswith(('rerouting at parked / slow', 'reroutings at parked / slow'))]
+    # print(f'{cols_reroutings=}')
+    df = pd.concat(
+        [
+            df_id,
+            df_orig['isCanPassFirstActive'].str.extract(
+                r'^hum=(?P<isCanPassFirstHum>false|true), aut=(?P<isCanPassFirstAut>false|true)$', expand=True
+            ).apply(lambda col: col == 'true'),
+            *[
+                df_orig[col].astype(str).str.extract(
+                    r'^(?P<reroutingsAtParked>-|\d+) / (?P<reroutingsAtSlow>-|\d+)$', expand=True
+                ).apply(lambda col: col.map(lambda x: np.nan if pd.isna(x) or x == '-' else int(x))).astype('Int64')
+                for col in cols_reroutings
+            ],
+            df_orig,
+        ],
+        axis=1
+    )
+    return df
+
+
 def prepare_missions(filename_events_tsv, filename_missions_csv):
     filename_script = './events2missions.py'
     if (
@@ -80,9 +135,10 @@ def add_vcurr_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def keep_forcing_reaction_started(df: pd.DataFrame) -> pd.DataFrame:
+def prepare_forcing_reaction_started(df: pd.DataFrame) -> pd.DataFrame:
     df = df[df['event_type'] == 'ForcingReactionStarted']
     df = add_vcurr_columns(df)
+    df = add_derived_columns(df)
     return df
 
 
@@ -99,35 +155,9 @@ def series2values(series: pd.Series) -> np.ndarray:
     raise TypeError(f'{dtype} is not supported')
 
 
-def normalize_df(df_orig):
-    df_id_pre = df_orig['Scenario ID'].str.extract(r'^(?P<filename>.*?)(?P<params>, .*)$', expand=True)
-
-    df_params = pd.concat([
-        df_id_pre['params'].str.extract(r', passhum (?P<passhum>0|1)\b', expand=True).astype(int).astype(bool),
-        df_id_pre['params'].str.extract(r', slowness (?P<slowness>[^,]+)\b', expand=True),
-        df_id_pre['params'].str.extract(r', forcing (?P<forcing>[^,]+)\b', expand=True),
-    ], axis=1)
-    assert list(df_params.columns) == COLUMNS_PARAMS  # TODO: set `COLUMNS_PARAMS`
-
-    df_id = pd.concat([
-        df_id_pre[['filename']],
-        df_id_pre['filename'].str.extract(r'(?P<dir_map>[^/]+)/(?P<basename_scenario>[^/]+)[.]json$', expand=True),
-        df_id_pre['filename'].str.extract(r'/scenario(?P<i_map>\d+)-(?P<i_locations>\d+)[.]json$', expand=True).astype(
-            int),
-        df_params,
-    ], axis=1).rename(columns={'i_locations': 'position'})
-    # IPython.display.display(df_id)
-    df_id['slowness'] = df_id['slowness'].apply(lambda s: 'baseline' if s == 'no' else s)
-    df_id['forcing'] = df_id['forcing'].apply(lambda s: 'baseline' if s == 'no' else s)
-    df_id['filename_screenshot'] = "../map-generator/generated-maps/" + df_id['dir_map'] + '/screenshots/' + df_id[
-        'basename_scenario'] + '.png'
-    df_id['are_bridges'] = df_id['dir_map'].str.contains('with_bridges')
-
-    куе
-
-
 def select_columns_input_output(df: pd.DataFrame) -> pd.DataFrame:
     columns_input = [
+        'i_map',
         'V: v_current',
         'V0: v_current',
     ]
@@ -174,7 +204,7 @@ def evaluate_and_plot_column(df_test, df_predictions, column):
 
 
 def convert_missions_all_into_dfs_model(df_all: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    df = keep_forcing_reaction_started(df_all)
+    df = prepare_forcing_reaction_started(df_all)
     show(df[pd.isna(df['V: v_current'])], 'bad')
     df = select_columns_input_output(df)
 
