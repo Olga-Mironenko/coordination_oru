@@ -11,7 +11,7 @@ def main(root_dir: str = ".") -> None:
     rows = []
 
     # Iterate through directories and files
-    for filename in sorted(glob.glob(f'{root_dir}/*/*.csv')):
+    for filename in sorted(glob.glob(f'{root_dir}/*/[0-9]*.csv')):
         # Read the file as key-value pairs
         with open(filename) as file:
             row = {}
