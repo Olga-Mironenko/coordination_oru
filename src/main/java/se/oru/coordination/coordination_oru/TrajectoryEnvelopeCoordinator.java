@@ -2051,18 +2051,29 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					int robotID1 = robotReport1.getRobotID();
 					int robotID2 = robotReport2.getRobotID();
 
+					boolean areCommunicatedCPsUsed = false;
+					// Sometimes, there are situations like the following. A robot becomes inferior on a CS while the
+					// robot is on the CS. So it seems like the start of the CS has been communicated to the robot
+					// as a CP.
+
 					//Force the dependency for the robot footprint
 					if (//the last critical point was before the critical section (can stop by induction)
+							areCommunicatedCPsUsed && (
 							(communicatedCPs.containsKey(robotTracker1) && communicatedCPs.get(robotTracker1).getFirst() != -1 && communicatedCPs.get(robotTracker1).getFirst() < cs.getTe1Start())
 									|| !communicatedCPs.containsKey(robotTracker1) && Math.max(0, robotReport1.getPathIndex()) < cs.getTe1Start())
+					)
 						canStopRobot1 = true;
 					else
 						//Due to temporal delays we cannot trust the velocity.
 						canStopRobot1 = earliestStoppingPoints.get(robotID1) < cs.getTe1Start();
-					if ((communicatedCPs.containsKey(robotTracker2) && communicatedCPs.get(robotTracker2).getFirst() != -1 && communicatedCPs.get(robotTracker2).getFirst() < cs.getTe2Start())
+					if (
+							areCommunicatedCPsUsed && (
+							(communicatedCPs.containsKey(robotTracker2) && communicatedCPs.get(robotTracker2).getFirst() != -1 && communicatedCPs.get(robotTracker2).getFirst() < cs.getTe2Start())
 							|| !communicatedCPs.containsKey(robotTracker2) && Math.max(0, robotReport2.getPathIndex()) < cs.getTe2Start())
+					)
 						canStopRobot2 = true;
-					else canStopRobot2 = earliestStoppingPoints.get(robotID2) < cs.getTe2Start();
+					else
+						canStopRobot2 = earliestStoppingPoints.get(robotID2) < cs.getTe2Start();
 
 					boolean isForcing = Forcing.isForcingActive();
 					boolean isHuman1Forcing = isForcing && VehiclesHashMap.isHuman(robotID1);

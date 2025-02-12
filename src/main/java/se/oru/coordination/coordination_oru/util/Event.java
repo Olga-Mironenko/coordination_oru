@@ -76,11 +76,8 @@ public abstract class Event {
     }
 
     public static class ForcingStarted extends Event {
-        public boolean areStopsAllowed; // TODO: remove
-
-        public ForcingStarted(int robotID, boolean areStopsAllowed) {
+        public ForcingStarted(int robotID) {
             this.robotID = robotID;
-            this.areStopsAllowed = areStopsAllowed;
         }
     }
 

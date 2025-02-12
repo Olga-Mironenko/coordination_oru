@@ -151,17 +151,17 @@ public class GeneratedMapTest {
                 // and "change of priorities"
             case "change of priorities":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
-                AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingStops = 0;
+                Forcing.probabilityStopNotChangeOfPriorities = 0;
                 break;
 
             case "stops":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
-                AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingStops = 1;
+                Forcing.probabilityStopNotChangeOfPriorities = 1;
                 break;
 
             case "50% stops":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
-                AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingStops = 0.5;
+                Forcing.probabilityStopNotChangeOfPriorities = 0.5;
                 break;
 
             default:

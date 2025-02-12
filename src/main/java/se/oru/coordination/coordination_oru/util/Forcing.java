@@ -46,7 +46,7 @@ public class Forcing {
     //   Note that stop effect without priority effect makes little sense.
     public static double stopDistanceMin = Double.NEGATIVE_INFINITY;
     // - When both change of priorities and stops apply, the latter is selected with the following probability.
-    public static double probabilityStop = 0.5;
+    public static double probabilityStopNotChangeOfPriorities = 0.5;
     // - If `isGlobalTemporaryStop` is true, then all other robots are stopped during forcing.
     public static boolean isGlobalTemporaryStop = false;
     // - If `isResetAfterCurrentCrossroad` is true, then forcing finishes automatically when its priority and stop
@@ -64,7 +64,7 @@ public class Forcing {
 
         AbstractVehicle hum0 = VehiclesHashMap.getVehicle(robotID);
         RobotReport rrAtForcingStart = hum0.getCurrentRobotReport();
-        KnobsAfterForcing knobsAfterForcing = Forcing.forceDriving(robotID, true);
+        KnobsAfterForcing knobsAfterForcing = Forcing.forceDriving(robotID);
         if (knobsAfterForcing == null) {
             return;
         }
@@ -89,9 +89,9 @@ public class Forcing {
         return forcingSinceTimestep != -1;
     }
 
-    public static KnobsAfterForcing forceDriving(int robotID, boolean areStopsAllowed) {
+    public static KnobsAfterForcing forceDriving(int robotID) {
         assert ! isForcingActive();
-        new Event.ForcingStarted(robotID, areStopsAllowed).write();
+        new Event.ForcingStarted(robotID).write();
 
         forcingSinceTimestep = Timekeeper.getTimestepsPassed();
         robotIDToNumForcingEvents.put(robotID, robotIDToNumForcingEvents.getOrDefault(robotID, 0) + 1);
@@ -129,14 +129,12 @@ public class Forcing {
                 priorityDistanceRemaining = Math.max(0, priorityDistanceRemaining);
 
                 double stopDistanceRemaining = 0;
-                if (areStopsAllowed) {
-                    stopDistanceRemaining = stopDistance - distanceTraveledAfterForcing;
-                    if (isDistanceToCPAddedToStopDistance) {
-                        assert distanceToCP != null;
-                        stopDistanceRemaining += distanceToCP;
-                    }
-                    stopDistanceRemaining = Math.max(0, stopDistanceRemaining);
+                stopDistanceRemaining = stopDistance - distanceTraveledAfterForcing;
+                if (isDistanceToCPAddedToStopDistance) {
+                    assert distanceToCP != null;
+                    stopDistanceRemaining += distanceToCP;
                 }
+                stopDistanceRemaining = Math.max(0, stopDistanceRemaining);
 
                 assert criticalSectionsToRestorePrioritiesLater.isEmpty() == robotsToRestoreLater.isEmpty();
 
@@ -237,7 +235,7 @@ public class Forcing {
                     }
 
                     if (isStop == null) {
-                        isStop = rand.nextDouble() < probabilityStop;
+                        isStop = rand.nextDouble() < probabilityStopNotChangeOfPriorities;
                     }
                     robotToIsStop.put(robotID, isStop);
                 }

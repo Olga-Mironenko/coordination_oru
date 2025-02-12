@@ -81,7 +81,6 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 	public double distanceToCP;
 	public static double probabilityForcingForHuman = 0.0;
-	public static double probabilityForcingStops = 0.5;
 	public static double distanceToCPForForcing = 5.0;
 	public static ForcingMaintainer forcingMaintainer;
 	public static double probabilitySlowingDownForHuman = 0.0;
@@ -1243,8 +1242,7 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 			distanceToCP = computeDistanceToCP();
 			if (isHuman) { // forcing
 				boolean isForcingNow = false;
-				boolean areStopsAllowed = false;
-				if (distanceToCP > distanceToCPLast) {
+				if (! isExpectingDistanceShrinking && distanceToCP > distanceToCPLast) {
 					isExpectingDistanceShrinking = true;
 				}
 				if (isExpectingDistanceShrinking &&
@@ -1254,14 +1252,11 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 
 					if (rand.nextDouble() < probabilityForcingForHuman) {
 						isForcingNow = true;
-						if (rand.nextDouble() < probabilityForcingStops) {
-							areStopsAllowed = true;
-						}
 					}
 				}
 				forcingMaintainer.update(
 						myRobotID, distanceToCP,
-						isForcingNow, areStopsAllowed,
+						isForcingNow,
 						false, false
 				);
 				distanceToCPLast = distanceToCP;

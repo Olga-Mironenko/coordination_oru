@@ -98,8 +98,9 @@ public abstract class Demo {
             Forcing.priorityDistance = 50.0;
             Forcing.isDistanceToCPAddedToPriorityDistance = true;
             /// - Stops:
-            Forcing.stopDistance = 50.0;
+            Forcing.stopDistance = Forcing.priorityDistance;
             Forcing.isDistanceToCPAddedToStopDistance = true;
+            Forcing.probabilityStopNotChangeOfPriorities = 0.5;
             Forcing.isGlobalTemporaryStop = false; // true for Global, false for Local
             Forcing.isResetAfterCurrentCrossroad = true;
             /// - Baseline "Ignoring Human":
