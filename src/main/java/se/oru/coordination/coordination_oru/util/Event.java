@@ -89,10 +89,12 @@ public abstract class Event {
 
     public static class ForcingReactionStarted extends Event {
         public boolean isStop;
+        public double distanceToCS;
 
-        public ForcingReactionStarted(int robotID, boolean isStop) {
+        public ForcingReactionStarted(int robotID, boolean isStop, double distanceToCS) {
             this.robotID = robotID;
             this.isStop = isStop;
+            this.distanceToCS = distanceToCS;
         }
     }
 

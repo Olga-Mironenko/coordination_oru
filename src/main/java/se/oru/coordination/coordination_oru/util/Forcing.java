@@ -1,10 +1,12 @@
 package se.oru.coordination.coordination_oru.util;
 
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
+import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.CriticalSection;
 import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
+import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
@@ -57,6 +59,27 @@ public class Forcing {
     private final static int maxNumberOfHumans = 1;
 
     public static int forcingSinceTimestep = -1;
+
+    private static double computeDistanceToCS(int humanID, int inferiorID, ArrayList<CriticalSection> cses) {
+        assert ! cses.isEmpty();
+
+        RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(inferiorID);
+        int inferiorPathIndex = rr.getPathIndex();
+        int minPathIndex = Integer.MAX_VALUE;
+        for (CriticalSection cs : cses) {
+            assert cs.getTe1RobotID() == humanID && cs.getTe2RobotID() == inferiorID;
+            minPathIndex = Math.min(minPathIndex, cs.getTe2Start());
+        }
+        if (minPathIndex <= inferiorPathIndex) {
+            return 0.0; // The robot is already on a CS with forcing.
+        }
+
+        TrajectoryEnvelope teInferior =
+                TrajectoryEnvelopeCoordinatorSimulation.tec.getTracker(inferiorID).getTrajectoryEnvelope();
+        return AdaptiveTrajectoryEnvelopeTrackerRK4.computeDistance(
+                teInferior.getTrajectory(), inferiorPathIndex, minPathIndex
+        );
+    }
 
     public static void startManualForcing(int robotID) {
         priorityDistance = 10;
@@ -255,7 +278,9 @@ public class Forcing {
                     int otherID = entry.getKey();
                     boolean isStop = entry.getValue();
 
-                    for (CriticalSection cs : robotToCSesPriority.getOrDefault(otherID, new ArrayList<>())) {
+
+                    ArrayList<CriticalSection> cses = robotToCSesPriority.getOrDefault(otherID, new ArrayList<>());
+                    for (CriticalSection cs : cses) {
                         increaseRobotPriorityOnCS(cs);
                     }
                     if (isStop) {
@@ -266,7 +291,8 @@ public class Forcing {
                         assert robotToIsStopInPast.get(otherID) == isStop;
                     } else {
                         robotToIsStopInPast.put(otherID, isStop);
-                        new Event.ForcingReactionStarted(otherID, isStop).write();
+                        double distanceToCS = computeDistanceToCS(robotID, otherID, cses);
+                        new Event.ForcingReactionStarted(otherID, isStop, distanceToCS).write();
                     }
                 }
             }
