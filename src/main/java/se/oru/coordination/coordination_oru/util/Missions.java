@@ -1736,82 +1736,86 @@ public class Missions {
 
 	public static void computeMissionLinearizations() {
 		for (String mode : List.of("A", "B", "C", "D")) {
-			// Initializing linearizations:
-			TreeMap<Integer, double[]> robotIDToMissionLinearization = null;
-			switch (mode) {
-				case "A":
-					robotIDToMissionLinearization = robotIDToMissionLinearizationA;
-					break;
-				case "B":
-					robotIDToMissionLinearization = robotIDToMissionLinearizationB;
-					break;
-				case "C":
-					robotIDToMissionLinearization = robotIDToMissionLinearizationC;
-					break;
+			computeMissionLinearization(mode);
+		}
+	}
+
+	public static void computeMissionLinearization(String mode) {
+		// Initializing linearizations:
+		TreeMap<Integer, double[]> robotIDToMissionLinearization = null;
+		switch (mode) {
+			case "A":
+				robotIDToMissionLinearization = robotIDToMissionLinearizationA;
+				break;
+			case "B":
+				robotIDToMissionLinearization = robotIDToMissionLinearizationB;
+				break;
+			case "C":
+				robotIDToMissionLinearization = robotIDToMissionLinearizationC;
+				break;
+		}
+		if (robotIDToMissionLinearization != null) {
+			robotIDToMissionLinearization.clear();
+			for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
+				AbstractTrajectoryEnvelopeTracker tracker = vehicle.getTracker();
+				TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
+				robotIDToMissionLinearization.put(vehicle.getID(), new double[te.getPathLength()]);
 			}
-			if (robotIDToMissionLinearization != null) {
-				robotIDToMissionLinearization.clear();
-				for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
-					AbstractTrajectoryEnvelopeTracker tracker = vehicle.getTracker();
-					TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
-					robotIDToMissionLinearization.put(vehicle.getID(), new double[te.getPathLength()]);
-				}
-			} else {
-				assert mode.equals("D");
-				robotIDToOtherIDToMissionLinearizationD.clear();
-				for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
-					TreeMap<Integer, double[]> otherIDToLinearization = new TreeMap<>();
-					robotIDToOtherIDToMissionLinearizationD.put(vehicle.getID(), otherIDToLinearization);
+		} else {
+			assert mode.equals("D");
+			robotIDToOtherIDToMissionLinearizationD.clear();
+			for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
+				TreeMap<Integer, double[]> otherIDToLinearization = new TreeMap<>();
+				robotIDToOtherIDToMissionLinearizationD.put(vehicle.getID(), otherIDToLinearization);
 
-					AbstractTrajectoryEnvelopeTracker tracker = vehicle.getTracker();
-					TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
+				AbstractTrajectoryEnvelopeTracker tracker = vehicle.getTracker();
+				TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
 
-					for (AbstractVehicle other : VehiclesHashMap.getVehicles()) {
-						if (other.getID() == vehicle.getID()) {
-							continue;
-						}
-
-						double[] linearization = new double[te.getPathLength()];
-						otherIDToLinearization.put(other.getID(), linearization);
+				for (AbstractVehicle other : VehiclesHashMap.getVehicles()) {
+					if (other.getID() == vehicle.getID()) {
+						continue;
 					}
+
+					double[] linearization = new double[te.getPathLength()];
+					otherIDToLinearization.put(other.getID(), linearization);
 				}
 			}
+		}
 
-			// Filling linearizations:
-			for (CriticalSection cs : TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections) {
-				for (int robotID : cs.getRobotIDs()) {
-					TrajectoryEnvelope teOther = !cs.isTe1(robotID) ? cs.getTe1() : cs.getTe2();
-					int teOtherStart = !cs.isTe1(robotID) ? cs.getTe1Start() : cs.getTe2Start();
-					int teOtherEnd = !cs.isTe1(robotID) ? cs.getTe1End() : cs.getTe2End();
+		// Filling linearizations:
+		for (CriticalSection cs : TrajectoryEnvelopeCoordinatorSimulation.tec.allCriticalSections) {
+			for (int robotID : cs.getRobotIDs()) {
+				TrajectoryEnvelope teOther = !cs.isTe1(robotID) ? cs.getTe1() : cs.getTe2();
+				int teOtherStart = !cs.isTe1(robotID) ? cs.getTe1Start() : cs.getTe2Start();
+				int teOtherEnd = !cs.isTe1(robotID) ? cs.getTe1End() : cs.getTe2End();
 
-					double weight;
-					switch (mode) {
-						case "A":
-							weight = 1.0;
-							break;
-						case "B":
-							weight = 1.0 / teOther.getPathLength();
-							break;
-						case "C":
-						case "D":
-							weight = (double) (teOtherEnd - teOtherStart + 1) / teOther.getPathLength();
-							break;
-						default:
-							throw new RuntimeException();
-					}
-					assert weight > 0;
+				double weight;
+				switch (mode) {
+					case "A":
+						weight = 1.0;
+						break;
+					case "B":
+						weight = 1.0 / teOther.getPathLength();
+						break;
+					case "C":
+					case "D":
+						weight = (double) (teOtherEnd - teOtherStart + 1) / teOther.getPathLength();
+						break;
+					default:
+						throw new RuntimeException();
+				}
+				assert weight > 0;
 
-					double[] linearization;
-					if (robotIDToMissionLinearization != null) {
-						linearization = robotIDToMissionLinearization.get(robotID);
-					} else {
-						assert mode.equals("D");
-						linearization = robotIDToOtherIDToMissionLinearizationD.get(robotID).get(teOther.getRobotID());
-					}
+				double[] linearization;
+				if (robotIDToMissionLinearization != null) {
+					linearization = robotIDToMissionLinearization.get(robotID);
+				} else {
+					assert mode.equals("D");
+					linearization = robotIDToOtherIDToMissionLinearizationD.get(robotID).get(teOther.getRobotID());
+				}
 
-					for (int i = cs.getStart(robotID); i <= cs.getEnd(robotID); i++) {
-						linearization[i] += weight;
-					}
+				for (int i = cs.getStart(robotID); i <= cs.getEnd(robotID); i++) {
+					linearization[i] += weight;
 				}
 			}
 		}

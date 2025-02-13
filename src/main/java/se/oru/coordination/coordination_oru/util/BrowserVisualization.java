@@ -565,16 +565,16 @@ public class BrowserVisualization implements FleetVisualization {
 					row.append(" | ");
 				}
 
-				thead1.append(" |5{border-color: blue;} Coordination strategies for AVs");
-				theadHints.append(" | proactive |4 reactive");
-				thead2.append(" | cautious<br>mode | reroutings at<br>parked / slow | moving<br>backwards" + " | change of<br>priorities | stops");
+				thead1.append(" |4{border-color: blue;} Coordination strategies for AVs");
+				theadHints.append(" | proactive |3 reactive");
+				thead2.append(" | cautious<br>mode | reroutings at<br>parked / slow | change of<br>priorities | stops");
 				if (isHuman) {
-					row.append(" |  |  |  |  | ");
+					row.append(" |  |  |  | ");
 				} else {
 					KnobsAfterForcing knobsAfterForcing = ForcingMaintainer.getKnobsOfTheHuman();
 					boolean isToRestore = knobsAfterForcing != null && knobsAfterForcing.isToRestore(id);
 					boolean isToResume = knobsAfterForcing != null && knobsAfterForcing.isToResume(id);
-					row.append(String.format(" | %s | %s |  | %s | %s",
+					row.append(String.format(" | %s | %s | %s | %s",
                             center(
                                     !AdaptiveTrajectoryEnvelopeTrackerRK4.isCautiousMode ? "" :
                                             vehicle.isMaxVelocityLowered() ? "yes" : "no"
@@ -632,10 +632,18 @@ public class BrowserVisualization implements FleetVisualization {
 					theadHints.append(" |8 ");
 					thead2.append(" | position<br>(x, y), m | traveled,<br>m");
 
-                    Double positionToSlowDown = trackerAdaptive == null ? null : trackerAdaptive.positionToSlowDown;
+					double pod = -1;
+					if (rr.getPathIndex() != -1) {
+						double[] linearization = Missions.robotIDToMissionLinearizationC.get(id);
+						if (linearization != null) {
+							pod = linearization[rr.getPathIndex()];
+						}
+					}
+
+					Double positionToSlowDown = trackerAdaptive == null ? null : trackerAdaptive.positionToSlowDown;
 					double distanceToCP =
 							trackerAdaptive == null ? Double.POSITIVE_INFINITY : trackerAdaptive.distanceToCP;
-					row.append(String.format(" | %s | %d | %s | %s | %s | <div style=\"text-align: left;\">%s</div>",
+					row.append(String.format(" | %s | %d | %s | %s | %s | %s | <div style=\"text-align: left;\">%s</div>",
                             rr.getPathIndex() == -1 ? "" : String.format("%d", rr.getPathIndex()),
                             te.getPathLength(),
                             rr.getCriticalPoint() == -1
@@ -643,11 +651,12 @@ public class BrowserVisualization implements FleetVisualization {
                                     : rr.getCriticalPoint() == TrajectoryEnvelopeCoordinatorSimulation.CP_ASAP
                                     ? "ASAP"
                                     : String.format("%d", rr.getCriticalPoint()),
-                            positionToSlowDown == null ? "" : String.format("%.1f", positionToSlowDown),
+							pod == -1 ? "" : String.format("%.3f", pod),
+							positionToSlowDown == null ? "" : String.format("%.1f", positionToSlowDown),
                             Double.isInfinite(distanceToCP) ? "" : String.format("%.1f", distanceToCP),
                             rr.statusString == null ? "-" : rr.statusString.replace("STOPPED_AT_CP", "STOP@CP")
                     ));
-					thead2.append(" | path<br>index | no.<br>poses | CP<br>(index) | posTo<br>Slow, m | distance<br>ToCP, m | status");
+					thead2.append(" | path<br>index | no.<br>poses | CP<br>(index) | POD | posTo<br>Slow, m | distance<br>ToCP, m | status");
 				}
 			}
 
