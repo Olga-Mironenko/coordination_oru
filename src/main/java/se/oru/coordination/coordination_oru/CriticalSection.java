@@ -1,15 +1,13 @@
 package se.oru.coordination.coordination_oru;
 
+import aima.core.util.datastructure.Pair;
 import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeTrackerRK4;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -354,35 +352,21 @@ public class CriticalSection {
 	public boolean is1Before2() {
 		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-		if (getWeight(getTe1RobotID()) != Weight.WEIGHT_NORMAL || getWeight(getTe2RobotID()) != Weight.WEIGHT_NORMAL) {
-			return tec.getOrder(
-					tec.getRobotReport(getTe1RobotID()),
-					tec.getRobotReport(getTe2RobotID()),
-					this
-			);
+		Pair<Integer, Integer> order = tec.CSToDepsOrder.get(this);
+		int robotIDWaiting = order.getFirst();
+		int waitingPoint = order.getSecond();
+		int margin = AbstractTrajectoryEnvelopeCoordinator.TRAILING_PATH_POINTS;
+		if (robotIDWaiting == getTe1RobotID()) {
+//			assert getTe1Start() - margin <= waitingPoint && waitingPoint <= getTe1Start();
+			// TODO: For some reason, `waitingPoint == getTe1Start() + 1` (not `- 1`) at least sometimes.
+			return false;
+		}
+		if (robotIDWaiting == getTe2RobotID()) {
+//			assert getTe2Start() - margin <= waitingPoint && waitingPoint <= getTe2Start();
+			return true;
 		}
 
-		for (int id : List.of(getTe1RobotID(), getTe2RobotID())) {
-			Dependency dep = tec.getCurrentDependencies().get(id);
-			if (dep != null) {
-				if (dep.getDrivingRobotID() == getTe1RobotID() && dep.getWaitingRobotID() == getTe2RobotID()) {
-					if (dep.getReleasingPoint() == getTe1End() && dep.getWaitingPoint() == getTe2Start()) { // an extra check of whether the dependency relates to this CS
-						return true;
-					}
-				}
-				if (dep.getDrivingRobotID() == getTe2RobotID() && dep.getWaitingRobotID() == getTe1RobotID()) {
-					if (dep.getReleasingPoint() == getTe2End() && dep.getWaitingPoint() == getTe1Start()) {
-						return false;
-					}
-				}
-			}
-		}
-
-		return tec.getOrder(
-				tec.getRobotReport(getTe1RobotID()),
-				tec.getRobotReport(getTe2RobotID()),
-				this
-		);
+		throw new RuntimeException("CSToDepsOrder is not synchronized with the CS");
 	}
 
 	public boolean isSuperior(int robotID) {

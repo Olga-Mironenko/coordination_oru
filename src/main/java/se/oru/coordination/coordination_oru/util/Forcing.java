@@ -149,6 +149,8 @@ public class Forcing {
                     if (robotsToRestoreLater.isEmpty() && robotsToResumeLater.isEmpty()) {
                         return false;
                     }
+                    return false; // TODO: remove that
+                    /*
 
                     if (criticalSectionsAtDone == null) {
                         criticalSectionsAtDone = new HashSet<>(criticalSectionsToRestorePrioritiesLater);
@@ -156,6 +158,8 @@ public class Forcing {
                     } else if (areSomeCriticalSectionsWithHighPriorityGone(tec.allCriticalSections, criticalSectionsAtDone)) {
                         return false;
                     }
+
+                     */
                 }
 
                 affectRobots(distanceTraveledAfterForcing, priorityDistanceRemaining, stopDistanceRemaining);

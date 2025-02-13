@@ -109,15 +109,17 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 	public HashSet<CriticalSection> allCriticalSections = new HashSet<CriticalSection>();
 	public int numCriticalSectionsCreated = 0;
 	public HashMap<Integer, Integer> robotIDToNumPotentialInteractions = new HashMap<>();
-	protected HashMap<CriticalSection,Pair<Integer,Integer>> CSToDepsOrder = new HashMap<CriticalSection,Pair<Integer,Integer>>(); 
-	HashMap<Dependency,CriticalSection> depsToCS = new HashMap<Dependency, CriticalSection>();
-	protected HashMap<CriticalSection,Pair<Integer,Integer>> escapingCSToWaitingRobotIDandCP = new HashMap<CriticalSection, Pair<Integer,Integer>>(); 
+	public HashMap<CriticalSection,Pair<Integer,Integer>> CSToDepsOrder = new HashMap<CriticalSection,Pair<Integer,Integer>>();
+	protected HashMap<Dependency,CriticalSection> depsToCS = new HashMap<Dependency, CriticalSection>();
+	public HashMap<CriticalSection, Dependency> csToDep = new HashMap<>();
+	protected HashMap<CriticalSection,Pair<Integer,Integer>> escapingCSToWaitingRobotIDandCP = new HashMap<CriticalSection, Pair<Integer,Integer>>();
 	public HashMap<Integer,ArrayList<Integer>> stoppingPoints = new HashMap<Integer,ArrayList<Integer>>();
 	protected HashMap<Integer,ArrayList<Integer>> stoppingTimes = new HashMap<Integer,ArrayList<Integer>>();
 	protected HashMap<Integer,Thread> stoppingPointTimers = new HashMap<Integer,Thread>();
 
 	public HashMap<Integer,AbstractTrajectoryEnvelopeTracker> trackers = new HashMap<Integer, AbstractTrajectoryEnvelopeTracker>();
 	protected HashMap<Integer, Dependency> currentDependencies = new HashMap<Integer, Dependency>();
+	public HashMap<Integer, HashSet<Dependency>> allDependencies = new HashMap<>();
 
 	protected static Logger metaCSPLogger = MetaCSPLogging.getLogger(TrajectoryEnvelopeCoordinator.class);
 	//static { metaCSPLogger.setLevel(Level.SEVERE); }

@@ -277,9 +277,11 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 		HashMap<Integer, Dependency> closestDeps = new HashMap<Integer, Dependency>();
 
-		if (allDeps == null && artificialDeps == null || allDeps.isEmpty() && artificialDeps.isEmpty()) {
+		if ((allDeps == null || allDeps.isEmpty()) && (artificialDeps == null || artificialDeps.isEmpty())) {
 			return closestDeps;
 		}
+		assert allDeps != null;
+		assert artificialDeps != null;
 
 		metaCSPLogger.finest("currentDeps: " + allDeps.toString() + ".");
 		metaCSPLogger.finest("artificialDeps: " + artificialDeps.toString() + ".");
@@ -310,6 +312,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				if (firstDep != null)
 					depToSend = firstArtificialDep != null ? (firstDep.compareTo(firstArtificialDep) < 0 ? firstDep : firstArtificialDep) : firstDep;
 				else depToSend = firstArtificialDep;
+				assert depToSend != null;
 				closestDeps.put(depToSend.getWaitingRobotID(), depToSend);
 			}
 		}
@@ -449,8 +452,10 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 					//create a temporary map between dependencies and critical sections
 					HashMap<Dependency,CriticalSection> depsToCSTmp = new HashMap<Dependency, CriticalSection>(depsToCS);
+					HashMap<CriticalSection, Dependency> csToDepTmp = new HashMap<>(csToDep);
 					depsToCSTmp.remove(dep);
 					depsToCSTmp.put(revDep, cs);
+					csToDepTmp.put(cs, revDep);
 
 					//update currentDeps
 					HashMap<Integer, Dependency> currentDepsTmp = computeClosestDependencies(allDepsTmp, artificialDeps);
@@ -475,6 +480,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						CSToDepsOrder.putAll(CSToDepsOrderTmp);
 						depsToCS.clear();
 						depsToCS.putAll(depsToCSTmp);
+						csToDep.clear();
+						csToDep.putAll(csToDepTmp);
 
 						break;
 					}
@@ -690,6 +697,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						earliestStoppingPoints.put(robotID, getForwardModel(robotID).getEarliestStoppingPathIndex(trackers.get(robotID).getTrajectoryEnvelope(), currentReports.get(robotID)));
 
 				depsToCS.clear();
+				csToDep.clear();
 				this.isBlockedNearParkedVehicle = false;
 
 				HashSet<CriticalSection> toRemove = new HashSet<CriticalSection>();
@@ -1838,23 +1846,27 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			gatherStoppingPointDependencies(currentReports, currentDeps);
 
 			//? 3) Process critical sections (the big chunk that used to be in `synchronized(allCriticalSections)`)
-			processAllCriticalSections(currentDeps,
+			processAllCriticalSections(
+					currentDeps,
 					artificialDependencies,
 					depsGraph,
 					askForReplan,
 					earliestStoppingPoints,
 					reversibleCS,
-					currentReports);
+					currentReports
+			);
 
 			//? 4) Try reversing reversible constraints according to the user-defined heuristic
 			reverseReversibleConstraints(reversibleCS, currentReports, depsGraph, currentDeps);
 
 			//? 5) Finalize and communicate updated dependencies (closest points, re-plans, etc.)
-			finalizeGlobalDependencies(currentDeps,
+			finalizeGlobalDependencies(
+					currentDeps,
 					artificialDependencies,
 					askForReplan,
 					trackers.keySet(),
-					currentReports);
+					currentReports
+			);
 		}
 	}
 
@@ -2083,7 +2095,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					//We will check if the heuristic after.
 					if (canStopRobot1 && canStopRobot2 ||
 							!canStopRobot1 && isHuman2Forcing ||
-							!canStopRobot2 && isHuman1Forcing
+							!canStopRobot2 && isHuman1Forcing ||
+							!canStopRobot1 && !canStopRobot2
 					) {
 						// The `isHuman` part is because otherwise `cs.setWeight(...)` (during forcing) affects nothing
 						// (since `getOrder` is called only for reversible CSes).
@@ -2123,6 +2136,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					}
 
 					else {    //Otherwise re-impose previously decided dependency if possible
+						assert false; // processed before
 
 						int drivingRobotID = -1;
 						int waitingRobotID = -1;
@@ -2535,6 +2549,12 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 			//update and communicate critical points
 			//get current dependencies
+
+			allDependencies.clear();
+			assert currentDeps != null;
+			allDependencies.putAll(currentDeps);
+			assert artificialDependencies != null;
+			allDependencies.putAll(artificialDependencies);
 
 			//FIXME: already synchronized (so maybe is ok currentDependencies = computeClosestDependencies(currentDeps, artificialDependencies);)
 			HashMap<Integer, Dependency> closestDeps = computeClosestDependencies(currentDeps, artificialDependencies);

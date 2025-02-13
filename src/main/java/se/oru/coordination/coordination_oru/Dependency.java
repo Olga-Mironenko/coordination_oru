@@ -25,12 +25,12 @@ public class Dependency implements Comparable<Dependency> {
 		this.thresholdPoint = thresholdPoint;
 		this.robotIDWaiting = teWaiting.getRobotID();
 		if (teDriving != null) this.robotIDDriving = teDriving.getRobotID();
-		else this.robotIDDriving = 0;
+		else this.robotIDDriving = -1;
 	}
 	
 	@Override
 	public int hashCode() {
-		long code = Long.parseLong(teWaiting.getRobotID()+"0"+Math.abs(waitingPoint)+"0"+this.robotIDDriving+"0"+thresholdPoint);
+		long code = Long.parseLong(teWaiting.getRobotID()+"0"+Math.abs(waitingPoint)+"0"+Math.abs(this.robotIDDriving)+"0"+thresholdPoint);
 		code = code%Integer.MAX_VALUE;
 		return (int)code;
 	}
