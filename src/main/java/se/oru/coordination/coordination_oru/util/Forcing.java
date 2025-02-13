@@ -65,6 +65,10 @@ public class Forcing {
 
         RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(inferiorID);
         int inferiorPathIndex = rr.getPathIndex();
+        if (inferiorPathIndex == -1) {
+            inferiorPathIndex = 0; // the same pose
+        }
+
         int minPathIndex = Integer.MAX_VALUE;
         for (CriticalSection cs : cses) {
             assert cs.getTe1RobotID() == humanID && cs.getTe2RobotID() == inferiorID;
@@ -292,6 +296,7 @@ public class Forcing {
                     } else {
                         robotToIsStopInPast.put(otherID, isStop);
                         double distanceToCS = computeDistanceToCS(robotID, otherID, cses);
+                        distanceToCS = (double) Math.round(distanceToCS * 10) / 10;
                         new Event.ForcingReactionStarted(otherID, isStop, distanceToCS).write();
                     }
                 }

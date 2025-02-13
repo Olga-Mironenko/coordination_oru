@@ -763,6 +763,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							currentDeps.get(waitingTracker.getTrajectoryEnvelope().getRobotID()).add(dep);
 							CSToDepsOrder.put(cs, new Pair<Integer,Integer>(dep.getWaitingRobotID(),dep.getWaitingPoint()));
 							depsToCS.put(dep, cs);
+							csToDep.put(cs, dep);
 						}
 					}
 					else {//Both robots are driving, let's determine an ordering for them through this critical section
@@ -941,6 +942,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							//Update the history of decisions for each critical section that has been updated
 							CSToDepsOrder.put(cs, new Pair<Integer,Integer>(dep.getWaitingRobotID(),dep.getWaitingPoint()));
 							depsToCS.put(dep, cs);
+							csToDep.put(cs, dep);
 							if (canStopRobot1 && canStopRobot2) currentReversibleDependencies.add(dep);
 						}
 						else {
@@ -1957,6 +1959,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				}
 
 			depsToCS.clear();
+			csToDep.clear();
 			this.isBlockedNearParkedVehicle = false;
 
 			HashSet<CriticalSection> toRemove = new HashSet<CriticalSection>();
@@ -1979,16 +1982,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					continue;
 				}
 
-				if (AbstractTrajectoryEnvelopeCoordinator.isHumanIgnored) {
-					Integer id1 = cs.getTe1RobotID();
-					Integer id2 = cs.getTe2RobotID();
-
-					boolean isHuman1 = VehiclesHashMap.isHuman(id1);
-					boolean isHuman2 = VehiclesHashMap.isHuman(id2);
-
-					if (isHuman1 || isHuman2) {
-						continue;
-					}
+				if (isHumanIgnoredCS(cs)) {
+					continue;
 				}
 
 				//If the precedence IS CONSTRAINED BY PARKED ROBOTS ...
@@ -2051,6 +2046,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						}
 						CSToDepsOrder.put(cs, new Pair<Integer, Integer>(dep.getWaitingRobotID(), dep.getWaitingPoint()));
 						depsToCS.put(dep, cs);
+						csToDep.put(cs, dep);
 					}
 				} else { //both the robots are driving. Check if the precedence is reversible.
 
@@ -2293,6 +2289,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						}
 						CSToDepsOrder.put(cs, new Pair<Integer, Integer>(dep.getWaitingRobotID(), dep.getWaitingPoint()));
 						depsToCS.put(dep, cs);
+						csToDep.put(cs, dep);
 					} else {
 						//If robot is asked to wait in an invalid path point, throw error and give up!
 						metaCSPLogger.severe("Waiting point < 0 for critical section " + cs);
@@ -2529,6 +2526,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				}
 				CSToDepsOrder.put(cs, new Pair<Integer,Integer>(depNew.getWaitingRobotID(), depNew.getWaitingPoint()));
 				depsToCS.put(depNew, cs);
+				csToDep.put(cs, depNew);
 				metaCSPLogger.finest("Update precedences " + depNew + " according to heuristic.");
 				currentOrdersHeurusticallyDecided.incrementAndGet();
 			}

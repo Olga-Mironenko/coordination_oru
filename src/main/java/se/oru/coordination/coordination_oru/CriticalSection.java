@@ -352,9 +352,15 @@ public class CriticalSection {
 	public boolean is1Before2() {
 		TrajectoryEnvelopeCoordinator tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
 
-		Pair<Integer, Integer> order = tec.CSToDepsOrder.get(this);
-		int robotIDWaiting = order.getFirst();
-		int waitingPoint = order.getSecond();
+		Dependency dep = tec.csToDep.get(this);
+		if (AbstractTrajectoryEnvelopeCoordinator.isHumanIgnoredCS(this)) {
+			assert dep == null;
+			return VehiclesHashMap.isHuman(getTe2RobotID());
+		}
+		assert dep != null;
+
+		int robotIDWaiting = dep.getWaitingRobotID();
+		int waitingPoint = dep.getWaitingPoint();
 		int margin = AbstractTrajectoryEnvelopeCoordinator.TRAILING_PATH_POINTS;
 		if (robotIDWaiting == getTe1RobotID()) {
 //			assert getTe1Start() - margin <= waitingPoint && waitingPoint <= getTe1Start();

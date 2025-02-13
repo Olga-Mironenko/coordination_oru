@@ -163,6 +163,20 @@ public abstract class AbstractTrajectoryEnvelopeCoordinator {
 
 	public static boolean isHumanIgnored = false;
 
+	public static boolean isHumanIgnoredCS(CriticalSection cs) {
+		if (! AbstractTrajectoryEnvelopeCoordinator.isHumanIgnored) {
+			return false;
+		}
+
+		Integer id1 = cs.getTe1RobotID();
+		Integer id2 = cs.getTe2RobotID();
+
+		boolean isHuman1 = VehiclesHashMap.isHuman(id1);
+		boolean isHuman2 = VehiclesHashMap.isHuman(id2);
+
+		return isHuman1 || isHuman2;
+	}
+
 	/**
 	 * Get the envelopes representing robots that are not idle.
 	 * @return Envelopes representing robots that are not idle.
