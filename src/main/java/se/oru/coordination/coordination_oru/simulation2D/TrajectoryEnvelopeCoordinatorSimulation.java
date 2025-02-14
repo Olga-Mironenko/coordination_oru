@@ -23,6 +23,7 @@ import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
 import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
 import se.oru.coordination.coordination_oru.util.Event;
+import se.oru.coordination.coordination_oru.util.Missions;
 import se.oru.coordination.coordination_oru.util.gates.GatedCalendar;
 import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
@@ -430,156 +431,163 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 
 	@Override
 	public void onCriticalSectionUpdate() {
-		
-		if (checkCollisions && (collisionThread == null) && (this.allCriticalSections.size() > 0)) {
-			// Start the collision checking thread. 
-			// The tread will be alive until there will be almost one critical section.
-			collisionThread = new GatedThread("Collision checking thread.") {
+		startCollisionThread();
+		Missions.computeMissionLinearizations(false);
+	}
 
-				@Override
-				public void runCore() {
-					metaCSPLogger.info("Starting the collision checking thread.");
-					
-					while(true) {
-						//collisions can happen only in critical sections						
-						synchronized (allCriticalSections) {
+	private void startCollisionThread() {
+		if (! (checkCollisions && collisionThread == null && ! this.allCriticalSections.isEmpty())) {
+			return;
+		}
+
+		// Start the collision checking thread.
+		// The tread will be alive until there will be almost one critical section.
+		collisionThread = new GatedThread("Collision checking thread.") {
+
+			@Override
+			public void runCore() {
+				metaCSPLogger.info("Starting the collision checking thread.");
+
+				while(true) {
+					//collisions can happen only in critical sections
+					synchronized (allCriticalSections) {
 //							if (allCriticalSections.isEmpty())
 //								break; //break the thread if there are no critical sections to control
 
-							for (CriticalSection cs : allCriticalSections) {
-								//FIXME sample the real pose of the robots (ok in simulation, but not otherwise)
-								RobotReport robotReport1, robotReport2;
-								AbstractTrajectoryEnvelopeTracker tracker1, tracker2;
-								try {
-									synchronized (trackers) {
-										tracker1 = trackers.get(cs.getTe1().getRobotID());
-										robotReport1 = tracker1.getRobotReport();
-										tracker2 = trackers.get(cs.getTe2().getRobotID());
-										robotReport2 = tracker2.getRobotReport();
-									}
-								} catch (NullPointerException e) {
-									continue; //skip this cycle
+						for (CriticalSection cs : allCriticalSections) {
+							//FIXME sample the real pose of the robots (ok in simulation, but not otherwise)
+							RobotReport robotReport1, robotReport2;
+							AbstractTrajectoryEnvelopeTracker tracker1, tracker2;
+							try {
+								synchronized (trackers) {
+									tracker1 = trackers.get(cs.getTe1().getRobotID());
+									robotReport1 = tracker1.getRobotReport();
+									tracker2 = trackers.get(cs.getTe2().getRobotID());
+									robotReport2 = tracker2.getRobotReport();
 								}
+							} catch (NullPointerException e) {
+								continue; //skip this cycle
+							}
 
-								if (robotReport1 == null || robotReport2 == null) {
+							if (robotReport1 == null || robotReport2 == null) {
+								continue;
+							}
+
+							PoseSteering[] path1 = cs.getTe1().getTrajectory().getPoseSteering();
+							PoseSteering[] path2 = cs.getTe2().getTrajectory().getPoseSteering();
+
+							int i1 = robotReport1.getPathIndex();
+							if (i1 == -1) {
+								i1 = robotReport1.getDistanceTraveled() == 0.0 ? 0 : path1.length - 1;
+								// This is because in a dummy tracker:
+								// - cs.getTe1Start() == cs.getTe1End() == 0
+								// - cs.getTe1().getTrajectory().getPoseSteering() has only index 0
+							}
+
+							int i2 = robotReport2.getPathIndex();
+							if (i2 == -1) {
+								i2 = robotReport2.getDistanceTraveled() == 0.0 ? 0 : path2.length - 1;
+							}
+
+							int s1 = cs.getTe1Start();
+							int s2 = cs.getTe2Start();
+
+							int e1 = cs.getTe1End();
+							int e2 = cs.getTe2End();
+
+							boolean isInside1 = s1 <= i1 && i1 <= e1;
+							boolean isInside2 = s2 <= i2 && i2 <= e2;
+
+							boolean isInside = isInside1 && isInside2;
+							if (!isInside) {
+								continue;
+							}
+
+							for (ArrayList<CollisionEvent> collisionsList : Arrays.asList(allCollisionsList, majorCollisionsList)) {
+								boolean isMajor = collisionsList == majorCollisionsList;
+								//check if both the robots are inside the critical section
+
+								// TODO: This is a hack (`setInnerFootprint` should be called in a proper place).
+								cs.getTe1().setInnerFootprint(tec.getInnerFootprint(cs.getTe1RobotID()));
+								cs.getTe2().setInnerFootprint(tec.getInnerFootprint(cs.getTe2RobotID()));
+
+								//place robot  in pose and get geometry
+								Geometry placement1 = isMajor
+									? cs.getTe1().makeInnerFootprint(path1[i1])
+									: cs.getTe1().makeFootprint(path1[i1]);
+
+								Geometry placement2 = isMajor
+									? cs.getTe2().makeInnerFootprint(path2[i2])
+									: cs.getTe2().makeFootprint(path2[i2]);
+
+								//check intersection
+								if (!placement1.intersects(placement2)) {
 									continue;
 								}
 
-								PoseSteering[] path1 = cs.getTe1().getTrajectory().getPoseSteering();
-								PoseSteering[] path2 = cs.getTe2().getTrajectory().getPoseSteering();
-
-								int i1 = robotReport1.getPathIndex();
-								if (i1 == -1) {
-									i1 = robotReport1.getDistanceTraveled() == 0.0 ? 0 : path1.length - 1;
-									// This is because in a dummy tracker:
-									// - cs.getTe1Start() == cs.getTe1End() == 0
-									// - cs.getTe1().getTrajectory().getPoseSteering() has only index 0
-								}
-
-								int i2 = robotReport2.getPathIndex();
-								if (i2 == -1) {
-									i2 = robotReport2.getDistanceTraveled() == 0.0 ? 0 : path2.length - 1;
-								}
-
-								int s1 = cs.getTe1Start();
-								int s2 = cs.getTe2Start();
-
-								int e1 = cs.getTe1End();
-								int e2 = cs.getTe2End();
-
-								boolean isInside1 = s1 <= i1 && i1 <= e1;
-								boolean isInside2 = s2 <= i2 && i2 <= e2;
-
-								boolean isInside = isInside1 && isInside2;
-								if (!isInside) {
+								if (findCSinCollisionsList(cs, collisionsList) != -1) {
 									continue;
 								}
 
-								for (ArrayList<CollisionEvent> collisionsList : Arrays.asList(allCollisionsList, majorCollisionsList)) {
-									boolean isMajor = collisionsList == majorCollisionsList;
-									//check if both the robots are inside the critical section
+								metaCSPLogger.info(" * NEW COLLISION *");
+								CollisionEvent ce = new CollisionEvent(GatedCalendar.getInstance().getTimeInMillis(), robotReport1, robotReport2, cs, isMajor);
 
-									// TODO: This is a hack (`setInnerFootprint` should be called in a proper place).
-									cs.getTe1().setInnerFootprint(tec.getInnerFootprint(cs.getTe1RobotID()));
-									cs.getTe2().setInnerFootprint(tec.getInnerFootprint(cs.getTe2RobotID()));
+								collisionsList.add(ce);
 
-									//place robot  in pose and get geometry
-									Geometry placement1 = isMajor
-										? cs.getTe1().makeInnerFootprint(path1[i1])
-										: cs.getTe1().makeFootprint(path1[i1]);
-
-									Geometry placement2 = isMajor
-										? cs.getTe2().makeInnerFootprint(path2[i2])
-										: cs.getTe2().makeFootprint(path2[i2]);
-
-									//check intersection
-									if (!placement1.intersects(placement2)) {
-										continue;
+								for (List<Integer> pair : List.of(
+										List.of(robotReport1.getRobotID(), robotReport2.getRobotID()),
+										List.of(robotReport2.getRobotID(), robotReport1.getRobotID())
+								)) {
+									int a = pair.get(0);
+									int b = pair.get(1);
+									if (isMajor) {
+										new Event.MajorCollisionFromMinor(a, b).write();
+									} else {
+										new Event.MinorCollision(a, b).write();
 									}
+								}
 
-									if (findCSinCollisionsList(cs, collisionsList) != -1) {
-										continue;
-									}
-
-									metaCSPLogger.info(" * NEW COLLISION *");
-									CollisionEvent ce = new CollisionEvent(GatedCalendar.getInstance().getTimeInMillis(), robotReport1, robotReport2, cs, isMajor);
-
-									collisionsList.add(ce);
-
-									for (List<Integer> pair : List.of(
-											List.of(robotReport1.getRobotID(), robotReport2.getRobotID()),
-											List.of(robotReport2.getRobotID(), robotReport1.getRobotID())
-									)) {
-										int a = pair.get(0);
-										int b = pair.get(1);
-										if (isMajor) {
-											new Event.MajorCollisionFromMinor(a, b).write();
-										} else {
-											new Event.MinorCollision(a, b).write();
-										}
-									}
-
-									HashMap<Integer, List<CollisionEvent>> robotIDToCollisions = isMajor ? robotIDToMajorCollisions : robotIDToAllCollisions;
-									for (int robotID : Arrays.asList(cs.getTe1RobotID(), cs.getTe2RobotID(), -1)) {
-										// Prepare a list of collisions:
-										if (! robotIDToCollisions.containsKey(robotID)) {
-											robotIDToCollisions.put(robotID, new ArrayList<>());
-											if (! isMajor) {
-												robotIDToMinorCollisions.put(robotID, new ArrayList<>());
-											}
-										}
-
-										// Add the collision:
-										robotIDToCollisions.get(robotID).add(ce);
+								HashMap<Integer, List<CollisionEvent>> robotIDToCollisions = isMajor ? robotIDToMajorCollisions : robotIDToAllCollisions;
+								for (int robotID : Arrays.asList(cs.getTe1RobotID(), cs.getTe2RobotID(), -1)) {
+									// Prepare a list of collisions:
+									if (! robotIDToCollisions.containsKey(robotID)) {
+										robotIDToCollisions.put(robotID, new ArrayList<>());
 										if (! isMajor) {
-											robotIDToMinorCollisions.get(robotID).add(ce);
-										} else {
-											// Remove the corresponding minor collision:
-											int indexMinor = findCSinCollisionsList(cs, robotIDToMinorCollisions.get(robotID));
-											assert indexMinor != -1; // TODO: perhaps doesn't work if there's no safety distance
-											robotIDToMinorCollisions.get(robotID).remove(indexMinor);
+											robotIDToMinorCollisions.put(robotID, new ArrayList<>());
+										}
+									}
 
-											// Change the type of the corresponding minor collision:
-											int indexAdd = findCSinCollisionsList(cs, robotIDToAllCollisions.get(robotID));
-											assert indexAdd != -1;
-											CollisionEvent ceAll = robotIDToAllCollisions.get(robotID).get(indexAdd);
-											if (! ceAll.isMajor) {
-												ceAll.isMajor = true;
-											}
+									// Add the collision:
+									robotIDToCollisions.get(robotID).add(ce);
+									if (! isMajor) {
+										robotIDToMinorCollisions.get(robotID).add(ce);
+									} else {
+										// Remove the corresponding minor collision:
+										int indexMinor = findCSinCollisionsList(cs, robotIDToMinorCollisions.get(robotID));
+										assert indexMinor != -1; // TODO: perhaps doesn't work if there's no safety distance
+										robotIDToMinorCollisions.get(robotID).remove(indexMinor);
+
+										// Change the type of the corresponding minor collision:
+										int indexAdd = findCSinCollisionsList(cs, robotIDToAllCollisions.get(robotID));
+										assert indexAdd != -1;
+										CollisionEvent ceAll = robotIDToAllCollisions.get(robotID).get(indexAdd);
+										if (! ceAll.isMajor) {
+											ceAll.isMajor = true;
 										}
 									}
 								}
 							}
 						}
-						
-						try { GatedThread.sleep((long)(1000.0/30.0)); }
-						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
-//					metaCSPLogger.info("Ending the collision checking thread.");
+
+					try { GatedThread.sleep((long)(1000.0/30.0)); }
+					catch (InterruptedException e) { e.printStackTrace(); return; }
 				}
-					
-			};
-			collisionThread.start();
-		}
+//					metaCSPLogger.info("Ending the collision checking thread.");
+			}
+
+		};
+
+		collisionThread.start();
 	}
 }

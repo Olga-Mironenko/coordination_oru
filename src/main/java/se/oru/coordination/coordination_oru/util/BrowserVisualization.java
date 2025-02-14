@@ -123,7 +123,7 @@ public class BrowserVisualization implements FleetVisualization {
 						if (Containerization.IS_VISUALIZATION) {
 							makeScreenshot();
 						}
-						Missions.computeMissionLinearizations();
+						Missions.computeMissionLinearizations(true);
 						break;
 					}
 					GatedThread.skipTimesteps(1);
@@ -632,14 +632,7 @@ public class BrowserVisualization implements FleetVisualization {
 					theadHints.append(" |8 ");
 					thead2.append(" | position<br>(x, y), m | traveled,<br>m");
 
-					double pod = -1;
-					if (rr.getPathIndex() != -1) {
-						double[] linearization = Missions.robotIDToMissionLinearizationC.get(id);
-						if (linearization != null) {
-							pod = linearization[rr.getPathIndex()];
-						}
-					}
-
+					Double pod = Missions.getPodC(id, rr.getPathIndex());
 					Double positionToSlowDown = trackerAdaptive == null ? null : trackerAdaptive.positionToSlowDown;
 					double distanceToCP =
 							trackerAdaptive == null ? Double.POSITIVE_INFINITY : trackerAdaptive.distanceToCP;
@@ -651,7 +644,7 @@ public class BrowserVisualization implements FleetVisualization {
                                     : rr.getCriticalPoint() == TrajectoryEnvelopeCoordinatorSimulation.CP_ASAP
                                     ? "ASAP"
                                     : String.format("%d", rr.getCriticalPoint()),
-							pod == -1 ? "" : String.format("%.3f", pod),
+							pod == null ? "" : String.format("%.3f", pod),
 							positionToSlowDown == null ? "" : String.format("%.1f", positionToSlowDown),
                             Double.isInfinite(distanceToCP) ? "" : String.format("%.1f", distanceToCP),
                             rr.statusString == null ? "-" : rr.statusString.replace("STOPPED_AT_CP", "STOP@CP")

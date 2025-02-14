@@ -277,18 +277,18 @@ public abstract class AbstractVehicle {
         return mapStats;
     }
 
-    public LinkedHashMap<Entry<String, Integer>, String> collectLinearizations() {
+    public LinkedHashMap<Entry<String, Integer>, String> collectLinearizationsInitial() {
         LinkedHashMap<Entry<String, Integer>, String> mapStats = new LinkedHashMap<>();
 
-        addLinearization(mapStats, "A", Missions.robotIDToMissionLinearizationA.get(id));
-        addLinearization(mapStats, "B", Missions.robotIDToMissionLinearizationB.get(id));
-        addLinearization(mapStats, "C", Missions.robotIDToMissionLinearizationC.get(id));
+        addLinearization(mapStats, "A", Missions.robotIDToMissionLinearizationAInitial.get(id));
+        addLinearization(mapStats, "B", Missions.robotIDToMissionLinearizationBInitial.get(id));
+        addLinearization(mapStats, "C", Missions.robotIDToMissionLinearizationCInitial.get(id));
         for (AbstractVehicle other : VehiclesHashMap.getVehicles()) {
             if (other.id == id) {
                 continue;
             }
             addLinearization(mapStats, "D" + other.id,
-                    Missions.robotIDToOtherIDToMissionLinearizationD.get(id).get(other.id));
+                    Missions.robotIDToOtherIDToMissionLinearizationDInitial.get(id).get(other.id));
         }
 
         return mapStats;
@@ -325,7 +325,7 @@ public abstract class AbstractVehicle {
     public void writeStatistics() {
         LinkedHashMap<Entry<String, Integer>, String> mapStats = collectStatistics();
         if (GatedThread.gatekeeper.isOver) {
-            mapStats.putAll(collectLinearizations());
+            mapStats.putAll(collectLinearizationsInitial());
         }
 
         File dir = prepareRundir();

@@ -41,7 +41,6 @@ import se.oru.coordination.coordination_oru.code.AbstractVehicle;
 import se.oru.coordination.coordination_oru.code.AutonomousVehicle;
 import se.oru.coordination.coordination_oru.code.LookAheadVehicle;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
-import se.oru.coordination.coordination_oru.util.Event;
 import se.oru.coordination.coordination_oru.motionplanning.AbstractMotionPlanner;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.tests.util.GridMapConstants;
@@ -1728,30 +1727,42 @@ public class Missions {
 		BrowserVisualizationSocket.sendMapToAll();
 	}
 
-	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationA = new TreeMap<>();
-	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationB = new TreeMap<>();
-	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationC = new TreeMap<>();
-	public static TreeMap<Integer, TreeMap<Integer, double[]>> robotIDToOtherIDToMissionLinearizationD =
+	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationAInitial = new TreeMap<>();
+	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationBInitial = new TreeMap<>();
+	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationCInitial = new TreeMap<>();
+	public static TreeMap<Integer, TreeMap<Integer, double[]>> robotIDToOtherIDToMissionLinearizationDInitial =
 			new TreeMap<>();
 
-	public static void computeMissionLinearizations() {
-		for (String mode : List.of("A", "B", "C", "D")) {
-			computeMissionLinearization(mode);
+	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationACurrent = null;
+	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationBCurrent = null;
+	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationCCurrent = new TreeMap<>();
+	public static TreeMap<Integer, TreeMap<Integer, double[]>> robotIDToOtherIDToMissionLinearizationDCurrent = null;
+
+	public static void computeMissionLinearizations(boolean isInitial) {
+		if (! isInitial) {
+			computeMissionLinearization(false, "C");
+		} else {
+			for (String mode : List.of("A", "B", "C", "D")) {
+				computeMissionLinearization(true, mode);
+			}
 		}
 	}
 
-	public static void computeMissionLinearization(String mode) {
+	public static void computeMissionLinearization(boolean isInitial, String mode) {
 		// Initializing linearizations:
 		TreeMap<Integer, double[]> robotIDToMissionLinearization = null;
 		switch (mode) {
 			case "A":
-				robotIDToMissionLinearization = robotIDToMissionLinearizationA;
+				robotIDToMissionLinearization =
+						isInitial ? robotIDToMissionLinearizationAInitial : robotIDToMissionLinearizationACurrent;
 				break;
 			case "B":
-				robotIDToMissionLinearization = robotIDToMissionLinearizationB;
+				robotIDToMissionLinearization =
+						isInitial ? robotIDToMissionLinearizationBInitial : robotIDToMissionLinearizationBCurrent;
 				break;
 			case "C":
-				robotIDToMissionLinearization = robotIDToMissionLinearizationC;
+				robotIDToMissionLinearization =
+						isInitial ? robotIDToMissionLinearizationCInitial : robotIDToMissionLinearizationCCurrent;
 				break;
 		}
 		if (robotIDToMissionLinearization != null) {
@@ -1759,14 +1770,19 @@ public class Missions {
 			for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
 				AbstractTrajectoryEnvelopeTracker tracker = vehicle.getTracker();
 				TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
+				// TODO: get the driving te (not parking)
 				robotIDToMissionLinearization.put(vehicle.getID(), new double[te.getPathLength()]);
 			}
 		} else {
 			assert mode.equals("D");
-			robotIDToOtherIDToMissionLinearizationD.clear();
+			TreeMap<Integer, TreeMap<Integer, double[]>> robotIDToOtherIDToMissionLinearization =
+					isInitial
+							? robotIDToOtherIDToMissionLinearizationDInitial
+							: robotIDToOtherIDToMissionLinearizationDCurrent;
+			robotIDToOtherIDToMissionLinearization.clear();
 			for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
 				TreeMap<Integer, double[]> otherIDToLinearization = new TreeMap<>();
-				robotIDToOtherIDToMissionLinearizationD.put(vehicle.getID(), otherIDToLinearization);
+				robotIDToOtherIDToMissionLinearization.put(vehicle.getID(), otherIDToLinearization);
 
 				AbstractTrajectoryEnvelopeTracker tracker = vehicle.getTracker();
 				TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
@@ -1811,13 +1827,29 @@ public class Missions {
 					linearization = robotIDToMissionLinearization.get(robotID);
 				} else {
 					assert mode.equals("D");
-					linearization = robotIDToOtherIDToMissionLinearizationD.get(robotID).get(teOther.getRobotID());
+					TreeMap<Integer, TreeMap<Integer, double[]>> robotIDToOtherIDToMissionLinearization =
+							isInitial
+									? robotIDToOtherIDToMissionLinearizationDInitial
+									: robotIDToOtherIDToMissionLinearizationDCurrent;
+					linearization = robotIDToOtherIDToMissionLinearization.get(robotID).get(teOther.getRobotID());
 				}
 
 				for (int i = cs.getStart(robotID); i <= cs.getEnd(robotID); i++) {
-					linearization[i] += weight;
+					if (linearization.length > 1) {
+						linearization[i] += weight;
+					}
 				}
 			}
 		}
+	}
+
+	public static Double getPodC(int robotID, int pathIndex) {
+		if (pathIndex != -1) {
+			double[] linearization = Missions.robotIDToMissionLinearizationCCurrent.get(robotID);
+			if (linearization != null && linearization.length > 1) {
+				return linearization[pathIndex];
+			}
+		}
+		return null;
 	}
 }
