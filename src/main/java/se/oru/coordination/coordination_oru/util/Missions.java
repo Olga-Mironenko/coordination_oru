@@ -1727,16 +1727,16 @@ public class Missions {
 		BrowserVisualizationSocket.sendMapToAll();
 	}
 
-	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationAInitial = new TreeMap<>();
-	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationBInitial = new TreeMap<>();
-	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationCInitial = new TreeMap<>();
-	public static TreeMap<Integer, TreeMap<Integer, double[]>> robotIDToOtherIDToMissionLinearizationDInitial =
+	public static TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearizationAInitial = new TreeMap<>();
+	public static TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearizationBInitial = new TreeMap<>();
+	public static TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearizationCInitial = new TreeMap<>();
+	public static TreeMap<Integer, TreeMap<Integer, ArrayList<Double>>> robotIDToOtherIDToMissionLinearizationDInitial =
 			new TreeMap<>();
 
-	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationACurrent = null;
-	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationBCurrent = null;
-	public static TreeMap<Integer, double[]> robotIDToMissionLinearizationCCurrent = new TreeMap<>();
-	public static TreeMap<Integer, TreeMap<Integer, double[]>> robotIDToOtherIDToMissionLinearizationDCurrent = null;
+	public static TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearizationACurrent = null;
+	public static TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearizationBCurrent = null;
+	public static TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearizationCCurrent = new TreeMap<>();
+	public static TreeMap<Integer, TreeMap<Integer, ArrayList<Double>>> robotIDToOtherIDToMissionLinearizationDCurrent = null;
 
 	public static void computeMissionLinearizations(boolean isInitial) {
 		if (! isInitial) {
@@ -1750,7 +1750,7 @@ public class Missions {
 
 	public static void computeMissionLinearization(boolean isInitial, String mode) {
 		// Initializing linearizations:
-		TreeMap<Integer, double[]> robotIDToMissionLinearization = null;
+		TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearization = null;
 		switch (mode) {
 			case "A":
 				robotIDToMissionLinearization =
@@ -1768,20 +1768,21 @@ public class Missions {
 		if (robotIDToMissionLinearization != null) {
 			robotIDToMissionLinearization.clear();
 			for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
-				AbstractTrajectoryEnvelopeTracker tracker = vehicle.getTracker();
-				TrajectoryEnvelope te = tracker.getTrajectoryEnvelope();
-				// TODO: get the driving te (not parking)
-				robotIDToMissionLinearization.put(vehicle.getID(), new double[te.getPathLength()]);
+				TrajectoryEnvelope te = vehicle.getTracker().getTrajectoryEnvelope();
+				// Note: We can't fully rely on `te.getPathLength()`, because when `onCriticalSectionUpdate` is fired,
+				// the TE may be parking, not driving (if it was the TE that fired the `onCriticalSectionUpdate`).
+				// Therefore, dynamic arrays are used.
+				robotIDToMissionLinearization.put(vehicle.getID(), new ArrayList<>(te.getPathLength()));
 			}
 		} else {
 			assert mode.equals("D");
-			TreeMap<Integer, TreeMap<Integer, double[]>> robotIDToOtherIDToMissionLinearization =
+			TreeMap<Integer, TreeMap<Integer, ArrayList<Double>>> robotIDToOtherIDToMissionLinearization =
 					isInitial
 							? robotIDToOtherIDToMissionLinearizationDInitial
 							: robotIDToOtherIDToMissionLinearizationDCurrent;
 			robotIDToOtherIDToMissionLinearization.clear();
 			for (AbstractVehicle vehicle : VehiclesHashMap.getVehicles()) {
-				TreeMap<Integer, double[]> otherIDToLinearization = new TreeMap<>();
+				TreeMap<Integer, ArrayList<Double>> otherIDToLinearization = new TreeMap<>();
 				robotIDToOtherIDToMissionLinearization.put(vehicle.getID(), otherIDToLinearization);
 
 				AbstractTrajectoryEnvelopeTracker tracker = vehicle.getTracker();
@@ -1792,7 +1793,7 @@ public class Missions {
 						continue;
 					}
 
-					double[] linearization = new double[te.getPathLength()];
+					ArrayList<Double> linearization = new ArrayList<>(te.getPathLength());
 					otherIDToLinearization.put(other.getID(), linearization);
 				}
 			}
@@ -1822,12 +1823,12 @@ public class Missions {
 				}
 				assert weight > 0;
 
-				double[] linearization;
+				ArrayList<Double> linearization;
 				if (robotIDToMissionLinearization != null) {
 					linearization = robotIDToMissionLinearization.get(robotID);
 				} else {
 					assert mode.equals("D");
-					TreeMap<Integer, TreeMap<Integer, double[]>> robotIDToOtherIDToMissionLinearization =
+					TreeMap<Integer, TreeMap<Integer, ArrayList<Double>>> robotIDToOtherIDToMissionLinearization =
 							isInitial
 									? robotIDToOtherIDToMissionLinearizationDInitial
 									: robotIDToOtherIDToMissionLinearizationDCurrent;
@@ -1835,21 +1836,29 @@ public class Missions {
 				}
 
 				for (int i = cs.getStart(robotID); i <= cs.getEnd(robotID); i++) {
-					if (linearization.length > 1) {
-						linearization[i] += weight;
+					if (i >= linearization.size()) {
+						linearization.addAll(Collections.nCopies(i - linearization.size() + 1, 0.0));
 					}
+					assert i < linearization.size();
+					linearization.set(i, linearization.get(i) + weight);
 				}
 			}
 		}
 	}
 
 	public static Double getPodC(int robotID, int pathIndex) {
-		if (pathIndex != -1) {
-			double[] linearization = Missions.robotIDToMissionLinearizationCCurrent.get(robotID);
-			if (linearization != null && linearization.length > 1) {
-				return linearization[pathIndex];
-			}
+		if (pathIndex == -1) {
+			pathIndex = 0; // TODO: It seems that we should use the previous linearization in this case.
 		}
-		return null;
+
+		ArrayList<Double> linearization = Missions.robotIDToMissionLinearizationCCurrent.get(robotID);
+		if (linearization == null) {
+			return null;
+		}
+
+		if (pathIndex >= linearization.size()) {
+			return 0.0;
+		}
+		return linearization.get(pathIndex);
 	}
 }

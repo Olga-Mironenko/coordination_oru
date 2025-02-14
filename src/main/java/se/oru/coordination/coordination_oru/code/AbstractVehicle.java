@@ -21,6 +21,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
@@ -352,9 +353,9 @@ public abstract class AbstractVehicle {
     }
 
     private void addLinearization(LinkedHashMap<Entry<String, Integer>, String> mapStats,
-                                  String name, double[] linearization) {
-        String result = Arrays.stream(linearization)
-                .mapToObj(d -> String.format("%.6f", d)) // Convert each number to String
+                                  String name, ArrayList<Double> linearization) {
+        String result = linearization.stream()
+                .map(d -> String.format("%.6f", d))
                 .collect(Collectors.joining(" "));
         mapStats.put(new Entry<>("Linearization " + name, id), result);
     }
