@@ -146,7 +146,7 @@ abstract public class GatedThread extends Thread {
         }
         Printer.print("ready");
 
-        if (gatekeeper.trackDeath) {
+        if (Gatekeeper.trackDeath) {
             try {
                 runCore();
             } catch (Throwable e) {

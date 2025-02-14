@@ -1,5 +1,6 @@
 package se.oru.coordination.coordination_oru.util.gates;
 
+import se.oru.coordination.coordination_oru.util.Containerization;
 import se.oru.coordination.coordination_oru.util.Printer;
 
 import java.util.concurrent.LinkedBlockingDeque;
@@ -14,8 +15,8 @@ public class Gatekeeper {
      */
     protected Gate gateSelf;
 
+    public static boolean trackDeath = Containerization.IS_CONTAINER;
     public boolean hasSomeoneDied = false;
-    public final boolean trackDeath = false;
 
     public boolean isOver = false;
 
@@ -74,8 +75,8 @@ public class Gatekeeper {
             gateSelf.await(); // Wait for the pushed thread to pause/finish.
 
             if (hasSomeoneDied) {
-                //System.exit(1);
-
+                System.exit(1);
+                /*
                 System.err.println("someone has died, sleeping indefinitely");
                 while (true) {
                     try {
@@ -84,6 +85,7 @@ public class Gatekeeper {
                         return;
                     }
                 }
+                */
             }
         }
     }
