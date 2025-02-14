@@ -233,7 +233,7 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 	
 	private void enqueueMessage(String message) {
-		synchronized (BrowserVisualizationSocket.ENDPOINTS) {
+		/*synchronized (BrowserVisualizationSocket.ENDPOINTS) {*/ { // for better debugging
 			if (!BrowserVisualizationSocket.ENDPOINTS.isEmpty()) {
 				this.msgQueue.add(message);
 			}
@@ -241,7 +241,7 @@ public class BrowserVisualization implements FleetVisualization {
 	}
 	
 	private void sendMessages() {
-		synchronized (BrowserVisualizationSocket.ENDPOINTS) {
+		/*synchronized (BrowserVisualizationSocket.ENDPOINTS) {*/ { // for better debugging
 			if (!BrowserVisualizationSocket.ENDPOINTS.isEmpty()) {
 				for (String message : this.msgQueue) {
 					sendMessage(message);
@@ -658,7 +658,7 @@ public class BrowserVisualization implements FleetVisualization {
 				if (missions == null) {
 					missions = new ArrayList<Mission>();
 				}
-				synchronized (missions) {
+				/*synchronized (missions) {*/ { // for better debugging
                     row.append(" | <div style=\"text-align: left;\">").append(missions.size()).append(": [");
 					thead1.append(" | Dispatcher");
 					theadHints.append(" | ");

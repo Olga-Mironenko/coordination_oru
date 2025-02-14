@@ -202,7 +202,7 @@ public class ParkingArray {
 					if (robotID%2 == 0) totalIterations = 19;
 					long startTime = Calendar.getInstance().getTimeInMillis();
 					while (true && totalIterations > 0) {
-						synchronized(tec.getSolver()) {
+						/*synchronized(tec.getSolver()) {*/ { // for better debugging
 							if (tec.isFree(robotID)) {
 								if (!firstTime) {
 									long elapsed = Calendar.getInstance().getTimeInMillis()-startTime;

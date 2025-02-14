@@ -204,7 +204,7 @@ public class Waves {
 					boolean firstTime = true;
 					long startTime = Calendar.getInstance().getTimeInMillis();
 					while (true && !Missions.getMissions(robotID).isEmpty()) {
-						synchronized(tec.getSolver()) {
+						/*synchronized(tec.getSolver()) {*/ { // for better debugging
 							Mission m = Missions.peekMission(robotID);
 							if (tec.addMissions(m)) {
 								Missions.dequeueMission(robotID);
@@ -224,7 +224,7 @@ public class Waves {
 						catch (InterruptedException e) { e.printStackTrace(); return; }
 					}
 					System.out.println("Robot" + robotID + " is done!");
-					synchronized(status) {
+					/*synchronized(status) {*/ { // for better debugging
 						status.put(robotID, true);
 						boolean allFinished = true;
 						for (int robotID : status.keySet()) {

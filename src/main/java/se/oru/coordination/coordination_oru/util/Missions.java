@@ -1175,7 +1175,7 @@ public class Missions {
 							if (Missions.hasMissions(robotID)) {
 								Mission m = Missions.peekMission(robotID);
 								if (m != null) {
-									synchronized(tec) {
+									/*synchronized(tec) {*/ { // for better debugging
 										if (tec.isFree(m.getRobotID())) {
 											//cat with future missions if necessary
 											if (concatenatedMissions.containsKey(m)) {
@@ -1275,7 +1275,7 @@ public class Missions {
 							if (Missions.hasMissions(robotID)) {
 								Mission m = Missions.peekMission(robotID);
 								if (m != null) {
-									synchronized(tec) {
+									/*synchronized(tec) {*/ { // for better debugging
 										if (tec.isFree(m.getRobotID())) {
 											//cat with future missions if necessary
 											if (concatenatedMissions.containsKey(m)) {
@@ -1364,7 +1364,7 @@ public class Missions {
 							if (Missions.hasMissions(robotID)) {
 								Mission m = Missions.peekMission(robotID);
 								if (m != null) {
-									synchronized (tec) {
+									/*synchronized (tec) {*/ { // for better debugging
 										if (tec.isFree(m.getRobotID())) {
 											//cat with future missions if necessary
 											if (concatenatedMissions.containsKey(m)) {
@@ -1447,7 +1447,7 @@ public class Missions {
 						Mission m = Missions.peekMission(robotID);
 						assert m != null;
 
-						synchronized (tec) {
+						/*synchronized (tec) {*/ { // for better debugging
 							if (! tec.addMissions(m)) {
 								continue; // robot wasn't free to accept a new mission
 							}
@@ -1587,7 +1587,7 @@ public class Missions {
 	}
 
 	public static void writeStatistics(TrajectoryEnvelopeCoordinator tec) {
-		synchronized (tec.trackers) {
+		/*synchronized (tec.trackers) {*/ { // for better debugging
 			for (int robotID : tec.getAllRobotIDs()) {
 				VehiclesHashMap.getVehicle(robotID).writeStatistics();
 			}
@@ -1595,7 +1595,7 @@ public class Missions {
 	}
 
 	private static void updateRobotReports(TrajectoryEnvelopeCoordinator tec) {
-		synchronized (tec.trackers) {
+		/*synchronized (tec.trackers) {*/ { // for better debugging
 			for (int robotID : tec.getAllRobotIDs()) {
 				VehiclesHashMap.getVehicle(robotID).setCurrentRobotReport(tec.getRobotReport(robotID));
 			}

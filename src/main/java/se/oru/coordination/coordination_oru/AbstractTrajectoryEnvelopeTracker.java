@@ -112,8 +112,8 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 	 * @param te The new {@link TrajectoryEnvelope} of this tracker.
 	 */
 	public void updateTrajectoryEnvelope(TrajectoryEnvelope te) {
-		synchronized(tec.getSolver()) {
-			synchronized(this.te) {
+		/*synchronized(tec.getSolver()) {*/ { // for better debugging
+			/*synchronized(this.te) {*/ { // for better debugging
 				metaCSPLogger.info("Updating trajectory Robot" +this.te.getRobotID()+". TEID: " + this.te.getID() + "--> TEID: " + te.getID()+ ".");
 				this.te = te;
 				this.cb.updateTrajectoryEnvelope(te);
@@ -268,10 +268,10 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 		if (BrowserVisualization.areAllVehiclesStarted && ! isThrottled) {
 			//Draw an arrow if there is a critical point
 			RobotReport rrWaiting = getRobotReport();
-			synchronized (tec.getCurrentDependencies()) {
+			/*synchronized (tec.getCurrentDependencies()) {*/ { // for better debugging
 				for (int robotID : tec.getCurrentDependencies().keySet()) {
 					Dependency dep = tec.getCurrentDependencies().get(robotID);
-					synchronized (tec.trackers) {
+					/*synchronized (tec.trackers) {*/ { // for better debugging
 						AbstractTrajectoryEnvelopeTracker waitingTrackers = tec.trackers.get(dep.getWaitingRobotID());
 						AbstractTrajectoryEnvelopeTracker drivingTrackers = tec.trackers.get(dep.getDrivingRobotID());
 						if (waitingTrackers.equals(this)) {
@@ -313,7 +313,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 	}
 	
 	protected void updateDeadline(TrajectoryEnvelope trajEnv, long delta) {
-		synchronized(tec.getSolver()) {
+		/*synchronized(tec.getSolver()) {*/ { // for better debugging
 			long time = getCurrentTimeInMillis()+delta;
 			if (time > trajEnv.getTemporalVariable().getEET()) {
 				tec.getSolver().removeConstraint(deadlines.get(trajEnv));
@@ -335,7 +335,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 	}
 
 	protected void fixDeadline(TrajectoryEnvelope trajEnv, long delta) {
-		synchronized(tec.getSolver()) {
+		/*synchronized(tec.getSolver()) {*/ { // for better debugging
 			long time = getCurrentTimeInMillis()+delta;
 			if (time > trajEnv.getTemporalVariable().getEET()) {
 				tec.getSolver().removeConstraint(deadlines.get(trajEnv));
@@ -357,7 +357,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 	}
 
 	protected void setRelease(TrajectoryEnvelope trajEnv) {
-		synchronized(tec.getSolver()) {
+		/*synchronized(tec.getSolver()) {*/ { // for better debugging
 			long time = getCurrentTimeInMillis();
 			time = Math.max(time, trajEnv.getTemporalVariable().getEST());
 			metaCSPLogger.info("Releasing @ " + time + " " + trajEnv + " (ST bounds: [" + trajEnv.getTemporalVariable().getEST() + "," + trajEnv.getTemporalVariable().getLST() + "])");
@@ -485,7 +485,7 @@ public abstract class AbstractTrajectoryEnvelopeTracker {
 
 				}
 
-				synchronized(tec.getSolver()) { 
+				/*synchronized(tec.getSolver()) {*/ { // for better debugging
 					if (cb != null) cb.beforeTrackingFinished();
 					finishTracking();
 					if (cb != null) cb.onTrackingFinished();

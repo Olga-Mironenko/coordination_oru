@@ -163,7 +163,7 @@ public class Experiment1Test1 {
 						if (inUse(robotID)) {
 							//Mission to dispatch alternates between (rip -> desti) and (desti -> rip)
 							Mission m = Missions.getMission(robotID, iteration%2);
-							synchronized(tec) {
+							/*synchronized(tec) {*/ { // for better debugging
 								//addMission returns true iff the robot was free to accept a new mission
 								if (tec.addMissions(m)) {
 									//tec.writeSetupLog("progress", "Robot "+robotID+" has completed " +iteration+" missions.");

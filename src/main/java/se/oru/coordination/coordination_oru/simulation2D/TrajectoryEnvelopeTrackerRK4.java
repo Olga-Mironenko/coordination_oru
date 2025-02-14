@@ -124,7 +124,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	@Override
 	protected void onTrajectoryEnvelopeUpdate() {
-		synchronized(reportsList) { //FIXME not ok, all the mutex should be changed
+		/*synchronized(reportsList) { //FIXME not ok, all the mutex should be changed*/ { // for better debugging
 			this.totalDistance = this.computeDistance(0, traj.getPose().length-1);
 			this.overallDistance = totalDistance;
 			this.internalCriticalPoints.clear();
@@ -165,7 +165,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	private void enqueueOneReport() {
 
-		synchronized (reportsList) {
+		/*synchronized (reportsList) {*/ { // for better debugging
 
 			//Before start, initialize the position
 			if (reportsList.isEmpty()) {
@@ -246,7 +246,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 
 	@Override
 	public RobotReport getLastRobotReport() {
-		synchronized (reportsList) {
+		/*synchronized (reportsList) {*/ { // for better debugging
 			if (reportsList.isEmpty()) return getRobotReport();
 			return reportsList.get(reportsList.size()-1);
 		}
@@ -343,7 +343,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	}
 
 	public static void integrateRK4(State state, double time, double deltaTime, boolean slowDown, double MAX_VELOCITY, double MAX_VELOCITY_DAMPENING_FACTOR, double MAX_ACCELERATION) {
-		synchronized(state) {
+		/*synchronized(state) {*/ { // for better debugging
 			Derivative a = Derivative.evaluate(state, time, 0.0, new Derivative(), slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
 			Derivative b = Derivative.evaluate(state, time, deltaTime/2.0, a, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR, MAX_ACCELERATION);
 			Derivative c = Derivative.evaluate(state, time, deltaTime/2.0, b, slowDown, MAX_VELOCITY, MAX_VELOCITY_DAMPENING_FACTOR,MAX_ACCELERATION);
@@ -380,8 +380,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 				catch (InterruptedException e) { e.printStackTrace(); return; }
 
 				//if possible (according to packet loss, send
-				synchronized (externalCPCounter)
-				{
+				/*synchronized (externalCPCounter)*/ { // for better debugging
 					boolean send = false;
 					int trial = 0;
 					//while(!send && trial < numberOfReplicas) {
@@ -477,7 +476,7 @@ public abstract class TrajectoryEnvelopeTrackerRK4 extends AbstractTrajectoryEnv
 	public RobotReport getRobotReport() {
 		if (state == null) return null;
 		if (!this.th.isAlive()) return new RobotReport(te.getRobotID(), traj.getPoseSteering()[0].getPose(), -1, 0.0, 0.0, -1);
-		synchronized(state) {
+		/*synchronized(state) {*/ { // for better debugging
 			Pose pose = null;
 			int currentPathIndex = -1;
 			double accumulatedDist = 0.0;

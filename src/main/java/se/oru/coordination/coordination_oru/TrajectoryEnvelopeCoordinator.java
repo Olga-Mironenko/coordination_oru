@@ -181,7 +181,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 		int numVar = solver.getConstraintNetwork().getVariables().length;
 		int numCon = solver.getConstraintNetwork().getConstraints().length;
 
-		synchronized (trackers) {
+		/*synchronized (trackers) {*/ { // for better debugging
 			ret.add("Status @ "  + getCurrentTimeInMillis() + " ms");
 			ret.add(CONNECTOR_BRANCH + "Eff period ..... " + EFFECTIVE_CONTROL_PERIOD + " ms");
 			ret.add(CONNECTOR_BRANCH + "Network ........ " + numVar + " variables, " + numCon + " constraints");
@@ -203,7 +203,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			}
 			ret.add(st);
 		}
-		synchronized (currentDependencies) {
+		/*synchronized (currentDependencies) {*/ { // for better debugging
 			ret.add(CONNECTOR_BRANCH + "Dependencies ... " + currentDependencies);
 		}
 		ret.add(CONNECTOR_BRANCH + "Total number of obsolete critical sections ... " + criticalSectionCounter.get() + ".");
@@ -328,7 +328,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 		if (GatedThread.isEnabled()) {
 			this.isDeadlocked = false;
 		}
-		synchronized(solver) {
+		/*synchronized(solver) {*/ { // for better debugging
 			SimpleDirectedGraph<Integer,Dependency> g = depsToGraph(currentDependencies);
 			List<List<Integer>> nonliveCycles = findSimpleNonliveCycles(g);
 			for (List<Integer> cycle : nonliveCycles) {
@@ -503,7 +503,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	}
 
 	protected boolean replanEnvelope(int robotID, boolean onlyIfDeadlocks) {
-		synchronized (solver) {
+		/*synchronized (solver) {*/ { // for better debugging
 			SimpleDirectedGraph<Integer,Dependency> g = depsToGraph(currentDependencies);
 			List<List<Integer>> nonliveCycles = null;
 
@@ -532,7 +532,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			Dependency dep = g.getEdge(cycle.get(i), cycle.get(i < cycle.size()-1 ? i+1 : 0));
 			if (dep == null) {
 				AbstractTrajectoryEnvelopeTracker tracker = null;
-				synchronized (trackers) {
+				/*synchronized (trackers) {*/ { // for better debugging
 					tracker = trackers.get(robotID);
 				}
 				if (tracker instanceof TrajectoryEnvelopeTrackerDummy) return false;
@@ -631,7 +631,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 	@Override
 	public void updateDependencies() {
-		synchronized(solver) {
+		/*synchronized(solver) {*/ { // for better debugging
 			if (this.fake) {
 				for (int robotID : trackers.keySet()) setCriticalPoint(robotID, -1, true);
 				return;
@@ -644,7 +644,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	protected void localCheckAndRevise() {
 
 		//System.out.println("Caller of updateDependencies(): " + Thread.currentThread().getStackTrace()[2]);
-		synchronized(solver) {
+		/*synchronized(solver) {*/ { // for better debugging
 			HashMap<Integer,RobotReport> currentReports = new HashMap<Integer,RobotReport>();
 			HashMap<Integer,HashSet<Dependency>> currentDeps = new HashMap<Integer,HashSet<Dependency>>();
 			HashMap<Integer,HashSet<Dependency>> artificialDependencies = new HashMap<Integer,HashSet<Dependency>>();
@@ -658,7 +658,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				//Update the coordinator view
 				RobotReport robotReport = robotTracker.getRobotReport();
 				currentReports.put(robotID, robotReport);
-				synchronized(stoppingPoints) {
+				/*synchronized(stoppingPoints) {*/ { // for better debugging
 					if (stoppingPoints.containsKey(robotID)) {
 //						metaCSPLogger.info("Stopping points Robot"+robotID+": "+stoppingPoints.get(robotID).toString());
 						for (int i = 0; i < stoppingPoints.get(robotID).size(); i++) {
@@ -677,7 +677,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						}
 					}
 				}
-				synchronized(replanningStoppingPoints) {
+				/*synchronized(replanningStoppingPoints) {*/ { // for better debugging
 					if (replanningStoppingPoints.containsKey(robotID)) 	{
 						//We should enforce the last robot stopping point while it is involved in a re-plan.
 						if (!currentDeps.containsKey(robotID)) currentDeps.put(robotID, new HashSet<Dependency>());
@@ -689,7 +689,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 
 			//Make deps from critical sections, and remove obsolete critical sections
-			synchronized(allCriticalSections) {
+			/*synchronized(allCriticalSections) {*/ { // for better debugging
 
 				//FIXME Add a CriticalSectionManager class
 				if (allCriticalSections.size() > 0)
@@ -965,7 +965,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 
 			//get current dependencies
-			synchronized(currentDependencies) {
+			/*synchronized(currentDependencies) {*/ { // for better debugging
 
 				//FIXME: already synchronized (so maybe is ok currentDependencies = computeClosestDependencies(currentDeps, artificialDependencies);)
 				HashMap<Integer, Dependency> closestDeps  = computeClosestDependencies(currentDeps, artificialDependencies);
@@ -994,7 +994,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 		//You should lock the robots if you want to start re-planning. 
 		//In this way, the last critical point communicated when the re-plan is started is forced not to be updated
-		synchronized (replanningStoppingPoints) {
+		/*synchronized (replanningStoppingPoints) {*/ { // for better debugging
 			if (setMaxCPDependencies(robotsToReplan)) {
 				metaCSPLogger.info("Will re-plan for one of the following deadlocked robots: " + robotsToReplan + " (" + allConnectedRobots + ")...");
 				if (GatedThread.isEnabled()) {
@@ -1014,7 +1014,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	}
 
 	protected boolean setMaxCPDependencies(Set<Integer> robotsIDs) {
-		synchronized (replanningStoppingPoints) {
+		/*synchronized (replanningStoppingPoints) {*/ { // for better debugging
 			boolean tryLocking = true;
 			for (int robotID : robotsIDs) {
 				if (replanningStoppingPoints.containsKey(robotID)) {
@@ -1060,11 +1060,11 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			//FIXME not synchronized on current dependencies
 			Geometry[] obstacles = null;
 			HashSet<Integer> otherRobotIDs = new HashSet<Integer>();
-			synchronized (getCurrentDependencies()) {
+			/*synchronized (getCurrentDependencies()) {*/ { // for better debugging
 				HashMap<Integer, Dependency> currentDeps = getCurrentDependencies();
 				Dependency dep = null;
 				if (isCheckingStoppingPoints && robotsToReplan.size() == 1) {
-					synchronized(replanningStoppingPoints) {
+					/*synchronized(replanningStoppingPoints) {*/ { // for better debugging
 						if (!replanningStoppingPoints.containsKey(robotID)) {
 							metaCSPLogger.info("Invalid replan " + robotID + " ... ");
 							return false;
@@ -1102,7 +1102,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				metaCSPLogger.severe("Motion planner is not initialized for Robot" + robotID + ", cannot replan");
 				continue;
 			}
-			synchronized (mp) {
+			/*synchronized (mp) {*/ { // for better debugging
 				PoseSteering[] newPath = null;
 //				for (double shift = 0; shift < 2 * Math.PI; shift += Math.PI / 2) {
 //					Pose start = new Pose(currentWaitingPose.getX() - 1, currentWaitingPose.getY(), currentWaitingPose.getTheta() + shift);
@@ -1141,7 +1141,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				}
 			}
 		}
-		synchronized(replanningStoppingPoints) {
+		/*synchronized(replanningStoppingPoints) {*/ { // for better debugging
 			for (int robotID : robotsToReplan) replanningStoppingPoints.remove(robotID);
 			metaCSPLogger.info("Removing replanning stopping points of robots: " + robotsToReplan.toString());
 		}
@@ -1198,7 +1198,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 					numberNewAddedMissions = 0;
 					numberDrivingRobots = 0;
 
-					synchronized (solver) {
+					/*synchronized (solver) {*/ { // for better debugging
 						for (Integer robotID : trackers.keySet())
 							if (!(trackers.get(robotID) instanceof TrajectoryEnvelopeTrackerDummy)) numberDrivingRobots++;
 
@@ -1285,7 +1285,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	@Override
 	protected void cleanUpRobotCS(int robotID, int lastWaitingPoint) {
 
-		synchronized (allCriticalSections) {
+		/*synchronized (allCriticalSections) {*/ { // for better debugging
 
 			metaCSPLogger.info("Cleaning up critical sections of Robot" + robotID);
 			ArrayList<CriticalSection> toRemove = new ArrayList<CriticalSection>();
@@ -1347,16 +1347,16 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	 */
 	public synchronized void replacePath(int robotID, PoseSteering[] newPath, int breakingPathIndex, boolean concatenatePaths, Set<Integer> lockedRobotIDs) {
 
-		synchronized (solver) {
+		/*synchronized (solver) {*/ { // for better debugging
 
-			synchronized(trackers) {
+			/*synchronized(trackers) {*/ { // for better debugging
 				if (!trackers.containsKey(robotID)) {
 					metaCSPLogger.warning("Invalid robotID. Place the robot before!");
 					return;
 				}
 			}
 
-			synchronized (allCriticalSections) {
+			/*synchronized (allCriticalSections) {*/ { // for better debugging
 				//Get current envelope
 				TrajectoryEnvelope te = this.getCurrentTrajectoryEnvelope(robotID);
 
@@ -1388,7 +1388,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				TrajectoryEnvelope newTE = solver.createEnvelopeNoParking(robotID, newPath, "Driving", this.getFootprint(robotID));
 
 				//Notify tracker
-				synchronized (trackers) {
+				/*synchronized (trackers) {*/ { // for better debugging
 					this.trackers.get(robotID).updateTrajectoryEnvelope(newTE);
 				}
 
@@ -1473,7 +1473,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 				envelopesToTrack.remove(newTE);
 
-				synchronized (replanningStoppingPoints) {
+				/*synchronized (replanningStoppingPoints) {*/ { // for better debugging
 					if (lockedRobotIDs != null) {
 						for (int ID : lockedRobotIDs) replanningStoppingPoints.remove(ID);
 						metaCSPLogger.finest("Unlocking robots: " + lockedRobotIDs.toString());
@@ -1497,16 +1497,16 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	// the "synchronized" problem:
 	public synchronized void updatePath(int robotID, PoseSteering[] newPath, int breakingPathIndex) {
 
-		synchronized (solver) {
+		/*synchronized (solver) {*/ { // for better debugging
 
-			synchronized(trackers) {
+			/*synchronized(trackers) {*/ { // for better debugging
 				if (!trackers.containsKey(robotID)) {
 					metaCSPLogger.warning("Invalid robotID. Place the robot before!");
 					return;
 				}
 			}
 
-			synchronized (allCriticalSections) {
+			/*synchronized (allCriticalSections) {*/ { // for better debugging
 				//Get current envelope
 				TrajectoryEnvelope te = this.getCurrentTrajectoryEnvelope(robotID);
 
@@ -1526,7 +1526,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				TrajectoryEnvelope newTE = solver.createEnvelopeNoParking(robotID, newPath, "Driving", this.getFootprint(robotID));
 
 				//Notify tracker
-				synchronized (trackers) {
+				/*synchronized (trackers) {*/ { // for better debugging
 					this.trackers.get(robotID).updateTrajectoryEnvelope(newTE);
 				}
 
@@ -1590,15 +1590,15 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	 */
 	public boolean truncateEnvelopeAt(int robotID, int pathIndex) {
 
-		synchronized (solver) {
+		/*synchronized (solver) {*/ { // for better debugging
 
-			synchronized (replanningStoppingPoints) {
+			/*synchronized (replanningStoppingPoints) {*/ { // for better debugging
 				if (replanningStoppingPoints.containsKey(robotID)) return false;
 			}
 
 			TrajectoryEnvelope te = this.getCurrentTrajectoryEnvelope(robotID);
 			AbstractTrajectoryEnvelopeTracker tet = null;
-			synchronized(trackers) {
+			/*synchronized(trackers) {*/ { // for better debugging
 				tet = this.trackers.get(robotID);
 			}
 
@@ -1635,15 +1635,15 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 	 * @return <code>true</code> iff the envelope is successfully truncated.
 	 */
 	public boolean reverseEnvelope(int robotID) {
-		synchronized (solver) {
+		/*synchronized (solver) {*/ { // for better debugging
 
-			synchronized (replanningStoppingPoints) {
+			/*synchronized (replanningStoppingPoints) {*/ { // for better debugging
 				if (replanningStoppingPoints.containsKey(robotID)) return false;
 			}
 
 			TrajectoryEnvelope te = this.getCurrentTrajectoryEnvelope(robotID);
 			AbstractTrajectoryEnvelopeTracker tet = null;
-			synchronized(trackers) {
+			/*synchronized(trackers) {*/ { // for better debugging
 				tet = this.trackers.get(robotID);
 			}
 
@@ -1683,7 +1683,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 	protected void deleteEdges(HashMap<Pair<Integer,Integer>, Integer> edgesToDelete) {
 
-		synchronized(allCriticalSections) {
+		/*synchronized(allCriticalSections) {*/ { // for better debugging
 
 			if (edgesToDelete == null || edgesToDelete.isEmpty()) return;
 
@@ -1725,7 +1725,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 		if (edgesToAdd == null || edgesToAdd.isEmpty()) return;
 
-		synchronized(allCriticalSections) {
+		/*synchronized(allCriticalSections) {*/ { // for better debugging
 
 			HashSet<Pair<Integer,Integer>> toAdd = new HashSet<Pair<Integer,Integer>>();
 
@@ -1802,7 +1802,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 	protected void updateGraph(HashMap<Pair<Integer,Integer>, Integer> edgesToDelete, HashMap<Pair<Integer,Integer>, Integer> edgesToAdd) {
 
-		synchronized(allCriticalSections) {
+		/*synchronized(allCriticalSections) {*/ { // for better debugging
 
 			HashMap<Pair<Integer,Integer>, Integer> toDelete = null;
 			if (edgesToDelete != null && !edgesToDelete.isEmpty()) {
@@ -1832,7 +1832,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 	protected void globalCheckAndRevise() {
 
-		synchronized(solver) {
+		/*synchronized(solver) {*/ { // for better debugging
 			//? 1) Prepare local collections
 			HashMap<Integer,RobotReport> currentReports = new HashMap<Integer,RobotReport>();
 			HashMap<Integer,HashSet<Dependency>> currentDeps = new HashMap<Integer,HashSet<Dependency>>();
@@ -1884,7 +1884,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 			//Update the coordinator view
 			RobotReport robotReport = robotTracker.getRobotReport();
 			currentReports.put(robotID, robotReport);
-			synchronized (stoppingPoints) {
+			/*synchronized (stoppingPoints) {*/ { // for better debugging
 				if (stoppingPoints.containsKey(robotID)) {
 //						metaCSPLogger.info("Stopping points Robot"+robotID+": "+stoppingPoints.get(robotID).toString());
 					for (int i = 0; i < stoppingPoints.get(robotID).size(); i++) {
@@ -1913,7 +1913,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 				}
 
 				//? Re-planning lock dependencies
-				synchronized (replanningStoppingPoints) {
+				/*synchronized (replanningStoppingPoints) {*/ { // for better debugging
 					if (replanningStoppingPoints.containsKey(robotID)) {
 						//We should enforce the last robot stopping point while it is involved in a re-plan.
 						if (!currentDeps.containsKey(robotID))
@@ -1942,7 +1942,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 		HashMap<Pair<Integer,Integer>,Integer> edgesToAdd = new HashMap<>();
 
 		//Make deps from critical sections, and remove obsolete critical sections
-		synchronized (allCriticalSections) {
+		/*synchronized (allCriticalSections) {*/ { // for better debugging
 
 			//FIXME Add a CriticalSectionManager class
 			//? fill earliestStoppingPoints
@@ -2549,7 +2549,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 											Set<Integer> robotIDs,
 											HashMap<Integer,RobotReport> currentReports)
 	{
-		synchronized(currentDependencies) {
+		/*synchronized(currentDependencies) {*/ { // for better debugging
 
 			//update and communicate critical points
 			//get current dependencies
@@ -2596,12 +2596,12 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 
 	protected void sendCriticalPoint(int robotID, HashMap<Integer, RobotReport> currentReports) {
 		AbstractTrajectoryEnvelopeTracker tracker = null;
-		synchronized (trackers) {
+		/*synchronized (trackers) {*/ { // for better debugging
 			tracker = trackers.get(robotID);
 		}
 		int maxDelay = 2*(MAX_TX_DELAY+CONTROL_PERIOD+tracker.getTrackingPeriodInMillis()) + CONTROL_PERIOD; //add an extra control period to the theoretical upperbound to handle the case o equality
 		boolean retransmitt = forceCriticalPointReTransmission.containsKey(robotID) && forceCriticalPointReTransmission.get(robotID);
-		synchronized (currentDependencies) {
+		/*synchronized (currentDependencies) {*/ { // for better debugging
 			if (currentDependencies.containsKey(robotID)) {
 				Dependency dep = currentDependencies.get(robotID);
 				metaCSPLogger.finest("Set critical point " + dep.getWaitingPoint() + " to Robot" + dep.getWaitingRobotID() +".");

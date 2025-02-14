@@ -73,7 +73,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
     }
 
     public static void sendMapToAll() {
-        synchronized (ENDPOINTS) {
+        /*synchronized (ENDPOINTS) {*/ { // for better debugging
             for (RemoteEndpoint rep : BrowserVisualizationSocket.ENDPOINTS) {
                 try {
                     sendMap(rep);
@@ -90,7 +90,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
         System.out.println("Socket Connected: " + sess);
 
         RemoteEndpoint rep = super.getRemote();
-        synchronized (ENDPOINTS) {
+        /*synchronized (ENDPOINTS) {*/ { // for better debugging
             ENDPOINTS.add(rep);
 
             //Send map and map parameters if present
@@ -155,7 +155,7 @@ public class BrowserVisualizationSocket extends WebSocketAdapter {
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
         System.out.println("Removing connection to client");
-        synchronized (ENDPOINTS) {
+        /*synchronized (ENDPOINTS) {*/ { // for better debugging
             ENDPOINTS.remove(super.getRemote());
         }
         super.onWebSocketClose(statusCode,reason);

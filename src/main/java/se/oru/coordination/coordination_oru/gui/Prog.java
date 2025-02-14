@@ -137,8 +137,7 @@ public class Prog {
 
                                 Mission m = Missions.getMission(robotID, iteration%Missions.getMissions(robotID).size());
 
-                                synchronized(tec) 
-                                {
+                                /*synchronized(tec)*/ { // for better debugging
                                     if(StatusExperiment.isAddMission(robotID))
                                     {
                                         //addMission returns true iff the robot was free to accept a new mission

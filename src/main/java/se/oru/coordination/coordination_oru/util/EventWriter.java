@@ -19,7 +19,7 @@ public class EventWriter {
     private static boolean isHeaderWritten = false;
 
     public static void activate() {
-        synchronized (EventWriter.class) {
+        /*synchronized (EventWriter.class) {*/ { // for better debugging
             try {
                 File dir = AbstractVehicle.prepareRundir();
                 File file = new File(dir + "/events.tsv");
@@ -32,7 +32,7 @@ public class EventWriter {
     }
 
     public static void writeEvent(Event event) {
-        synchronized (EventWriter.class) {
+        /*synchronized (EventWriter.class) {*/ { // for better debugging
             if (bw == null) {
                 return;
             }
@@ -79,7 +79,7 @@ public class EventWriter {
     }
 
     public static void close() {
-        synchronized (EventWriter.class) {
+        /*synchronized (EventWriter.class) {*/ { // for better debugging
             if (bw != null) {
                 try {
                     bw.close();

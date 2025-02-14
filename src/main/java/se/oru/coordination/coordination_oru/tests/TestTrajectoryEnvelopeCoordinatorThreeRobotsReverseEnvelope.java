@@ -129,7 +129,7 @@ public class TestTrajectoryEnvelopeCoordinatorThreeRobotsReverseEnvelope {
 					while (true) {
 						//Mission to dispatch alternates between (rip -> desti) and (desti -> rip)
 						Mission m = Missions.getMission(robotID, iteration%2);
-						synchronized(tec) {
+						/*synchronized(tec) {*/ { // for better debugging
 							//addMission returns true iff the robot was free to accept a new mission
 							if (!isPaused.get(robotID) && tec.addMissions(m)) iteration++;
 						}

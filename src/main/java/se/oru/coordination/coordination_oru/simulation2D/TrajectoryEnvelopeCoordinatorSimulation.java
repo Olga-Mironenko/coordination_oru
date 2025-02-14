@@ -350,7 +350,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 		Constraint[] constraints = solver.getConstraintNetwork().getConstraints();
 		int numCon = constraints.length;
 		
-		synchronized (trackers) {
+		/*synchronized (trackers) {*/ { // for better debugging
 			ret.add("Status @ "  + getCurrentTimeInMillis() + " ms");
 			ret.add(CONNECTOR_BRANCH + 		"Eff period .......... " + EFFECTIVE_CONTROL_PERIOD + " ms");
 			ret.add(CONNECTOR_BRANCH + 		"Constraint network .. " + numVar + " variables, " + numCon + " constraints");
@@ -388,13 +388,13 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 			}
 			ret.add(st);
 		}
-		synchronized (currentDependencies) {
+		/*synchronized (currentDependencies) {*/ { // for better debugging
 			ret.add(CONNECTOR_BRANCH + 		"Dependencies ........ " + currentDependencies);
 		}
 		if (checkCollisions) {
 			for (ArrayList<CollisionEvent> collisionsList : Arrays.asList(allCollisionsList, majorCollisionsList)) {
 				int numberOfCollisions = 0;
-				synchronized (collisionsList) {
+				/*synchronized (collisionsList) {*/ { // for better debugging
 					numberOfCollisions = collisionsList.size();
 					String label = collisionsList == allCollisionsList ? " all " : "major";
 					ret.add(CONNECTOR_BRANCH + "Collisions (" + label + ")... " + numberOfCollisions + ".");
@@ -450,7 +450,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 
 				while(true) {
 					//collisions can happen only in critical sections
-					synchronized (allCriticalSections) {
+					/*synchronized (allCriticalSections) {*/ { // for better debugging
 //							if (allCriticalSections.isEmpty())
 //								break; //break the thread if there are no critical sections to control
 
@@ -459,7 +459,7 @@ public class TrajectoryEnvelopeCoordinatorSimulation extends TrajectoryEnvelopeC
 							RobotReport robotReport1, robotReport2;
 							AbstractTrajectoryEnvelopeTracker tracker1, tracker2;
 							try {
-								synchronized (trackers) {
+								/*synchronized (trackers) {*/ { // for better debugging
 									tracker1 = trackers.get(cs.getTe1().getRobotID());
 									robotReport1 = tracker1.getRobotReport();
 									tracker2 = trackers.get(cs.getTe2().getRobotID());

@@ -205,7 +205,7 @@ public class Experiment2 {
 					String lastDestination = "R_"+(robotID-1);
 					long startTime = Calendar.getInstance().getTimeInMillis();
 					while (true && totalIterations > 0) {
-						synchronized(tec) {
+						/*synchronized(tec) {*/ { // for better debugging
 							if (tec.isFree(robotID)) {
 								if (!firstTime) {
 									long elapsed = Calendar.getInstance().getTimeInMillis()-startTime;

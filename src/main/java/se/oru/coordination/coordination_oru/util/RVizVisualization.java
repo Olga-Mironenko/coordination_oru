@@ -316,11 +316,11 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 			if (!this.robotStatusPublishers.containsKey(rr.getRobotID())) {
 				Publisher<visualization_msgs.MarkerArray> markerArrayPublisher = node.newPublisher("robot"+rr.getRobotID()+"/status", visualization_msgs.MarkerArray._TYPE);
 				this.robotStatusPublishers.put(rr.getRobotID(), markerArrayPublisher);
-				synchronized(robotStatusMarkers) {
+				/*synchronized(robotStatusMarkers) {*/ { // for better debugging
 					this.robotStatusMarkers.put(rr.getRobotID(), new ArrayList<visualization_msgs.Marker>());
 				}
 			}
-			synchronized(robotStatusMarkers) {
+			/*synchronized(robotStatusMarkers) {*/ { // for better debugging
 				this.robotStatusMarkers.get(rr.getRobotID()).add(marker);
 			}
 
@@ -359,7 +359,7 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 			pos.setZ(0);
 			pose.setPosition(pos);
 			markerName.setPose(pose);
-			synchronized(robotStatusMarkers) {
+			/*synchronized(robotStatusMarkers) {*/ { // for better debugging
 				this.robotStatusMarkers.get(rr.getRobotID()).add(markerName);
 			}
 			//if (this.publishPartialEnvelope) createPartialEnvelopeGeometryMarker(te, rr.getPathIndex() >= 0 ? rr.getPathIndex() : te.getPathLength()-1, te.getPathLength()-1);
@@ -403,11 +403,11 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 			if (!this.robotStatusPublishers.containsKey(rr.getRobotID())) {
 				Publisher<visualization_msgs.MarkerArray> markerArrayPublisher = node.newPublisher("robot"+rr.getRobotID()+"/status", visualization_msgs.MarkerArray._TYPE);
 				this.robotStatusPublishers.put(rr.getRobotID(), markerArrayPublisher);
-				synchronized(robotStatusMarkers) {
+				/*synchronized(robotStatusMarkers) {*/ { // for better debugging
 					this.robotStatusMarkers.put(rr.getRobotID(), new ArrayList<visualization_msgs.Marker>());
 				}
 			}
-			synchronized(robotStatusMarkers) {
+			/*synchronized(robotStatusMarkers) {*/ { // for better debugging
 				this.robotStatusMarkers.get(rr.getRobotID()).add(marker);
 			}
 
@@ -446,7 +446,7 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 			pos.setZ(0);
 			pose.setPosition(pos);
 			markerName.setPose(pose);
-			synchronized(robotStatusMarkers) {
+			/*synchronized(robotStatusMarkers) {*/ { // for better debugging
 				this.robotStatusMarkers.get(rr.getRobotID()).add(markerName);
 			}
 
@@ -481,11 +481,11 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 			if (!this.boxMarkerPublishers.containsKey(markerLabel)) {
 				Publisher<visualization_msgs.MarkerArray> markerArrayPublisher = node.newPublisher(markerLabel, visualization_msgs.MarkerArray._TYPE);
 				this.boxMarkerPublishers.put(markerLabel, markerArrayPublisher);
-				synchronized(boxMarkerMarkers) {
+				/*synchronized(boxMarkerMarkers) {*/ { // for better debugging
 					this.boxMarkerMarkers.put(markerLabel, new ArrayList<visualization_msgs.Marker>());
 				}
 			}
-			synchronized(boxMarkerMarkers) {
+			/*synchronized(boxMarkerMarkers) {*/ { // for better debugging
 				this.boxMarkerMarkers.get(markerLabel).add(marker);
 			}
 
@@ -512,7 +512,7 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 			pos.setZ(0);
 			pose.setPosition(pos);
 			markerName.setPose(pose);
-			synchronized(boxMarkerMarkers) {
+			/*synchronized(boxMarkerMarkers) {*/ { // for better debugging
 				this.boxMarkerMarkers.get(markerLabel).add(markerName);
 			}
 		}
@@ -563,11 +563,11 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 			if (!this.dependencyPublishers.containsKey(rrWaiting.getRobotID())) {
 				Publisher<visualization_msgs.MarkerArray> markerArrayPublisher = node.newPublisher("robot"+rrWaiting.getRobotID()+"/deps", visualization_msgs.MarkerArray._TYPE);
 				this.dependencyPublishers.put(rrWaiting.getRobotID(), markerArrayPublisher);
-				synchronized(dependencyMarkers) {
+				/*synchronized(dependencyMarkers) {*/ { // for better debugging
 					this.dependencyMarkers.put(rrWaiting.getRobotID(), new ArrayList<visualization_msgs.Marker>());
 				}
 			}
-			synchronized(dependencyMarkers) {
+			/*synchronized(dependencyMarkers) {*/ { // for better debugging
 				this.dependencyMarkers.get(rrWaiting.getRobotID()).add(mArrow);
 			}
 		}
@@ -576,13 +576,13 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 	@Override
 	public void updateVisualization() {
 		for (Entry<Integer, Publisher<MarkerArray>> entry : robotStatusPublishers.entrySet()) {
-			synchronized(robotStatusMarkers) {
+			/*synchronized(robotStatusMarkers) {*/ { // for better debugging
 				if (!robotStatusMarkers.get(entry.getKey()).isEmpty()) { 
 					visualization_msgs.MarkerArray ma = node.getTopicMessageFactory().newFromType(visualization_msgs.MarkerArray._TYPE);
 					ArrayList<visualization_msgs.Marker> copy = new ArrayList<visualization_msgs.Marker>();
 					for (visualization_msgs.Marker m : robotStatusMarkers.get(entry.getKey())) copy.add(m);
 					if (envelopeMarkers != null) {
-						synchronized(envelopeMarkers) {
+						/*synchronized(envelopeMarkers) {*/ { // for better debugging
 							if (envelopeMarkers != null && envelopeMarkers.containsKey(entry.getKey())) copy.add(envelopeMarkers.get(entry.getKey()));
 						}
 					}
@@ -594,7 +594,7 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 		}
 		
 		for (Entry<Integer, Publisher<MarkerArray>> entry : dependencyPublishers.entrySet()) {
-			synchronized(dependencyMarkers) {
+			/*synchronized(dependencyMarkers) {*/ { // for better debugging
 				if (!dependencyMarkers.get(entry.getKey()).isEmpty()) { 				
 					visualization_msgs.MarkerArray ma = node.getTopicMessageFactory().newFromType(visualization_msgs.MarkerArray._TYPE);
 					ArrayList<visualization_msgs.Marker> copy = new ArrayList<visualization_msgs.Marker>();
@@ -607,7 +607,7 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 		}
 		
 		for (Entry<String, Publisher<MarkerArray>> entry : boxMarkerPublishers.entrySet()) {
-			synchronized(boxMarkerMarkers) {
+			/*synchronized(boxMarkerMarkers) {*/ { // for better debugging
 				if (!boxMarkerMarkers.get(entry.getKey()).isEmpty()) { 
 					visualization_msgs.MarkerArray ma = node.getTopicMessageFactory().newFromType(visualization_msgs.MarkerArray._TYPE);
 					ArrayList<visualization_msgs.Marker> copy = new ArrayList<visualization_msgs.Marker>();
@@ -709,7 +709,7 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 		marker.setPoints(points);
 
 		if (this.envelopeMarkers == null) this.envelopeMarkers = new HashMap<Integer,visualization_msgs.Marker>();
-		synchronized(envelopeMarkers) {
+		/*synchronized(envelopeMarkers) {*/ { // for better debugging
 			this.envelopeMarkers.put(te.getRobotID(), marker);
 		}
 
@@ -718,7 +718,7 @@ public class RVizVisualization implements FleetVisualization, NodeMain {
 	@Override
 	public void removeEnvelope(TrajectoryEnvelope te) {
 		if (this.envelopeMarkers == null) return;
-		synchronized(envelopeMarkers) {
+		/*synchronized(envelopeMarkers) {*/ { // for better debugging
 			this.envelopeMarkers.remove(te.getRobotID());
 		}		
 	}

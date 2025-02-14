@@ -148,7 +148,7 @@ public class TestTrajectoryEnvelopeCoordinatorWithMotionPlanner4 {
 					while (true) {
 						//Mission to dispatch alternates between (rip -> desti) and (desti -> rip)
 						Mission m = Missions.getMission(robotID, iteration%2);
-						synchronized(tec) {
+						/*synchronized(tec) {*/ { // for better debugging
 							//addMission returns true iff the robot was free to accept a new mission
 							if (tec.addMissions(m)) {
 								if (MAX_DELAY-MIN_DELAY > 0) {
