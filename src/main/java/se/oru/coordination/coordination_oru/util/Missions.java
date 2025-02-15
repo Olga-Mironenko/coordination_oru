@@ -1733,18 +1733,16 @@ public class Missions {
 	public static TreeMap<Integer, TreeMap<Integer, ArrayList<Double>>> robotIDToOtherIDToMissionLinearizationDInitial =
 			new TreeMap<>();
 
-	public static TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearizationACurrent = null;
-	public static TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearizationBCurrent = null;
+	public static TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearizationACurrent = new TreeMap<>();
+	public static TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearizationBCurrent = new TreeMap<>();
 	public static TreeMap<Integer, ArrayList<Double>> robotIDToMissionLinearizationCCurrent = new TreeMap<>();
-	public static TreeMap<Integer, TreeMap<Integer, ArrayList<Double>>> robotIDToOtherIDToMissionLinearizationDCurrent = null;
+	public static TreeMap<Integer, TreeMap<Integer, ArrayList<Double>>> robotIDToOtherIDToMissionLinearizationDCurrent =
+			new TreeMap<>();
 
 	public static void computeMissionLinearizations(boolean isInitial) {
-		if (! isInitial) {
-			computeMissionLinearization(false, "C");
-		} else {
-			for (String mode : List.of("A", "B", "C", "D")) {
-				computeMissionLinearization(true, mode);
-			}
+		List<String> modes = isInitial ? List.of("A", "B", "C", "D") : List.of("C", "D");
+		for (String mode : modes) {
+			computeMissionLinearization(isInitial, mode);
 		}
 	}
 

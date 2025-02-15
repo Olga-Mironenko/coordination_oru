@@ -3,12 +3,28 @@ package se.oru.coordination.coordination_oru.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializer;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonPrimitive;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 // Base class for all events
 public abstract class Event {
     private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Double.class, new JsonSerializer<Double>() {
+                @Override
+                public JsonElement serialize(Double src, java.lang.reflect.Type typeOfSrc, JsonSerializationContext context) {
+                    BigDecimal roundedValue = new BigDecimal(src).setScale(3, RoundingMode.HALF_UP);
+                    return new JsonPrimitive(roundedValue);
+                }
+            })
             .disableHtmlEscaping()
             .setPrettyPrinting()  // Pretty printing ensures spaces after commas
             .create();
@@ -24,10 +40,11 @@ public abstract class Event {
 
         // Create a new JSON object with "type" first
         JsonObject sortedJson = new JsonObject();
+        sortedJson.addProperty("robotID", this.robotID); // Robot ID second
         sortedJson.addProperty("type", getType()); // Add "type" first
 
         for (String key : jsonObject.keySet()) {
-            if (!key.equals("type")) {
+            if (! key.equals("robotID") && ! key.equals("type")) {
                 sortedJson.add(key, jsonObject.get(key));
             }
         }
@@ -90,11 +107,21 @@ public abstract class Event {
     public static class ForcingReactionStarted extends Event {
         public boolean isStop;
         public double distanceToCS;
+        public ArrayList<Double> linearizationC;
+        public ArrayList<Double> linearizationDf;
 
-        public ForcingReactionStarted(int robotID, boolean isStop, double distanceToCS) {
+        public ForcingReactionStarted(
+                int robotID,
+                boolean isStop,
+                double distanceToCS,
+                ArrayList<Double> linearizationC,
+                ArrayList<Double> linearizationDf
+        ) {
             this.robotID = robotID;
             this.isStop = isStop;
             this.distanceToCS = distanceToCS;
+            this.linearizationC = linearizationC;
+            this.linearizationDf = linearizationDf;
         }
     }
 

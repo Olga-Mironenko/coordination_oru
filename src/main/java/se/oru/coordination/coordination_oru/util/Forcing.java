@@ -279,25 +279,31 @@ public class Forcing {
                 }
 
                 for (Map.Entry<Integer, Boolean> entry : robotToIsStop.entrySet()) {
-                    int otherID = entry.getKey();
+                    int affectedID = entry.getKey();
                     boolean isStop = entry.getValue();
 
-
-                    ArrayList<CriticalSection> cses = robotToCSesPriority.getOrDefault(otherID, new ArrayList<>());
+                    ArrayList<CriticalSection> cses = robotToCSesPriority.getOrDefault(affectedID, new ArrayList<>());
                     for (CriticalSection cs : cses) {
                         increaseRobotPriorityOnCS(cs);
                     }
                     if (isStop) {
-                        stopRobotIfNeeded(otherID);
+                        stopRobotIfNeeded(affectedID);
                     }
 
-                    if (robotToIsStopInPast.containsKey(otherID)) {
-                        assert robotToIsStopInPast.get(otherID) == isStop;
+                    if (robotToIsStopInPast.containsKey(affectedID)) {
+                        assert robotToIsStopInPast.get(affectedID) == isStop;
                     } else {
-                        robotToIsStopInPast.put(otherID, isStop);
-                        double distanceToCS = computeDistanceToCS(robotID, otherID, cses);
-                        distanceToCS = (double) Math.round(distanceToCS * 10) / 10;
-                        new Event.ForcingReactionStarted(otherID, isStop, distanceToCS).write();
+                        robotToIsStopInPast.put(affectedID, isStop);
+
+                        double distanceToCS = computeDistanceToCS(robotID, affectedID, cses);
+
+                        new Event.ForcingReactionStarted(
+                                affectedID,
+                                isStop,
+                                (double) Math.round(distanceToCS * 10) / 10,
+                                Missions.robotIDToMissionLinearizationCCurrent.get(affectedID),
+                                Missions.robotIDToOtherIDToMissionLinearizationDCurrent.get(affectedID).get(robotID)
+                        ).write();
                     }
                 }
             }
