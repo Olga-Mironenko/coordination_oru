@@ -85,3 +85,6 @@ src/main/java/se/oru/coordination/coordination_oru/scenarios/Test.java
 logprocessing/csvtk
 
 screen-c*.mp4
+
+# To have the file re-generated:
+compose.yaml

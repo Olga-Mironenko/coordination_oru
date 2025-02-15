@@ -1,0 +1,13 @@
+{
+    "mapconf": "mapconf5-acb764d6.yaml",
+    "locations": "locations5-6.tsv",
+    "num_auts": 3,
+    "dimensions_vehicle": [
+        10.0,
+        10.0,
+        5.0,
+        5.0,
+        1.0,
+        1.0
+    ]
+}

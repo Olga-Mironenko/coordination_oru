@@ -17,7 +17,9 @@ args=(
 trap 'kill -s SIGINT $pid; docker compose down' SIGINT
 
 set -x
-export RUNDIRS=logs/rundirs/$date
+rundirs_root=logs/rundirs
+mkdir -p "$rundirs_root"
+export RUNDIRS=$rundirs_root/$date
 mkdir "$RUNDIRS"
 docker compose "${args[@]}" > >(tee /dev/stderr | ansi2txt >logs/compose-up_"$date".log) 2>&1 &
 pid=$!

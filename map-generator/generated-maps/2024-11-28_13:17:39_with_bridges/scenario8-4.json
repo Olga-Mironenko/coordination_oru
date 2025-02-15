@@ -1,0 +1,13 @@
+{
+    "mapconf": "mapconf8-554df437.yaml",
+    "locations": "locations8-4.tsv",
+    "num_auts": 3,
+    "dimensions_vehicle": [
+        10.0,
+        10.0,
+        5.0,
+        5.0,
+        1.0,
+        1.0
+    ]
+}
