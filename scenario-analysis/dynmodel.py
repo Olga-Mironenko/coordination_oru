@@ -21,7 +21,8 @@ warnings.filterwarnings("ignore", message="Can't initialize NVML")
 
 RUNDIRS = '../logs/rundirs'
 
-RUNNAME = '20250209_170442'
+# RUNNAME = '20250209_170442'
+RUNNAME = '20250214_172108_halfway'
 
 RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # DIRECTORY_DATA = f'data/{RUNNAME}'
@@ -166,10 +167,14 @@ def series2values(series: pd.Series) -> np.ndarray:
 
 def select_columns_input_output(df: pd.DataFrame) -> pd.DataFrame:
     columns_input = [
+        'event_isStop',
         'i_map',
         'No. of OPs',
         'V: v_current',
         'V0: v_current',
+        'V: POD',
+        'V0: POD',
+        'event_distanceToCS',
     ]
     columns_output = [
         'MajorCollisionFromMinor before forcing ends',
