@@ -1791,7 +1791,7 @@ public class Missions {
 						continue;
 					}
 
-					ArrayList<Double> linearization = new ArrayList<>(te.getPathLength());
+					ArrayList<Double> linearization = new ArrayList<>(Collections.nCopies(te.getPathLength(), 0.0));
 					otherIDToLinearization.put(other.getID(), linearization);
 				}
 			}
