@@ -308,6 +308,16 @@ def convert(filename_events_tsv: str, filename_missions_csv: str) -> None:
     df = missions_to_dataframe(robot_id_to_missions)
     assert len(df) == len(df_events)
 
+    for robot_id in robot_id_to_missions:
+        df_robot = df[df["robotID"] == robot_id]
+        assert not df_robot.empty
+        moments_mission_started = df_robot[df_robot['event_type'] == 'MissionStarted']['secondsVirtual']
+        moments_forcing_reaction_started = df_robot[df_robot['event_type'] == 'ForcingReactionStarted']['secondsVirtual']
+        moments_common = sorted(set(moments_mission_started) & set(moments_forcing_reaction_started))
+        if moments_common:
+            print(f'{filename_missions_csv}, {robot_id=}: ' + ' ,'.join(map(str, moments_common)))
+        assert not moments_common
+
     for related_event in 'MinorCollision', 'MajorCollisionFromMinor':
         df = add_related_event_counts(df, related_event)
         assert len(df) == len(df_events)

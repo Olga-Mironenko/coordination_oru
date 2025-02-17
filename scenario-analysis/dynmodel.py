@@ -22,7 +22,8 @@ warnings.filterwarnings("ignore", message="Can't initialize NVML")
 RUNDIRS = '../logs/rundirs'
 
 # RUNNAME = '20250209_170442'
-RUNNAME = '20250214_172108_halfway'
+# RUNNAME = '20250214_172108_halfway'
+RUNNAME = '20250214_172108'
 
 RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # DIRECTORY_DATA = f'data/{RUNNAME}'
