@@ -3,6 +3,7 @@ package se.oru.coordination.coordination_oru.util.gates;
 import se.oru.coordination.coordination_oru.util.Containerization;
 import se.oru.coordination.coordination_oru.util.Printer;
 
+import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingDeque;
 
 public class Gatekeeper {
@@ -28,6 +29,25 @@ public class Gatekeeper {
         gateSelf.push();
     }
 
+    public static void insertAfter(LinkedBlockingDeque<Gate> gates, String targetNamePrefix, Gate newGate) {
+        LinkedBlockingDeque<Gate> gatesNew = new LinkedBlockingDeque<>();
+        boolean inserted = false;
+
+        for (Gate current : gates) {
+            gatesNew.add(current);
+
+            if (current.name.startsWith(targetNamePrefix)) {
+                assert ! inserted;
+                gatesNew.add(newGate);
+                inserted = true;
+            }
+        }
+        assert inserted;
+
+        gates.clear();
+        gates.addAll(gatesNew);
+    }
+
     /**
      * This method is called by a gated thread to register itself in the queue and to pass control to the gatekeeper.
      * @param nameStep The name of the current step of the gated thread (useful for debugging).
@@ -38,12 +58,16 @@ public class Gatekeeper {
      *                  anymore.
      */
     public void pauseCurrentThread(String nameStep, boolean isThreadInitialization, boolean isQueueHead, Gate gateStart) throws InterruptedException {
-        Gate gate = new Gate(Thread.currentThread().getName() + "'s " + nameStep);
+        String nameThread = Thread.currentThread().getName();
+        Gate gate = new Gate(nameThread + "'s " + nameStep);
         if (isQueueHead) {
             gates.addFirst(gate);
+        } else if (gate.name.startsWith("TrajectoryEnvelopeCoordinator inference's sleep(")) {
+            insertAfter(gates, "Timekeeper's sleep(", gate);
         } else {
             gates.add(gate);
         }
+
         if (gateStart != null) {
             gateStart.push();
         }
