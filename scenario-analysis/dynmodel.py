@@ -1,3 +1,4 @@
+import ast
 import os
 import warnings
 from typing import Any
@@ -23,11 +24,15 @@ RUNDIRS = '../logs/rundirs'
 
 # RUNNAME = '20250209_170442'
 # RUNNAME = '20250214_172108_halfway'
-RUNNAME = '20250214_172108'
+# RUNNAME = '20250214_172108'
+# RUNNAME = '20250215_120817'
+RUNNAME = '20250217_230154_halfway'
 
 RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # DIRECTORY_DATA = f'data/{RUNNAME}'
 # os.makedirs(DIRECTORY_DATA, exist_ok=True)
+
+FILENAME_MISSIONS_ALL = f'{RUNDIR}/missions_all.csv'
 
 
 # Dictionary to map Map IDs to the number of OPs
@@ -107,16 +112,48 @@ def prepare_missions(filename_events_tsv, filename_missions_csv):
 
 
 def prepare_missions_all():
-    dfs = []
-    for name in tqdm.tqdm(sorted(os.listdir(RUNDIR))):
+    is_try = True
+
+    dirs = []
+    for name in os.listdir(RUNDIR):
         dir_scenario = f'{RUNDIR}/{name}'
         if os.path.isdir(dir_scenario):
-            df = prepare_missions(f'{dir_scenario}/events.tsv',
-                                  f'{dir_scenario}/missions.csv')
-            dfs.append(df)
+            dirs.append(dir_scenario)
+
+    dfs = []
+    for dir_scenario in tqdm.tqdm(dirs):
+        prepare = lambda: prepare_missions(f'{dir_scenario}/events.tsv',
+                                           f'{dir_scenario}/missions.csv')
+        if not is_try:
+            df = prepare()
+        else:
+            try:
+                df = prepare()
+            except Exception as e:
+                print(dir_scenario, e)
+                continue
+
+        dfs.append(df)
 
     df_all = pd.concat(dfs)
     df_all = df_all.loc[:, ['Scenario ID'] + [col for col in df_all.columns if col != 'Scenario ID']]
+    return df_all
+
+
+def save_missions_all(df_all: pd.DataFrame) -> None:
+    df_all.to_csv(FILENAME_MISSIONS_ALL, index=False)
+
+
+def load_missions_all() -> pd.DataFrame:
+    return pd.read_csv(FILENAME_MISSIONS_ALL, low_memory=False)
+
+
+def load_or_prepare_missions_all() -> pd.DataFrame:
+    if os.path.exists(FILENAME_MISSIONS_ALL):
+        return load_missions_all()
+
+    df_all = prepare_missions_all()
+    save_missions_all(df_all)
     return df_all
 
 
@@ -146,10 +183,108 @@ def add_vcurr_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def add_column_pod_next(
+        df: pd.DataFrame, pod_prefix: str = "POD C", next_n: int = 5
+) -> None:
+    """
+    For each row in the dataframe, create a new column named
+    f"{pod_prefix} next {next_n}" computed as follows:
+
+      - Determine the source list from a column:
+          * If pod_prefix starts with "POD C", use the column "event_linearizationC".
+          * If pod_prefix starts with "POD Df", use the column "event_linearizationDf".
+      - Retrieve the row's "V: path index" (i) and "V: no. poses".
+      - If the length of the source list is less than "V: no. poses", pad the list
+        with zeros to reach that length.
+      - If, after padding, the source list does not have an element at index i,
+        throw an error.
+      - Compute the average of the next `next_n` elements (i.e. source_list[i+1:i+1+next_n]).
+        (If the slice is shorter than next_n, average whatever is present. If there are no
+        elements after i, return 0.)
+
+    Args:
+        df: The input DataFrame containing at least the following columns:
+            - "event_linearizationC" or "event_linearizationDf"
+            - "V: path index"
+            - "V: no. poses"
+        pod_prefix: A string like "POD C" or "POD Df" (determines the source column).
+        next_n: The number of subsequent elements to average.
+
+    Returns:
+        A new DataFrame with an extra column named f"{pod_prefix} next {next_n}".
+
+    Raises:
+        ValueError: If the source column is not found or if required columns are missing.
+        IndexError: If, after padding, the index given by "V: path index" does not exist.
+    """
+    # Determine which source column to use based on pod_prefix.
+    if pod_prefix.startswith("POD C"):
+        source_col = "event_linearizationC"
+    elif pod_prefix.startswith("POD Df"):
+        source_col = "event_linearizationDf"
+    else:
+        raise ValueError("pod_prefix must start with 'POD C' or 'POD Df'.")
+
+    new_col = f"{pod_prefix} next {next_n}"
+
+    def compute_next(row: pd.Series) -> Any:
+        # Retrieve the source list.
+        pod_list = row[source_col]
+        if not isinstance(pod_list, list):
+            assert pd.isna(pod_list), (type(pod_list), pod_list)
+            return pd.NA
+        if not isinstance(pod_list, list):
+            raise TypeError(f"Expected {source_col} to be a list, got {type(pod_list)}.")
+
+        i = row["V: path index"]
+        if pd.isna(i):
+            i = 0
+        else:
+            i = int(i)
+
+        total_poses = int(row["V: no. poses"])
+
+        # Pad pod_list with zeros if necessary.
+        if len(pod_list) < total_poses:
+            pod_list = pod_list + [0] * (total_poses - len(pod_list))
+
+        # Check that the index i exists.
+        if i >= len(pod_list):
+            raise IndexError(
+                f"Index {i} does not exist in {source_col} (length {len(pod_list)})."
+            )
+
+        # Compute the slice for the next next_n elements.
+        next_slice = pod_list[i + 1: i + 1 + next_n]
+        if next_slice:
+            avg_value = sum(next_slice) / len(next_slice)
+        else:
+            avg_value = 0
+
+        return avg_value
+
+    # Apply the computation row-wise.
+    df[new_col] = df.apply(compute_next, axis=1)
+
+
+def add_columns_pod_next(df: pd.DataFrame) -> None:
+    for col in df.columns:
+        if col.startswith('event_linearization'):
+            df.loc[:, col] = df[col].apply(lambda x: ast.literal_eval(x) if pd.notna(x) else x)
+
+    for prefix in "POD C", "POD Df":
+        for k in 20, 50, 100, 200:
+            add_column_pod_next(df, prefix, k)
+
+
 def prepare_forcing_reaction_started(df: pd.DataFrame) -> pd.DataFrame:
     df = df[df['event_type'] == 'ForcingReactionStarted']
-    df = add_vcurr_columns(df)
+
     df = add_derived_columns(df)
+    df = add_vcurr_columns(df)
+    add_columns_pod_next(df)
+
+    show(df[pd.isna(df['V: v_current'])], 'without v_current')
     return df
 
 
@@ -177,6 +312,11 @@ def select_columns_input_output(df: pd.DataFrame) -> pd.DataFrame:
         'V0: POD',
         'event_distanceToCS',
     ]
+
+    for prefix in "POD C", "POD Df":
+        for k in 20, 50, 100, 200:
+            columns_input.append(f'{prefix} next {k}')
+
     columns_output = [
         'MajorCollisionFromMinor before forcing ends',
     ]
@@ -219,10 +359,8 @@ def evaluate_and_plot_column(df_test, df_predictions, column):
     # save_and_show(fig, f'Actual_vs_Predicted_Values_{name}')
 
 
-def convert_missions_all_into_dfs_model(df_all: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    df = prepare_forcing_reaction_started(df_all)
-    show(df[pd.isna(df['V: v_current'])], 'bad')
-    df = select_columns_input_output(df)
+def convert_missions_all_into_dfs_model(df_started: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    df = select_columns_input_output(df_started)
 
     df_train, df_test = sklearn.model_selection.train_test_split(df, test_size=0.2, random_state=1)
     show(df_train, 'df_train')
@@ -294,8 +432,8 @@ def run_autogluon(df_train: pd.DataFrame, df_test: pd.DataFrame) -> tuple[list[A
     return predictors, df_predictions
 
 
-def run_models(df_all):
-    df_train, df_test = convert_missions_all_into_dfs_model(df_all)
+def run_models(df_started: pd.DataFrame) -> pd.DataFrame:
+    df_train, df_test = convert_missions_all_into_dfs_model(df_started)
     df_predictions_regression = run_regression(df_train, df_test)
     show(df_predictions_regression, 'df_predictions_regression')
     evaluate_and_plot_column(df_test, df_predictions_regression, '(out) MajorCollisionFromMinor before forcing ends')
@@ -305,7 +443,9 @@ def run_models(df_all):
 
 
 def main():
-    prepare_missions_all()
+    df_all = load_or_prepare_missions_all()
+    df_started = prepare_forcing_reaction_started(df_all)
+    run_models(df_started)
 
 
 if __name__ == '__main__':

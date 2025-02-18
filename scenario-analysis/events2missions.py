@@ -320,8 +320,8 @@ def convert(filename_events_tsv: str, filename_missions_csv: str) -> None:
 
     for related_event in 'MinorCollision', 'MajorCollisionFromMinor':
         df = add_related_event_counts(df, related_event)
-        assert len(df) == len(df_events)
 
+    assert len(df) == len(df_events)
     df.to_csv(filename_missions_csv, index=False)
 
 
