@@ -60,29 +60,48 @@ public class Forcing {
 
     public static int forcingSinceTimestep = -1;
 
-    private static double computeDistanceToCS(int humanID, int inferiorID, ArrayList<CriticalSection> cses) {
-        assert ! cses.isEmpty();
+    static class InfoFirstCS {
+        int indicesToCS;
+        double distanceToCS;
+        int indicesToCSEnd;
+        double distanceToCSEnd;
 
-        RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(inferiorID);
-        int inferiorPathIndex = rr.getPathIndex();
-        if (inferiorPathIndex == -1) {
-            inferiorPathIndex = 0; // the same pose
-        }
+        InfoFirstCS(int humanID, int inferiorID, ArrayList<CriticalSection> cses) {
+            assert !cses.isEmpty();
 
-        int minPathIndex = Integer.MAX_VALUE;
-        for (CriticalSection cs : cses) {
-            assert cs.getTe1RobotID() == humanID && cs.getTe2RobotID() == inferiorID;
-            minPathIndex = Math.min(minPathIndex, cs.getTe2Start());
-        }
-        if (minPathIndex <= inferiorPathIndex) {
-            return 0.0; // The robot is already on a CS with forcing.
-        }
+            RobotReport rr = TrajectoryEnvelopeCoordinatorSimulation.tec.getRobotReport(inferiorID);
+            int inferiorPathIndex = rr.getPathIndex();
+            if (inferiorPathIndex == -1) {
+                inferiorPathIndex = 0; // the same pose
+            }
 
-        TrajectoryEnvelope teInferior =
-                TrajectoryEnvelopeCoordinatorSimulation.tec.getTracker(inferiorID).getTrajectoryEnvelope();
-        return AdaptiveTrajectoryEnvelopeTrackerRK4.computeDistance(
-                teInferior.getTrajectory(), inferiorPathIndex, minPathIndex
-        );
+            CriticalSection csFirst = null;
+            for (CriticalSection cs : cses) {
+                assert cs.getTe1RobotID() == humanID && cs.getTe2RobotID() == inferiorID;
+                if (csFirst == null || cs.getTe2Start() < csFirst.getTe2Start()) {
+                    csFirst = cs;
+                }
+            }
+            assert csFirst != null;
+
+            TrajectoryEnvelope teInferior =
+                    TrajectoryEnvelopeCoordinatorSimulation.tec.getTracker(inferiorID).getTrajectoryEnvelope();
+
+            indicesToCS = Math.max(0, csFirst.getTe2Start() - inferiorPathIndex);
+            if (indicesToCS == 0) { // The robot is already on a CS with forcing.
+                distanceToCS = 0.0;
+            } else {
+                distanceToCS = AdaptiveTrajectoryEnvelopeTrackerRK4.computeDistance(
+                        teInferior.getTrajectory(), inferiorPathIndex, csFirst.getTe2Start()
+                );
+            }
+
+            indicesToCSEnd = csFirst.getTe2End() - inferiorPathIndex;
+            assert indicesToCSEnd >= 0;
+            distanceToCSEnd = AdaptiveTrajectoryEnvelopeTrackerRK4.computeDistance(
+                    teInferior.getTrajectory(), inferiorPathIndex, csFirst.getTe2End()
+            );
+        }
     }
 
     public static void startManualForcing(int robotID) {
@@ -295,12 +314,15 @@ public class Forcing {
                     } else {
                         robotToIsStopInPast.put(affectedID, isStop);
 
-                        double distanceToCS = computeDistanceToCS(robotID, affectedID, cses);
+                        InfoFirstCS infoFirstCS = new InfoFirstCS(robotID, affectedID, cses);
 
                         new Event.ForcingReactionStarted(
                                 affectedID,
                                 isStop,
-                                (double) Math.round(distanceToCS * 10) / 10,
+                                infoFirstCS.indicesToCS,
+                                infoFirstCS.distanceToCS,
+                                infoFirstCS.indicesToCSEnd,
+                                infoFirstCS.distanceToCSEnd,
                                 Missions.robotIDToMissionLinearizationCCurrent.get(affectedID),
                                 Missions.robotIDToOtherIDToMissionLinearizationDCurrent.get(affectedID).get(robotID)
                         ).write();

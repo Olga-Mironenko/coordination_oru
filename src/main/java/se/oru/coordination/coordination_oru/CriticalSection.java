@@ -1,6 +1,5 @@
 package se.oru.coordination.coordination_oru;
 
-import aima.core.util.datastructure.Pair;
 import org.metacsp.multi.spatioTemporal.paths.Trajectory;
 import org.metacsp.multi.spatioTemporal.paths.TrajectoryEnvelope;
 import se.oru.coordination.coordination_oru.code.VehiclesHashMap;
@@ -227,7 +226,7 @@ public class CriticalSection {
 	class DistanceEstimation {
 		int currentIndex;
 		int goalIndex;
-		int deltaIndexes;
+		int deltaIndices;
 		double distance;
 		double velocity = 0.0;
 		double time;
@@ -246,11 +245,11 @@ public class CriticalSection {
 
 			currentIndex = rr.getPathIndex();
 			goalIndex = currentIndex == -1 ? -1 : (isInferior ? getEnd(robotID) + 1 : getStart(robotID));
-			deltaIndexes = Math.max(0, goalIndex - currentIndex);
+			deltaIndices = Math.max(0, goalIndex - currentIndex);
 
 			Trajectory traj = tec.trackers.get(robotID).traj;
 			distance =
-					deltaIndexes == 0
+					deltaIndices == 0
 							? 0.0
 							: goalIndex == traj.getPoseSteering().length
 							? Double.POSITIVE_INFINITY
@@ -303,7 +302,7 @@ public class CriticalSection {
 		public String toString() {
 			return String.format(
 					"%d pt = %.1f m ≈ %.1f s at %.1f m/s",
-					deltaIndexes, distance, time, velocity
+					deltaIndices, distance, time, velocity
 			);
 		}
 	}

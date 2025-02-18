@@ -106,20 +106,29 @@ public abstract class Event {
 
     public static class ForcingReactionStarted extends Event {
         public boolean isStop;
+        public int indicesToCS;
         public double distanceToCS;
+        public int indicesToCSEnd;
+        public double distanceToCSEnd;
         public ArrayList<Double> linearizationC;
         public ArrayList<Double> linearizationDf;
 
         public ForcingReactionStarted(
                 int robotID,
                 boolean isStop,
+                int indicesToCS,
                 double distanceToCS,
+                int indicesToCSEnd,
+                double distanceToCSEnd,
                 ArrayList<Double> linearizationC,
                 ArrayList<Double> linearizationDf
         ) {
             this.robotID = robotID;
             this.isStop = isStop;
+            this.indicesToCS = indicesToCS;
             this.distanceToCS = distanceToCS;
+            this.indicesToCSEnd = indicesToCSEnd;
+            this.distanceToCSEnd = distanceToCSEnd;
             this.linearizationC = linearizationC;
             this.linearizationDf = linearizationDf;
         }
