@@ -26,7 +26,8 @@ RUNDIRS = '../logs/rundirs'
 # RUNNAME = '20250214_172108_halfway'
 # RUNNAME = '20250214_172108'
 # RUNNAME = '20250215_120817'
-RUNNAME = '20250217_230154_halfway'
+# RUNNAME = '20250217_230154_halfway'
+RUNNAME = '20250218_115818_halfway'
 
 RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # DIRECTORY_DATA = f'data/{RUNNAME}'
@@ -40,6 +41,13 @@ MAP_TO_OPS = {
     1: 2, 6: 2, 10: 2,  # Maps with 2 OPs
     2: 1, 3: 1, 4: 1, 5: 1, 7: 1, 8: 1, 9: 1,  # Maps with 1 OP
 }
+
+PARAMSETS_POD_NEXT = [
+    {'pod_prefix': pod_prefix,
+     'next_n': next_n}
+    for pod_prefix in ("POD C", "POD Df")
+    for next_n in (20, 50, 100, 200, None)
+]
 
 
 def add_derived_columns(df_orig, *, columns_params = None, columns_configuration = None):
@@ -183,41 +191,11 @@ def add_vcurr_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def add_column_pod_next(
-        df: pd.DataFrame, pod_prefix: str = "POD C", next_n: int = 5
-) -> None:
-    """
-    For each row in the dataframe, create a new column named
-    f"{pod_prefix} next {next_n}" computed as follows:
+def make_name_column_pod_next(pod_prefix: str, next_n: int | None) -> str:
+    return f"{pod_prefix} " + (f'next {next_n}' if next_n is not None else 'CS segment with human')
 
-      - Determine the source list from a column:
-          * If pod_prefix starts with "POD C", use the column "event_linearizationC".
-          * If pod_prefix starts with "POD Df", use the column "event_linearizationDf".
-      - Retrieve the row's "V: path index" (i) and "V: no. poses".
-      - If the length of the source list is less than "V: no. poses", pad the list
-        with zeros to reach that length.
-      - If, after padding, the source list does not have an element at index i,
-        throw an error.
-      - Compute the average of the next `next_n` elements (i.e. source_list[i+1:i+1+next_n]).
-        (If the slice is shorter than next_n, average whatever is present. If there are no
-        elements after i, return 0.)
 
-    Args:
-        df: The input DataFrame containing at least the following columns:
-            - "event_linearizationC" or "event_linearizationDf"
-            - "V: path index"
-            - "V: no. poses"
-        pod_prefix: A string like "POD C" or "POD Df" (determines the source column).
-        next_n: The number of subsequent elements to average.
-
-    Returns:
-        A new DataFrame with an extra column named f"{pod_prefix} next {next_n}".
-
-    Raises:
-        ValueError: If the source column is not found or if required columns are missing.
-        IndexError: If, after padding, the index given by "V: path index" does not exist.
-    """
-    # Determine which source column to use based on pod_prefix.
+def add_column_pod_next(df: pd.DataFrame, pod_prefix: str, next_n: int | None) -> None:
     if pod_prefix.startswith("POD C"):
         source_col = "event_linearizationC"
     elif pod_prefix.startswith("POD Df"):
@@ -225,16 +203,10 @@ def add_column_pod_next(
     else:
         raise ValueError("pod_prefix must start with 'POD C' or 'POD Df'.")
 
-    new_col = f"{pod_prefix} next {next_n}"
+    new_col = make_name_column_pod_next(pod_prefix, next_n)
 
-    def compute_next(row: pd.Series) -> Any:
-        # Retrieve the source list.
+    def process_row(row: pd.Series) -> float:
         pod_list = row[source_col]
-        if not isinstance(pod_list, list):
-            assert pd.isna(pod_list), (type(pod_list), pod_list)
-            return pd.NA
-        if not isinstance(pod_list, list):
-            raise TypeError(f"Expected {source_col} to be a list, got {type(pod_list)}.")
 
         i = row["V: path index"]
         if pd.isna(i):
@@ -254,17 +226,18 @@ def add_column_pod_next(
                 f"Index {i} does not exist in {source_col} (length {len(pod_list)})."
             )
 
-        # Compute the slice for the next next_n elements.
-        next_slice = pod_list[i + 1: i + 1 + next_n]
-        if next_slice:
-            avg_value = sum(next_slice) / len(next_slice)
+        if next_n is not None:
+            i_start = i + 1
+            i_end = i + next_n
         else:
-            avg_value = 0
+            i_start = i + int(row['event_indicesToCS'])
+            i_end = i + int(row['event_indicesToCSEnd'])
 
-        return avg_value
+        next_slice = pod_list[i_start : i_end + 1]
+        return 0 if not next_slice else sum(next_slice) / len(next_slice)
 
     # Apply the computation row-wise.
-    df[new_col] = df.apply(compute_next, axis=1)
+    df[new_col] = df.apply(process_row, axis=1)
 
 
 def add_columns_pod_next(df: pd.DataFrame) -> None:
@@ -272,9 +245,8 @@ def add_columns_pod_next(df: pd.DataFrame) -> None:
         if col.startswith('event_linearization'):
             df.loc[:, col] = df[col].apply(lambda x: ast.literal_eval(x) if pd.notna(x) else x)
 
-    for prefix in "POD C", "POD Df":
-        for k in 20, 50, 100, 200:
-            add_column_pod_next(df, prefix, k)
+    for paramset in PARAMSETS_POD_NEXT:
+        add_column_pod_next(df, **paramset)
 
 
 def prepare_forcing_reaction_started(df: pd.DataFrame) -> pd.DataFrame:
@@ -311,11 +283,11 @@ def select_columns_input_output(df: pd.DataFrame) -> pd.DataFrame:
         'V: POD',
         'V0: POD',
         'event_distanceToCS',
+        'event_distanceToCSEnd',
     ]
 
-    for prefix in "POD C", "POD Df":
-        for k in 20, 50, 100, 200:
-            columns_input.append(f'{prefix} next {k}')
+    for paramset in PARAMSETS_POD_NEXT:
+        columns_input.append(make_name_column_pod_next(**paramset))
 
     columns_output = [
         'MajorCollisionFromMinor before forcing ends',
