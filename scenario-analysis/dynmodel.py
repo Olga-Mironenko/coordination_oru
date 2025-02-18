@@ -261,14 +261,19 @@ def prepare_forcing_reaction_started(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def series2values(series: pd.Series) -> np.ndarray:
+    col = series.name
+    assert isinstance(col, str)
+    if col.endswith(': v_current'):
+        return series.replace("~0.0", 0.0).astype(float).values
+    if col.endswith(': distance ToCP, m'):
+        return series.fillna(-1).astype(float).values
+
     dtype = series.dtype
     if dtype == 'bool':
         return series.astype('int').values
     if dtype in ('int64', 'float64'):
         return series.values
     if dtype == 'object':
-        if series.name == 'V: v_current':
-            return series.replace("~0.0", 0.0).astype(float).values
         return series.astype('category').cat.codes
     raise TypeError(f'{dtype} is not supported')
 
@@ -276,14 +281,25 @@ def series2values(series: pd.Series) -> np.ndarray:
 def select_columns_input_output(df: pd.DataFrame) -> pd.DataFrame:
     columns_input = [
         'event_isStop',
-        'i_map',
+
+        # Map features:
         'No. of OPs',
+        'are_bridges',
+
+        # Scenario parameters:
+        'slowness',
+
+        # Current values:
+
         'V: v_current',
         'V0: v_current',
+
         'V: POD',
         'V0: POD',
+
         'event_distanceToCS',
         'event_distanceToCSEnd',
+        'V0: distance ToCP, m',
     ]
 
     for paramset in PARAMSETS_POD_NEXT:
@@ -331,7 +347,7 @@ def evaluate_and_plot_column(df_test, df_predictions, column):
     # save_and_show(fig, f'Actual_vs_Predicted_Values_{name}')
 
 
-def convert_missions_all_into_dfs_model(df_started: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+def convert_df_started_to_train_test(df_started: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     df = select_columns_input_output(df_started)
 
     df_train, df_test = sklearn.model_selection.train_test_split(df, test_size=0.2, random_state=1)
@@ -405,7 +421,7 @@ def run_autogluon(df_train: pd.DataFrame, df_test: pd.DataFrame) -> tuple[list[A
 
 
 def run_models(df_started: pd.DataFrame) -> pd.DataFrame:
-    df_train, df_test = convert_missions_all_into_dfs_model(df_started)
+    df_train, df_test = convert_df_started_to_train_test(df_started)
     df_predictions_regression = run_regression(df_train, df_test)
     show(df_predictions_regression, 'df_predictions_regression')
     evaluate_and_plot_column(df_test, df_predictions_regression, '(out) MajorCollisionFromMinor before forcing ends')
