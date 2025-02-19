@@ -48,6 +48,7 @@ forcings=(
   "no"
   "change of priorities"
   "stops"
+  "50% stops"
 )
 
 # Use variables
