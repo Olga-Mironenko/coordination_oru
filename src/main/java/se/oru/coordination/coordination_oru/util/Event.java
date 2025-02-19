@@ -7,12 +7,15 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializer;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonPrimitive;
+import se.oru.coordination.coordination_oru.CriticalSection;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 // Base class for all events
@@ -23,6 +26,19 @@ public abstract class Event {
                 public JsonElement serialize(Double src, java.lang.reflect.Type typeOfSrc, JsonSerializationContext context) {
                     BigDecimal roundedValue = new BigDecimal(src).setScale(3, RoundingMode.HALF_UP);
                     return new JsonPrimitive(roundedValue);
+                }
+            })
+            .registerTypeAdapter(CriticalSection.class, new JsonSerializer<CriticalSection>() {
+                @Override
+                public JsonElement serialize(CriticalSection src, java.lang.reflect.Type typeOfSrc, JsonSerializationContext context) {
+                    JsonObject jsonObject = new JsonObject();
+                    jsonObject.addProperty("te1Start", src.getTe1Start());
+                    jsonObject.addProperty("te2Start", src.getTe2Start());
+                    jsonObject.addProperty("te1End", src.getTe1End());
+                    jsonObject.addProperty("te2End", src.getTe2End());
+                    jsonObject.addProperty("te1HigherWeight", src.te1HigherWeight.toString());
+                    jsonObject.addProperty("te2HigherWeight", src.te2HigherWeight.toString());
+                    return jsonObject;
                 }
             })
             .disableHtmlEscaping()
@@ -36,15 +52,30 @@ public abstract class Event {
 
     // Convert event to JSON string with correct formatting
     public String toJson() {
-        JsonObject jsonObject = gson.toJsonTree(this).getAsJsonObject();
-
         // Create a new JSON object with "type" first
         JsonObject sortedJson = new JsonObject();
         sortedJson.addProperty("robotID", this.robotID); // Robot ID second
         sortedJson.addProperty("type", getType()); // Add "type" first
 
+        // Flatten `criticalSection` dynamically if it exists in the subclass
+        try {
+            Field detailsField = this.getClass().getDeclaredField("criticalSection");
+            detailsField.setAccessible(true);
+            Object detailsObject = detailsField.get(this);
+
+            if (detailsObject != null) {
+                JsonObject detailsJson = gson.toJsonTree(detailsObject).getAsJsonObject();
+                for (Map.Entry<String, JsonElement> entry : detailsJson.entrySet()) {
+                    sortedJson.add(entry.getKey(), entry.getValue());
+                }
+            }
+        } catch (NoSuchFieldException | IllegalAccessException ignored) {
+            // Do nothing if `details` doesn't exist (other event types)
+        }
+
+        JsonObject jsonObject = gson.toJsonTree(this).getAsJsonObject();
         for (String key : jsonObject.keySet()) {
-            if (! key.equals("robotID") && ! key.equals("type")) {
+            if (! key.equals("robotID") && ! key.equals("type") && ! key.equals("criticalSection")) {
                 sortedJson.add(key, jsonObject.get(key));
             }
         }
@@ -110,6 +141,7 @@ public abstract class Event {
         public double distanceToCS;
         public int indicesToCSEnd;
         public double distanceToCSEnd;
+        public CriticalSection criticalSection;
         public ArrayList<Double> linearizationC;
         public ArrayList<Double> linearizationDf;
 
@@ -120,6 +152,7 @@ public abstract class Event {
                 double distanceToCS,
                 int indicesToCSEnd,
                 double distanceToCSEnd,
+                CriticalSection criticalSection,
                 ArrayList<Double> linearizationC,
                 ArrayList<Double> linearizationDf
         ) {
@@ -129,6 +162,7 @@ public abstract class Event {
             this.distanceToCS = distanceToCS;
             this.indicesToCSEnd = indicesToCSEnd;
             this.distanceToCSEnd = distanceToCSEnd;
+            this.criticalSection = criticalSection;
             this.linearizationC = linearizationC;
             this.linearizationDf = linearizationDf;
         }

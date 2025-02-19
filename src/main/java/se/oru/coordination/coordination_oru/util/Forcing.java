@@ -61,10 +61,11 @@ public class Forcing {
     public static int forcingSinceTimestep = -1;
 
     static class InfoFirstCS {
-        int indicesToCS;
+        int indicesToCS; // TODO: remove it (can be derived from `criticalSection` and path index)
         double distanceToCS;
-        int indicesToCSEnd;
+        int indicesToCSEnd; // TODO: remove it (can be derived from `criticalSection` and path index)
         double distanceToCSEnd;
+        CriticalSection criticalSection;
 
         InfoFirstCS(int humanID, int inferiorID, ArrayList<CriticalSection> cses) {
             assert !cses.isEmpty();
@@ -75,31 +76,30 @@ public class Forcing {
                 inferiorPathIndex = 0; // the same pose
             }
 
-            CriticalSection csFirst = null;
             for (CriticalSection cs : cses) {
                 assert cs.getTe1RobotID() == humanID && cs.getTe2RobotID() == inferiorID;
-                if (csFirst == null || cs.getTe2Start() < csFirst.getTe2Start()) {
-                    csFirst = cs;
+                if (criticalSection == null || cs.getTe2Start() < criticalSection.getTe2Start()) {
+                    criticalSection = cs;
                 }
             }
-            assert csFirst != null;
+            assert criticalSection != null;
 
             TrajectoryEnvelope teInferior =
                     TrajectoryEnvelopeCoordinatorSimulation.tec.getTracker(inferiorID).getTrajectoryEnvelope();
 
-            indicesToCS = Math.max(0, csFirst.getTe2Start() - inferiorPathIndex);
+            indicesToCS = Math.max(0, criticalSection.getTe2Start() - inferiorPathIndex);
             if (indicesToCS == 0) { // The robot is already on a CS with forcing.
                 distanceToCS = 0.0;
             } else {
                 distanceToCS = AdaptiveTrajectoryEnvelopeTrackerRK4.computeDistance(
-                        teInferior.getTrajectory(), inferiorPathIndex, csFirst.getTe2Start()
+                        teInferior.getTrajectory(), inferiorPathIndex, criticalSection.getTe2Start()
                 );
             }
 
-            indicesToCSEnd = csFirst.getTe2End() - inferiorPathIndex;
+            indicesToCSEnd = criticalSection.getTe2End() - inferiorPathIndex;
             assert indicesToCSEnd >= 0;
             distanceToCSEnd = AdaptiveTrajectoryEnvelopeTrackerRK4.computeDistance(
-                    teInferior.getTrajectory(), inferiorPathIndex, csFirst.getTe2End()
+                    teInferior.getTrajectory(), inferiorPathIndex, criticalSection.getTe2End()
             );
         }
     }
@@ -323,6 +323,7 @@ public class Forcing {
                                 infoFirstCS.distanceToCS,
                                 infoFirstCS.indicesToCSEnd,
                                 infoFirstCS.distanceToCSEnd,
+                                infoFirstCS.criticalSection,
                                 Missions.robotIDToMissionLinearizationCCurrent.get(affectedID),
                                 Missions.robotIDToOtherIDToMissionLinearizationDCurrent.get(affectedID).get(robotID)
                         ).write();
