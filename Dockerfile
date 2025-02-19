@@ -34,6 +34,12 @@ WORKDIR /coordination_oru/
 
 ENV DISPLAY=:0
 
+RUN set -eux; \
+    tz=Europe/Stockholm; \
+    ln -snf /usr/share/zoneinfo/"$tz" /etc/localtime; \
+    echo "$tz" >/etc/timezone; \
+    date
+
 CMD ["bash"]
 
 EXPOSE 5900
