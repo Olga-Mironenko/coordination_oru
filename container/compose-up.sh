@@ -21,7 +21,10 @@ rundirs_root=logs/rundirs
 mkdir -p "$rundirs_root"
 export RUNDIRS=$rundirs_root/$date
 mkdir "$RUNDIRS"
-docker compose "${args[@]}" > >(tee /dev/stderr | ansi2txt >logs/compose-up_"$date".log) 2>&1 &
+(
+  git --no-pager log -n1
+  docker compose "${args[@]}"
+) > >(tee /dev/stderr | ansi2txt >logs/compose-up_"$date".log) 2>&1 &
 pid=$!
 
 wait
