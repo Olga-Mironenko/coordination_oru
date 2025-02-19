@@ -27,7 +27,9 @@ RUNDIRS = '../logs/rundirs'
 # RUNNAME = '20250214_172108'
 # RUNNAME = '20250215_120817'
 # RUNNAME = '20250217_230154_halfway'
-RUNNAME = '20250218_115818_halfway'
+# RUNNAME = '20250218_115818_halfway'
+# RUNNAME = '20250218_115818'
+RUNNAME = '20250219_095235_halfway'
 
 RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # DIRECTORY_DATA = f'data/{RUNNAME}'
@@ -240,6 +242,28 @@ def add_column_pod_next(df: pd.DataFrame, pod_prefix: str, next_n: int | None) -
     df[new_col] = df.apply(process_row, axis=1)
 
 
+def add_indices_human_to_cs(df: pd.DataFrame, is_to_end: bool) -> None:
+    def process_row(row: pd.Series) -> float:
+        i = row["V0: path index"]
+        if pd.isna(i):
+            i = 0
+        else:
+            i = int(i)
+
+        if is_to_end:
+            i_end = int(row["event_te1End"])
+            di = i_end - i
+            assert di >= 0
+        else:
+            i_start = int(row['event_te1Start'])
+            di = max(0, i_start - i)
+
+        return di
+
+    # Apply the computation row-wise.
+    df['indicesHumanToCS' + ('End' if is_to_end else '')] = df.apply(process_row, axis=1)
+
+
 def add_columns_pod_next(df: pd.DataFrame) -> None:
     for col in df.columns:
         if col.startswith('event_linearization'):
@@ -255,6 +279,8 @@ def prepare_forcing_reaction_started(df: pd.DataFrame) -> pd.DataFrame:
     df = add_derived_columns(df)
     df = add_vcurr_columns(df)
     add_columns_pod_next(df)
+    for is_to_end in False, True:
+        add_indices_human_to_cs(df, is_to_end=is_to_end)
 
     show(df[pd.isna(df['V: v_current'])], 'without v_current')
     return df
@@ -299,7 +325,9 @@ def select_columns_input_output(df: pd.DataFrame) -> pd.DataFrame:
 
         'event_distanceToCS',
         'event_distanceToCSEnd',
-        'V0: distance ToCP, m',
+        #'V0: distance ToCP, m'  # Note: It's computed BEFORE the forcing.
+        'indicesHumanToCS',
+        'indicesHumanToCSEnd',
     ]
 
     for paramset in PARAMSETS_POD_NEXT:
