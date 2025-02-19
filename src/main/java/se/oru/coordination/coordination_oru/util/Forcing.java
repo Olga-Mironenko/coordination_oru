@@ -62,9 +62,9 @@ public class Forcing {
 
     static class InfoFirstCS {
         int indicesToCS; // TODO: remove it (can be derived from `criticalSection` and path index)
-        double distanceToCS;
+        double distanceToCS; // TODO: remove it (can be derived from `criticalSection` and path index)
         int indicesToCSEnd; // TODO: remove it (can be derived from `criticalSection` and path index)
-        double distanceToCSEnd;
+        double distanceToCSEnd; // TODO: remove it (can be derived from `criticalSection` and path index)
         CriticalSection criticalSection;
 
         InfoFirstCS(int humanID, int inferiorID, ArrayList<CriticalSection> cses) {
@@ -316,6 +316,10 @@ public class Forcing {
 
                         InfoFirstCS infoFirstCS = new InfoFirstCS(robotID, affectedID, cses);
 
+                        AdaptiveTrajectoryEnvelopeTrackerRK4 trackerHuman = (AdaptiveTrajectoryEnvelopeTrackerRK4) (
+                                TrajectoryEnvelopeCoordinatorSimulation.tec.getTracker(robotID)
+                        );
+
                         new Event.ForcingReactionStarted(
                                 affectedID,
                                 isStop,
@@ -324,6 +328,7 @@ public class Forcing {
                                 infoFirstCS.indicesToCSEnd,
                                 infoFirstCS.distanceToCSEnd,
                                 infoFirstCS.criticalSection,
+                                trackerHuman.distanceToCP, // it's outdated in `BrowserVisualization.pretable`
                                 Missions.robotIDToMissionLinearizationCCurrent.get(affectedID),
                                 Missions.robotIDToOtherIDToMissionLinearizationDCurrent.get(affectedID).get(robotID)
                         ).write();

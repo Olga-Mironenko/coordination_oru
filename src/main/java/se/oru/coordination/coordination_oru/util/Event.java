@@ -142,6 +142,7 @@ public abstract class Event {
         public int indicesToCSEnd;
         public double distanceToCSEnd;
         public CriticalSection criticalSection;
+        public double distanceToCPHuman;
         public ArrayList<Double> linearizationC;
         public ArrayList<Double> linearizationDf;
 
@@ -153,6 +154,7 @@ public abstract class Event {
                 int indicesToCSEnd,
                 double distanceToCSEnd,
                 CriticalSection criticalSection,
+                double distanceToCP,
                 ArrayList<Double> linearizationC,
                 ArrayList<Double> linearizationDf
         ) {
@@ -163,6 +165,7 @@ public abstract class Event {
             this.indicesToCSEnd = indicesToCSEnd;
             this.distanceToCSEnd = distanceToCSEnd;
             this.criticalSection = criticalSection;
+            this.distanceToCPHuman = distanceToCP;
             this.linearizationC = linearizationC;
             this.linearizationDf = linearizationDf;
         }
