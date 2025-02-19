@@ -29,8 +29,8 @@ positions=({1..10})
 #  '2024-11-22_11:27:17_without_bridges'
 #)
 dirs_maps=(  # 3 robots
-  '2024-11-28_13:19:18_without_bridges'
-  '2024-11-28_13:17:39_with_bridges'
+  '3_without_bridges'  # '2024-11-28_13:19:18_without_bridges'
+  '3_with_bridges'  # '2024-11-28_13:17:39_with_bridges'
 )
 
 passhums=(
@@ -56,7 +56,7 @@ for i_map in "${indexes_maps[@]}"; do
   for position in "${positions[@]}"; do
     for dir_maps in "${dirs_maps[@]}"; do
       filename_simple=map-generator/generated-maps/$dir_maps/scenario$i_map-$position.json
-      filename=$(cd "$root"/..; realpath --canonicalize-existing --relative-to=. "$filename_simple")
+      filename=$(cd "$root"/..; realpath --no-symlinks --canonicalize-existing --relative-to=. "$filename_simple")
 
       for slowness in "${slownesses[@]}"; do
         if [[ $dir_maps = *_without_bridges ]] && [ "$slowness" = 'with rerouting' ]; then
