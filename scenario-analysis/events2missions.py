@@ -18,6 +18,7 @@ Row = Dict[str, Any]
 Mission = List[Row]
 MissionsDict = Dict[str, List[Mission]]
 
+ID_HUMAN = 0
 WIDTH_CONSOLE = shutil.get_terminal_size().columns
 
 
@@ -229,7 +230,7 @@ def add_related_event_counts(
 
     # --- Step 2. Create helper columns for counting related events ---
     # Mark 1 for rows where event_type equals the provided related_event_type.
-    df["is_related_event"] = (df["event_type"] == related_event_type).astype(int)
+    df["is_related_event"] = ((df["event_type"] == related_event_type) & (df["event_otherID"] == ID_HUMAN)).astype(int)
 
     # Cumulative counts within each mission and for each robot.
     cum_mission_col = f"cum_{related_event_type}_mission"
