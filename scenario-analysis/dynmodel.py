@@ -30,7 +30,8 @@ RUNDIRS = '../logs/rundirs'
 # RUNNAME = '20250218_115818_halfway'
 # RUNNAME = '20250218_115818'
 # RUNNAME = '20250219_095235_halfway'
-RUNNAME = '20250219_192637_halfway'
+# RUNNAME = '20250219_192637_halfway'
+RUNNAME = '20250220_094622_halfway'
 
 RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # DIRECTORY_DATA = f'data/{RUNNAME}'
@@ -326,7 +327,8 @@ def select_columns_input_output(df: pd.DataFrame) -> pd.DataFrame:
 
         'event_distanceToCS',
         'event_distanceToCSEnd',
-        #'V0: distance ToCP, m'  # Note: It's computed BEFORE the forcing.
+
+        'event_distanceHumanToCP',  # Note: 'V0: distance ToCP, m' is computed BEFORE the forcing.
         'indicesHumanToCS',
         'indicesHumanToCSEnd',
     ]
