@@ -320,6 +320,12 @@ public class Forcing {
                                 TrajectoryEnvelopeCoordinatorSimulation.tec.getTracker(robotID)
                         );
 
+                        // Note: In `BrowserVisualization.pretable`, it's outdated.
+                        double distanceHumanToCP = trackerHuman.distanceToCP;
+                        if (distanceHumanToCP == Double.POSITIVE_INFINITY) {
+                            distanceHumanToCP = -1.0;
+                        }
+
                         new Event.ForcingReactionStarted(
                                 affectedID,
                                 isStop,
@@ -328,7 +334,7 @@ public class Forcing {
                                 infoFirstCS.indicesToCSEnd,
                                 infoFirstCS.distanceToCSEnd,
                                 infoFirstCS.criticalSection,
-                                trackerHuman.distanceToCP, // it's outdated in `BrowserVisualization.pretable`
+                                distanceHumanToCP,
                                 Missions.robotIDToMissionLinearizationCCurrent.get(affectedID),
                                 Missions.robotIDToOtherIDToMissionLinearizationDCurrent.get(affectedID).get(robotID)
                         ).write();
