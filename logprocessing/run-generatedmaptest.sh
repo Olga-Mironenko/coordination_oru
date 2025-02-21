@@ -90,7 +90,7 @@ done
 
 echo "Scenarios:"
 printf -- "- %s\n" "${scenarios[@]}" | cat -n
-exit
+#exit
 
 trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT TERM
 

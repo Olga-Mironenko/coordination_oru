@@ -7,13 +7,15 @@ set -eux -o pipefail
 root=$(dirname "$0")
 prefixer=$root/prefixer.sh
 
-"$prefixer" xvfb "$root"/xvfb.sh &
-sleep 1
+if [ "${IS_VISUALIZATION}" ]; then
+  "$prefixer" xvfb "$root"/xvfb.sh &
+  sleep 1
 
-"$prefixer" x11vnc "$root"/x11vnc.sh &
-"$prefixer" fluxbox fluxbox &
-"$prefixer" chromium "$root"/chromium.sh --start-maximized &
-sleep 1
+  "$prefixer" x11vnc "$root"/x11vnc.sh &
+  "$prefixer" fluxbox fluxbox &
+  "$prefixer" chromium "$root"/chromium.sh --start-maximized &
+  sleep 1
+fi
 
 "$prefixer" build-planners "$root"/build-planners.sh
 
