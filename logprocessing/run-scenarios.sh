@@ -15,5 +15,5 @@ trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT TERM
 root=$(dirname "$0")
 set -x
 for scenario in "${scenarios[@]}"; do
-  env SCENARIO="$scenario" "$root"/run-demo.sh "$demo" "$timeout" || echo "WARNING: exit $?"
+  env SCENARIO="$scenario" "$root"/run-scenario.sh "$demo" "$timeout" || echo "WARNING: exit $?"
 done

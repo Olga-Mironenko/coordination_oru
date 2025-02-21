@@ -9,6 +9,7 @@ import se.oru.coordination.coordination_oru.RobotReport;
 import se.oru.coordination.coordination_oru.TrajectoryEnvelopeTrackerDummy;
 import se.oru.coordination.coordination_oru.simulation2D.AdaptiveTrajectoryEnvelopeTrackerRK4;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.tests.util.Demo;
 import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.Containerization;
 import se.oru.coordination.coordination_oru.util.Forcing;
@@ -312,6 +313,12 @@ public abstract class AbstractVehicle {
                     Path current = Path.of(rundirCurrent);
                     Files.deleteIfExists(current);
                     Files.createSymbolicLink(current, Path.of(subdir));
+                }
+
+                if (Containerization.FILENAME_LOG != null) {
+                    String filenameLogRundir = dir + "/scenario.log";
+                    int codeLn = Demo.runProcess("ln", Containerization.FILENAME_LOG, filenameLogRundir);
+                    assert codeLn == 0;
                 }
 
                 isRundirPrepared = true;
