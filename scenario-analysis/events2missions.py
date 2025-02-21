@@ -228,6 +228,9 @@ def add_related_event_counts(
 
     # (Step 1: extracted into `sort_df`.)
 
+    if 'event_otherID' not in df:
+        df['event_otherID'] = pd.NA
+
     # --- Step 2. Create helper columns for counting related events ---
     # Mark 1 for rows where event_type equals the provided related_event_type.
     df["is_related_event"] = ((df["event_type"] == related_event_type) & (df["event_otherID"] == ID_HUMAN)).astype(int)
