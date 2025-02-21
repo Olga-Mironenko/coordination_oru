@@ -117,7 +117,10 @@ public class GeneratedMapTest {
 //                      "map-generator/generated-maps/3_without_bridges/scenario1-1.json, passhum 0, slowness no, forcing change of priorities"
 //                      "map-generator/generated-maps/3_without_bridges/scenario9-1.json, passhum 0, slowness no, forcing change of priorities"
 //                      "map-generator_generated-maps_3_without_bridges_scenario7-9.json,_passhum_0,_slowness_no,_forcing_stops"
-                      "map-generator/generated-maps/3_without_bridges/scenario7-1.json, passhum 0, slowness without rerouting, forcing no"
+//                      "map-generator/generated-maps/3_without_bridges/scenario7-1.json, passhum 0, slowness without rerouting, forcing no"
+//                      "map-generator/generated-maps/3_without_bridges/scenario7-3.json, passhum 0, slowness no, forcing change of priorities"
+//                      "map-generator/generated-maps/3_without_bridges/scenario7-3.json, passhum 0, slowness no, forcing stops 50% with forcing 50%"
+                      "map-generator/generated-maps/3_without_bridges/scenario7-3.json, passhum 0, slowness no, forcing stops 50%"
             );
         }
         scenarioString = replaceUnderscoreAfterFirstComma(scenarioString);
@@ -172,8 +175,13 @@ public class GeneratedMapTest {
                 Forcing.probabilityStopNotChangeOfPriorities = 1;
                 break;
 
-            case "50% stops":
+            case "stops 50%":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
+                Forcing.probabilityStopNotChangeOfPriorities = 0.5;
+                break;
+
+            case "stops 50% with forcing 50%":
+                AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 0.5;
                 Forcing.probabilityStopNotChangeOfPriorities = 0.5;
                 break;
 

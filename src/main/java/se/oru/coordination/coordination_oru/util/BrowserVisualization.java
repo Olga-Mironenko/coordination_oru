@@ -628,8 +628,8 @@ public class BrowserVisualization implements FleetVisualization {
                             rr.getPose().getX(), rr.getPose().getY(),
                             rr.getDistanceTraveled()
                     ));
-					thead1.append(" |8 Tracker state (current mission)");
-					theadHints.append(" |8 ");
+					thead1.append(" |9 Tracker state (current mission)");
+					theadHints.append(" |9 ");
 					thead2.append(" | position<br>(x, y), m | traveled,<br>m");
 
 					Double pod = Missions.getPodC(id, rr.getPathIndex());
@@ -793,6 +793,7 @@ public class BrowserVisualization implements FleetVisualization {
 				CriticalSection.isCanPassFirstActiveAut));
 		map.put("isRacingThroughCrossroadAllowed", String.format("%b", AdaptiveTrajectoryEnvelopeTrackerRK4.isRacingThroughCrossroadAllowed));
 		map.put("probabilitySlowingDownForHuman", String.valueOf(AdaptiveTrajectoryEnvelopeTrackerRK4.probabilitySlowingDownForHuman));
+		map.put("probabilityForcingForHuman", String.valueOf(AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman));
 
 		if (HumanControl.status != null) {
 			map.put("Human control status", HumanControl.status);

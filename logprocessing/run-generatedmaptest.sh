@@ -48,7 +48,8 @@ forcings=(
   "no"
   "change of priorities"
   "stops"
-  "50% stops"
+  "stops 50%"
+  "stops 50% with forcing 50%"
 )
 
 # Use variables
@@ -89,7 +90,7 @@ done
 
 echo "Scenarios:"
 printf -- "- %s\n" "${scenarios[@]}" | cat -n
-#exit
+exit
 
 trap 'pkill -f "^[^ ]*java .*coordination_oru"' INT TERM
 
