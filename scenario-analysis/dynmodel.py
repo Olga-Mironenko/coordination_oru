@@ -1,5 +1,6 @@
 import ast
 import os
+import subprocess
 import warnings
 from typing import Any
 
@@ -32,7 +33,8 @@ RUNDIRS = '../logs/rundirs'
 # RUNNAME = '20250219_095235_halfway'
 # RUNNAME = '20250219_192637_halfway'
 # RUNNAME = '20250220_094622_halfway'
-RUNNAME = '20250220_094622'
+# RUNNAME = '20250220_094622'
+RUNNAME = '20250221_172706'
 
 RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # DIRECTORY_DATA = f'data/{RUNNAME}'
@@ -59,9 +61,9 @@ def add_derived_columns(df_orig, *, columns_params = None, columns_configuration
     df_id_pre = df_orig['Scenario ID'].str.extract(r'^(?P<filename>.*?)(?P<params>, .*)$', expand=True)
 
     df_params = pd.concat([
-        df_id_pre['params'].str.extract(r', passhum (?P<passhum>0|1)\b', expand=True).astype(int).astype(bool),
-        df_id_pre['params'].str.extract(r', slowness (?P<slowness>[^,]+)\b', expand=True),
-        df_id_pre['params'].str.extract(r', forcing (?P<forcing>[^,]+)\b', expand=True),
+        df_id_pre['params'].str.extract(r', passhum (?P<passhum>0|1)(?:$|(?=,))', expand=True).astype(int).astype(bool),
+        df_id_pre['params'].str.extract(r', slowness (?P<slowness>[^,]+)', expand=True),
+        df_id_pre['params'].str.extract(r', forcing (?P<forcing>[^,]+)', expand=True),
     ], axis=1)
     if columns_params is not None:
         assert list(df_params.columns) == columns_params  # TODO: set `COLUMNS_PARAMS`
@@ -144,6 +146,8 @@ def prepare_missions_all():
                 df = prepare()
             except Exception as e:
                 print(dir_scenario, e)
+                subprocess.run(['sed', '-n', '/^Exception in /,/^> Task :run/p', f'{dir_scenario}/scenario.log'],
+                               check=True)
                 continue
 
         dfs.append(df)
