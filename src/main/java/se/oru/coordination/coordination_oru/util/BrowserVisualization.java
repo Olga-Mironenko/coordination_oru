@@ -340,10 +340,9 @@ public class BrowserVisualization implements FleetVisualization {
 
 		long h = seconds;
 
-		return String.format(
-				"%d:%02d:%02d%s", h, m, s,
-				String.format("%.1f", (millis % 1000) / 1000.0).replace("0.", ".")
-		);
+		long ms = millis % 1000;
+
+		return String.format("%d:%02d:%04.1f", h, m, s + ms / 1000.0);
 	}
 
 	protected String center(Object object) {
