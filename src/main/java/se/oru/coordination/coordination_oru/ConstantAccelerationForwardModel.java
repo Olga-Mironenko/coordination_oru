@@ -48,20 +48,23 @@ public class ConstantAccelerationForwardModel implements ForwardModel {
 		return true;
 	}
 
-	private int getPathIndex(TrajectoryEnvelope te, State auxState) {
+	private int getPathIndexLowerBound(TrajectoryEnvelope te, State auxState) {
 		if (auxState == null) return -1;
 		Pose pose = null;
 		int currentPathIndex = -1;
 		double accumulatedDist = 0.0;
 		Trajectory traj = te.getTrajectory();
 		Pose[] poses = traj.getPose();
+		if (auxState.getPosition() == 0) {
+			return 0;
+		}
 		for (int i = 0; i < poses.length-1; i++) {
 			double deltaS = poses[i].distanceTo(poses[i+1]);
 			accumulatedDist += deltaS;
-			if (accumulatedDist > auxState.getPosition()) {
+			if (accumulatedDist >= auxState.getPosition()) {
 				double ratio = 1.0-(accumulatedDist-auxState.getPosition())/deltaS;
 				pose = poses[i].interpolate(poses[i+1], ratio);
-				currentPathIndex = i;
+				currentPathIndex = i + 1;
 				break;
 			}
 		}
@@ -94,14 +97,14 @@ public class ConstantAccelerationForwardModel implements ForwardModel {
 		while (state.getVelocity() > 0) {
 			if (AdaptiveTrajectoryEnvelopeTrackerRK4.isEnabledForTe(te)) {
 				AdaptiveTrajectoryEnvelopeTrackerRK4.integrateRK4(state,
-						time, deltaTime, true, maxVel, 1.0, maxAccel * 0.9, te.getRobotID());
+						time, deltaTime, true, maxVel, 1.0, maxAccel, te.getRobotID());
 			} else {
 				TrajectoryEnvelopeTrackerRK4.integrateRK4(state,
-						time, deltaTime, true, maxVel, 1.0, maxAccel * 0.9);
+						time, deltaTime, true, maxVel, 1.0, maxAccel);
 			}
 			time += deltaTime;
 		}
-		return getPathIndex(te,state);
+		return getPathIndexLowerBound(te,state);
 	}
 
 }

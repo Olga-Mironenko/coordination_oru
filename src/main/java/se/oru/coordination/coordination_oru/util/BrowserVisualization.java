@@ -624,12 +624,13 @@ public class BrowserVisualization implements FleetVisualization {
 				thead2.append(" | traveled<br>total, m | no.<br>missions | blocked");
 
 				if (isExtendedText) {
+					thead1.append(" |9 Tracker state (current mission)");
+					theadHints.append(" |9 ");
+
                     row.append(String.format(" | (%.1f, %.1f) | %.1f",
                             rr.getPose().getX(), rr.getPose().getY(),
                             rr.getDistanceTraveled()
                     ));
-					thead1.append(" |9 Tracker state (current mission)");
-					theadHints.append(" |9 ");
 					thead2.append(" | position<br>(x, y), m | traveled,<br>m");
 
 					Double pod = Missions.getPodC(id, rr.getPathIndex());
@@ -647,9 +648,14 @@ public class BrowserVisualization implements FleetVisualization {
 							pod == null ? "" : String.format("%.3f", pod),
 							positionToSlowDown == null ? "" : String.format("%.1f", positionToSlowDown),
                             Double.isInfinite(distanceToCP) ? "" : String.format("%.1f", distanceToCP),
+//							tec.earliestStoppingPointsLast.getOrDefault(id, -1),
                             rr.statusString == null ? "-" : rr.statusString.replace("STOPPED_AT_CP", "STOP@CP")
                     ));
-					thead2.append(" | path<br>index | no.<br>poses | CP<br>(index) | POD | posTo<br>Slow, m | distance<br>ToCP, m | status");
+					thead2.append(
+							" | path<br>index | no.<br>poses | CP<br>(index) | POD | posTo<br>Slow, m | distance<br>ToCP, m" +
+//									" | earl<br>StP, m" +
+									" | status"
+					);
 				}
 			}
 

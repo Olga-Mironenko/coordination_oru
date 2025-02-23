@@ -1926,6 +1926,8 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 		}
 	}
 
+	public HashMap<Integer,Integer> earliestStoppingPointsLast = new HashMap<>();
+
 	/**
 	 * //? Process all critical sections (heavy logic).
 	 */
@@ -1957,6 +1959,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 							)
 					);
 				}
+			earliestStoppingPointsLast = earliestStoppingPoints;
 
 			depsToCS.clear();
 			csToDep.clear();

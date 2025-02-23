@@ -1096,6 +1096,8 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		if (! slowingDown && stateTemp.getPosition() > positionToSlowDown) {
 			slowingDown = true;
 			integrateRK4(state, elapsedTrackingTime, deltaTime, slowingDown, maxVelocity, dampening, maxAcceleration, te.getRobotID());
+			// "assert state.getPosition() <= positionToSlowDown" -- not always: what we need is being slowing down
+			// at `positionToSlowDown`.
 		} else {
 			state = stateTemp;
 		}
