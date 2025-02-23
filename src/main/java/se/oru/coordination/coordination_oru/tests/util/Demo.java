@@ -37,12 +37,12 @@ public abstract class Demo {
     public void exec() {
         checkForAssertions();
 
-        System.setProperty("java.awt.headless", "true"); // https://stackoverflow.com/a/21309150
-
         if (! Containerization.IS_CONTAINER) {
             long pid = ProcessHandle.current().pid();
 //        runProcess("renice --priority=-5 --pid " + pid);
 //        runProcess("ionice --class=realtime --classdata=1 --pid " + pid);
+        } else {
+            System.setProperty("java.awt.headless", "true"); // https://stackoverflow.com/a/21309150
         }
 
         Printer.resetTime();
