@@ -34,7 +34,8 @@ RUNDIRS = '../logs/rundirs'
 # RUNNAME = '20250219_192637_halfway'
 # RUNNAME = '20250220_094622_halfway'
 # RUNNAME = '20250220_094622'
-RUNNAME = '20250221_172706'
+# RUNNAME = '20250221_172706'
+RUNNAME = '20250223_150717_halfway'
 
 RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # DIRECTORY_DATA = f'data/{RUNNAME}'
@@ -130,7 +131,7 @@ def prepare_missions_all():
     is_try = True
 
     dirs = []
-    for name in os.listdir(RUNDIR):
+    for name in sorted(os.listdir(RUNDIR)):
         dir_scenario = f'{RUNDIR}/{name}'
         if os.path.isdir(dir_scenario):
             dirs.append(dir_scenario)
