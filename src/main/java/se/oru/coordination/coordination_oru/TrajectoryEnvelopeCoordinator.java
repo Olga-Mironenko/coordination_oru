@@ -2021,6 +2021,7 @@ public abstract class TrajectoryEnvelopeCoordinator extends AbstractTrajectoryEn
 						}
 					}
 
+					createAParkingDep = true; // because otherwise, `is1Before2` doesn't find a dependency and
 					if (createAParkingDep) {
 						int drivingCSEnd = drivingTracker.getTrajectoryEnvelope().getRobotID() == cs.getTe1().getRobotID() ? cs.getTe1End() : cs.getTe2End();
 						metaCSPLogger.finest("Robot" + drivingTracker.getTrajectoryEnvelope().getRobotID() + " is parked, so Robot" + waitingTracker.getTrajectoryEnvelope().getRobotID() + " will have to wait");

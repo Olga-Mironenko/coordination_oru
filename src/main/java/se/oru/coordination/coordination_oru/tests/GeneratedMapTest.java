@@ -125,7 +125,8 @@ public class GeneratedMapTest {
 //                      "map-generator_generated-maps_3_with_bridges_scenario2-1.json,_passhum_0,_slowness_with_rerouting,_forcing_stops_50%_with_forcing_50%"
 //                      "map-generator_generated-maps_3_without_bridges_scenario9-4.json,_passhum_0,_slowness_no,_forcing_stops_50%_with_forcing_50%"
 //                      "map-generator_generated-maps_3_without_bridges_scenario9-4.json,_passhum_0,_slowness_no,_forcing_stops_50%_with_forcing_50%"
-                      "map-generator_generated-maps_3_without_bridges_scenario9-10.json,_passhum_0,_slowness_no,_forcing_stops_50%_with_forcing_50%"
+//                      "map-generator_generated-maps_3_without_bridges_scenario9-10.json,_passhum_0,_slowness_no,_forcing_stops_50%_with_forcing_50%"
+                      "map-generator_generated-maps_3_without_bridges_scenario9-4.json,_passhum_0,_slowness_no,_forcing_stops_50%"
             );
         }
         scenarioString = replaceUnderscoreAfterFirstComma(scenarioString);
@@ -280,6 +281,9 @@ public class GeneratedMapTest {
         tec.setUseInternalCriticalPoints(false);
         tec.setYieldIfParking(true);
         tec.setBreakDeadlocks(true, false, false);
+//        tec.setBreakDeadlocks(false, true, true); // forcing doesn't work
+//        tec.setBreakDeadlocks(false, true, false); // forcing doesn't work
+//        tec.setBreakDeadlocks(false, false, true); // forcing doesn't work
 
         var viz = new BrowserVisualization();
         double resolution = Missions.getDynamicMap().resolution;
