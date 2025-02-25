@@ -126,7 +126,10 @@ public class GeneratedMapTest {
 //                      "map-generator_generated-maps_3_without_bridges_scenario9-4.json,_passhum_0,_slowness_no,_forcing_stops_50%_with_forcing_50%"
 //                      "map-generator_generated-maps_3_without_bridges_scenario9-4.json,_passhum_0,_slowness_no,_forcing_stops_50%_with_forcing_50%"
 //                      "map-generator_generated-maps_3_without_bridges_scenario9-10.json,_passhum_0,_slowness_no,_forcing_stops_50%_with_forcing_50%"
-                      "map-generator_generated-maps_3_without_bridges_scenario9-4.json,_passhum_0,_slowness_no,_forcing_stops_50%"
+//                      "map-generator_generated-maps_3_without_bridges_scenario9-4.json,_passhum_0,_slowness_no,_forcing_stops_50%"
+//                      "map-generator/generated-maps/3_with_bridges/scenario1-1.json, passhum 0, slowness with rerouting, forcing stops 50% with forcing 50%"
+//                      "map-generator_generated-maps_3_with_bridges_scenario4-9.json,_passhum_0,_slowness_with_rerouting,_forcing_change_of_priorities"
+                      "map-generator_generated-maps_3_with_bridges_scenario4-9.json,_passhum_0,_slowness_with_rerouting,_forcing_stops_50%"
             );
         }
         scenarioString = replaceUnderscoreAfterFirstComma(scenarioString);

@@ -35,7 +35,8 @@ RUNDIRS = '../logs/rundirs'
 # RUNNAME = '20250220_094622_halfway'
 # RUNNAME = '20250220_094622'
 # RUNNAME = '20250221_172706'
-RUNNAME = '20250223_150717_halfway'
+# RUNNAME = '20250223_150717_halfway'
+RUNNAME = '20250223_150717'
 
 RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # DIRECTORY_DATA = f'data/{RUNNAME}'
@@ -147,6 +148,8 @@ def prepare_missions_all():
                 df = prepare()
             except Exception as e:
                 print(dir_scenario, e)
+                subprocess.run(['grep', '^Time passed (sim.)', f'{dir_scenario}/0.csv'],
+                               check=True)
                 subprocess.run(['sed', '-n', '/^Exception in /,/^> Task :run/p', f'{dir_scenario}/scenario.log'],
                                check=True)
                 continue
@@ -426,6 +429,7 @@ def run_autogluon(df_train: pd.DataFrame, df_test: pd.DataFrame) -> tuple[list[A
     for column in columns_output:
         print(f'{column=}:')
         df_train_predictor = pd.concat([X_train, y_train[[column]]], axis=1)
+        preset = 'medium'
 
         predictor = autogluon.tabular.TabularPredictor(
             label=column,
@@ -433,7 +437,7 @@ def run_autogluon(df_train: pd.DataFrame, df_test: pd.DataFrame) -> tuple[list[A
             problem_type='regression',
         ).fit(
             df_train_predictor,
-            presets='medium',
+            presets=preset,
             hyperparameters={
                 'GBM': {},  # LightGBM (TODO: something like `GBMLarge`)
                 'XGB': {},  # XGBoost
@@ -452,18 +456,28 @@ def run_autogluon(df_train: pd.DataFrame, df_test: pd.DataFrame) -> tuple[list[A
         # Leaderboard - Display a table of different models and their performance
         df_test_predictor = pd.concat([X_test, y_test[[column]]], axis=1)
         leaderboard = predictor.leaderboard(df_test_predictor, silent=True)
-        show(leaderboard, f'Leaderboard for {column}')
+        process_leaderboard(leaderboard, RUNDIR, column, preset)
 
     return predictors, df_predictions
+
+
+def process_leaderboard(leaderboard, rundir, column, preset):
+    leaderboard = leaderboard.sort_values(by="score_val", ascending=False).round(3)
+    title = f'Leaderboard for {column} ({preset})'
+    show(leaderboard, title)
+    r2 = leaderboard.iloc[0, 1]
+    leaderboard.to_csv(f'{rundir}/{title} (score_test: {r2:}).csv', index=False)
+    return leaderboard
 
 
 def run_models(df_started: pd.DataFrame) -> pd.DataFrame:
     df_train, df_test = convert_df_started_to_train_test(df_started)
     df_predictions_regression = run_regression(df_train, df_test)
     show(df_predictions_regression, 'df_predictions_regression')
-    evaluate_and_plot_column(df_test, df_predictions_regression, '(out) MajorCollisionFromMinor before forcing ends')
 
     predictors, df_predictions_autogluon = run_autogluon(df_train, df_test)
+    evaluate_and_plot_column(df_test, df_predictions_autogluon, '(out) MajorCollisionFromMinor before forcing ends')
+
     return df_predictions_autogluon
 
 
