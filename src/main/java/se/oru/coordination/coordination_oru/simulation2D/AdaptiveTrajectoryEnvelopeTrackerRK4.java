@@ -897,24 +897,26 @@ public abstract class AdaptiveTrajectoryEnvelopeTrackerRK4 extends AbstractTraje
 		if (! isCautious) {
 			if (isCautiousSituation()) {
 				isCautious = true;
-				new Event.CautiousStarted(vehicle.getID()).write();
 
 				assert deltaMaxVelocityCautious <= 0;
 				// if max velocity isn't to be increased, then it's OK to keep the same `slowDownProfile`
 
 				assert maxVelocityBeforeCautious == null;
 				maxVelocityBeforeCautious = vehicle.getMaxVelocity();
-				vehicle.setMaxVelocity(Math.max(
+				double maxVelocityNew = Math.max(
 						minMaxVelocityCautious,
 						vehicle.getMaxVelocity() + deltaMaxVelocityCautious
-				));
+				);
+
+				new Event.CautiousStarted(vehicle.getID(), maxVelocityNew, maxVelocityBeforeCautious).write();
+				vehicle.setMaxVelocity(maxVelocityNew);
 			}
 		} else {
 			if (! isCautiousSituation()) {
 				isCautious = false;
-				new Event.CautiousFinished(vehicle.getID()).write();
 
 				assert maxVelocityBeforeCautious != null;
+				new Event.CautiousFinished(vehicle.getID(), maxVelocityBeforeCautious, vehicle.getMaxVelocity()).write();
 				vehicle.setMaxVelocity(maxVelocityBeforeCautious);
 				maxVelocityBeforeCautious = null;
 			}

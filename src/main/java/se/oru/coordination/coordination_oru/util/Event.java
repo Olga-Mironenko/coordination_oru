@@ -213,14 +213,24 @@ public abstract class Event {
     }
 
     public static class CautiousStarted extends Event {
-        public CautiousStarted(int robotID) {
+        public double maxVelocityNew;
+        public double maxVelocityOld;
+
+        public CautiousStarted(int robotID, double maxVelocityNew, double maxVelocityOld) {
             this.robotID = robotID;
+                this.maxVelocityNew = maxVelocityNew;
+                this.maxVelocityOld = maxVelocityOld;
         }
     }
 
     public static class CautiousFinished extends Event {
-        public CautiousFinished(int robotID) {
+        public double maxVelocityNew;
+        public double maxVelocityOld;
+
+        public CautiousFinished(int robotID, double maxVelocityNew, double maxVelocityOld) {
             this.robotID = robotID;
+            this.maxVelocityNew = maxVelocityNew;
+            this.maxVelocityOld = maxVelocityOld;
         }
     }
 }
