@@ -44,6 +44,7 @@ RUNDIR = f'{RUNDIRS}/{RUNNAME}'
 # os.makedirs(DIRECTORY_DATA, exist_ok=True)
 
 FILENAME_MISSIONS_ALL = f'{RUNDIR}/missions_all.csv'
+FILENAME_DF_TEST_INPUT = f'{RUNDIR}/df_test_input.csv'
 
 
 # Dictionary to map Map IDs to the number of OPs
@@ -398,9 +399,17 @@ def convert_df_started_to_train_test(df_started: pd.DataFrame) -> tuple[pd.DataF
     return df_train, df_test
 
 
+def select_columns_input(df):
+    return [col for col in df.columns if col.startswith('(in) ')]
+
+
+def select_columns_output(df):
+    return [col for col in df.columns if col.startswith('(out) ')]
+
+
 def split_df_to_X_y(df):
-    columns_input_df = [col for col in df.columns if col.startswith('(in) ')]
-    columns_output_df = [col for col in df.columns if col.startswith('(out) ')]
+    columns_input_df = select_columns_input(df)
+    columns_output_df = select_columns_output(df)
     assert set(columns_input_df) | set(columns_output_df) == set(df.columns)
 
     X = df[columns_input_df]
@@ -426,7 +435,7 @@ def run_autogluon(df_train: pd.DataFrame, df_test: pd.DataFrame) -> tuple[list[A
     # Train AutoGluon models
     predictors = []
     df_predictions = pd.DataFrame()
-    columns_output = [col for col in df_train.columns if col.startswith('(out) ')]
+    columns_output = select_columns_output(df_train)
     for column in columns_output:
         print(f'{column=}:')
         df_train_predictor = pd.concat([X_train, y_train[[column]]], axis=1)
@@ -471,8 +480,19 @@ def process_leaderboard(leaderboard, rundir, column, preset):
     return leaderboard, r2
 
 
+def save_df_test_input(df_test: pd.DataFrame) -> None:
+    df_test_input = df_test.drop(columns=select_columns_output(df_test))
+    df_test_input.to_csv(FILENAME_DF_TEST_INPUT, index=False)
+
+
+def load_df_test_input() -> pd.DataFrame:
+    return pd.read_csv(FILENAME_DF_TEST_INPUT)
+
+
 def run_models(df_started: pd.DataFrame) -> pd.DataFrame:
     df_train, df_test = convert_df_started_to_train_test(df_started)
+    save_df_test_input(df_test)
+
     df_predictions_regression = run_regression(df_train, df_test)
     show(df_predictions_regression, 'df_predictions_regression')
 
@@ -480,6 +500,31 @@ def run_models(df_started: pd.DataFrame) -> pd.DataFrame:
     evaluate_and_plot_column(df_test, df_predictions_autogluon, '(out) MajorCollisionFromMinor before forcing ends')
 
     return df_predictions_autogluon
+
+
+def load_predictor(path):
+    return autogluon.tabular.TabularPredictor.load(path)
+
+
+class ForcingReactionRecommender:
+    def __init__(self, predictor_collision: autogluon.tabular.TabularPredictor) -> None:
+        self.predictor_collision = predictor_collision
+
+    def calculate_score(self, prediction_collisions):
+        return -prediction_collisions
+
+    def is_stop_recommended(self, record_input_without_is_stop: dict[str, Any]) -> bool:
+        df = pd.DataFrame.from_records([
+            {'(in) event_isStop': x, **record_input_without_is_stop}
+            for x in (0, 1)
+        ])
+        predictions_collisions = self.predictor_collision.predict(df)
+
+        score_0, score_1 = [self.calculate_score(prediction_collisions)
+                            for prediction_collisions in predictions_collisions]
+        print(f'{score_0=}, {score_1=}')
+
+        return score_1 > score_0
 
 
 def main():
