@@ -2,17 +2,21 @@
 
 set -eux -o pipefail
 
-[ $# = 0 ]
+[ $# -ge 0 ]
 
-experiments=(
-  100
-  010
-  001
-  110
-  101
-  011
-  111
-)
+if [ $# != 0 ]; then
+  experiments=("$@")
+else
+  experiments=(
+    100
+    010
+    001
+    110
+    101
+    011
+    111
+  )
+fi
 
 fails=()
 for experiment in "${experiments[@]}"; do

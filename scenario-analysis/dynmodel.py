@@ -467,7 +467,7 @@ def process_leaderboard(leaderboard, rundir, column, preset):
     show(leaderboard, title)
     r2 = leaderboard.iloc[0, 1]
     leaderboard.to_csv(f'{rundir}/{title} (score_test: {r2:}).csv', index=False)
-    return leaderboard
+    return leaderboard, r2
 
 
 def run_models(df_started: pd.DataFrame) -> pd.DataFrame:
