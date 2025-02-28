@@ -1,5 +1,9 @@
 package se.oru.coordination.coordination_oru.tests.util;
 
+import jep.Interpreter;
+import jep.PyConfig;
+import jep.SharedInterpreter;
+
 import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.CriticalSection;
@@ -34,8 +38,58 @@ public abstract class Demo {
         return code;
     }
 
+    private void runInterpreter() {
+        PyConfig pyConfig = new PyConfig();
+        pyConfig.setPythonHome("/home/olga/miniconda3");
+
+        Interpreter interp = new SharedInterpreter();
+
+        interp.exec("from java.lang import System");
+        interp.exec("s = 'Hello World'");
+        interp.exec("System.out.println(s + ' from println')");
+        interp.exec("print(s + ' from print')");
+
+        interp.exec("import os");
+        interp.exec("System.out.println(os.getcwd())");
+
+        interp.exec("import sys");
+        interp.exec("System.out.println(str(sys.version))");
+        interp.exec("sys.path = ['', '/home/olga/miniconda3/lib/python312.zip', '/home/olga/miniconda3/lib/python3.12', '/home/olga/miniconda3/lib/python3.12/lib-dynload', '/home/olga/miniconda3/lib/python3.12/site-packages']");
+        interp.exec("sys.path.append(os.getcwd() + '/scenario-analysis')");
+        interp.exec("System.out.println('Python Executable: ' + sys.executable)");
+        interp.exec("System.out.println('Python Path: ' + str(sys.path))");
+
+        interp.exec("import autogluon");
+        interp.exec("System.out.println(str(autogluon))");
+
+        interp.exec("import autogluon.tabular");
+        interp.exec("System.out.println(str(autogluon.tabular))");
+
+        interp.exec("import pandas as pd");
+        interp.exec("System.out.println(str(pd))");
+
+        interp.exec("import recommenderlib");
+        interp.exec("System.out.println(recommenderlib.make_greeting())");
+
+        interp.exec("import time");
+
+        interp.exec("recommender = recommenderlib.ForcingReactionRecommender(path_collision='scenario-analysis/AutogluonModels/ag-20250227_141815')");
+        interp.exec("record_input_without_is_stop = {'(in) No. of OPs': 2.0, '(in) are_bridges': 0.0, '(in) slowness': 0.0, '(in) V: v_current': 0.1, '(in) V0: v_current': 5.6, '(in) V: POD': 0.0, '(in) V0: POD': 0.0, '(in) event_distanceToCS': 482.258, '(in) event_distanceToCSEnd': 768.382, '(in) event_distanceHumanToCP': 0.0, '(in) indicesHumanToCS': 0.0, '(in) indicesHumanToCSEnd': 59.0, '(in) POD C next 20': 0.0, '(in) POD C next 50': 0.0, '(in) POD C next 100': 0.0, '(in) POD C next 200': 0.0, '(in) POD C CS segment with human': 0.0, '(in) POD Df next 20': 0.0, '(in) POD Df next 50': 0.0, '(in) POD Df next 100': 0.0, '(in) POD Df next 200': 0.0, '(in) POD Df CS segment with human': 0.0}");
+
+        for (int i = 0; i < 5; i++) {
+            interp.exec("start = time.time()");
+            interp.exec("is_stop_recommended = recommender.is_stop_recommended(record_input_without_is_stop)");
+            interp.exec("delta = time.time() - start");
+            interp.exec("System.out.println(f'{is_stop_recommended=}, {delta=}')");
+        }
+
+        System.exit(0);
+    }
+
     public void exec() {
         checkForAssertions();
+
+        runInterpreter();
 
         if (! Containerization.IS_CONTAINER) {
             long pid = ProcessHandle.current().pid();

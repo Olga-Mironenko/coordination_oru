@@ -76,6 +76,8 @@ scenario-analysis/tmp*.ipynb
 scenario-analysis/.ipynb_checkpoints/
 scenario-analysis/old/
 
+libs/
+
 # Result .txt files
 src/main/java/se/oru/coordination/coordination_oru/results/*
 

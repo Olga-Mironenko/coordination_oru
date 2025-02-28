@@ -502,31 +502,6 @@ def run_models(df_started: pd.DataFrame) -> pd.DataFrame:
     return df_predictions_autogluon
 
 
-def load_predictor(path):
-    return autogluon.tabular.TabularPredictor.load(path)
-
-
-class ForcingReactionRecommender:
-    def __init__(self, predictor_collision: autogluon.tabular.TabularPredictor) -> None:
-        self.predictor_collision = predictor_collision
-
-    def calculate_score(self, prediction_collisions):
-        return -prediction_collisions
-
-    def is_stop_recommended(self, record_input_without_is_stop: dict[str, Any]) -> bool:
-        df = pd.DataFrame.from_records([
-            {'(in) event_isStop': x, **record_input_without_is_stop}
-            for x in (0, 1)
-        ])
-        predictions_collisions = self.predictor_collision.predict(df)
-
-        score_0, score_1 = [self.calculate_score(prediction_collisions)
-                            for prediction_collisions in predictions_collisions]
-        print(f'{score_0=}, {score_1=}')
-
-        return score_1 > score_0
-
-
 def main():
     df_all = load_or_prepare_missions_all()
     df_started = prepare_forcing_reaction_started(df_all)

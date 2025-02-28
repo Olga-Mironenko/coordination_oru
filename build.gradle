@@ -47,6 +47,7 @@ version = '0.6.3'//'0.0.0-SNAPSHOT'
 group = 'se.oru.coordination'
 
 dependencies {
+  implementation files('libs/jep-4.2.2.jar')
 
   // This pulls in the meta-csp-framework jar
   //compile 'org.metacsp:meta-csp-framework:1.3.4'
@@ -92,5 +93,15 @@ run {
 
   if (project.hasProperty("demo")) {
     args(demo)
+  }
+}
+
+allprojects {
+  tasks.withType(JavaExec).configureEach {
+    jvmArgs "-Djep.pythonExecutable=${project.property('jepPythonExecutable')}"
+  }
+  tasks.withType(JavaExec).configureEach {
+    environment "PYTHONHOME", project.property("PYTHONHOME")
+    environment "LD_LIBRARY_PATH", project.property("LD_LIBRARY_PATH")
   }
 }
