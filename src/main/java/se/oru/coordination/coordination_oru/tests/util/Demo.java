@@ -39,9 +39,6 @@ public abstract class Demo {
     }
 
     private void runInterpreter() {
-        PyConfig pyConfig = new PyConfig();
-        pyConfig.setPythonHome("/home/olga/miniconda3");
-
         Interpreter interp = new SharedInterpreter();
 
         interp.exec("from java.lang import System");

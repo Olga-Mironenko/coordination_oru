@@ -42,8 +42,7 @@ configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 
-version = '0.6.3'//'0.0.0-SNAPSHOT'
-// Call your group something meaninful, e.g., '<inverse-url>.<project-name>'
+version = '0.6.3'
 group = 'se.oru.coordination'
 
 dependencies {
@@ -76,13 +75,7 @@ dependencies {
 
   //For JSON file handling
   implementation 'com.google.code.gson:gson:2.8.8'
-  
-  // Add the following if you need to include jars that are not
-  // in Maven Central and that you have places in the directory "lib"
-  // (NOTE: you have to create this directory if you need it)
-  //compile fileTree(dir: 'lib', include: '**/*.jar')
 
-  implementation fileTree(dir: 'lib', include: '**/*.jar')
   implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 }
 
@@ -97,9 +90,6 @@ run {
 }
 
 allprojects {
-  tasks.withType(JavaExec).configureEach {
-    jvmArgs "-Djep.pythonExecutable=${project.property('jepPythonExecutable')}"
-  }
   tasks.withType(JavaExec).configureEach {
     environment "PYTHONHOME", project.property("PYTHONHOME")
     environment "LD_LIBRARY_PATH", project.property("LD_LIBRARY_PATH")
