@@ -92,6 +92,6 @@ run {
 allprojects {
   tasks.withType(JavaExec).configureEach {
     environment "PYTHONHOME", project.property("PYTHONHOME")
-    environment "LD_LIBRARY_PATH", project.property("LD_LIBRARY_PATH")
+    environment "LD_PRELOAD", project.property("LD_PRELOAD")
   }
 }
