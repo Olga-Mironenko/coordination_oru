@@ -1,9 +1,9 @@
 package se.oru.coordination.coordination_oru.tests.util;
 
 import jep.Interpreter;
-import jep.PyConfig;
 import jep.SharedInterpreter;
 
+import jep.python.PyObject;
 import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeCoordinator;
 import se.oru.coordination.coordination_oru.AbstractTrajectoryEnvelopeTracker;
 import se.oru.coordination.coordination_oru.CriticalSection;
@@ -15,6 +15,8 @@ import se.oru.coordination.coordination_oru.util.gates.GatedThread;
 import se.oru.coordination.coordination_oru.util.gates.Timekeeper;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public abstract class Demo {
     protected abstract void run(String scenarioString);
@@ -64,6 +66,23 @@ public abstract class Demo {
 
         interp.exec("import pandas as pd");
         interp.exec("System.out.println(str(pd))");
+
+        Map<String, Double> record = new LinkedHashMap<>();
+        record.put("a", 10.0);
+        record.put("b", 20.0);
+
+        interp.set("record", record);
+        interp.exec("System.out.println(f'{record=}, {type(record)=}')");
+        interp.exec("record = dict(record)");
+        interp.exec("System.out.println(f'{record=}, {type(record)=}')");
+
+        interp.exec("type_ = type");
+        PyObject recordType = (PyObject) interp.invoke("type_", record);
+        System.out.println("recordType: " + recordType.toString());
+
+        interp.exec("bool_ = bool");
+        boolean recordBoolean = (boolean) interp.invoke("bool_", record);
+        System.out.println("recordBoolean: " + recordBoolean);
 
         interp.exec("import recommenderlib");
         interp.exec("System.out.println(recommenderlib.make_greeting())");
