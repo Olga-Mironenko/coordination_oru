@@ -130,8 +130,11 @@ public class GeneratedMapTest {
 //                      "map-generator/generated-maps/3_with_bridges/scenario1-1.json, passhum 0, slowness with rerouting, forcing stops 50% with forcing 50%"
 //                      "map-generator_generated-maps_3_with_bridges_scenario4-9.json,_passhum_0,_slowness_with_rerouting,_forcing_change_of_priorities"
 //                      "map-generator_generated-maps_3_with_bridges_scenario4-9.json,_passhum_0,_slowness_with_rerouting,_forcing_stops_50%"
+
                     // Cautious mode:
-                      "map-generator_generated-maps_3_without_bridges_scenario9-4.json,_passhum_0,_slowness_without_rerouting,_forcing_change_of_priorities"
+//                      "map-generator_generated-maps_3_without_bridges_scenario9-4.json,_passhum_0,_slowness_without_rerouting,_forcing_change_of_priorities"
+
+                    "map-generator/generated-maps/3_with_bridges/scenario1-1.json, passhum 0, slowness no, forcing stops as recommended"
             );
         }
         scenarioString = replaceUnderscoreAfterFirstComma(scenarioString);
@@ -178,17 +181,22 @@ public class GeneratedMapTest {
                 // and "change of priorities"
             case "change of priorities":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
-                Forcing.probabilityStopNotChangeOfPriorities = 0;
+                Forcing.probabilityStopNotChangeOfPriorities = 0.0;
                 break;
 
             case "stops":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
-                Forcing.probabilityStopNotChangeOfPriorities = 1;
+                Forcing.probabilityStopNotChangeOfPriorities = 1.0;
                 break;
 
             case "stops 50%":
                 AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
                 Forcing.probabilityStopNotChangeOfPriorities = 0.5;
+                break;
+
+            case "stops as recommended":
+                AdaptiveTrajectoryEnvelopeTrackerRK4.probabilityForcingForHuman = 1;
+                Forcing.probabilityStopNotChangeOfPriorities = null;
                 break;
 
             case "stops 50% with forcing 50%":

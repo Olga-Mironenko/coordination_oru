@@ -53,6 +53,7 @@ public abstract class Demo {
 
         interp.exec("import sys");
         interp.exec("System.out.println(str(sys.version))");
+        // From `python3 -c 'import sys; print(sys.path)'` in the needed venv:
         interp.exec("sys.path = ['', '/home/olga/miniconda3/lib/python312.zip', '/home/olga/miniconda3/lib/python3.12', '/home/olga/miniconda3/lib/python3.12/lib-dynload', '/home/olga/miniconda3/lib/python3.12/site-packages']");
         interp.exec("sys.path.append(os.getcwd() + '/scenario-analysis')");
         interp.exec("System.out.println('Python Executable: ' + sys.executable)");
@@ -105,7 +106,7 @@ public abstract class Demo {
     public void exec() {
         checkForAssertions();
 
-        runInterpreter();
+//        runInterpreter();
 
         if (! Containerization.IS_CONTAINER) {
             long pid = ProcessHandle.current().pid();

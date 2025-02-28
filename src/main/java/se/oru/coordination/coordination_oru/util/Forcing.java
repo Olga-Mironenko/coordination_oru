@@ -48,7 +48,7 @@ public class Forcing {
     //   Note that stop effect without priority effect makes little sense.
     public static double stopDistanceMin = Double.NEGATIVE_INFINITY;
     // - When both change of priorities and stops apply, the latter is selected with the following probability.
-    public static double probabilityStopNotChangeOfPriorities = 0.5;
+    public static Double probabilityStopNotChangeOfPriorities = 0.5;
     // - If `isGlobalTemporaryStop` is true, then all other robots are stopped during forcing.
     public static boolean isGlobalTemporaryStop = false;
     // - If `isResetAfterCurrentCrossroad` is true, then forcing finishes automatically when its priority and stop
@@ -292,7 +292,11 @@ public class Forcing {
                     }
 
                     if (isStop == null) {
-                        isStop = rand.nextDouble() < probabilityStopNotChangeOfPriorities;
+                        if (probabilityStopNotChangeOfPriorities != null) {
+                            isStop = rand.nextDouble() < probabilityStopNotChangeOfPriorities;
+                        } else {
+                            isStop = RecommenderlibWrapper.isStopRecommended(robotID);
+                        }
                     }
                     robotToIsStop.put(robotID, isStop);
                 }
