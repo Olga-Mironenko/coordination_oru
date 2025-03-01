@@ -265,30 +265,33 @@ public class Forcing {
                 return robotsToStop;
             }
 
-            private void affectRobot(
+            private boolean computeIsStop(
                     TreeMap<Integer, ArrayList<CriticalSection>> robotToCSesPriority,
                     TreeSet<Integer> robotsToStop,
                     int affectedID
             ) {
-                Boolean isStop = null;
-                if (robotToIsStopInPast.containsKey(affectedID)) {
-                    isStop = robotToIsStopInPast.get(affectedID);
-                } else if (! robotToCSesPriority.containsKey(affectedID)) {
+                if (! robotToCSesPriority.containsKey(affectedID)) {
                     assert robotsToStop.contains(affectedID);
-                    isStop = true;
-                } else if (! robotsToStop.contains(affectedID)) {
+                    return true;
+                }
+
+                if (! robotsToStop.contains(affectedID)) {
                     assert robotToCSesPriority.containsKey(affectedID);
-                    isStop = false;
+                    return false;
                 }
 
-                if (isStop == null) {
-                    if (probabilityStopNotChangeOfPriorities != null) {
-                        isStop = rand.nextDouble() < probabilityStopNotChangeOfPriorities;
-                    } else {
-                        isStop = RecommenderlibWrapper.isStopRecommended(affectedID);
-                    }
+                if (probabilityStopNotChangeOfPriorities != null) {
+                    return rand.nextDouble() < probabilityStopNotChangeOfPriorities;
                 }
 
+                return RecommenderlibWrapper.isStopRecommended(affectedID);
+            }
+
+            private ArrayList<CriticalSection> applyIsStop(
+                    TreeMap<Integer, ArrayList<CriticalSection>> robotToCSesPriority,
+                    int affectedID,
+                    boolean isStop
+            ) {
                 ArrayList<CriticalSection> cses = robotToCSesPriority.getOrDefault(affectedID, new ArrayList<>());
                 for (CriticalSection cs : cses) {
                     increaseRobotPriorityOnCS(cs);
@@ -296,13 +299,13 @@ public class Forcing {
                 if (isStop) {
                     stopRobotIfNeeded(affectedID);
                 }
+                return cses;
+            }
 
-                if (robotToIsStopInPast.containsKey(affectedID)) {
-                    assert robotToIsStopInPast.get(affectedID) == isStop;
-                    return;
-                }
-                robotToIsStopInPast.put(affectedID, isStop);
-
+            private Event.ForcingReactionStarted makeEventForcingReactionStarted(
+                    int affectedID,
+                    ArrayList<CriticalSection> cses
+            ) {
                 InfoFirstCS infoFirstCS = new InfoFirstCS(robotID, affectedID, cses);
 
                 AdaptiveTrajectoryEnvelopeTrackerRK4 trackerHuman = (AdaptiveTrajectoryEnvelopeTrackerRK4) (
@@ -327,6 +330,24 @@ public class Forcing {
                         Missions.robotIDToMissionLinearizationCCurrent.get(affectedID),
                         Missions.robotIDToOtherIDToMissionLinearizationDCurrent.get(affectedID).get(robotID)
                 );
+                return event;
+            }
+
+            private void affectRobot(
+                    TreeMap<Integer, ArrayList<CriticalSection>> robotToCSesPriority,
+                    TreeSet<Integer> robotsToStop,
+                    int affectedID
+            ) {
+                if (robotToIsStopInPast.containsKey(affectedID)) {
+                    return;
+                }
+
+                boolean isStop = computeIsStop(robotToCSesPriority, robotsToStop, affectedID);
+                robotToIsStopInPast.put(affectedID, isStop);
+
+                ArrayList<CriticalSection> cses = applyIsStop(robotToCSesPriority, affectedID, isStop);
+
+                Event.ForcingReactionStarted event = makeEventForcingReactionStarted(affectedID, cses);
                 // TODO: Compute `isStop` based on `event` here.
 
                 event.isStop = isStop;
