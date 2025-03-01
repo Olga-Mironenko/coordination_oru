@@ -6,6 +6,7 @@ sequence of rows (from the TSV) starting with an event of type
 'MissionStarted' and ending with an event of type 'MissionFinished'.
 In the output, the 'event' field is a dictionary rather than a JSON string.
 """
+import io
 import json
 import shutil
 import sys
@@ -55,10 +56,14 @@ def sort_df(df: pd.DataFrame):
     )
 
 
-def parse_tsv_file(file_path: str, *, is_concise: bool = False) -> tuple[pd.DataFrame, MissionsDict]:
+def convert_df_events_to_missions(
+        df: pd.DataFrame,
+        *,
+        is_concise: bool = False,
+        is_single_row: bool = False,
+) -> MissionsDict:
     """
-    Parse the TSV file and convert it to a dictionary mapping robotID
-    to missions.
+    Convert the dataframe to a dictionary mapping robotID to missions.
 
     Each mission is a list of rows (dictionaries) from the TSV file.
     A mission starts when an event with type "MissionStarted" is found and
@@ -66,17 +71,16 @@ def parse_tsv_file(file_path: str, *, is_concise: bool = False) -> tuple[pd.Data
     The 'event' key in each row is converted from a JSON string into a
     dictionary.
 
-    Args:
-        file_path: The path to the TSV file.
-
     Returns:
         A dictionary where each key is a robotID and each value is a list
         of missions. Each mission is a list of rows (dictionaries) from the file.
     """
-    # Read the TSV file using pandas; numeric columns are inferred.
-    df: pd.DataFrame = pd.read_csv(file_path, sep="\t")
     df['event'] = df['event'].apply(json.loads)
-    sort_df(df)
+
+    if is_single_row:
+        assert len(df) == 1
+    else:
+        sort_df(df)
     rows: List[Row] = df.to_dict(orient="records")
 
     robot_id_to_missions: MissionsDict = {}
@@ -96,7 +100,7 @@ def parse_tsv_file(file_path: str, *, is_concise: bool = False) -> tuple[pd.Data
         else:
             row_out = row
 
-        if event_type == "MissionStarted":
+        if is_single_row or event_type == "MissionStarted":
             # Start a new mission for this robot.
             assert robot_id not in active_missions, (
                 f"Robot {robot_id} already has an active mission."
@@ -119,10 +123,10 @@ def parse_tsv_file(file_path: str, *, is_concise: bool = False) -> tuple[pd.Data
             )
             active_missions[robot_id].append(row_out)
 
-    return df, dict(sorted(robot_id_to_missions.items()))
+    return dict(sorted(robot_id_to_missions.items()))
 
 
-def missions_to_dataframe(robot_id_to_missions: MissionsDict) -> pd.DataFrame:
+def convert_missions_to_df_missions(robot_id_to_missions: MissionsDict) -> pd.DataFrame:
     """
     Convert a MissionsDict into a Pandas DataFrame with the following columns:
     - robotID: the robot identifier (from the dictionary key)
@@ -306,13 +310,9 @@ def add_related_event_counts(
     return df
 
 
-def convert(filename_events_tsv: str, filename_missions_csv: str) -> None:
-    df_events, robot_id_to_missions = parse_tsv_file(filename_events_tsv, is_concise=False)
-    df = missions_to_dataframe(robot_id_to_missions)
-    assert len(df) == len(df_events)
-
+def check_no_moments_common(filename_missions_csv, df_missions, robot_id_to_missions):
     for robot_id in robot_id_to_missions:
-        df_robot = df[df["robotID"] == robot_id]
+        df_robot = df_missions[df_missions["robotID"] == robot_id]
         assert not df_robot.empty
         moments_mission_started = df_robot[df_robot['event_type'] == 'MissionStarted']['secondsVirtual']
         moments_forcing_reaction_started = df_robot[df_robot['event_type'] == 'ForcingReactionStarted']['secondsVirtual']
@@ -320,6 +320,37 @@ def convert(filename_events_tsv: str, filename_missions_csv: str) -> None:
         if moments_common:
             print(f'{filename_missions_csv}, {robot_id=}: ' + ' ,'.join(map(str, moments_common)))
         assert not moments_common
+
+
+def convert_map_event_to_df_missions(map_event: dict[str, str]) -> pd.DataFrame:
+    df_strings = pd.DataFrame.from_records([map_event])
+
+    stream = io.StringIO()
+    df_strings.to_csv(stream, index=False)
+    stream.seek(0)
+    df_events = pd.read_csv(stream)
+    stream.close()
+
+    return convert_df_events_to_df_missions(df_events, is_single_row=True)
+
+
+def convert_df_events_to_df_missions(
+        df_events: pd.DataFrame,
+        filename_missions_csv: str | None = None,
+        *,
+        is_single_row: bool = False
+) -> pd.DataFrame:
+    robot_id_to_missions = convert_df_events_to_missions(df_events, is_concise=False, is_single_row=is_single_row)
+    df_missions = convert_missions_to_df_missions(robot_id_to_missions)
+    if not is_single_row:
+        check_no_moments_common(filename_missions_csv, df_missions, robot_id_to_missions)
+    return df_missions
+
+
+def convert(filename_events_tsv: str, filename_missions_csv: str) -> None:
+    df_events = pd.read_csv(filename_events_tsv, sep="\t")
+    df = convert_df_events_to_df_missions(df_events, filename_missions_csv)
+    assert len(df) == len(df_events)
 
     for related_event in 'MinorCollision', 'MajorCollisionFromMinor':
         df = add_related_event_counts(df, related_event)

@@ -17,14 +17,23 @@ public class RecommenderlibWrapper {
         }
     }
 
-    public static boolean isStopRecommended(int robotID) {
-//        LinkedHashMap<String, String> mapEvent = EventWriter.makeMapEvent(event);
+    public static boolean isStopRecommended(Event.ForcingReactionStarted event) {
+        LinkedHashMap<String, String> mapEvent = EventWriter.makeMapEvent(event); // TODO: avoid doing `makeMapEvent` here and in `write()`
 
         boolean isStop;
         long start = System.currentTimeMillis();
         try (Interpreter interp = new SharedInterpreter()) {
             interp.exec("import recommenderlib");
-            isStop = (boolean) interp.invoke("recommenderlib.bool_", robotID);
+            isStop = (boolean) interp.invoke("recommenderlib.bool_", mapEvent);
+
+            interp.exec("import events2missions");
+            interp.exec("from java.lang import System");
+            interp.set("map_event", mapEvent);
+            interp.exec("map_event = dict(map_event)");
+//            interp.exec("System.out.println(str(map_event))");
+            interp.exec("df_missions = events2missions.convert_map_event_to_df_missions(map_event)");
+            interp.exec("row, = df_missions.to_dict('records')");
+            interp.exec("System.out.println(str(row))");
         }
         long delta = System.currentTimeMillis() - start;
 

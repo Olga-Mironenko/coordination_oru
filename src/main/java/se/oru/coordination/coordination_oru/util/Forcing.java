@@ -268,7 +268,8 @@ public class Forcing {
             private boolean computeIsStop(
                     TreeMap<Integer, ArrayList<CriticalSection>> robotToCSesPriority,
                     TreeSet<Integer> robotsToStop,
-                    int affectedID
+                    int affectedID,
+                    Event.ForcingReactionStarted event
             ) {
                 if (! robotToCSesPriority.containsKey(affectedID)) {
                     assert robotsToStop.contains(affectedID);
@@ -287,7 +288,7 @@ public class Forcing {
                     return rand.nextDouble() < probabilityStopNotChangeOfPriorities;
                 }
 
-                return RecommenderlibWrapper.isStopRecommended(affectedID);
+                return RecommenderlibWrapper.isStopRecommended(event);
             }
 
             private void applyIsStop(
@@ -347,7 +348,7 @@ public class Forcing {
 
                 Event.ForcingReactionStarted event = makeEventForcingReactionStarted(affectedID, cses);
 
-                boolean isStop = computeIsStop(robotToCSesPriority, robotsToStop, affectedID);
+                boolean isStop = computeIsStop(robotToCSesPriority, robotsToStop, affectedID, event);
                 robotToIsStopInPast.put(affectedID, isStop);
                 applyIsStop(cses, affectedID, isStop);
 
