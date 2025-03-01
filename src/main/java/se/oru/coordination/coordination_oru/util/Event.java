@@ -136,7 +136,7 @@ public abstract class Event {
     }
 
     public static class ForcingReactionStarted extends Event {
-        public boolean isStop;
+        public Boolean isStop;
         public int indicesToCS;
         public double distanceToCS;
         public int indicesToCSEnd;
@@ -148,7 +148,7 @@ public abstract class Event {
 
         public ForcingReactionStarted(
                 int robotID,
-                boolean isStop,
+                Boolean isStop,
                 int indicesToCS,
                 double distanceToCS,
                 int indicesToCSEnd,
@@ -168,6 +168,12 @@ public abstract class Event {
             this.distanceHumanToCP = distanceToCP;
             this.linearizationC = linearizationC;
             this.linearizationDf = linearizationDf;
+        }
+
+        @Override
+        public void write() {
+            assert isStop != null;
+            super.write();
         }
     }
 

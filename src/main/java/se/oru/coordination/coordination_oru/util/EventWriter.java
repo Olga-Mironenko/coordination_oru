@@ -31,35 +31,40 @@ public class EventWriter {
         }
     }
 
+    public static LinkedHashMap<String, String> makeMapEvent(Event event) {
+        TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
+        LinkedHashMap<Entry<String, Integer>, String> mapStats = new LinkedHashMap<>();
+        for (int robotID : tec.getAllRobotIDs()) {
+            LinkedHashMap<Entry<String, Integer>, String> mapStatsRobot =
+                    VehiclesHashMap.getVehicle(robotID).collectStatistics();
+            mapStats.putAll(mapStatsRobot);
+        }
+
+        LinkedHashMap<String, String> mapEvent = new LinkedHashMap<>();
+        mapEvent.put("secondsVirtual", String.format("%6.1f", Timekeeper.getVirtualMillisPassed() / 1000.0));
+        mapEvent.put("event", event.toJson());
+        for (boolean isNull : List.of(true, false)) {
+            for (Map.Entry<Entry<String, Integer>, String> entry : mapStats.entrySet()) {
+                Entry<String, Integer> key = entry.getKey();
+                if ((key.getValue() == null) == isNull) {
+                    String name = key.getKey();
+                    if (key.getValue() != null) {
+                        name = "V" + key.getValue() + ": " + name;
+                    }
+                    mapEvent.put(name, entry.getValue());
+                }
+            }
+        }
+        return mapEvent;
+    }
+
     public static void writeEvent(Event event) {
         /*synchronized (EventWriter.class) {*/ { // for better debugging
             if (bw == null) {
                 return;
             }
 
-            TrajectoryEnvelopeCoordinatorSimulation tec = TrajectoryEnvelopeCoordinatorSimulation.tec;
-            LinkedHashMap<Entry<String, Integer>, String> mapStats = new LinkedHashMap<>();
-            for (int robotID : tec.getAllRobotIDs()) {
-                LinkedHashMap<Entry<String, Integer>, String> mapStatsRobot =
-                        VehiclesHashMap.getVehicle(robotID).collectStatistics();
-                mapStats.putAll(mapStatsRobot);
-            }
-
-            LinkedHashMap<String, String> mapEvent = new LinkedHashMap<>();
-            mapEvent.put("secondsVirtual", String.format("%6.1f", Timekeeper.getVirtualMillisPassed() / 1000.0));
-            mapEvent.put("event", event.toJson());
-            for (boolean isNull : List.of(true, false)) {
-                for (Map.Entry<Entry<String, Integer>, String> entry : mapStats.entrySet()) {
-                    Entry<String, Integer> key = entry.getKey();
-                    if ((key.getValue() == null) == isNull) {
-                        String name = key.getKey();
-                        if (key.getValue() != null) {
-                            name = "V" + key.getValue() + ": " + name;
-                        }
-                        mapEvent.put(name, entry.getValue());
-                    }
-                }
-            }
+            LinkedHashMap<String, String> mapEvent = makeMapEvent(event);
 
             try {
                 if (! isHeaderWritten) {

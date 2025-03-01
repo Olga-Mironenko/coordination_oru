@@ -3,6 +3,8 @@ package se.oru.coordination.coordination_oru.util;
 import jep.Interpreter;
 import jep.SharedInterpreter;
 
+import java.util.LinkedHashMap;
+
 public class RecommenderlibWrapper {
     static {
         try (Interpreter interp = new SharedInterpreter()) {
@@ -16,15 +18,14 @@ public class RecommenderlibWrapper {
     }
 
     public static boolean isStopRecommended(int robotID) {
+//        LinkedHashMap<String, String> mapEvent = EventWriter.makeMapEvent(event);
+
         boolean isStop;
-
         long start = System.currentTimeMillis();
-
         try (Interpreter interp = new SharedInterpreter()) {
             interp.exec("import recommenderlib");
             isStop = (boolean) interp.invoke("recommenderlib.bool_", robotID);
         }
-
         long delta = System.currentTimeMillis() - start;
 
         return isStop;

@@ -265,6 +265,74 @@ public class Forcing {
                 return robotsToStop;
             }
 
+            private void affectRobot(
+                    TreeMap<Integer, ArrayList<CriticalSection>> robotToCSesPriority,
+                    TreeSet<Integer> robotsToStop,
+                    int affectedID
+            ) {
+                Boolean isStop = null;
+                if (robotToIsStopInPast.containsKey(affectedID)) {
+                    isStop = robotToIsStopInPast.get(affectedID);
+                } else if (! robotToCSesPriority.containsKey(affectedID)) {
+                    assert robotsToStop.contains(affectedID);
+                    isStop = true;
+                } else if (! robotsToStop.contains(affectedID)) {
+                    assert robotToCSesPriority.containsKey(affectedID);
+                    isStop = false;
+                }
+
+                if (isStop == null) {
+                    if (probabilityStopNotChangeOfPriorities != null) {
+                        isStop = rand.nextDouble() < probabilityStopNotChangeOfPriorities;
+                    } else {
+                        isStop = RecommenderlibWrapper.isStopRecommended(affectedID);
+                    }
+                }
+
+                ArrayList<CriticalSection> cses = robotToCSesPriority.getOrDefault(affectedID, new ArrayList<>());
+                for (CriticalSection cs : cses) {
+                    increaseRobotPriorityOnCS(cs);
+                }
+                if (isStop) {
+                    stopRobotIfNeeded(affectedID);
+                }
+
+                if (robotToIsStopInPast.containsKey(affectedID)) {
+                    assert robotToIsStopInPast.get(affectedID) == isStop;
+                    return;
+                }
+                robotToIsStopInPast.put(affectedID, isStop);
+
+                InfoFirstCS infoFirstCS = new InfoFirstCS(robotID, affectedID, cses);
+
+                AdaptiveTrajectoryEnvelopeTrackerRK4 trackerHuman = (AdaptiveTrajectoryEnvelopeTrackerRK4) (
+                        TrajectoryEnvelopeCoordinatorSimulation.tec.getTracker(robotID)
+                );
+
+                // Note: In `BrowserVisualization.pretable`, it's outdated.
+                double distanceHumanToCP = trackerHuman.distanceToCP;
+                if (distanceHumanToCP == Double.POSITIVE_INFINITY) {
+                    distanceHumanToCP = -1.0;
+                }
+
+                Event.ForcingReactionStarted event = new Event.ForcingReactionStarted(
+                        affectedID,
+                        null,
+                        infoFirstCS.indicesToCS,
+                        infoFirstCS.distanceToCS,
+                        infoFirstCS.indicesToCSEnd,
+                        infoFirstCS.distanceToCSEnd,
+                        infoFirstCS.criticalSection,
+                        distanceHumanToCP,
+                        Missions.robotIDToMissionLinearizationCCurrent.get(affectedID),
+                        Missions.robotIDToOtherIDToMissionLinearizationDCurrent.get(affectedID).get(robotID)
+                );
+                // TODO: Compute `isStop` based on `event` here.
+
+                event.isStop = isStop;
+                event.write();
+            }
+
             private void affectRobots(
                     double distanceTraveledAfterForcing,
                     double priorityDistanceRemaining,
@@ -275,74 +343,11 @@ public class Forcing {
                 );
                 TreeSet<Integer> robotsToStop = findRobotsToStop(distanceTraveledAfterForcing, stopDistanceRemaining);
 
-                TreeMap<Integer, Boolean> robotToIsStop = new TreeMap<>();
                 TreeSet<Integer> robotsToConsider = new TreeSet<>();
                 robotsToConsider.addAll(robotToCSesPriority.keySet());
                 robotsToConsider.addAll(robotsToStop);
-                for (int robotID : robotsToConsider) {
-                    Boolean isStop = null;
-                    if (robotToIsStopInPast.containsKey(robotID)) {
-                        isStop = robotToIsStopInPast.get(robotID);
-                    } else if (! robotToCSesPriority.containsKey(robotID)) {
-                        assert robotsToStop.contains(robotID);
-                        isStop = true;
-                    } else if (! robotsToStop.contains(robotID)) {
-                        assert robotToCSesPriority.containsKey(robotID);
-                        isStop = false;
-                    }
-
-                    if (isStop == null) {
-                        if (probabilityStopNotChangeOfPriorities != null) {
-                            isStop = rand.nextDouble() < probabilityStopNotChangeOfPriorities;
-                        } else {
-                            isStop = RecommenderlibWrapper.isStopRecommended(robotID);
-                        }
-                    }
-                    robotToIsStop.put(robotID, isStop);
-                }
-
-                for (Map.Entry<Integer, Boolean> entry : robotToIsStop.entrySet()) {
-                    int affectedID = entry.getKey();
-                    boolean isStop = entry.getValue();
-
-                    ArrayList<CriticalSection> cses = robotToCSesPriority.getOrDefault(affectedID, new ArrayList<>());
-                    for (CriticalSection cs : cses) {
-                        increaseRobotPriorityOnCS(cs);
-                    }
-                    if (isStop) {
-                        stopRobotIfNeeded(affectedID);
-                    }
-
-                    if (robotToIsStopInPast.containsKey(affectedID)) {
-                        assert robotToIsStopInPast.get(affectedID) == isStop;
-                    } else {
-                        robotToIsStopInPast.put(affectedID, isStop);
-
-                        InfoFirstCS infoFirstCS = new InfoFirstCS(robotID, affectedID, cses);
-
-                        AdaptiveTrajectoryEnvelopeTrackerRK4 trackerHuman = (AdaptiveTrajectoryEnvelopeTrackerRK4) (
-                                TrajectoryEnvelopeCoordinatorSimulation.tec.getTracker(robotID)
-                        );
-
-                        // Note: In `BrowserVisualization.pretable`, it's outdated.
-                        double distanceHumanToCP = trackerHuman.distanceToCP;
-                        if (distanceHumanToCP == Double.POSITIVE_INFINITY) {
-                            distanceHumanToCP = -1.0;
-                        }
-
-                        new Event.ForcingReactionStarted(
-                                affectedID,
-                                isStop,
-                                infoFirstCS.indicesToCS,
-                                infoFirstCS.distanceToCS,
-                                infoFirstCS.indicesToCSEnd,
-                                infoFirstCS.distanceToCSEnd,
-                                infoFirstCS.criticalSection,
-                                distanceHumanToCP,
-                                Missions.robotIDToMissionLinearizationCCurrent.get(affectedID),
-                                Missions.robotIDToOtherIDToMissionLinearizationDCurrent.get(affectedID).get(robotID)
-                        ).write();
-                    }
+                for (int affectedID : robotsToConsider) {
+                    affectRobot(robotToCSesPriority, robotsToStop, affectedID);
                 }
             }
 
