@@ -280,6 +280,9 @@ public class Forcing {
                     return false;
                 }
 
+                assert robotToCSesPriority.containsKey(affectedID) && robotsToStop.contains(affectedID);
+                // Therefore is the choice.
+
                 if (probabilityStopNotChangeOfPriorities != null) {
                     return rand.nextDouble() < probabilityStopNotChangeOfPriorities;
                 }
@@ -287,19 +290,17 @@ public class Forcing {
                 return RecommenderlibWrapper.isStopRecommended(affectedID);
             }
 
-            private ArrayList<CriticalSection> applyIsStop(
-                    TreeMap<Integer, ArrayList<CriticalSection>> robotToCSesPriority,
+            private void applyIsStop(
+                    ArrayList<CriticalSection> cses,
                     int affectedID,
                     boolean isStop
             ) {
-                ArrayList<CriticalSection> cses = robotToCSesPriority.getOrDefault(affectedID, new ArrayList<>());
                 for (CriticalSection cs : cses) {
                     increaseRobotPriorityOnCS(cs);
                 }
                 if (isStop) {
                     stopRobotIfNeeded(affectedID);
                 }
-                return cses;
             }
 
             private Event.ForcingReactionStarted makeEventForcingReactionStarted(
@@ -342,13 +343,13 @@ public class Forcing {
                     return;
                 }
 
-                boolean isStop = computeIsStop(robotToCSesPriority, robotsToStop, affectedID);
-                robotToIsStopInPast.put(affectedID, isStop);
-
-                ArrayList<CriticalSection> cses = applyIsStop(robotToCSesPriority, affectedID, isStop);
+                ArrayList<CriticalSection> cses = robotToCSesPriority.getOrDefault(affectedID, new ArrayList<>());
 
                 Event.ForcingReactionStarted event = makeEventForcingReactionStarted(affectedID, cses);
-                // TODO: Compute `isStop` based on `event` here.
+
+                boolean isStop = computeIsStop(robotToCSesPriority, robotsToStop, affectedID);
+                robotToIsStopInPast.put(affectedID, isStop);
+                applyIsStop(cses, affectedID, isStop);
 
                 event.isStop = isStop;
                 event.write();
