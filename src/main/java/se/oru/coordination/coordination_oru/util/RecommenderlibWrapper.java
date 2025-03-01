@@ -13,7 +13,8 @@ public class RecommenderlibWrapper {
             interp.exec("sys.path.append(os.getcwd() + '/scenario-analysis')");
 
             interp.exec("import recommenderlib");
-            interp.exec("recommenderlib.bool_ = bool");
+//            interp.exec("recommenderlib.bool_ = bool");
+            interp.exec("recommenderlib.initialize_recommender_forcing_reaction()");
         }
     }
 
@@ -24,16 +25,25 @@ public class RecommenderlibWrapper {
         long start = System.currentTimeMillis();
         try (Interpreter interp = new SharedInterpreter()) {
             interp.exec("import recommenderlib");
-            isStop = (boolean) interp.invoke("recommenderlib.bool_", mapEvent);
+//            isStop = (boolean) interp.invoke("recommenderlib.bool_", mapEvent);
 
-            interp.exec("import events2missions");
-            interp.exec("from java.lang import System");
+//            interp.exec("import events2missions");
+//            interp.exec("from java.lang import System");
             interp.set("map_event", mapEvent);
             interp.exec("map_event = dict(map_event)");
+
+            interp.exec("is_stop = recommenderlib.use_recommender_forcing_reaction(map_event)");
+            isStop = (boolean) interp.getValue("is_stop");
+
+//            interp.exec("import json");
+//            interp.exec("with open('map_event.json', 'w') as file: json.dump(map_event, file)");
+
 //            interp.exec("System.out.println(str(map_event))");
-            interp.exec("df_missions = events2missions.convert_map_event_to_df_missions(map_event)");
-            interp.exec("row, = df_missions.to_dict('records')");
-            interp.exec("System.out.println(str(row))");
+//            interp.exec("df_missions = events2missions.convert_map_event_to_df_missions(map_event)");
+//            interp.exec("row, = df_missions.to_dict('records')");
+//            interp.exec("System.out.println(str(row))");
+
+
         }
         long delta = System.currentTimeMillis() - start;
 

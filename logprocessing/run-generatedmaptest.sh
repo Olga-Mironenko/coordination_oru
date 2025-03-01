@@ -45,11 +45,13 @@ slownesses=(
 )
 
 forcings=(
-  "no"
-  "change of priorities"
-  "stops"
-  "stops 50%"
-  "stops 50% with forcing 50%"
+#  "no"
+#  "change of priorities"
+#  "stops"
+#  "stops 50%"
+#  "stops 50% with forcing 50%"
+  "stops as recommended"
+#  "stops as recommended with forcing 50%"
 )
 
 # Use variables

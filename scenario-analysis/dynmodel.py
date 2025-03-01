@@ -21,8 +21,6 @@ pd.options.display.max_colwidth = 200
 
 warnings.filterwarnings("ignore", message="Can't initialize NVML")
 
-RUNDIRS = '../logs/rundirs'
-
 # RUNNAME = '20250209_170442'
 # RUNNAME = '20250214_172108_halfway'
 # RUNNAME = '20250214_172108'
@@ -39,10 +37,7 @@ RUNDIRS = '../logs/rundirs'
 # RUNNAME = '20250223_150717'
 RUNNAME = '20250225_171132_cautious'
 
-RUNDIR = f'{RUNDIRS}/{RUNNAME}'
-# DIRECTORY_DATA = f'data/{RUNNAME}'
-# os.makedirs(DIRECTORY_DATA, exist_ok=True)
-
+RUNDIR = f'../logs/rundirs/{RUNNAME}'
 FILENAME_MISSIONS_ALL = f'{RUNDIR}/missions_all.csv'
 FILENAME_DF_TEST_INPUT = f'{RUNDIR}/df_test_input.csv'
 
@@ -280,14 +275,19 @@ def add_indices_human_to_cs(df: pd.DataFrame, is_to_end: bool) -> None:
 def add_columns_pod_next(df: pd.DataFrame) -> None:
     for col in df.columns:
         if col.startswith('event_linearization'):
-            df.loc[:, col] = df[col].apply(lambda x: ast.literal_eval(x) if pd.notna(x) else x)
+            df.loc[:, col] = df[col].apply(
+                lambda x:
+                ast.literal_eval(x)
+                if isinstance(x, str)
+                else x
+            )
 
     for paramset in PARAMSETS_POD_NEXT:
         add_column_pod_next(df, **paramset)
 
 
-def prepare_forcing_reaction_started(df: pd.DataFrame) -> pd.DataFrame:
-    df = df[df['event_type'] == 'ForcingReactionStarted']
+def prepare_forcing_reaction_started(df_missions: pd.DataFrame) -> pd.DataFrame:
+    df = df_missions[df_missions['event_type'] == 'ForcingReactionStarted']
 
     df = add_derived_columns(df)
     df = add_vcurr_columns(df)
@@ -317,7 +317,11 @@ def series2values(series: pd.Series) -> np.ndarray:
     raise TypeError(f'{dtype} is not supported')
 
 
-def select_columns_input_output(df: pd.DataFrame) -> pd.DataFrame:
+def select_columns_input_output(
+        df: pd.DataFrame,
+        *,
+        are_columns_required: bool = True,
+) -> pd.DataFrame:
     columns_input = [
         'event_isStop',
 
@@ -352,14 +356,10 @@ def select_columns_input_output(df: pd.DataFrame) -> pd.DataFrame:
     ]
 
     return pd.DataFrame({
-        **{
-            f'(in) {col}': series2values(df[col])
-            for col in columns_input
-        },
-        **{
-            f'(out) {col}': series2values(df[col])
-            for col in columns_output
-        },
+        prefix + col: series2values(df[col])
+        for prefix, columns in (('(in) ', columns_input), ('(out) ', columns_output))
+        for col in columns
+        if are_columns_required or col in df
     })
 
 
@@ -503,8 +503,8 @@ def run_models(df_started: pd.DataFrame) -> pd.DataFrame:
 
 
 def main():
-    df_all = load_or_prepare_missions_all()
-    df_started = prepare_forcing_reaction_started(df_all)
+    df_missions = load_or_prepare_missions_all()
+    df_started = prepare_forcing_reaction_started(df_missions)
     run_models(df_started)
 
 

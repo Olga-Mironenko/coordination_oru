@@ -32,6 +32,7 @@ def main():
                 f'project-gradle-{i}{SUFFIX}:/coordination_oru/.gradle/',
                 f'project-build-{i}{SUFFIX}:/coordination_oru/build/',
                 f'root-gradle-{i}{SUFFIX}:/root/.gradle/',
+                '/home/olga/miniconda3/:/home/olga/miniconda3/:ro',
             ],
             'environment': {
                 'WORKER': f'c{i}',
