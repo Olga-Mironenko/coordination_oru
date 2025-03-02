@@ -35,7 +35,9 @@ warnings.filterwarnings("ignore", message="Can't initialize NVML")
 # RUNNAME = '20250221_172706'
 # RUNNAME = '20250223_150717_halfway'
 # RUNNAME = '20250223_150717'
-RUNNAME = '20250225_171132_cautious'
+# RUNNAME = '20250225_171132_cautious'
+# RUNNAME = '20250228_090518'
+RUNNAME = '20250228_090518_with_20250225_171132_cautious'
 
 RUNDIR = f'../logs/rundirs/{RUNNAME}'
 FILENAME_MISSIONS_ALL = f'{RUNDIR}/missions_all.csv'
@@ -57,20 +59,20 @@ PARAMSETS_POD_NEXT = [
 
 
 def add_derived_columns(df_orig, *, columns_params = None, columns_configuration = None):
-    df_id_pre = df_orig['Scenario ID'].str.extract(r'^(?P<filename>.*?)(?P<params>, .*)$', expand=True)
+    df_id_pre = df_orig['Scenario ID'].str.extract(r'^(?P<filename>.*?)(?P<params>, .*)$')
 
     df_params = pd.concat([
-        df_id_pre['params'].str.extract(r', passhum (?P<passhum>0|1)(?:$|(?=,))', expand=True).astype(int).astype(bool),
-        df_id_pre['params'].str.extract(r', slowness (?P<slowness>[^,]+)', expand=True),
-        df_id_pre['params'].str.extract(r', forcing (?P<forcing>[^,]+)', expand=True),
+        df_id_pre['params'].str.extract(r', passhum (?P<passhum>0|1)(?:$|(?=,))').astype(int).astype(bool),
+        df_id_pre['params'].str.extract(r', slowness (?P<slowness>[^,]+)'),
+        df_id_pre['params'].str.extract(r', forcing (?P<forcing>[^,]+)'),
     ], axis=1)
     if columns_params is not None:
         assert list(df_params.columns) == columns_params  # TODO: set `COLUMNS_PARAMS`
 
     df_id = pd.concat([
         df_id_pre[['filename']],
-        df_id_pre['filename'].str.extract(r'(?P<dir_map>[^/]+)/(?P<basename_scenario>[^/]+)[.]json$', expand=True),
-        df_id_pre['filename'].str.extract(r'/scenario(?P<i_map>\d+)-(?P<i_locations>\d+)[.]json$', expand=True).astype(
+        df_id_pre['filename'].str.extract(r'(?P<dir_map>[^/]+)/(?P<basename_scenario>[^/]+)[.]json$'),
+        df_id_pre['filename'].str.extract(r'/scenario(?P<i_map>\d+)-(?P<i_locations>\d+)[.]json$').astype(
             int),
         df_params,
     ], axis=1).rename(columns={'i_locations': 'position'})
@@ -98,11 +100,11 @@ def add_derived_columns(df_orig, *, columns_params = None, columns_configuration
         [
             df_id,
             df_orig['isCanPassFirstActive'].str.extract(
-                r'^hum=(?P<isCanPassFirstHum>false|true), aut=(?P<isCanPassFirstAut>false|true)$', expand=True
+                r'^hum=(?P<isCanPassFirstHum>false|true), aut=(?P<isCanPassFirstAut>false|true)$'
             ).apply(lambda col: col == 'true'),
             *[
                 df_orig[col].astype(str).str.extract(
-                    r'^(?P<reroutingsAtParked>-|\d+) / (?P<reroutingsAtSlow>-|\d+)$', expand=True
+                    r'^(?P<reroutingsAtParked>-|\d+) / (?P<reroutingsAtSlow>-|\d+)$'
                 ).apply(lambda col: col.map(lambda x: np.nan if pd.isna(x) or x == '-' else int(x))).astype('Int64')
                 for col in cols_reroutings
             ],
@@ -224,7 +226,10 @@ def add_column_pod_next(df: pd.DataFrame, pod_prefix: str, next_n: int | None) -
         else:
             i = int(i)
 
-        total_poses = int(row["V: no. poses"])
+        total_poses_raw = row["V: no. poses"]
+        if pd.isna(total_poses_raw):
+            return 0
+        total_poses = int(total_poses_raw)
 
         # Pad pod_list with zeros if necessary.
         if len(pod_list) < total_poses:
@@ -303,9 +308,11 @@ def series2values(series: pd.Series) -> np.ndarray:
     col = series.name
     assert isinstance(col, str)
     if col.endswith(': v_current'):
-        return series.replace("~0.0", 0.0).astype(float).values
+        return series.replace("~0.0", 0.0).fillna(0).astype(float).values
     if col.endswith(': distance ToCP, m'):
         return series.fillna(-1).astype(float).values
+    if col.endswith(': POD'):
+        return series.fillna(0).astype(float).values
 
     dtype = series.dtype
     if dtype == 'bool':
@@ -389,12 +396,22 @@ def evaluate_and_plot_column(df_test, df_predictions, column):
     # save_and_show(fig, f'Actual_vs_Predicted_Values_{name}')
 
 
+def get_rows_with_nan(df):
+    return df[df.isnull().any(axis=1)]
+
+
 def convert_df_started_to_train_test(df_started: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     df = select_columns_input_output(df_started)
 
     df_train, df_test = sklearn.model_selection.train_test_split(df, test_size=0.2, random_state=1)
+
     show(df_train, 'df_train')
     show(df_test, 'df_test')
+
+    for name, df in ('df_train', df_train), ('df_test', df_test):
+        df_nan = get_rows_with_nan(df)
+        if not df_nan.empty:
+            show(df_nan, f'{name} (nan)')
 
     return df_train, df_test
 

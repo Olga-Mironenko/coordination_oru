@@ -134,7 +134,8 @@ public class GeneratedMapTest {
                     // Cautious mode:
 //                      "map-generator_generated-maps_3_without_bridges_scenario9-4.json,_passhum_0,_slowness_without_rerouting,_forcing_change_of_priorities"
 
-                    "map-generator/generated-maps/3_with_bridges/scenario1-1.json, passhum 0, slowness no, forcing stops as recommended"
+//                    "map-generator/generated-maps/3_with_bridges/scenario1-1.json, passhum 0, slowness no, forcing stops as recommended"
+                    "map-generator_generated-maps_3_with_bridges_scenario4-9.json,_passhum_0,_slowness_with_rerouting,_forcing_stops_50%"
             );
         }
         scenarioString = replaceUnderscoreAfterFirstComma(scenarioString);
